@@ -1,38 +1,26 @@
-# Skunk Squad Asset Placeholders
+# Ninja Skunk Sprite Assets
 
-This directory contains sprite assets for the Skunk Squad characters.
+This directory contains sprite assets for the Ninja Skunk character.
 
-## Character Sprites Needed
+## Ninja Skunk Sprites Needed
 
-### Hero Skunk
-- hero_idle.png (sprite sheet)
-- hero_walk.png (sprite sheet)
-- hero_jump.png
-- hero_attack.png (sprite sheet)
-- hero_special.png (sprite sheet)
-
-### Ninja Skunk
-- ninja_idle.png
-- ninja_walk.png
-- ninja_jump.png
-- ninja_attack.png
-- ninja_special.png (shadow strike)
-
-### Tank Skunk
-- tank_idle.png
-- tank_walk.png
-- tank_jump.png
-- tank_attack.png
-- tank_special.png (ground pound)
-
-### Mage Skunk
-- mage_idle.png
-- mage_walk.png
-- mage_jump.png
-- mage_attack.png
-- mage_special.png (magic blast)
+### Animation Sprite Sheets
+- `ninja_idle.png` - Idle stance (4 frames)
+- `ninja_walk.png` - Running animation (6 frames)
+- `ninja_jump.png` - Jump/fall animation (4 frames)
+- `ninja_attack.png` - Basic attack combo (6 frames)
+- `ninja_shadow_strike.png` - Shadow Strike dash (8 frames with motion blur)
+- `ninja_hurt.png` - Taking damage (2 frames)
 
 ## Sprite Specifications
-- Recommended size: 64x64 pixels per frame
-- Format: PNG with transparency
-- Animation frames: 4-8 frames per animation
+- **Size**: 64x64 pixels per frame
+- **Format**: PNG with transparency
+- **Color Scheme**: Dark grays, blacks, with purple/blue accents for ninja theme
+- **Animation Speed**: 10-15 FPS for most animations, 20 FPS for Shadow Strike
+- **Style**: Fast, agile movements with ninja aesthetic
+
+## Visual Design Notes
+- Dark gray/black fur for stealth ninja appearance
+- Optional ninja headband or mask
+- Motion blur effects for Shadow Strike ability
+- Swift, fluid movement animations

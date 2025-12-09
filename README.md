@@ -1,29 +1,24 @@
 # Skunk Fu - 2D Beat 'em Up Platformer
 
-A 2D beat 'em up platformer game featuring the Skunk Squad characters! Fight through waves of enemies, master special abilities, and save the day!
+A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves of enemies with lightning-fast combat and the deadly Shadow Strike ability!
 
 ## Features
 
 ### 🎮 Gameplay
-- **Classic Beat 'em Up Action**: Combo attacks, special moves, and intense combat
-- **Platforming Elements**: Jump across platforms, dodge obstacles
-- **Multiple Characters**: Choose from 4 unique Skunk Squad members
+- **Fast-Paced Beat 'em Up Action**: Quick attacks, dash abilities, and intense ninja combat
+- **Platforming Elements**: High jumps across platforms, agile movement
+- **Shadow Strike Special**: Dash through enemies with extended attack range
 - **Enemy Waves**: Face different enemy types with unique AI behaviors
 - **Score System**: Defeat enemies and rack up points
 
-### 🦨 Playable Characters
+### 🦨 Ninja Skunk
 
-1. **Hero Skunk** - Balanced fighter with Stink Bomb special
-   - Health: 100 | Speed: 300 | Attack: 20
-   
-2. **Ninja Skunk** - Fast and agile with Shadow Strike
-   - Health: 80 | Speed: 400 | Attack: 15
-   
-3. **Tank Skunk** - Heavy hitter with Ground Pound
-   - Health: 150 | Speed: 200 | Attack: 30
-   
-4. **Mage Skunk** - Ranged specialist with Magic Blast
-   - Health: 70 | Speed: 250 | Attack: 25
+**The Shadow Striker** - Lightning-fast ninja warrior
+- **Health**: 80 (Glass cannon - high risk, high reward)
+- **Speed**: 400 (Fastest movement)
+- **Jump Force**: 700 (Highest jumps)
+- **Attack Damage**: 15
+- **Special Ability**: **Shadow Strike** - Forward dash attack with extended hitbox
 
 ## Installation
 
@@ -117,16 +112,16 @@ Each character has unique attributes:
 - [x] Camera system
 
 ### Phase 2: Polish (In Progress)
-- [ ] Add sprite animations
-- [ ] Implement special abilities for each character
+- [ ] Add Ninja Skunk sprite animations
+- [x] Implement Shadow Strike special ability
 - [ ] Add sound effects and music
 - [ ] Create multiple levels
 - [ ] Add power-ups and collectibles
 - [ ] Boss battles
 
 ### Phase 3: Content Expansion
-- [ ] More enemy types
-- [ ] Character selection screen
+- [ ] More enemy types and variants
+- [ ] Additional ninja abilities and combos
 - [ ] Co-op multiplayer support
 - [ ] Achievement system
 - [ ] High score leaderboard
