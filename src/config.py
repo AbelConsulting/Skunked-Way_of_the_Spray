@@ -11,11 +11,11 @@ FPS = 60
 GRAVITY = 1500  # pixels per second squared
 MAX_FALL_SPEED = 800
 
-# Player settings
-PLAYER_SPEED = 300
-PLAYER_JUMP_FORCE = 600
-PLAYER_MAX_HEALTH = 100
-PLAYER_ATTACK_DAMAGE = 20
+# Player settings (Ninja Skunk)
+PLAYER_SPEED = 400
+PLAYER_JUMP_FORCE = 700
+PLAYER_MAX_HEALTH = 80
+PLAYER_ATTACK_DAMAGE = 15
 
 # Enemy settings
 ENEMY_SPEED = 150
@@ -32,38 +32,13 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 GRAY = (128, 128, 128)
 
-# Skunk Squad Characters
-CHARACTERS = {
-    "HERO_SKUNK": {
-        "name": "Hero Skunk",
-        "health": 100,
-        "speed": 300,
-        "jump_force": 600,
-        "attack_damage": 20,
-        "special_ability": "Stink Bomb"
-    },
-    "NINJA_SKUNK": {
-        "name": "Ninja Skunk",
-        "health": 80,
-        "speed": 400,
-        "jump_force": 700,
-        "attack_damage": 15,
-        "special_ability": "Shadow Strike"
-    },
-    "TANK_SKUNK": {
-        "name": "Tank Skunk",
-        "health": 150,
-        "speed": 200,
-        "jump_force": 500,
-        "attack_damage": 30,
-        "special_ability": "Ground Pound"
-    },
-    "MAGE_SKUNK": {
-        "name": "Mage Skunk",
-        "health": 70,
-        "speed": 250,
-        "jump_force": 550,
-        "attack_damage": 25,
-        "special_ability": "Magic Blast"
-    }
+# Ninja Skunk Character
+CHARACTER = {
+    "name": "Ninja Skunk",
+    "health": 80,
+    "speed": 400,
+    "jump_force": 700,
+    "attack_damage": 15,
+    "special_ability": "Shadow Strike",
+    "color": (64, 64, 64)  # Dark gray for ninja
 }

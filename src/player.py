@@ -7,7 +7,7 @@ from config import *
 class Player:
     """Player character with combat and platforming abilities"""
     
-    def __init__(self, x, y, character_type="HERO_SKUNK"):
+    def __init__(self, x, y):
         # Position and movement
         self.x = x
         self.y = y
@@ -15,16 +15,15 @@ class Player:
         self.height = 80
         self.rect = pygame.Rect(x, y, self.width, self.height)
         
-        # Character stats
-        char_stats = CHARACTERS[character_type]
-        self.character_type = character_type
-        self.name = char_stats["name"]
-        self.max_health = char_stats["health"]
+        # Character stats (Ninja Skunk)
+        self.name = CHARACTER["name"]
+        self.max_health = CHARACTER["health"]
         self.health = self.max_health
-        self.speed = char_stats["speed"]
-        self.jump_force = char_stats["jump_force"]
-        self.attack_damage = char_stats["attack_damage"]
-        self.special_ability = char_stats["special_ability"]
+        self.speed = CHARACTER["speed"]
+        self.jump_force = CHARACTER["jump_force"]
+        self.attack_damage = CHARACTER["attack_damage"]
+        self.special_ability = CHARACTER["special_ability"]
+        self.color = CHARACTER["color"]
         
         # Movement state
         self.velocity_x = 0
@@ -137,9 +136,22 @@ class Player:
             self.attack_cooldown_timer = self.attack_cooldown
     
     def special_attack(self):
-        """Perform special ability attack"""
-        # TODO: Implement character-specific special abilities
-        pass
+        """Perform Shadow Strike - fast dash attack"""
+        if not self.is_attacking and self.on_ground:
+            self.is_attacking = True
+            self.attack_timer = self.attack_duration
+            self.attack_cooldown_timer = self.attack_cooldown
+            
+            # Dash forward
+            dash_distance = 150
+            if self.facing_right:
+                self.x += dash_distance
+            else:
+                self.x -= dash_distance
+            
+            # Larger hitbox for special
+            self.attack_hitbox.width = 80
+            self.attack_hitbox.height = 60
     
     def take_damage(self, damage):
         """Take damage from enemy"""
@@ -162,9 +174,17 @@ class Player:
         screen_x = int(self.x - camera_x)
         screen_y = int(self.y)
         
-        # Draw player rectangle (placeholder for sprite)
-        color = GREEN if self.health > 30 else YELLOW if self.health > 10 else RED
-        pygame.draw.rect(screen, color, (screen_x, screen_y, self.width, self.height))
+        # Draw Ninja Skunk (placeholder for sprite)
+        # Body - dark gray
+        pygame.draw.rect(screen, self.color, (screen_x, screen_y, self.width, self.height))
+        
+        # Health indicator overlay
+        if self.health < 30:
+            overlay_color = RED if self.health < 15 else YELLOW
+            overlay = pygame.Surface((self.width, self.height))
+            overlay.set_alpha(100)
+            overlay.fill(overlay_color)
+            screen.blit(overlay, (screen_x, screen_y))
         
         # Draw direction indicator
         if self.facing_right:

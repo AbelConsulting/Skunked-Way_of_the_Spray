@@ -26,9 +26,14 @@ class UI:
         screen.blit(title, title_rect)
         
         # Subtitle
-        subtitle = self.menu_font.render("Skunk Squad Adventure", True, YELLOW)
+        subtitle = self.menu_font.render("Ninja Skunk - Shadow Strike", True, YELLOW)
         subtitle_rect = subtitle.get_rect(center=(self.width // 2, 230))
         screen.blit(subtitle, subtitle_rect)
+        
+        # Character info
+        char_info = self.small_font.render("Fast & Agile Ninja Fighter", True, WHITE)
+        char_rect = char_info.get_rect(center=(self.width // 2, 270))
+        screen.blit(char_info, char_rect)
         
         # Instructions
         instructions = [

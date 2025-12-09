@@ -17,7 +17,7 @@ def main():
     
     # Create game window
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Skunk Fu - Skunk Squad Adventure")
+    pygame.display.set_caption("Skunk Fu - Ninja Skunk")
     
     # Initialize game
     game = Game(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
