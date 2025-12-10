@@ -22,28 +22,28 @@ class Level:
         # Ground platform (full width)
         self.platforms.append(pygame.Rect(0, 580, self.width, 40))
         
-        # Starting area platforms
+        # Starting area platforms - gentle progression
         self.platforms.append(pygame.Rect(200, 500, 150, 20))
-        self.platforms.append(pygame.Rect(400, 420, 180, 20))
+        self.platforms.append(pygame.Rect(400, 440, 180, 20))
         
-        # Mid-section with varied heights
+        # Mid-section with varied heights - max 140px gaps
         self.platforms.append(pygame.Rect(650, 480, 200, 20))
-        self.platforms.append(pygame.Rect(900, 380, 180, 20))
-        self.platforms.append(pygame.Rect(1120, 440, 160, 20))
-        self.platforms.append(pygame.Rect(1320, 350, 200, 20))
+        self.platforms.append(pygame.Rect(900, 400, 180, 20))
+        self.platforms.append(pygame.Rect(1120, 460, 160, 20))
+        self.platforms.append(pygame.Rect(1320, 380, 200, 20))
         
-        # High platforms section
-        self.platforms.append(pygame.Rect(1580, 280, 180, 20))
-        self.platforms.append(pygame.Rect(1820, 340, 160, 20))
+        # High platforms section - accessible from previous platforms
+        self.platforms.append(pygame.Rect(1580, 320, 180, 20))
+        self.platforms.append(pygame.Rect(1820, 380, 160, 20))
         
-        # Staircase effect
+        # Staircase effect - smooth descent
         self.platforms.append(pygame.Rect(2040, 500, 140, 20))
-        self.platforms.append(pygame.Rect(2220, 440, 140, 20))
-        self.platforms.append(pygame.Rect(2400, 380, 140, 20))
-        self.platforms.append(pygame.Rect(2580, 320, 140, 20))
+        self.platforms.append(pygame.Rect(2220, 450, 140, 20))
+        self.platforms.append(pygame.Rect(2400, 400, 140, 20))
+        self.platforms.append(pygame.Rect(2580, 350, 140, 20))
         
-        # Final area
-        self.platforms.append(pygame.Rect(2760, 400, 240, 20))
+        # Final area - reachable from staircase
+        self.platforms.append(pygame.Rect(2760, 420, 240, 20))
     
     def create_boundaries(self):
         """Create invisible walls at level edges"""
