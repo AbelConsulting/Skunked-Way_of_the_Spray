@@ -75,6 +75,7 @@ def main():
     frame_index = 0
     animation_timer = 0
     animation_speed = 0.1  # seconds per frame
+    max_frames = 32  # Maximum frames to cycle through for preview
     
     # Main loop
     running = True
@@ -93,7 +94,7 @@ def main():
         animation_timer += dt
         if animation_timer >= animation_speed:
             animation_timer = 0
-            frame_index = (frame_index + 1) % 32  # Cycle through first 32 frames
+            frame_index = (frame_index + 1) % max_frames
         
         # Clear screen
         screen.fill((50, 50, 50))  # Dark gray background
@@ -118,9 +119,10 @@ def main():
         
         x_pos = 100
         for name in ['ninja_idle', 'ninja_walk', 'ninja_jump', 'ninja_attack']:
-            if name in sprites and len(sprites[name]) > frame_index:
+            if name in sprites and len(sprites[name]) > 0:
                 # Draw sprite (scaled up for visibility)
-                frame = sprites[name][frame_index]
+                current_frame = min(frame_index, len(sprites[name]) - 1)
+                frame = sprites[name][current_frame]
                 scaled_frame = pygame.transform.scale(frame, (128, 128))
                 screen.blit(scaled_frame, (x_pos, y_offset))
                 
@@ -139,9 +141,10 @@ def main():
         
         x_pos = 100
         for name, size in [('basic_idle', 96), ('fly_idle', 80), ('boss_idle', 128)]:
-            if name in sprites and len(sprites[name]) > frame_index:
+            if name in sprites and len(sprites[name]) > 0:
                 # Draw sprite (scaled for visibility)
-                frame = sprites[name][min(frame_index, len(sprites[name]) - 1)]
+                current_frame = min(frame_index, len(sprites[name]) - 1)
+                frame = sprites[name][current_frame]
                 scaled_frame = pygame.transform.scale(frame, (size, size))
                 screen.blit(scaled_frame, (x_pos, y_offset))
                 

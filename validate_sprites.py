@@ -8,6 +8,9 @@ import pygame
 import os
 import sys
 
+# Constants
+BYTES_TO_MB = 1024 * 1024
+
 def validate_sprite(filepath, expected_frame_width=None):
     """
     Validate a single sprite file.
@@ -23,7 +26,7 @@ def validate_sprite(filepath, expected_frame_width=None):
         # Load the sprite
         img = pygame.image.load(filepath)
         width, height = img.get_size()
-        file_size = os.path.getsize(filepath) / (1024 * 1024)  # MB
+        file_size = os.path.getsize(filepath) / BYTES_TO_MB
         
         # Calculate frames if expected width provided
         frames = None
