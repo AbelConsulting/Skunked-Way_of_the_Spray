@@ -18,32 +18,34 @@ class Level:
         self.create_boundaries()
     
     def create_platforms(self):
-        """Create platform layout"""
+        """Create platform layout with proper clearance"""
         # Ground platform (full width)
         self.platforms.append(pygame.Rect(0, 580, self.width, 40))
         
-        # Starting area platforms - gentle progression
-        self.platforms.append(pygame.Rect(200, 500, 150, 20))
-        self.platforms.append(pygame.Rect(400, 440, 180, 20))
+        # Starting area platforms - 80px clearance minimum (player is 64px tall)
+        self.platforms.append(pygame.Rect(200, 480, 150, 20))  # 100px clearance
+        self.platforms.append(pygame.Rect(400, 420, 180, 20))  # 160px clearance
         
-        # Mid-section with varied heights - max 140px gaps
-        self.platforms.append(pygame.Rect(650, 480, 200, 20))
-        self.platforms.append(pygame.Rect(900, 400, 180, 20))
-        self.platforms.append(pygame.Rect(1120, 460, 160, 20))
-        self.platforms.append(pygame.Rect(1320, 380, 200, 20))
+        # Mid-section with varied heights - ensuring walkable paths
+        self.platforms.append(pygame.Rect(650, 460, 200, 20))  # 120px clearance
+        self.platforms.append(pygame.Rect(900, 380, 180, 20))  # 200px clearance - high platform
+        self.platforms.append(pygame.Rect(1120, 440, 160, 20))  # 140px clearance
+        self.platforms.append(pygame.Rect(1320, 360, 200, 20))  # 220px clearance - high platform
         
-        # High platforms section - accessible from previous platforms
-        self.platforms.append(pygame.Rect(1580, 320, 180, 20))
-        self.platforms.append(pygame.Rect(1820, 380, 160, 20))
+        # High platforms section - accessible jumps with ground passage
+        self.platforms.append(pygame.Rect(1580, 300, 180, 20))  # 280px clearance - high platform
+        self.platforms.append(pygame.Rect(1820, 360, 160, 20))  # 220px clearance
         
-        # Staircase effect - smooth descent
-        self.platforms.append(pygame.Rect(2040, 500, 140, 20))
-        self.platforms.append(pygame.Rect(2220, 450, 140, 20))
-        self.platforms.append(pygame.Rect(2400, 400, 140, 20))
-        self.platforms.append(pygame.Rect(2580, 350, 140, 20))
+        # Raised floor sections - blocking ground passage intentionally
+        self.platforms.append(pygame.Rect(2000, 540, 200, 40))  # Raised floor at 540 (40px above ground)
+        self.platforms.append(pygame.Rect(2200, 500, 200, 40))  # Raised floor at 500 (80px above ground)
         
-        # Final area - reachable from staircase
-        self.platforms.append(pygame.Rect(2760, 420, 240, 20))
+        # Staircase on raised sections
+        self.platforms.append(pygame.Rect(2400, 430, 140, 20))  # 150px clearance from ground
+        self.platforms.append(pygame.Rect(2580, 350, 140, 20))  # 230px clearance - high platform
+        
+        # Final area - accessible from staircase
+        self.platforms.append(pygame.Rect(2760, 400, 240, 20))  # 180px clearance
     
     def create_boundaries(self):
         """Create invisible walls at level edges"""
