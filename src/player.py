@@ -93,7 +93,7 @@ class Player:
             
             # Create animations from frames
             self.animations = {
-                "idle": Animation(idle_frames, 0.15, True),
+                "idle": Animation(idle_frames, 0.1, True),
                 "walk": Animation(walk_frames, 0.1, True),
                 "jump": Animation(jump_frames, 0.12, False),
                 "attack": Animation(attack_frames, 0.08, False),

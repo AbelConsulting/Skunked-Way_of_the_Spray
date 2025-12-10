@@ -13,7 +13,8 @@ class AudioManager:
         
         # Sound effect channels for mixing
         self.sfx_volume = 0.7
-        self.music_volume = 0.5
+        # Music balance: metal guitar as lead (0.3 background) + guitar (0.5)
+        self.music_volume = 0.3  # Lowered from 0.5 to let metal guitar lead
         
         # Sound effects dictionary
         self.sounds = {}
@@ -85,7 +86,7 @@ class AudioManager:
         if os.path.exists(metal_path):
             try:
                 self.metal_pad_sound = pygame.mixer.Sound(metal_path)
-                self.metal_pad_sound.set_volume(0.3)  # Quieter than main music
+                self.metal_pad_sound.set_volume(0.5)  # Increased from 0.3 to make guitar prominent
                 print(f"✓ Loaded metal pad layer")
             except pygame.error as e:
                 print(f"✗ Failed to load metal pad: {e}")

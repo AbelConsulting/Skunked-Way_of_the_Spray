@@ -42,6 +42,11 @@
 			"label": "Generate Metal Guitar",
 			"type": "shell",
 			"command": "C:/Users/marcf/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe generate_metal_sound.py"
+		},
+		{
+			"label": "Analyze Music Mix",
+			"type": "shell",
+			"command": "C:/Users/marcf/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe analyze_music_mix.py"
 		}
 	]
 }
