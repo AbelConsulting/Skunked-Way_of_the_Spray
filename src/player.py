@@ -195,6 +195,22 @@ class Player:
                     self.x = platform.right
                 self.rect.x = int(self.x)
         
+        # Check boundaries (level edges)
+        for boundary in level.boundaries:
+            if self.rect.colliderect(boundary):
+                # Left wall
+                if boundary.x < 0:
+                    self.x = 0
+                    self.velocity_x = 0
+                # Right wall
+                elif boundary.x >= level.width:
+                    self.x = level.width - self.width
+                    self.velocity_x = 0
+                # Death zone (fell off bottom)
+                elif boundary.y > 600:
+                    self.take_damage(999)  # Instant death
+                self.rect.x = int(self.x)
+        
         # Update vertical position
         self.y += self.velocity_y * dt
         self.rect.y = int(self.y)

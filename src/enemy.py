@@ -189,6 +189,24 @@ class Enemy:
                     self.facing_right = True
                 self.rect.x = int(self.x)
         
+        # Check boundaries (level edges)
+        for boundary in level.boundaries:
+            if self.rect.colliderect(boundary):
+                # Left wall
+                if boundary.x < 0:
+                    self.x = 0
+                    self.velocity_x = self.speed
+                    self.facing_right = True
+                # Right wall
+                elif boundary.x >= level.width:
+                    self.x = level.width - self.width
+                    self.velocity_x = -self.speed
+                    self.facing_right = False
+                # Death zone (fell off bottom) - kill enemy
+                elif boundary.y > 600:
+                    self.health = 0
+                self.rect.x = int(self.x)
+        
         # Update vertical position
         self.y += self.velocity_y * dt
         self.rect.y = int(self.y)
