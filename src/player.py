@@ -88,10 +88,9 @@ class Player:
             import os
             idle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'sprites', 'characters', 'ninja_idle.png')
             idle_img = pygame.image.load(idle_path)
-            # Extract just the first 64x64 frame
-            idle_frame = idle_img.subsurface((0, 0, 64, 64))
-            idle_frame = pygame.transform.scale(idle_frame, (64, 64))
-            idle_frames = [idle_frame]  # Single static frame
+            # Extract just the first 64x64 frame as a static pose
+            self.idle_sprite = idle_img.subsurface((0, 0, 64, 64))
+            self.idle_sprite = pygame.transform.scale(self.idle_sprite, (64, 64))
             
             walk_frames = sprite_loader.load_spritesheet("characters/ninja_walk.png", 32, 32, 4, (64, 64))
             jump_frames = sprite_loader.load_spritesheet("characters/ninja_jump.png", 32, 32, 4, (64, 64))
@@ -99,9 +98,8 @@ class Player:
             shadow_strike_frames = sprite_loader.load_spritesheet("characters/ninja_shadow_strike.png", 32, 32, 4, (64, 64))
             hurt_frames = sprite_loader.load_spritesheet("characters/ninja_hurt.png", 32, 32, 2, (64, 64))
             
-            # Create animations from frames
+            # Create animations from frames (idle is handled separately as static sprite)
             self.animations = {
-                "idle": Animation(idle_frames, 0.1, True),
                 "walk": Animation(walk_frames, 0.1, True),
                 "jump": Animation(jump_frames, 0.12, False),
                 "attack": Animation(attack_frames, 0.08, False),
@@ -411,9 +409,15 @@ class Player:
                 return  # Don't render this frame
         
         # Get current animation frame
-        if self.animations and self.current_anim:
+        # Handle idle as special case - static sprite with no animation
+        if self.last_anim_state == "idle" and hasattr(self, 'idle_sprite'):
+            sprite = self.idle_sprite
+        elif self.animations and self.current_anim:
             sprite = self.current_anim.get_current_frame()
-            
+        else:
+            sprite = None
+        
+        if sprite:
             # Flip sprite if facing left
             if not self.facing_right:
                 sprite = pygame.transform.flip(sprite, True, False)
