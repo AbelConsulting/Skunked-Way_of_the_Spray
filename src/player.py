@@ -89,17 +89,18 @@ class Player:
             idle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'sprites', 'characters', 'ninja_idle.png')
             idle_img = pygame.image.load(idle_path).convert_alpha()
             # Extract only the first 64x64 frame as a completely static pose
-            self.idle_sprite = pygame.Surface((64, 64), pygame.SRCALPHA)
-            self.idle_sprite.blit(idle_img, (0, 0), pygame.Rect(0, 0, 64, 64))
+            temp_surface = pygame.Surface((64, 64), pygame.SRCALPHA)
+            temp_surface.blit(idle_img, (0, 0), pygame.Rect(0, 0, 64, 64))
+            # Scale up to 128x128 to match the scale of movement sprites better
+            self.idle_sprite = pygame.transform.scale(temp_surface, (128, 128))
             # Pre-create flipped version to avoid recreating every frame
             self.idle_sprite_flipped = pygame.transform.flip(self.idle_sprite, True, False)
-            # Keep it at original size, no animation
             
-            walk_frames = sprite_loader.load_spritesheet("characters/ninja_walk.png", 32, 32, 4, (64, 64))
-            jump_frames = sprite_loader.load_spritesheet("characters/ninja_jump.png", 32, 32, 4, (64, 64))
-            attack_frames = sprite_loader.load_spritesheet("characters/ninja_attack.png", 32, 32, 4, (64, 64))
-            shadow_strike_frames = sprite_loader.load_spritesheet("characters/ninja_shadow_strike.png", 32, 32, 4, (64, 64))
-            hurt_frames = sprite_loader.load_spritesheet("characters/ninja_hurt.png", 32, 32, 2, (64, 64))
+            walk_frames = sprite_loader.load_spritesheet("characters/ninja_walk.png", 32, 32, 4, (128, 128))
+            jump_frames = sprite_loader.load_spritesheet("characters/ninja_jump.png", 32, 32, 4, (128, 128))
+            attack_frames = sprite_loader.load_spritesheet("characters/ninja_attack.png", 32, 32, 4, (128, 128))
+            shadow_strike_frames = sprite_loader.load_spritesheet("characters/ninja_shadow_strike.png", 32, 32, 4, (128, 128))
+            hurt_frames = sprite_loader.load_spritesheet("characters/ninja_hurt.png", 32, 32, 2, (128, 128))
             
             # Create animations from frames (idle is handled separately as static sprite)
             self.animations = {
@@ -236,18 +237,23 @@ class Player:
         just_landed = False
         
         for platform in level.platforms:
-            if self.rect.colliderect(platform):
-                if self.velocity_y > 0:  # Falling down
-                    # Land on platform
-                    self.y = platform.top - self.height
-                    self.rect.y = int(self.y)
-                    
-                    # Check if we just landed (for sound)
-                    if not was_on_ground and self.velocity_y > 200:
-                        just_landed = True
-                    
-                    self.velocity_y = 0
-                    self.on_ground = True
+            # Check with slight tolerance to prevent flickering
+            feet_rect = pygame.Rect(self.rect.x, self.rect.bottom - 2, self.rect.width, 4)
+            if feet_rect.colliderect(platform) and self.velocity_y >= 0:
+                # We're on or very close to the platform
+                self.on_ground = True
+                
+                if self.rect.colliderect(platform):
+                    if self.velocity_y > 0:  # Falling down
+                        # Land on platform
+                        self.y = platform.top - self.height
+                        self.rect.y = int(self.y)
+                        
+                        # Check if we just landed (for sound)
+                        if not was_on_ground and self.velocity_y > 200:
+                            just_landed = True
+                        
+                        self.velocity_y = 0
                     break
                 elif self.velocity_y < 0:  # Jumping up
                     # Hit head on platform
@@ -292,7 +298,7 @@ class Player:
         
         # Update animation state and animate
         self.update_animation_state()
-        if self.animations:
+        if self.animations and self.current_anim:  # Only update if there's an active animation
             self.current_anim.update(dt)
     
     def update_animation_state(self):
@@ -309,7 +315,9 @@ class Player:
         # Switch animation if state changed
         if anim_state != self.last_anim_state:
             # Idle is handled as a static sprite, not an animation
-            if anim_state != "idle" and self.animations and anim_state in self.animations:
+            if anim_state == "idle":
+                self.current_anim = None  # No animation for idle
+            elif self.animations and anim_state in self.animations:
                 self.current_anim = self.animations[anim_state]
                 self.current_anim.reset()
             self.last_anim_state = anim_state
