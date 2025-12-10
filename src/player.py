@@ -52,6 +52,7 @@ class Player:
         self.attack_cooldown = 0.3  # Reduced for faster combos
         self.attack_cooldown_timer = 0
         self.attack_hitbox = pygame.Rect(0, 0, 60, 40)
+        self.hit_enemies = set()  # Track enemies hit in current attack
         
         # Combo system
         self.combo_count = 0
@@ -293,6 +294,7 @@ class Player:
             self.is_attacking = True
             self.attack_timer = self.attack_duration
             self.attack_cooldown_timer = self.attack_cooldown
+            self.hit_enemies.clear()  # Clear hit tracking for new attack
             
             # Combo system
             if self.combo_timer > 0 and self.combo_count < self.max_combo:
@@ -319,6 +321,7 @@ class Player:
             self.is_attacking = True
             self.attack_timer = self.attack_duration
             self.attack_cooldown_timer = self.attack_cooldown
+            self.hit_enemies.clear()  # Clear hit tracking
             
             # Dash forward
             dash_distance = 150

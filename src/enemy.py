@@ -50,11 +50,15 @@ class Enemy:
         # Combat
         self.is_attacking = False
         self.attack_timer = 0
-        self.attack_duration = 0.4
-        self.attack_cooldown = 1.5
+        self.attack_duration = 0.5
+        self.attack_cooldown = 2.0
         self.attack_cooldown_timer = 0
-        self.attack_range = 60
-        self.attack_hitbox = pygame.Rect(0, 0, 50, 40)
+        self.attack_range = 80
+        self.attack_hitbox = pygame.Rect(0, 0, 60, 40)
+        
+        # Hit feedback
+        self.hit_stun_timer = 0
+        self.knockback_velocity_x = 0
         
         # AI state
         self.state = "PATROL"  # PATROL, CHASE, ATTACK
@@ -139,21 +143,36 @@ class Enemy:
         else:
             self.state = "PATROL"
         
-        # Behavior based on state
-        if self.state == "PATROL":
-            self.patrol(dt)
-        elif self.state == "CHASE":
-            self.chase(dt, player)
-        elif self.state == "ATTACK":
-            self.attack_player(dt, player)
+        # Update hit stun
+        if self.hit_stun_timer > 0:
+            self.hit_stun_timer -= dt
+            # Apply knockback
+            if self.knockback_velocity_x != 0:
+                # Decay knockback
+                self.knockback_velocity_x *= 0.9
+                if abs(self.knockback_velocity_x) < 10:
+                    self.knockback_velocity_x = 0
+        
+        # Behavior based on state (only if not in hit stun)
+        if self.hit_stun_timer <= 0:
+            if self.state == "PATROL":
+                self.patrol(dt)
+            elif self.state == "CHASE":
+                self.chase(dt, player)
+            elif self.state == "ATTACK":
+                self.attack_player(dt, player)
+        else:
+            # Stop movement during hit stun
+            self.velocity_x = 0
         
         # Apply gravity
         self.velocity_y += GRAVITY * dt
         if self.velocity_y > MAX_FALL_SPEED:
             self.velocity_y = MAX_FALL_SPEED
         
-        # Update horizontal position
-        self.x += self.velocity_x * dt
+        # Update horizontal position (including knockback)
+        total_velocity_x = self.velocity_x + self.knockback_velocity_x
+        self.x += total_velocity_x * dt
         self.rect.x = int(self.x)
         
         # Check horizontal collisions with platforms
@@ -255,9 +274,13 @@ class Enemy:
             self.attack_timer = self.attack_duration
             self.attack_cooldown_timer = self.attack_cooldown
     
-    def take_damage(self, damage):
-        """Take damage"""
+    def take_damage(self, damage, knockback_direction=1):
+        """Take damage with knockback"""
         self.health -= damage
+        
+        # Apply hit stun and knockback
+        self.hit_stun_timer = 0.15
+        self.knockback_velocity_x = knockback_direction * 200
         
         # Play appropriate sound
         if self.audio_manager:
@@ -279,13 +302,23 @@ class Enemy:
             if not self.facing_right:
                 sprite = pygame.transform.flip(sprite, True, False)
             
+            # Hit flash effect
+            if self.hit_stun_timer > 0:
+                # Create white flash overlay
+                flash_sprite = sprite.copy()
+                flash_sprite.fill((255, 255, 255, 180), special_flags=pygame.BLEND_RGB_ADD)
+                sprite = flash_sprite
+            
             # Center sprite on enemy position
             sprite_rect = sprite.get_rect()
             sprite_rect.center = (screen_x + self.width // 2, screen_y + self.height // 2)
             screen.blit(sprite, sprite_rect)
         else:
-            # Fallback to colored rectangles
-            color = RED if self.state == "ATTACK" else YELLOW if self.state == "CHASE" else GRAY
+            # Fallback to colored rectangles with hit flash
+            if self.hit_stun_timer > 0:
+                color = WHITE
+            else:
+                color = RED if self.state == "ATTACK" else YELLOW if self.state == "CHASE" else GRAY
             pygame.draw.rect(screen, color, (screen_x, screen_y, self.width, self.height))
         
         # Health bar
