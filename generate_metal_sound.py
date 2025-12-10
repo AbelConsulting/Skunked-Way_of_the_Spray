@@ -19,9 +19,9 @@ def generate_metal_guitar(duration=30, sample_rate=44100):
     # Create time array
     t = np.linspace(0, duration, int(duration * sample_rate))
     
-    # Ninja metal riff - slower BPM (68 instead of 85) with Eastern-inspired melody
+    # Ninja metal riff - slower BPM (35.7 instead of 51) with Eastern-inspired melody
     # Each tuple: (base_freq, duration_in_beats)
-    # BPM = 68, so each beat = 0.882 seconds
+    # BPM = 35.7, so each beat = 1.681 seconds
     
     audio = np.zeros_like(t)
     
@@ -37,7 +37,7 @@ def generate_metal_guitar(duration=30, sample_rate=44100):
     ]
     
     # Build the riff multiple times to fill the duration
-    beat_duration = 0.882  # 68 BPM = 0.882 seconds per beat
+    beat_duration = 1.681  # 35.7 BPM = 1.681 seconds per beat
     current_time = 0
     
     while current_time < duration:

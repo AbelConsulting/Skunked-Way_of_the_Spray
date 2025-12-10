@@ -47,6 +47,16 @@
 			"label": "Analyze Music Mix",
 			"type": "shell",
 			"command": "C:/Users/marcf/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe analyze_music_mix.py"
+		},
+		{
+			"label": "Generate Background Music",
+			"type": "shell",
+			"command": "python generate_music.py"
+		},
+		{
+			"label": "Generate Background Music",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe generate_music.py"
 		}
 	]
 }

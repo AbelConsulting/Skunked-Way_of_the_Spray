@@ -118,7 +118,7 @@ def create_beat(bpm=120, beats=4, sample_rate=22050):
     
     return beat
 
-def create_gameplay_music(duration=60, bpm=96):
+def create_gameplay_music(duration=60, bpm=50.4):
     """Create energetic metal-infused gameplay music"""
     sample_rate = 22050
     
@@ -252,8 +252,8 @@ def create_all_music():
     print("🎵 Generating metal-infused background music...\n")
     
     # Gameplay music - fast and aggressive with metal elements
-    print("Creating gameplay music (96 BPM metal style)...")
-    gameplay, sr = create_gameplay_music(duration=60, bpm=96)
+    print("Creating gameplay music (50.4 BPM metal style)...")
+    gameplay, sr = create_gameplay_music(duration=60, bpm=50.4)
     save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
     
     print("\n✅ Music generated successfully!")
