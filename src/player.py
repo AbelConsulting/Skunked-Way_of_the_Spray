@@ -183,6 +183,10 @@ class Player:
                     self.velocity_x = 0
                 else:
                     self.velocity_x -= (self.velocity_x / abs(self.velocity_x)) * friction_amount
+            
+            # Ensure completely zero velocity when very small (prevent micro-movements)
+            if abs(self.velocity_x) < 0.1:
+                self.velocity_x = 0
         
         # Check if we just left the ground (for coyote time)
         was_on_ground = self.on_ground
@@ -192,9 +196,10 @@ class Player:
         if self.velocity_y > MAX_FALL_SPEED:
             self.velocity_y = MAX_FALL_SPEED
         
-        # Update horizontal position
-        self.x += self.velocity_x * dt
-        self.rect.x = int(self.x)
+        # Update horizontal position (only if actually moving)
+        if abs(self.velocity_x) > 0:
+            self.x += self.velocity_x * dt
+            self.rect.x = int(self.x)
         
         # Check horizontal collisions with platforms
         for platform in level.platforms:
