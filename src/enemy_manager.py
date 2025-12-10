@@ -7,10 +7,11 @@ from enemy import Enemy
 class EnemyManager:
     """Manages all enemies in the level"""
     
-    def __init__(self):
+    def __init__(self, audio_manager=None):
         self.enemies = []
         self.spawn_timer = 0
         self.spawn_interval = 5.0  # Seconds between spawns
+        self.audio_manager = audio_manager
         
         # Spawn initial enemies
         self.spawn_enemy(400, 500)
@@ -19,7 +20,7 @@ class EnemyManager:
     
     def spawn_enemy(self, x, y):
         """Spawn a new enemy at position"""
-        enemy = Enemy(x, y)
+        enemy = Enemy(x, y, audio_manager=self.audio_manager)
         self.enemies.append(enemy)
     
     def update(self, dt, level, player):

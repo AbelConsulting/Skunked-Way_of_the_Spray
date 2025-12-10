@@ -6,6 +6,7 @@ from player import Player
 from level import Level
 from enemy_manager import EnemyManager
 from ui import UI
+from audio_manager import AudioManager
 
 class Game:
     """Main game controller"""
@@ -15,15 +16,18 @@ class Game:
         self.width = width
         self.height = height
         
+        # Initialize audio
+        self.audio_manager = AudioManager()
+        
         # Game state
         self.state = "MENU"  # MENU, PLAYING, PAUSED, GAME_OVER
         self.score = 0
         self.lives = 3
         
         # Initialize game components
-        self.player = Player(100, 500)
+        self.player = Player(100, 500, audio_manager=self.audio_manager)
         self.level = Level(width, height)
-        self.enemy_manager = EnemyManager()
+        self.enemy_manager = EnemyManager(audio_manager=self.audio_manager)
         self.ui = UI(width, height)
         
         # Camera
@@ -35,12 +39,17 @@ class Game:
             if event.key == pygame.K_ESCAPE:
                 if self.state == "PLAYING":
                     self.state = "PAUSED"
+                    self.audio_manager.play_sound('pause')
+                    self.audio_manager.pause_music()
                 elif self.state == "PAUSED":
                     self.state = "PLAYING"
+                    self.audio_manager.unpause_music()
             elif event.key == pygame.K_RETURN:
                 if self.state == "MENU":
+                    self.audio_manager.play_sound('menu_select')
                     self.start_game()
                 elif self.state == "GAME_OVER":
+                    self.audio_manager.play_sound('menu_select')
                     self.start_game()  # Restart game
         
         if self.state == "PLAYING":
@@ -94,6 +103,8 @@ class Game:
                     self.lives -= 1
                     if self.lives <= 0:
                         self.state = "GAME_OVER"
+                        self.audio_manager.play_sound('game_over')
+                        self.audio_manager.stop_music()
                     else:
                         self.player.reset()
     

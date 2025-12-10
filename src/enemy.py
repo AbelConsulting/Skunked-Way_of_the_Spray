@@ -8,10 +8,11 @@ from sprite_loader import sprite_loader, Animation
 class Enemy:
     """Base enemy class"""
     
-    def __init__(self, x, y, enemy_type="BASIC"):
+    def __init__(self, x, y, enemy_type="BASIC", audio_manager=None):
         self.x = x
         self.y = y
         self.enemy_type = enemy_type
+        self.audio_manager = audio_manager
         
         # Load sprites based on enemy type
         self.load_sprites()
@@ -231,6 +232,13 @@ class Enemy:
     def take_damage(self, damage):
         """Take damage"""
         self.health -= damage
+        
+        # Play appropriate sound
+        if self.audio_manager:
+            if self.health <= 0:
+                self.audio_manager.play_sound('enemy_death')
+            else:
+                self.audio_manager.play_sound('enemy_hit')
     
     def render(self, screen, camera_x):
         """Render the enemy"""

@@ -8,10 +8,11 @@ from sprite_loader import sprite_loader, Animation
 class Player:
     """Player character with combat and platforming abilities"""
     
-    def __init__(self, x, y):
+    def __init__(self, x, y, audio_manager=None):
         # Position and movement
         self.x = x
         self.y = y
+        self.audio_manager = audio_manager
         self.width = 64
         self.height = 64
         self.rect = pygame.Rect(x, y, self.width, self.height)
@@ -185,9 +186,16 @@ class Player:
         
         # Collision with ground
         if self.y >= 500:  # Temporary ground level
+            # Check if we just landed (for sound)
+            just_landed = not was_on_ground and self.velocity_y > 200
+            
             self.y = 500
             self.velocity_y = 0
             self.on_ground = True
+            
+            # Play landing sound if significant fall
+            if just_landed and self.audio_manager:
+                self.audio_manager.play_sound('land', volume=0.5)
         else:
             self.on_ground = False
         
@@ -251,6 +259,10 @@ class Player:
             self.velocity_y = -self.jump_force
             self.on_ground = False
             self.coyote_timer = 0  # Used up coyote time
+            
+            # Play jump sound
+            if self.audio_manager:
+                self.audio_manager.play_sound('jump')
     
     def attack(self):
         """Perform basic attack with combo system"""
@@ -269,6 +281,14 @@ class Player:
             # Scale damage with combo
             combo_multiplier = 1 + (self.combo_count - 1) * 0.2
             self.current_attack_damage = int(self.attack_damage * combo_multiplier)
+            
+            # Play attack sound based on combo
+            if self.audio_manager:
+                self.audio_manager.play_attack_sound(self.combo_count)
+                
+                # Play combo sound on 3rd hit
+                if self.combo_count == 3:
+                    self.audio_manager.play_sound('combo', volume=0.6)
     
     def special_attack(self):
         """Perform Shadow Strike - fast dash attack"""
@@ -287,6 +307,10 @@ class Player:
             # Larger hitbox for special
             self.attack_hitbox.width = 80
             self.attack_hitbox.height = 60
+            
+            # Play shadow strike sound
+            if self.audio_manager:
+                self.audio_manager.play_sound('shadow_strike')
     
     def take_damage(self, damage):
         """Take damage from enemy"""
@@ -302,6 +326,10 @@ class Player:
             # Knockback
             self.velocity_x = -200 if self.facing_right else 200
             self.velocity_y = -300
+            
+            # Play hit sound
+            if self.audio_manager:
+                self.audio_manager.play_sound('player_hit')
     
     def reset(self):
         """Reset player to starting state"""
