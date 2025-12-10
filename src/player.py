@@ -295,13 +295,15 @@ class Player:
             anim_state = "shadow_strike" if self.attack_hitbox.width > 60 else "attack"
         elif not self.on_ground:
             anim_state = "jump"
-        elif abs(self.velocity_x) > 1.0:  # Dead zone: ignore tiny velocities
+        elif abs(self.velocity_x) > 10.0:  # Higher dead zone to prevent idle->walk jitter
             anim_state = "walk"
         
         # Switch animation if state changed
-        if anim_state != self.last_anim_state and self.animations:
-            self.current_anim = self.animations[anim_state]
-            self.current_anim.reset()
+        if anim_state != self.last_anim_state:
+            # Idle is handled as a static sprite, not an animation
+            if anim_state != "idle" and self.animations and anim_state in self.animations:
+                self.current_anim = self.animations[anim_state]
+                self.current_anim.reset()
             self.last_anim_state = anim_state
     
     def jump(self):
