@@ -375,10 +375,9 @@ class Enemy:
                 flash_sprite.fill((255, 255, 255, 180), special_flags=pygame.BLEND_RGB_ADD)
                 sprite = flash_sprite
             
-            # Position sprite - align bottom with collision box bottom, center horizontally
+            # Center sprite on collision box
             sprite_rect = sprite.get_rect()
-            sprite_rect.centerx = screen_x + self.width // 2
-            sprite_rect.bottom = screen_y + self.height
+            sprite_rect.center = (screen_x + self.width // 2, screen_y + self.height // 2)
             screen.blit(sprite, sprite_rect)
         else:
             # Fallback to colored rectangles with hit flash
@@ -394,6 +393,16 @@ class Enemy:
         bar_x = screen_x + (self.width - bar_width) // 2
         pygame.draw.rect(screen, RED, (bar_x, screen_y - 10, bar_width, 5))
         pygame.draw.rect(screen, GREEN, (bar_x, screen_y - 10, int(bar_width * health_ratio), 5))
+        
+        # Debug: Draw collision box outline to see sprite alignment (TEMPORARY)
+        if True:  # Set to False to disable debug
+            pygame.draw.rect(screen, (0, 255, 255), (screen_x, screen_y, self.width, self.height), 2)
+            # Draw sprite bounds if sprite exists
+            if self.animations and self.current_anim:
+                sprite = self.current_anim.get_current_frame()
+                sprite_rect = sprite.get_rect()
+                sprite_rect.center = (screen_x + self.width // 2, screen_y + self.height // 2)
+                pygame.draw.rect(screen, (255, 0, 255), sprite_rect, 2)
         
         # Attack hitbox when attacking (debug)
         if self.is_attacking and False:  # Set to True to see hitboxes
