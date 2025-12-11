@@ -105,13 +105,13 @@ class Level:
     
     def render(self, screen, camera_x):
         """Render the level"""
-        # Sky background with gradient effect
+        # Cyberpunk sky gradient - dark purple to magenta
         for y in range(0, 400, 20):
-            # Gradient from light blue at top to lighter at horizon
             ratio = y / 400
-            r = int(135 + (200 - 135) * ratio)
-            g = int(206 + (230 - 206) * ratio)
-            b = int(250)
+            # Deep purple at top to hot magenta at horizon
+            r = int(25 + (138 - 25) * ratio)
+            g = int(0 + (43 - 0) * ratio)
+            b = int(51 + (226 - 51) * ratio)
             pygame.draw.rect(screen, (r, g, b), (0, y, SCREEN_WIDTH, 20))
         
         # Draw distant mountains (parallax layer 0.2x)
@@ -125,17 +125,17 @@ class Level:
                 base_right = screen_x + mountain['width']
                 base_y = mountain['y']
                 
-                # Mountain silhouette (dark blue-gray)
+                # Mountain silhouette (dark cyan-purple)
                 points = [(peak_x, peak_y), (base_left, base_y), (base_right, base_y)]
-                pygame.draw.polygon(screen, (60, 80, 100), points)
+                pygame.draw.polygon(screen, (20, 30, 60), points)
                 
-                # Snow cap (top 20% of mountain)
+                # Neon cyan peak glow (top 20% of mountain)
                 snow_height = mountain['height'] * 0.2
                 snow_left_x = peak_x - snow_height * 0.5
                 snow_right_x = peak_x + snow_height * 0.5
                 snow_y = peak_y + snow_height
                 snow_points = [(peak_x, peak_y), (snow_left_x, snow_y), (snow_right_x, snow_y)]
-                pygame.draw.polygon(screen, (240, 248, 255), snow_points)
+                pygame.draw.polygon(screen, (0, 255, 255), snow_points)
         
         # Draw clouds with parallax
         for cloud in self.clouds:
@@ -144,16 +144,16 @@ class Level:
             screen_x = cloud['x'] - (camera_x * parallax)
             
             if -cloud['width'] < screen_x < SCREEN_WIDTH:
-                # Draw cloud as overlapping circles
-                color = (255, 255, 255, 180) if cloud['layer'] == 1 else (255, 255, 255, 220)
+                # Draw clouds as neon pink/purple vapor
+                color = (255, 0, 200) if cloud['layer'] == 1 else (200, 0, 255)
                 # Main cloud body
-                pygame.draw.ellipse(screen, (255, 255, 255), 
+                pygame.draw.ellipse(screen, color, 
                                   (screen_x, cloud['y'], cloud['width'], cloud['height']))
                 # Additional puffs for depth
-                pygame.draw.ellipse(screen, (255, 255, 255), 
+                pygame.draw.ellipse(screen, color, 
                                   (screen_x + cloud['width'] * 0.2, cloud['y'] - cloud['height'] * 0.2, 
                                    cloud['width'] * 0.5, cloud['height'] * 0.8))
-                pygame.draw.ellipse(screen, (255, 255, 255), 
+                pygame.draw.ellipse(screen, color, 
                                   (screen_x + cloud['width'] * 0.5, cloud['y'] - cloud['height'] * 0.15, 
                                    cloud['width'] * 0.6, cloud['height'] * 0.9))
         
@@ -163,59 +163,58 @@ class Level:
             
             # Different colors for ground vs floating platforms
             if platform.y >= 580:
-                # Ground - vibrant grass green with texture
-                grass_green = (60, 179, 113)  # Medium sea green
-                dirt_brown = (101, 67, 33)
+                # Ground - neon grid floor
+                base_dark = (10, 10, 30)  # Very dark blue
+                neon_cyan = (0, 255, 255)  # Bright cyan
                 
-                # Draw dirt/earth base
-                pygame.draw.rect(screen, dirt_brown,
+                # Draw dark base
+                pygame.draw.rect(screen, base_dark,
                                (screen_x, platform.y + 8, platform.width, platform.height - 8))
                 
-                # Draw grass top layer
-                pygame.draw.rect(screen, grass_green,
+                # Draw cyan energy layer
+                pygame.draw.rect(screen, (0, 100, 120),
                                (screen_x, platform.y, platform.width, 8))
                 
-                # Add grass texture (lighter green blades)
-                light_grass = (124, 252, 0)  # Lawn green
+                # Add neon grid lines
                 for i in range(0, platform.width, 8):
-                    # Draw small grass blades
+                    # Draw vertical neon lines
                     blade_x = screen_x + i
-                    pygame.draw.line(screen, light_grass, 
+                    pygame.draw.line(screen, neon_cyan, 
                                    (blade_x + 2, platform.y + 7), 
                                    (blade_x + 2, platform.y + 2), 2)
-                    pygame.draw.line(screen, light_grass,
+                    pygame.draw.line(screen, neon_cyan,
                                    (blade_x + 5, platform.y + 7),
                                    (blade_x + 5, platform.y + 3), 2)
                 
-                # Grass top highlight
-                pygame.draw.rect(screen, light_grass,
+                # Bright cyan top edge
+                pygame.draw.rect(screen, neon_cyan,
                                (screen_x, platform.y, platform.width, 2))
             else:
-                # Floating platforms - stone gray with moss accents
-                stone_gray = (120, 120, 120)
-                dark_gray = (80, 80, 80)
-                moss_green = (107, 142, 35)
+                # Floating platforms - holographic purple/magenta
+                base_purple = (60, 20, 80)
+                dark_purple = (30, 10, 50)
+                neon_magenta = (255, 0, 255)
                 
-                # Main stone platform
-                pygame.draw.rect(screen, stone_gray,
+                # Main platform body
+                pygame.draw.rect(screen, base_purple,
                                (screen_x, platform.y, platform.width, platform.height))
                 
-                # Moss accent on top
-                pygame.draw.rect(screen, moss_green,
+                # Neon magenta edge on top
+                pygame.draw.rect(screen, neon_magenta,
                                (screen_x, platform.y, platform.width, 3))
                 
-                # Stone shadow/depth
+                # Dark shadow/depth
                 if platform.height > 10:
-                    pygame.draw.rect(screen, dark_gray,
+                    pygame.draw.rect(screen, dark_purple,
                                    (screen_x, platform.y + 3, platform.width, platform.height - 3))
                 
-                # Top highlight (lighter)
-                highlight_color = (140, 140, 140)
+                # Bright magenta highlight
+                highlight_color = (200, 50, 255)
                 pygame.draw.rect(screen, highlight_color,
                                (screen_x, platform.y, platform.width, 2))
             
-            # Platform outline
-            pygame.draw.rect(screen, BLACK,
+            # Platform outline - neon cyan glow
+            pygame.draw.rect(screen, (0, 255, 255),
                            (screen_x, platform.y, platform.width, platform.height), 2)
         
         # Draw boundaries (visual indicators)
@@ -224,24 +223,24 @@ class Level:
             
             # Only draw if visible on screen
             if -100 < screen_x < screen.get_width() + 100:
-                # Left wall (red barrier)
+                # Left wall (neon magenta barrier)
                 if boundary.x < 0:
                     # Draw warning stripes
                     for i in range(0, self.height, 40):
-                        color = (200, 0, 0) if (i // 40) % 2 == 0 else (150, 0, 0)
+                        color = (255, 0, 150) if (i // 40) % 2 == 0 else (150, 0, 100)
                         pygame.draw.rect(screen, color,
                                        (screen_x, i, 50, 40))
                     # Outline
-                    pygame.draw.rect(screen, (255, 0, 0),
+                    pygame.draw.rect(screen, (255, 0, 255),
                                    (screen_x, 0, 50, self.height), 3)
                 
-                # Right wall (red barrier)
+                # Right wall (neon magenta barrier)
                 elif boundary.x >= self.width:
                     # Draw warning stripes
                     for i in range(0, self.height, 40):
-                        color = (200, 0, 0) if (i // 40) % 2 == 0 else (150, 0, 0)
+                        color = (255, 0, 150) if (i // 40) % 2 == 0 else (150, 0, 100)
                         pygame.draw.rect(screen, color,
                                        (screen_x, i, 50, 40))
                     # Outline
-                    pygame.draw.rect(screen, (255, 0, 0),
+                    pygame.draw.rect(screen, (255, 0, 255),
                                    (screen_x, 0, 50, self.height), 3)

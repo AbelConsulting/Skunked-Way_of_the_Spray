@@ -46,6 +46,15 @@ class Enemy:
         self.facing_right = False
         self.patrol_range = 200
         self.start_x = x
+        self.start_y = y
+        
+        # Flying enemy specific
+        if enemy_type == "FLYING":
+            self.hover_time = 0
+            self.hover_amplitude = 30  # How far up/down to bob
+            self.hover_speed = 2.0  # Speed of bobbing
+            self.dive_cooldown = 0
+            self.is_diving = False
         
         # Combat
         self.is_attacking = False
@@ -164,29 +173,31 @@ class Enemy:
             # Stop movement during hit stun
             self.velocity_x = 0
         
-        # Apply gravity
-        self.velocity_y += GRAVITY * dt
-        if self.velocity_y > MAX_FALL_SPEED:
-            self.velocity_y = MAX_FALL_SPEED
+        # Apply gravity (not for flying enemies)
+        if self.enemy_type != "FLYING":
+            self.velocity_y += GRAVITY * dt
+            if self.velocity_y > MAX_FALL_SPEED:
+                self.velocity_y = MAX_FALL_SPEED
         
         # Update horizontal position (including knockback)
         total_velocity_x = self.velocity_x + self.knockback_velocity_x
         self.x += total_velocity_x * dt
         self.rect.x = int(self.x)
         
-        # Check horizontal collisions with platforms
-        for platform in level.platforms:
-            if self.rect.colliderect(platform):
-                # Push out of platform and turn around
-                if self.velocity_x > 0:  # Moving right
-                    self.x = platform.left - self.width
-                    self.velocity_x = -self.speed
-                    self.facing_right = False
-                elif self.velocity_x < 0:  # Moving left
-                    self.x = platform.right
-                    self.velocity_x = self.speed
-                    self.facing_right = True
-                self.rect.x = int(self.x)
+        # Check horizontal collisions with platforms (not for flying enemies)
+        if self.enemy_type != "FLYING":
+            for platform in level.platforms:
+                if self.rect.colliderect(platform):
+                    # Push out of platform and turn around
+                    if self.velocity_x > 0:  # Moving right
+                        self.x = platform.left - self.width
+                        self.velocity_x = -self.speed
+                        self.facing_right = False
+                    elif self.velocity_x < 0:  # Moving left
+                        self.x = platform.right
+                        self.velocity_x = self.speed
+                        self.facing_right = True
+                    self.rect.x = int(self.x)
         
         # Check boundaries (level edges)
         for boundary in level.boundaries:
@@ -210,22 +221,23 @@ class Enemy:
         self.y += self.velocity_y * dt
         self.rect.y = int(self.y)
         
-        # Check vertical collisions with platforms
-        on_ground = False
-        for platform in level.platforms:
-            if self.rect.colliderect(platform):
-                if self.velocity_y > 0:  # Falling down
-                    # Land on platform
-                    self.y = platform.top - self.height
-                    self.rect.y = int(self.y)
-                    self.velocity_y = 0
-                    on_ground = True
-                    break
-                elif self.velocity_y < 0:  # Jumping up
-                    # Hit head on platform
-                    self.y = platform.bottom
-                    self.rect.y = int(self.y)
-                    self.velocity_y = 0
+        # Check vertical collisions with platforms (not for flying enemies)
+        if self.enemy_type != "FLYING":
+            on_ground = False
+            for platform in level.platforms:
+                if self.rect.colliderect(platform):
+                    if self.velocity_y > 0:  # Falling down
+                        # Land on platform
+                        self.y = platform.top - self.height
+                        self.rect.y = int(self.y)
+                        self.velocity_y = 0
+                        on_ground = True
+                        break
+                    elif self.velocity_y < 0:  # Jumping up
+                        # Hit head on platform
+                        self.y = platform.bottom
+                        self.rect.y = int(self.y)
+                        self.velocity_y = 0
         
         # Update attack
         if self.is_attacking:
@@ -265,22 +277,58 @@ class Enemy:
     
     def patrol(self, dt):
         """Patrol back and forth"""
-        # Turn around at patrol boundaries
-        if self.x <= self.start_x - self.patrol_range:
-            self.velocity_x = self.speed
-            self.facing_right = True
-        elif self.x >= self.start_x + self.patrol_range:
-            self.velocity_x = -self.speed
-            self.facing_right = False
+        if self.enemy_type == "FLYING":
+            # Flying patrol with sinusoidal movement
+            self.hover_time += dt
+            
+            # Horizontal patrol
+            if self.x <= self.start_x - self.patrol_range:
+                self.velocity_x = self.speed
+                self.facing_right = True
+            elif self.x >= self.start_x + self.patrol_range:
+                self.velocity_x = -self.speed
+                self.facing_right = False
+            
+            # Vertical hover (sine wave)
+            hover_offset = self.hover_amplitude * (1 + pygame.math.Vector2(0, 1).rotate(self.hover_time * self.hover_speed * 60).y)
+            target_y = self.start_y + hover_offset - self.hover_amplitude
+            self.velocity_y = (target_y - self.y) * 5  # Smooth movement to target
+        else:
+            # Ground enemy patrol
+            if self.x <= self.start_x - self.patrol_range:
+                self.velocity_x = self.speed
+                self.facing_right = True
+            elif self.x >= self.start_x + self.patrol_range:
+                self.velocity_x = -self.speed
+                self.facing_right = False
     
     def chase(self, dt, player):
         """Chase the player"""
-        if player.x > self.x:
-            self.velocity_x = self.speed
-            self.facing_right = True
+        if self.enemy_type == "FLYING":
+            # Flying chase - move towards player in both axes
+            if player.x > self.x:
+                self.velocity_x = self.speed * 1.2
+                self.facing_right = True
+            else:
+                self.velocity_x = -self.speed * 1.2
+                self.facing_right = False
+            
+            # Vertical chase - try to match player height
+            target_y = player.y - 50  # Fly slightly above player
+            y_diff = target_y - self.y
+            self.velocity_y = y_diff * 3  # Smooth vertical movement
+            
+            # Clamp vertical speed
+            if abs(self.velocity_y) > 300:
+                self.velocity_y = 300 if self.velocity_y > 0 else -300
         else:
-            self.velocity_x = -self.speed
-            self.facing_right = False
+            # Ground enemy chase
+            if player.x > self.x:
+                self.velocity_x = self.speed
+                self.facing_right = True
+            else:
+                self.velocity_x = -self.speed
+                self.facing_right = False
     
     def attack_player(self, dt, player):
         """Attack the player"""
