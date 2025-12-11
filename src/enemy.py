@@ -103,11 +103,11 @@ class Enemy:
                     "hurt": Animation(hurt_frames, 0.1, False)
                 }
             elif self.enemy_type == "FLYING":
-                # Load sprite sheets for flying enemy
+                # Load sprite sheets for flying enemy (40x40 per frame in 120x40 sheets = 3 frames each)
                 frame_size = 40
-                idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", frame_size, frame_size, 4, (64, 64))
-                move_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_move.png", frame_size, frame_size, 6, (64, 64))
-                attack_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_attack.png", frame_size, frame_size, 4, (64, 64))
+                idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", frame_size, frame_size, 3, (64, 64))
+                move_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_move.png", frame_size, frame_size, 3, (64, 64))
+                attack_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_attack.png", frame_size, frame_size, 3, (64, 64))
                 
                 self.animations = {
                     "idle": Animation(idle_frames, 0.2, True),
