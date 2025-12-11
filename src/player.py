@@ -302,11 +302,35 @@ class Player:
         
         # Update attack hitbox position (only while actively attacking)
         if self.is_attacking and self.attack_timer > 0:
-            if self.facing_right:
-                self.attack_hitbox.x = self.rect.right
+            # Check if there are enemies above us (for upward strikes)
+            enemies_above = False
+            if hasattr(self, '_current_enemies'):
+                for enemy in self._current_enemies:
+                    # Enemy is above if their bottom is higher than our top
+                    if enemy.y + enemy.height < self.rect.y + 20:
+                        # And within horizontal attack range
+                        horizontal_dist = abs((enemy.x + enemy.width/2) - (self.x + self.width/2))
+                        if horizontal_dist < 80:
+                            enemies_above = True
+                            break
+            
+            if enemies_above:
+                # Extend attack hitbox upward
+                if self.facing_right:
+                    self.attack_hitbox.x = self.rect.x
+                else:
+                    self.attack_hitbox.x = self.rect.x - 20
+                # Position hitbox to cover upward area
+                self.attack_hitbox.y = self.rect.y - 60  # Reach above
+                self.attack_hitbox.width = self.default_attack_width + 20
+                self.attack_hitbox.height = 80  # Tall hitbox for upward strikes
             else:
-                self.attack_hitbox.x = self.rect.left - self.attack_hitbox.width
-            self.attack_hitbox.y = self.rect.y + 20
+                # Normal horizontal attack
+                if self.facing_right:
+                    self.attack_hitbox.x = self.rect.right
+                else:
+                    self.attack_hitbox.x = self.rect.left - self.attack_hitbox.width
+                self.attack_hitbox.y = self.rect.y + 20
         
         # Update animation state and animate
         self.update_animation_state()

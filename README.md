@@ -160,9 +160,9 @@ Each character has unique attributes:
 - [x] Camera system
 
 ### Phase 2: Polish (In Progress)
-- [ ] Add Ninja Skunk sprite animations
+- [x] Add Ninja Skunk sprite animations
 - [x] Implement Shadow Strike special ability
-- [ ] Add sound effects and music
+- [x] Add sound effects and music
 - [ ] Create multiple levels
 - [ ] Add power-ups and collectibles
 - [ ] Boss battles
@@ -192,12 +192,13 @@ The game includes a complete audio system with procedurally generated placeholde
 - Player: jump, attacks (3 variants), shadow strike, hit, land
 - Enemies: hit, death
 - UI: menu navigation, pause, combo, game over
-- Music: Gameplay background track
+- Music: Gameplay background track + metal guitar pad layer
 
 **Quick Setup:**
 1. **Generate sounds**: `python generate_sounds.py`
 2. **Generate music**: `python generate_music.py`
-3. All audio files placed in `assets/audio/sfx/` and `assets/audio/music/`
+3. **Generate metal guitar pad**: `python generate_metal_sound.py`
+4. All audio files placed in `assets/audio/sfx/` and `assets/audio/music/`
 
 **Replace with Custom Audio:**
 Simply drop your own `.wav` files into `assets/audio/sfx/` or music files (`.ogg`, `.wav`, `.mp3`) into `assets/audio/music/` with matching names.
@@ -218,19 +219,20 @@ The game uses **horizontal sprite sheets** where animation frames are arranged s
 
 **Sprite Sheet Format:**
 ```
-ninja_walk.png = [Frame0][Frame1][Frame2][Frame3][Frame4][Frame5]
-Total: 384×64 pixels (6 frames @ 64x64 each)
+ninja_walk.png = [Frame0][Frame1][Frame2][Frame3]
+Total: 128×32 pixels (4 frames @ 32x32 each, scaled to 64x64 in-game)
 ```
 
 **See [SPRITE_GUIDE.md](SPRITE_GUIDE.md) for detailed instructions!**
 
 ### Frame Counts
-- **Idle**: 4 frames | **Walk**: 6 frames | **Jump**: 4 frames
-- **Attack**: 6 frames | **Shadow Strike**: 8 frames | **Hurt**: 2 frames
+- **Idle**: 1 frame (static, no jitter) | **Walk**: 4 frames | **Jump**: 4 frames
+- **Attack**: 4 frames | **Shadow Strike**: 4 frames | **Hurt**: 2 frames
 
 ### Tools Provided
 - `generate_sounds.py` - Creates all placeholder sound effects
 - `generate_music.py` - Creates background music
+- `generate_metal_sound.py` - Creates the metal guitar pad layer to blend with music
 - `sprite_stitcher.py` - Combines individual frames into sprite sheets
 - `create_frame_folders.py` - Creates organized folders for sprite creation
 - `test_sprites.py` - Verifies all sprites are properly loaded
@@ -278,6 +280,9 @@ This project is open source. See LICENSE file for details.
 - Python/Pygame version: Built with Python and Pygame
 - HTML5 version: Pure JavaScript with HTML5 Canvas
 **Characters**: Based on Skunk Squad
+**Development**: Built with Python and Pygame by MontanaDad
+
+**Characters**: Based on Skunk Squad by MontanaDad  
 
 ---
 

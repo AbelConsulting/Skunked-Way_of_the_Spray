@@ -21,12 +21,18 @@ class Enemy:
         if enemy_type == "BASIC":
             self.width = 48
             self.height = 48
+            self.sprite_width = 48
+            self.sprite_height = 48
         elif enemy_type == "FLYING":
-            self.width = 40
-            self.height = 40
+            self.width = 64
+            self.height = 64
+            self.sprite_width = 64
+            self.sprite_height = 64
         elif enemy_type == "BOSS":
             self.width = 128
             self.height = 128
+            self.sprite_width = 128
+            self.sprite_height = 128
         else:
             self.width = 50
             self.height = 70
@@ -46,6 +52,15 @@ class Enemy:
         self.facing_right = False
         self.patrol_range = 200
         self.start_x = x
+        self.start_y = y
+        
+        # Flying enemy specific
+        if enemy_type == "FLYING":
+            self.hover_time = 0
+            self.hover_amplitude = 30  # How far up/down to bob
+            self.hover_speed = 2.0  # Speed of bobbing
+            self.dive_cooldown = 0
+            self.is_diving = False
         
         # Combat
         self.is_attacking = False
@@ -75,11 +90,11 @@ class Enemy:
         
         try:
             if self.enemy_type == "BASIC":
-                # Load sprite sheets for basic enemy (24x24 per frame in 96x24 sheets)
-                idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", 24, 24, 4, (48, 48))
-                walk_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_walk.png", 24, 24, 4, (48, 48))
-                attack_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_attack.png", 24, 24, 4, (48, 48))
-                hurt_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_hurt.png", 24, 24, 4, (48, 48))
+                # Load sprite sheets for basic enemy (48x48 per frame in 192x48 sheets)
+                idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", 48, 48, 4, (48, 48))
+                walk_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_walk.png", 48, 48, 4, (48, 48))
+                attack_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_attack.png", 48, 48, 4, (48, 48))
+                hurt_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_hurt.png", 48, 48, 4, (48, 48))
                 
                 self.animations = {
                     "idle": Animation(idle_frames, 0.2, True),
@@ -88,11 +103,11 @@ class Enemy:
                     "hurt": Animation(hurt_frames, 0.1, False)
                 }
             elif self.enemy_type == "FLYING":
-                # Load sprite sheets for flying enemy
+                # Load sprite sheets for flying enemy (40x40 per frame in 120x40 sheets = 3 frames each)
                 frame_size = 40
-                idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", frame_size, frame_size, 4, (40, 40))
-                move_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_move.png", frame_size, frame_size, 6, (40, 40))
-                attack_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_attack.png", frame_size, frame_size, 4, (40, 40))
+                idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", frame_size, frame_size, 3, (64, 64))
+                move_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_move.png", frame_size, frame_size, 3, (64, 64))
+                attack_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_attack.png", frame_size, frame_size, 3, (64, 64))
                 
                 self.animations = {
                     "idle": Animation(idle_frames, 0.2, True),
@@ -164,29 +179,31 @@ class Enemy:
             # Stop movement during hit stun
             self.velocity_x = 0
         
-        # Apply gravity
-        self.velocity_y += GRAVITY * dt
-        if self.velocity_y > MAX_FALL_SPEED:
-            self.velocity_y = MAX_FALL_SPEED
+        # Apply gravity (not for flying enemies)
+        if self.enemy_type != "FLYING":
+            self.velocity_y += GRAVITY * dt
+            if self.velocity_y > MAX_FALL_SPEED:
+                self.velocity_y = MAX_FALL_SPEED
         
         # Update horizontal position (including knockback)
         total_velocity_x = self.velocity_x + self.knockback_velocity_x
         self.x += total_velocity_x * dt
         self.rect.x = int(self.x)
         
-        # Check horizontal collisions with platforms
-        for platform in level.platforms:
-            if self.rect.colliderect(platform):
-                # Push out of platform and turn around
-                if self.velocity_x > 0:  # Moving right
-                    self.x = platform.left - self.width
-                    self.velocity_x = -self.speed
-                    self.facing_right = False
-                elif self.velocity_x < 0:  # Moving left
-                    self.x = platform.right
-                    self.velocity_x = self.speed
-                    self.facing_right = True
-                self.rect.x = int(self.x)
+        # Check horizontal collisions with platforms (not for flying enemies)
+        if self.enemy_type != "FLYING":
+            for platform in level.platforms:
+                if self.rect.colliderect(platform):
+                    # Push out of platform and turn around
+                    if self.velocity_x > 0:  # Moving right
+                        self.x = platform.left - self.width
+                        self.velocity_x = -self.speed
+                        self.facing_right = False
+                    elif self.velocity_x < 0:  # Moving left
+                        self.x = platform.right
+                        self.velocity_x = self.speed
+                        self.facing_right = True
+                    self.rect.x = int(self.x)
         
         # Check boundaries (level edges)
         for boundary in level.boundaries:
@@ -210,22 +227,23 @@ class Enemy:
         self.y += self.velocity_y * dt
         self.rect.y = int(self.y)
         
-        # Check vertical collisions with platforms
-        on_ground = False
-        for platform in level.platforms:
-            if self.rect.colliderect(platform):
-                if self.velocity_y > 0:  # Falling down
-                    # Land on platform
-                    self.y = platform.top - self.height
-                    self.rect.y = int(self.y)
-                    self.velocity_y = 0
-                    on_ground = True
-                    break
-                elif self.velocity_y < 0:  # Jumping up
-                    # Hit head on platform
-                    self.y = platform.bottom
-                    self.rect.y = int(self.y)
-                    self.velocity_y = 0
+        # Check vertical collisions with platforms (not for flying enemies)
+        if self.enemy_type != "FLYING":
+            on_ground = False
+            for platform in level.platforms:
+                if self.rect.colliderect(platform):
+                    if self.velocity_y > 0:  # Falling down
+                        # Land on platform
+                        self.y = platform.top - self.height
+                        self.rect.y = int(self.y)
+                        self.velocity_y = 0
+                        on_ground = True
+                        break
+                    elif self.velocity_y < 0:  # Jumping up
+                        # Hit head on platform
+                        self.y = platform.bottom
+                        self.rect.y = int(self.y)
+                        self.velocity_y = 0
         
         # Update attack
         if self.is_attacking:
@@ -265,22 +283,81 @@ class Enemy:
     
     def patrol(self, dt):
         """Patrol back and forth"""
-        # Turn around at patrol boundaries
-        if self.x <= self.start_x - self.patrol_range:
-            self.velocity_x = self.speed
-            self.facing_right = True
-        elif self.x >= self.start_x + self.patrol_range:
-            self.velocity_x = -self.speed
-            self.facing_right = False
+        if self.enemy_type == "FLYING":
+            # Flying patrol with sinusoidal movement
+            self.hover_time += dt
+            
+            # Horizontal patrol
+            if self.x <= self.start_x - self.patrol_range:
+                self.velocity_x = self.speed
+                self.facing_right = True
+            elif self.x >= self.start_x + self.patrol_range:
+                self.velocity_x = -self.speed
+                self.facing_right = False
+            
+            # Vertical hover (sine wave)
+            hover_offset = self.hover_amplitude * (1 + pygame.math.Vector2(0, 1).rotate(self.hover_time * self.hover_speed * 60).y)
+            target_y = self.start_y + hover_offset - self.hover_amplitude
+            self.velocity_y = (target_y - self.y) * 5  # Smooth movement to target
+        else:
+            # Ground enemy patrol
+            if self.x <= self.start_x - self.patrol_range:
+                self.velocity_x = self.speed
+                self.facing_right = True
+            elif self.x >= self.start_x + self.patrol_range:
+                self.velocity_x = -self.speed
+                self.facing_right = False
     
     def chase(self, dt, player):
         """Chase the player"""
-        if player.x > self.x:
-            self.velocity_x = self.speed
-            self.facing_right = True
+        if self.enemy_type == "FLYING":
+            # Check if player is directly below (and close vertically)
+            horizontal_dist = abs(player.x - self.x)
+            vertical_dist = player.y - self.y
+            
+            # If player is below and we're close horizontally, just hover in place
+            if vertical_dist > 60 and horizontal_dist < 40:
+                self.velocity_x = 0
+                # Keep hovering vertically
+                target_y = player.y - 50
+                y_diff = target_y - self.y
+                self.velocity_y = y_diff * 3
+                if abs(self.velocity_y) > 300:
+                    self.velocity_y = 300 if self.velocity_y > 0 else -300
+            else:
+                # Flying chase - move towards player in both axes
+                if player.x > self.x:
+                    self.velocity_x = self.speed * 1.2
+                    self.facing_right = True
+                else:
+                    self.velocity_x = -self.speed * 1.2
+                    self.facing_right = False
+                
+                # Vertical chase - try to match player height
+                target_y = player.y - 50  # Fly slightly above player
+                y_diff = target_y - self.y
+                self.velocity_y = y_diff * 3  # Smooth vertical movement
+                
+                # Clamp vertical speed
+                if abs(self.velocity_y) > 300:
+                    self.velocity_y = 300 if self.velocity_y > 0 else -300
         else:
-            self.velocity_x = -self.speed
-            self.facing_right = False
+            # Ground enemy chase
+            # Check if player is directly above
+            horizontal_dist = abs(player.x - self.x)
+            vertical_dist = self.y - player.y
+            
+            # If player is above and we're close horizontally, stop and idle
+            if vertical_dist > 30 and horizontal_dist < 40:
+                self.velocity_x = 0
+            else:
+                # Normal chase
+                if player.x > self.x:
+                    self.velocity_x = self.speed
+                    self.facing_right = True
+                else:
+                    self.velocity_x = -self.speed
+                    self.facing_right = False
     
     def attack_player(self, dt, player):
         """Attack the player"""
@@ -327,7 +404,7 @@ class Enemy:
                 flash_sprite.fill((255, 255, 255, 180), special_flags=pygame.BLEND_RGB_ADD)
                 sprite = flash_sprite
             
-            # Center sprite on enemy position
+            # Center sprite on collision box
             sprite_rect = sprite.get_rect()
             sprite_rect.center = (screen_x + self.width // 2, screen_y + self.height // 2)
             screen.blit(sprite, sprite_rect)
@@ -345,6 +422,16 @@ class Enemy:
         bar_x = screen_x + (self.width - bar_width) // 2
         pygame.draw.rect(screen, RED, (bar_x, screen_y - 10, bar_width, 5))
         pygame.draw.rect(screen, GREEN, (bar_x, screen_y - 10, int(bar_width * health_ratio), 5))
+        
+        # Debug: Draw collision box outline to see sprite alignment (TEMPORARY)
+        if False:  # Set to False to disable debug
+            pygame.draw.rect(screen, (0, 255, 255), (screen_x, screen_y, self.width, self.height), 2)
+            # Draw sprite bounds if sprite exists
+            if self.animations and self.current_anim:
+                sprite = self.current_anim.get_current_frame()
+                sprite_rect = sprite.get_rect()
+                sprite_rect.center = (screen_x + self.width // 2, screen_y + self.height // 2)
+                pygame.draw.rect(screen, (255, 0, 255), sprite_rect, 2)
         
         # Attack hitbox when attacking (debug)
         if self.is_attacking and False:  # Set to True to see hitboxes

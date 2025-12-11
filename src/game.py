@@ -98,6 +98,9 @@ class Game:
         for hs in self.hit_sparks:
             hs.update(dt)
         
+        # Pass enemy list to player for upward strike detection
+        self.player._current_enemies = self.enemy_manager.enemies
+        
         # Update player
         self.player.update(dt, self.level)
         
