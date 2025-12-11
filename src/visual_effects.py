@@ -34,23 +34,41 @@ class DamageNumber:
         # Fade out over time
         alpha = int(255 * (1 - self.timer / self.lifetime))
         
-        # Color based on type
+        # Color based on damage value/type
         if self.is_critical:
             color = (255, 100, 100)  # Bright red for crits
             size = 24
+        elif self.damage >= 30:
+            color = (255, 255, 0)    # Yellow for high damage
+            size = 20
+        elif self.damage <= 5:
+            color = (100, 200, 255)  # Blue for low damage
+            size = 16
+        elif self.damage < 0:
+            color = (100, 255, 100)  # Green for healing
+            size = 18
         else:
             color = (255, 255, 255)  # White for normal hits
             size = 18
         
-        # Render text
-        text = font.render(str(self.damage), True, color)
+        # Render bold text with outline for pop
+        pop_font = pygame.font.Font(None, size + 8)
+        outline_font = pygame.font.Font(None, size + 12)
+        text_str = str(self.damage)
+        # Black outline
+        outline = outline_font.render(text_str, True, (0, 0, 0))
+        outline.set_alpha(alpha)
+        # Main colored text
+        text = pop_font.render(text_str, True, color)
         text.set_alpha(alpha)
-        
+
         screen_x = int(self.x - camera_x)
         screen_y = int(self.y)
-        
-        # Offset for readability
+
         text_rect = text.get_rect(center=(screen_x, screen_y))
+        outline_rect = outline.get_rect(center=(screen_x, screen_y))
+        # Draw outline first, then main text
+        screen.blit(outline, outline_rect)
         screen.blit(text, text_rect)
 
 
