@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skunk Fu - 2D Beat 'em Up Platformer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+        <div id="loading-screen">
+            <div class="loading-content">
+                <h1>Skunk Fu</h1>
+                <div class="loading-bar">
+                    <div id="loading-progress" class="loading-progress"></div>
+                </div>
+                <p id="loading-text">Loading assets...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/spriteLoader.js"></script>
+    <script src="js/audioManager.js"></script>
+    <script src="js/visualEffects.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/enemy.js"></script>
+    <script src="js/enemyManager.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -22,13 +22,46 @@ A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves 
 
 ## Installation
 
-### Prerequisites
+### 🌐 HTML5 Version (Recommended - Play in Browser!)
+
+The game is now available as an HTML5 web game that runs directly in your browser!
+
+**Quick Start:**
+
+1. Clone the repository:
+```bash
+git clone https://github.com/AbelConsulting/SkunkFU.git
+cd SkunkFU
+```
+
+2. Open `index.html` in your web browser:
+   - **Simple method**: Double-click `index.html` to open in your default browser
+   - **Local server method** (recommended for best compatibility):
+     ```bash
+     # Python 3
+     python -m http.server 8000
+     # Then open http://localhost:8000 in your browser
+     
+     # Or with Node.js
+     npx http-server -p 8000
+     # Then open http://localhost:8000 in your browser
+     ```
+
+3. Start playing! No installation required.
+
+**Browser Requirements:**
+- Modern web browser with HTML5 Canvas support (Chrome, Firefox, Safari, Edge)
+- JavaScript enabled
+
+### 🐍 Python/Pygame Version
+
+**Prerequisites:**
 - Python 3.8 or higher
 - pip package manager
 
-### Setup
+**Setup:**
 
-1. Clone the repository:
+1. Clone the repository (if not already done):
 ```bash
 git clone https://github.com/AbelConsulting/SkunkFU.git
 cd SkunkFU
@@ -60,25 +93,40 @@ python main.py
 
 ```
 SkunkFU/
-├── src/
-│   ├── main.py              # Game entry point
-│   ├── game.py              # Main game controller
-│   ├── config.py            # Game configuration and constants
-│   ├── player.py            # Player character class
-│   ├── enemy.py             # Enemy character class
-│   ├── enemy_manager.py     # Enemy spawning and management
-│   ├── level.py             # Level and platform handling
-│   └── ui.py                # User interface and HUD
+├── index.html              # HTML5 game entry point (NEW!)
+├── styles.css              # HTML5 game styles (NEW!)
+├── js/                     # HTML5 JavaScript game code (NEW!)
+│   ├── main.js             # Game initialization and loop
+│   ├── game.js             # Main game controller
+│   ├── config.js           # Game configuration and constants
+│   ├── utils.js            # Utility functions
+│   ├── player.js           # Player character class
+│   ├── enemy.js            # Enemy character class
+│   ├── enemyManager.js     # Enemy spawning and management
+│   ├── level.js            # Level and platform handling
+│   ├── ui.js               # User interface and HUD
+│   ├── spriteLoader.js     # Sprite loading and animation
+│   ├── audioManager.js     # Audio system
+│   └── visualEffects.js    # Visual effects (damage numbers, etc.)
+├── src/                    # Python/Pygame version
+│   ├── main.py             # Game entry point
+│   ├── game.py             # Main game controller
+│   ├── config.py           # Game configuration and constants
+│   ├── player.py           # Player character class
+│   ├── enemy.py            # Enemy character class
+│   ├── enemy_manager.py    # Enemy spawning and management
+│   ├── level.py            # Level and platform handling
+│   └── ui.py               # User interface and HUD
 ├── assets/
 │   ├── sprites/
-│   │   ├── characters/      # Player character sprites
-│   │   ├── enemies/         # Enemy sprites
-│   │   └── backgrounds/     # Background and tile sprites
+│   │   ├── characters/     # Player character sprites
+│   │   ├── enemies/        # Enemy sprites
+│   │   └── backgrounds/    # Background and tile sprites
 │   └── audio/
-│       ├── music/           # Background music
-│       └── sfx/             # Sound effects
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
+│       ├── music/          # Background music
+│       └── sfx/            # Sound effects
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
 ```
 
 ## Game Architecture
@@ -192,6 +240,35 @@ Total: 128×32 pixels (4 frames @ 32x32 each, scaled to 64x64 in-game)
 **Current Status**: 
 - ✅ **Audio System**: Complete with 14 sound effects and gameplay music!
 - ✅ **Sprite System**: Sprite sheets supported - animations will play automatically when you add multi-frame sheets!
+- ✅ **HTML5 Version**: Full web-based port available! Play directly in your browser!
+
+## Deployment (HTML5 Version)
+
+The HTML5 version can be easily deployed to any static web hosting service:
+
+### GitHub Pages
+1. Push your repository to GitHub
+2. Go to Settings > Pages
+3. Select your branch and root directory
+4. Your game will be available at `https://yourusername.github.io/SkunkFU/`
+
+### Netlify
+1. Drag and drop the entire project folder to [Netlify Drop](https://app.netlify.com/drop)
+2. Or connect your GitHub repository for automatic deployments
+
+### Vercel
+1. Install Vercel CLI: `npm i -g vercel`
+2. Run `vercel` in the project directory
+3. Follow the prompts
+
+### Other Static Hosts
+The game can be hosted on any static web server:
+- Amazon S3 + CloudFront
+- Google Cloud Storage
+- Azure Static Web Apps
+- Any traditional web hosting with static file support
+
+Just upload all files (index.html, styles.css, js/, assets/) to your web server!
 
 ## License
 
@@ -199,6 +276,10 @@ This project is open source. See LICENSE file for details.
 
 ## Credits
 
+**Development**: 
+- Python/Pygame version: Built with Python and Pygame
+- HTML5 version: Pure JavaScript with HTML5 Canvas
+**Characters**: Based on Skunk Squad
 **Development**: Built with Python and Pygame by MontanaDad
 
 **Characters**: Based on Skunk Squad by MontanaDad  
