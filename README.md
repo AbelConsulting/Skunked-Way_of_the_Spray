@@ -199,8 +199,9 @@ This project is open source. See LICENSE file for details.
 
 ## Credits
 
-**Development**: Built with Python and Pygame
-**Characters**: Based on Skunk Squad
+**Development**: Built with Python and Pygame by MontanaDad
+
+**Characters**: Based on Skunk Squad by MontanaDad
 
 ---
 
