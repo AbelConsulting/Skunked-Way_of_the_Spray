@@ -137,7 +137,7 @@ SkunkFU/
 ├── requirements.txt        # Python dependencies
 └── README.md              # This file
 
-SkunkFU/
+SkunkFU/ --python version
 ├── index.html              # HTML5 game entry point (NEW!)
 ├── styles.css              # HTML5 game styles (NEW!)
 ├── js/                     # HTML5 JavaScript game code (NEW!)
@@ -173,7 +173,7 @@ SkunkFU/
 ├── requirements.txt        # Python dependencies
 └── README.md              # This file
 ```
-SkunkFU/
+SkunkFU/ Html5 version
 ├── index.html              # HTML5 game entry point (NEW!)
 ├── styles.css              # HTML5 game styles (NEW!)
 ├── js/                     # HTML5 JavaScript game code (NEW!)
