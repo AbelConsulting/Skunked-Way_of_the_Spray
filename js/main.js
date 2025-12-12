@@ -70,6 +70,10 @@ class GameApp {
         const musicList = [
             ['gameplay', 'assets/audio/music/gameplay.ogg']
         ];
+        
+            // Enable audio on first user interaction (required by browsers)
+            window.addEventListener('keydown', () => audioManager.initialize(), { once: true });
+            window.addEventListener('mousedown', () => audioManager.initialize(), { once: true });
         await audioManager.loadAssets(soundList, musicList);
 
         // Update progress
