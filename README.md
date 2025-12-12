@@ -172,6 +172,42 @@ SkunkFU/ --python version
 │       └── sfx/            # Sound effects
 ├── requirements.txt        # Python dependencies
 └── README.md              # This file
+
+SkunkFU/ Html5 version
+├── index.html              # HTML5 game entry point (NEW!)
+├── styles.css              # HTML5 game styles (NEW!)
+├── js/                     # HTML5 JavaScript game code (NEW!)
+│   ├── main.js             # Game initialization and loop
+│   ├── game.js             # Main game controller
+│   ├── config.js           # Game configuration and constants
+│   ├── utils.js            # Utility functions
+│   ├── player.js           # Player character class
+│   ├── enemy.js            # Enemy character class
+│   ├── enemyManager.js     # Enemy spawning and management
+│   ├── level.js            # Level and platform handling
+│   ├── ui.js               # User interface and HUD
+│   ├── spriteLoader.js     # Sprite loading and animation
+│   ├── audioManager.js     # Audio system
+│   └── visualEffects.js    # Visual effects (damage numbers, etc.)
+├── src/                    # Python/Pygame version
+│   ├── main.py             # Game entry point
+│   ├── game.py             # Main game controller
+│   ├── config.py           # Game configuration and constants
+│   ├── player.py           # Player character class
+│   ├── enemy.py            # Enemy character class
+│   ├── enemy_manager.py    # Enemy spawning and management
+│   ├── level.py            # Level and platform handling
+│   └── ui.py               # User interface and HUD
+├── assets/
+│   ├── sprites/
+│   │   ├── characters/     # Player character sprites
+│   │   ├── enemies/        # Enemy sprites
+│   │   └── backgrounds/    # Background and tile sprites
+│   └── audio/
+│       ├── music/          # Background music
+│       └── sfx/            # Sound effects
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
 ```
 SkunkFU/ Html5 version
 ├── index.html              # HTML5 game entry point (NEW!)
