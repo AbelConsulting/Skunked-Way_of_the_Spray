@@ -1,45 +1,62 @@
-/**
- * Audio manager for music and sound effects
- */
-
 class AudioManager {
     constructor() {
-        this.sounds = {};
-        this.music = {};
+        // Web Audio Context for SFX (Low latency, high polyphony)
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        this.sfxBuffers = {}; // Stores decoded audio data
+        this.musicElements = {}; // Stores HTML5 Audio elements
+        
         this.currentMusic = null;
         this.soundEnabled = true;
         this.musicEnabled = true;
-        this.soundVolume = 0.7;
-        this.musicVolume = 0.5;
+        
+        // Gain Nodes for Volume Control
+        this.masterGain = this.audioCtx.createGain();
+        this.sfxGain = this.audioCtx.createGain();
+        this.musicGain = 1.0; // Handled separately for HTML5 Audio elements
+        
+        this.masterGain.connect(this.audioCtx.destination);
+        this.sfxGain.connect(this.masterGain);
+        
+        // Defaults
+        this.setSoundVolume(0.7);
+        this.setMusicVolume(0.5);
     }
 
     /**
-     * Load a sound effect
+     * Call this on the FIRST user interaction (click/keydown)
+     * to unlock the browser's audio engine.
      */
-    loadSound(name, path) {
-        return new Promise((resolve, reject) => {
-            const audio = new Audio();
-            audio.oncanplaythrough = () => {
-                this.sounds[name] = audio;
-                resolve(audio);
-            };
-            audio.onerror = () => {
-                console.warn(`Failed to load sound: ${path}`);
-                resolve(null); // Don't reject, just continue without this sound
-            };
-            audio.src = path;
-            audio.load();
-        });
+    async initialize() {
+        if (this.audioCtx.state === 'suspended') {
+            await this.audioCtx.resume();
+        }
     }
 
     /**
-     * Load background music
+     * Load a short sound effect into memory (Web Audio API)
+     */
+    async loadSound(name, path) {
+        try {
+            const response = await fetch(path);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+            this.sfxBuffers[name] = audioBuffer;
+            return audioBuffer;
+        } catch (e) {
+            console.warn(`Failed to load sound: ${path}`, e);
+            return null;
+        }
+    }
+
+    /**
+     * Load background music (HTML5 Audio - Streaming)
      */
     loadMusic(name, path) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const audio = new Audio();
             audio.oncanplaythrough = () => {
-                this.music[name] = audio;
+                this.musicElements[name] = audio;
                 resolve(audio);
             };
             audio.onerror = () => {
@@ -52,88 +69,56 @@ class AudioManager {
     }
 
     /**
-     * Load all game audio
+     * Load all assets (Accepts lists as arguments for reusability)
      */
-    async loadAllAudio() {
-        const soundsToLoad = [
-            ['jump', 'assets/audio/sfx/jump.wav'],
-            ['attack1', 'assets/audio/sfx/attack1.wav'],
-            ['attack2', 'assets/audio/sfx/attack2.wav'],
-            ['attack3', 'assets/audio/sfx/attack3.wav'],
-            ['shadow_strike', 'assets/audio/sfx/shadow_strike.wav'],
-            ['player_hit', 'assets/audio/sfx/player_hit.wav'],
-            ['land', 'assets/audio/sfx/land.wav'],
-            ['enemy_hit', 'assets/audio/sfx/enemy_hit.wav'],
-            ['enemy_death', 'assets/audio/sfx/enemy_death.wav'],
-            ['menu_select', 'assets/audio/sfx/menu_select.wav'],
-            ['pause', 'assets/audio/sfx/pause.wav'],
-            ['combo', 'assets/audio/sfx/combo.wav'],
-            ['game_over', 'assets/audio/sfx/game_over.wav']
-        ];
-
-        const musicToLoad = [
-            ['gameplay', 'assets/audio/music/gameplay.ogg']
-        ];
-
-        const soundPromises = soundsToLoad.map(([name, path]) => this.loadSound(name, path));
-        const musicPromises = musicToLoad.map(([name, path]) => this.loadMusic(name, path));
-
+    async loadAssets(soundList, musicList) {
+        const soundPromises = soundList.map(([name, path]) => this.loadSound(name, path));
+        const musicPromises = musicList.map(([name, path]) => this.loadMusic(name, path));
         await Promise.all([...soundPromises, ...musicPromises]);
     }
 
     /**
-     * Play a sound effect
+     * Play a SFX with low latency and automatic overlapping
      */
-    playSound(name, volume = 1.0) {
-        if (!this.soundEnabled || !this.sounds[name]) return;
+    playSound(name, volumeScale = 1.0) {
+        if (!this.soundEnabled || !this.sfxBuffers[name]) return;
 
-        try {
-            const sound = this.sounds[name].cloneNode();
-            sound.volume = this.soundVolume * volume;
-            sound.play().catch(e => console.warn(`Error playing sound ${name}:`, e));
-        } catch (e) {
-            console.warn(`Error playing sound ${name}:`, e);
-        }
+        // Create a source node for this specific instance of the sound
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.sfxBuffers[name];
+
+        // Create a temporary gain node for this specific sound instance
+        const gainNode = this.audioCtx.createGain();
+        gainNode.gain.value = volumeScale; // Individual sound volume adjustment
+
+        // Connect: Source -> Instance Gain -> SFX Group Gain -> Master -> Speakers
+        source.connect(gainNode);
+        gainNode.connect(this.sfxGain);
+
+        source.start(0);
     }
 
-    /**
-     * Play background music
-     */
     playMusic(name, loop = true) {
-        if (!this.musicEnabled || !this.music[name]) return;
+        if (!this.musicEnabled || !this.musicElements[name]) return;
 
-        if (this.currentMusic) {
-            this.currentMusic.pause();
-            this.currentMusic.currentTime = 0;
+        // If same track is requested, just ensure it's playing
+        if (this.currentMusic === this.musicElements[name]) {
+            if (this.currentMusic.paused) this.currentMusic.play();
+            return;
         }
 
-        this.currentMusic = this.music[name];
+        this.stopMusic();
+
+        this.currentMusic = this.musicElements[name];
         this.currentMusic.loop = loop;
-        this.currentMusic.volume = this.musicVolume;
-        this.currentMusic.play().catch(e => console.warn(`Error playing music ${name}:`, e));
-    }
-
-    /**
-     * Pause current music
-     */
-    pauseMusic() {
-        if (this.currentMusic) {
-            this.currentMusic.pause();
+        this.currentMusic.volume = this.musicGain;
+        
+        const playPromise = this.currentMusic.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.warn(`Auto-play blocked for music ${name}:`, e));
         }
     }
 
-    /**
-     * Resume current music
-     */
-    unpauseMusic() {
-        if (this.currentMusic) {
-            this.currentMusic.play().catch(e => console.warn('Error resuming music:', e));
-        }
-    }
-
-    /**
-     * Stop all music
-     */
     stopMusic() {
         if (this.currentMusic) {
             this.currentMusic.pause();
@@ -142,20 +127,26 @@ class AudioManager {
         }
     }
 
-    /**
-     * Set sound volume (0-1)
-     */
-    setSoundVolume(volume) {
-        this.soundVolume = Utils.clamp(volume, 0, 1);
+    toggleMute() {
+        this.soundEnabled = !this.soundEnabled;
+        this.musicEnabled = !this.musicEnabled;
+        
+        if (!this.musicEnabled) this.stopMusic();
+        // Web Audio mute
+        this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1 : 0, this.audioCtx.currentTime);
     }
 
-    /**
-     * Set music volume (0-1)
-     */
-    setMusicVolume(volume) {
-        this.musicVolume = Utils.clamp(volume, 0, 1);
+    setSoundVolume(val) {
+        // Clamp between 0 and 1
+        const volume = Math.max(0, Math.min(1, val));
+        this.sfxGain.gain.setValueAtTime(volume, this.audioCtx.currentTime);
+    }
+
+    setMusicVolume(val) {
+        const volume = Math.max(0, Math.min(1, val));
+        this.musicGain = volume;
         if (this.currentMusic) {
-            this.currentMusic.volume = this.musicVolume;
+            this.currentMusic.volume = volume;
         }
     }
 }
