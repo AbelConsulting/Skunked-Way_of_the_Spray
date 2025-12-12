@@ -110,7 +110,7 @@ class Player:
             # Create animations from frames (idle is handled separately as static sprite)
             self.animations = {
                 "walk": Animation(walk_frames, 0.1, True),
-                "jump": Animation(jump_frames, 0.12, False),
+                "jump": Animation(jump_frames, 0.12, True),
                 "attack": Animation(attack_frames, 0.08, False),
                 "shadow_strike": Animation(shadow_strike_frames, 0.05, False),
                 "hurt": Animation(hurt_frames, 0.1, False)
