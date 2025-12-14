@@ -113,6 +113,7 @@ class Game {
         this.hitSparks = [];
 
         // Start gameplay music
+        console.log('Game: Starting gameplay music');
         this.audioManager.playMusic('gameplay', true);
     }
 

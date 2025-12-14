@@ -60,6 +60,7 @@ class AudioManager {
         return new Promise((resolve) => {
             const audio = new Audio();
             audio.oncanplaythrough = () => {
+                console.log(`AudioManager: Music '${name}' loaded successfully`);
                 this.musicElements[name] = audio;
                 resolve(audio);
             };

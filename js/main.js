@@ -63,9 +63,11 @@ class GameApp {
             ['enemy_hit', 'assets/audio/sfx/enemy_hit.wav'],
             ['enemy_death', 'assets/audio/sfx/enemy_death.wav'],
             ['menu_select', 'assets/audio/sfx/menu_select.wav'],
+            ['menu_move', 'assets/audio/sfx/menu_move.wav'],
             ['pause', 'assets/audio/sfx/pause.wav'],
             ['combo', 'assets/audio/sfx/combo.wav'],
-            ['game_over', 'assets/audio/sfx/game_over.wav']
+            ['game_over', 'assets/audio/sfx/game_over.wav'],
+            ['metal_pad', 'assets/audio/sfx/metal_pad.wav']
         ];
         const musicList = [
             ['gameplay', 'assets/audio/music/gameplay.wav']
