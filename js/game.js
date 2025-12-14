@@ -88,6 +88,13 @@ class Game {
                 this.player.handleInput(key, true);
             }
         });
+
+        window.addEventListener('keyup', (event) => {
+            const key = event.key;
+            if (this.state === "PLAYING") {
+                this.player.handleInput(key, false);
+            }
+        });
     }
 
     handleKeyUp(event) {
