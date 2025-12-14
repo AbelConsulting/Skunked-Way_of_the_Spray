@@ -5,14 +5,14 @@
 console.log('game.js loaded');
 
 class Game {
-    constructor(canvas) {
+    constructor(canvas, audioManager) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.width = Config.SCREEN_WIDTH;
         this.height = Config.SCREEN_HEIGHT;
 
         // Initialize audio
-        this.audioManager = new AudioManager();
+        this.audioManager = audioManager;
 
         // Game state
         this.state = "PLAYING"; // MENU, PLAYING, PAUSED, GAME_OVER

@@ -10,6 +10,7 @@ class GameApp {
         this.loadingText = document.getElementById('loading-text');
         
         this.game = null;
+        this.audioManager = null;
         this.lastTime = 0;
         this.running = false;
 
@@ -25,7 +26,7 @@ class GameApp {
             this.loadingScreen.classList.add('hidden');
 
             // Create game instance
-            this.game = new Game(this.canvas);
+            this.game = new Game(this.canvas, this.audioManager);
 
             // Start game loop
             this.running = true;
@@ -51,7 +52,7 @@ class GameApp {
 
 
         // Load audio
-        const audioManager = new AudioManager();
+        this.audioManager = new AudioManager();
         const soundList = [
             ['jump', 'assets/audio/sfx/jump.wav'],
             ['attack1', 'assets/audio/sfx/attack1.wav'],
@@ -74,9 +75,9 @@ class GameApp {
         ];
         
             // Enable audio on first user interaction (required by browsers)
-            window.addEventListener('keydown', () => audioManager.initialize(), { once: true });
-            window.addEventListener('mousedown', () => audioManager.initialize(), { once: true });
-        await audioManager.loadAssets(soundList, musicList);
+            window.addEventListener('keydown', () => this.audioManager.initialize(), { once: true });
+            window.addEventListener('mousedown', () => this.audioManager.initialize(), { once: true });
+        await this.audioManager.loadAssets(soundList, musicList);
 
         // Update progress
         this.updateLoadingProgress(100);
