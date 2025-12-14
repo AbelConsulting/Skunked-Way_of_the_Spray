@@ -72,6 +72,7 @@ class Game {
                     this.dispatchGameStateChange();
                 }
             } else if (key === 'Enter') {
+            {
                 if (this.state === "MENU") {
                     this.audioManager.playSound('menu_select');
                     this.startGame();
