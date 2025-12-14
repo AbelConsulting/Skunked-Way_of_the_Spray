@@ -55,7 +55,7 @@ class Game {
             const key = event.key;
 
             // Prevent default for game keys
-            if ([" ", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key)) {
+            if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
                 event.preventDefault();
             }
 
@@ -257,3 +257,5 @@ class Game {
         }
     }
 }
+
+console.log('Game class defined');
