@@ -1,14 +1,130 @@
-base<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skunk Fu - 2D Beat 'em Up Platformer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Skunk Fu - 2D Beat 'em Up</title>
     <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* INLINE STYLES FOR MOBILE OPTIMIZATION */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden; /* Prevent scroll */
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* CRITICAL: Stops browser handling gestures */
+            touch-action: none; 
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* --- TOUCH CONTROLS UI --- */
+        #touch-controls {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Let touches pass through empty areas */
+            z-index: 100;
+            display: none; /* Hidden by default, shown via JS if mobile */
+        }
+
+        .control-group {
+            position: absolute;
+            bottom: 20px;
+            pointer-events: auto;
+        }
+
+        #d-pad { left: 20px; }
+        #actions { right: 20px; }
+
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px;
+            user-select: none;
+            outline: none;
+            /* Disable browser touch actions */
+            touch-action: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.95);
+        }
+
+        /* --- OVERLAYS --- */
+        #mobile-start-overlay, #rotate-message {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 200;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        #mobile-start-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* --- ORIENTATION CHECK --- */
+        #rotate-message { display: none; }
+        
+        @media screen and (orientation: portrait) {
+            #rotate-message { display: flex; }
+            #game-container { display: none; }
+        }
+    </style>
 </head>
 <body>
+
+    <div id="rotate-message">
+        <h1>Please Rotate Your Device</h1>
+        <p>Landscape mode required</p>
+    </div>
+
     <div id="game-container">
         <canvas id="game-canvas" width="1280" height="720"></canvas>
+        
         <div id="loading-screen">
             <div class="loading-content">
                 <h1>Skunk Fu</h1>
@@ -18,20 +134,24 @@ base<!DOCTYPE html>
                 <p id="loading-text">Loading assets...</p>
             </div>
         </div>
-        <!-- Touch Controls for Mobile -->
+
         <div id="touch-controls">
-            <button class="touch-btn" id="btn-left">&#8592;</button>
-            <button class="touch-btn" id="btn-right">&#8594;</button>
-            <button class="touch-btn" id="btn-jump">&#8593;</button>
-            <button class="touch-btn" id="btn-attack">&#x2694;</button>
+            <div id="d-pad" class="control-group">
+                <button class="touch-btn" id="btn-left">&#8592;</button>
+                <button class="touch-btn" id="btn-right">&#8594;</button>
+            </div>
+            
+            <div id="actions" class="control-group">
+                <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">&#x2694;</button>
+                <button class="touch-btn" id="btn-jump">&#8593;</button>
+            </div>
         </div>
-        <!-- Mobile Start Overlay -->
+
         <div id="mobile-start-overlay" style="display:none;">
             <button id="mobile-start-btn">Tap to Start</button>
         </div>
     </div>
 
-    <!-- Game scripts -->
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/spriteLoader.js"></script>
@@ -44,33 +164,52 @@ base<!DOCTYPE html>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
     <script src="js/main.js"></script>
+
 <script>
-// Touch controls event mapping
-let leftBtn = document.getElementById('btn-left');
-let rightBtn = document.getElementById('btn-right');
-let jumpBtn = document.getElementById('btn-jump');
-let attackBtn = document.getElementById('btn-attack');
-
-function triggerKeyEvent(key, type) {
-    const event = new KeyboardEvent(type, { key });
-    window.dispatchEvent(event);
-}
-
-if (leftBtn && rightBtn && jumpBtn && attackBtn) {
-    leftBtn.addEventListener('touchstart', e => { e.preventDefault(); triggerKeyEvent('ArrowLeft', 'keydown'); });
-    leftBtn.addEventListener('touchend', e => { e.preventDefault(); triggerKeyEvent('ArrowLeft', 'keyup'); });
-    rightBtn.addEventListener('touchstart', e => { e.preventDefault(); triggerKeyEvent('ArrowRight', 'keydown'); });
-    rightBtn.addEventListener('touchend', e => { e.preventDefault(); triggerKeyEvent('ArrowRight', 'keyup'); });
-    jumpBtn.addEventListener('touchstart', e => { e.preventDefault(); triggerKeyEvent(' ', 'keydown'); triggerKeyEvent('ArrowUp', 'keydown'); });
-    jumpBtn.addEventListener('touchend', e => { e.preventDefault(); triggerKeyEvent(' ', 'keyup'); triggerKeyEvent('ArrowUp', 'keyup'); });
-    attackBtn.addEventListener('touchstart', e => { e.preventDefault(); triggerKeyEvent('z', 'keydown'); });
-    attackBtn.addEventListener('touchend', e => { e.preventDefault(); triggerKeyEvent('z', 'keyup'); });
-}
-
-// Mobile Start Overlay logic
+// --- UTILITIES ---
 function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
+
+function triggerKeyEvent(key, type) {
+    const event = new KeyboardEvent(type, { key: key, code: key });
+    window.dispatchEvent(event);
+}
+
+// --- CONTROLS LOGIC ---
+if (isMobile()) {
+    document.getElementById('touch-controls').style.display = 'block';
+
+    const setupBtn = (id, key) => {
+        const btn = document.getElementById(id);
+        if(!btn) return;
+
+        // Prevent context menu on long press
+        btn.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); return false; };
+
+        // Handle Touch Start
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Critical: stops mouse emulation and scrolling
+            triggerKeyEvent(key, 'keydown');
+            // Special case for Jump to also trigger 'ArrowUp' if your game logic needs it
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown'); 
+        }, { passive: false });
+
+        // Handle Touch End
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            triggerKeyEvent(key, 'keyup');
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keyup');
+        }, { passive: false });
+    };
+
+    setupBtn('btn-left', 'ArrowLeft');
+    setupBtn('btn-right', 'ArrowRight');
+    setupBtn('btn-jump', ' '); // Spacebar
+    setupBtn('btn-attack', 'z'); // 'z' key
+}
+
+// --- MOBILE START & FULLSCREEN ---
 const mobileStartOverlay = document.getElementById('mobile-start-overlay');
 const mobileStartBtn = document.getElementById('mobile-start-btn');
 
@@ -81,17 +220,34 @@ function hideMobileStartOverlay() {
     if (mobileStartOverlay) mobileStartOverlay.style.display = 'none';
 }
 
+function requestFullscreen() {
+    const docEl = document.documentElement;
+    const requestMethod = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+    if (requestMethod) {
+        requestMethod.call(docEl).catch(err => {
+            // Silently fail if user denies or browser blocks
+            console.log("Fullscreen request denied:", err);
+        });
+    }
+}
+
 if (isMobile() && mobileStartBtn) {
-    // Show overlay on load
     showMobileStartOverlay();
-    // Tap to start (simulate ENTER)
+
     mobileStartBtn.addEventListener('touchend', function(e) {
         e.preventDefault();
+        
+        // 1. Enter Fullscreen
+        requestFullscreen();
+
+        // 2. Start Game Logic
         triggerKeyEvent('Enter', 'keydown');
-        triggerKeyEvent('Enter', 'keyup');
+        setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100); // Small delay ensures game registers input
+        
         hideMobileStartOverlay();
     });
-    // Listen for game state changes to show/hide overlay
+
+    // Re-show overlay if game goes back to Menu
     window.addEventListener('gameStateChange', function(e) {
         if (e.detail && (e.detail.state === 'MENU' || e.detail.state === 'GAME_OVER')) {
             showMobileStartOverlay();
