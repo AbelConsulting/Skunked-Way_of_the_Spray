@@ -163,7 +163,7 @@
     <script src="js/enemy.js"></script>
     <script src="js/enemyManager.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/game.js?v=1"></script>
+    <script src="js/game.js?v=2"></script>
     <script src="js/main.js"></script>
 
 <script>
@@ -237,6 +237,8 @@ if (isMobile() && mobileStartBtn) {
 
     mobileStartBtn.addEventListener('touchend', function(e) {
         e.preventDefault();
+        
+        if (!window.gameReady) return; // Wait for game to load
         
         // 1. Enter Fullscreen
         requestFullscreen();

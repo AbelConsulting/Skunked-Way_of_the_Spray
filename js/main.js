@@ -113,4 +113,5 @@ class GameApp {
 // Start the game when DOM is loaded
 window.addEventListener('DOMContentLoaded', () => {
     const gameApp = new GameApp();
+    window.gameReady = true; // Flag for mobile start button
 });
