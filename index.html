@@ -58,6 +58,7 @@
 
         #d-pad { left: 20px; }
         #actions { right: 20px; }
+        #game-over-controls { bottom: 100px; left: 50%; transform: translateX(-50%); }
 
         .touch-btn {
             width: 70px;
@@ -156,7 +157,13 @@
             
             <div id="actions" class="control-group">
                 <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
+                <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
                 <button class="touch-btn" id="btn-jump">&#8593;</button>
+                <button class="touch-btn" id="btn-pause">Pause</button>
+            </div>
+            
+            <div id="game-over-controls" class="control-group">
+                <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
             </div>
         </div>
 
@@ -224,6 +231,27 @@ if (isMobile()) {
     setupBtn('btn-right', 'ArrowRight');
     setupBtn('btn-jump', ' '); // Spacebar
     setupBtn('btn-attack', 'x'); // Regular attack
+    setupBtn('btn-special', 'z'); // Special attack
+    setupBtn('btn-pause', 'Escape'); // Pause
+
+    // Restart button - manual setup since conditional
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) {
+        restartBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerKeyEvent('Enter', 'keydown');
+            setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+        }, { passive: false });
+    }
+
+    // Listen for game state changes to show/hide restart
+    window.addEventListener('gameStateChange', (e) => {
+        if (restartBtn && e.detail.state === 'GAME_OVER') {
+            restartBtn.style.display = 'block';
+        } else if (restartBtn) {
+            restartBtn.style.display = 'none';
+        }
+    });
 }
 
 // --- MOBILE START & FULLSCREEN ---
