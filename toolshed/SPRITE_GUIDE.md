@@ -62,11 +62,12 @@ python sprite_stitcher.py ninja
 | Animation | Frames | Sheet Size | File Name |
 |-----------|--------|------------|-----------|
 | Idle | 4 | 256 × 64 | `ninja_idle.png` |
-| Walk | 6 | 384 × 64 | `ninja_walk.png` |
+| Walk | 4 | 256 × 64 | `ninja_walk.png` |
 | Jump | 4 | 256 × 64 | `ninja_jump.png` |
-| Attack | 6 | 384 × 64 | `ninja_attack.png` |
-| Shadow Strike | 8 | 512 × 64 | `ninja_shadow_strike.png` |
+| Attack | 4 | 256 × 64 | `ninja_attack.png` |
+| Shadow Strike | 4 | 256 × 64 | `ninja_shadow_strike.png` |
 | Hurt | 2 | 128 × 64 | `ninja_hurt.png` |
+> **Note:** The HTML5/JS version expects 4 frames for all main Ninja Skunk actions (walk, jump, attack, shadow strike). Adjust your sprite sheets accordingly. If you want to use more frames, update the frame count in the loader code.
 
 ### Basic Enemy (48x48 per frame)
 
