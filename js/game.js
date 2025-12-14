@@ -49,8 +49,8 @@ class Game {
     }
 
     setupInput() {
-        window.addEventListener('keydown', (e) => {
-            const key = e.key;
+        window.addEventListener('keydown', (event) => {
+            const key = event.key;
 
             // Prevent default for game keys
             if ([" ", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key)) {
