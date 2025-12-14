@@ -15,14 +15,9 @@ class UI {
 
         // Title
         ctx.font = 'bold 72px Arial';
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#FF0000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        
-        const gradient = ctx.createLinearGradient(0, this.height / 2 - 100, 0, this.height / 2);
-        gradient.addColorStop(0, '#FFFFFF');
-        gradient.addColorStop(1, '#AAAAAA');
-        ctx.fillStyle = gradient;
         
         ctx.fillText('SKUNK FU', this.width / 2, this.height / 2 - 100);
 

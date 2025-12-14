@@ -15,7 +15,7 @@ class Game {
         this.audioManager = new AudioManager();
 
         // Game state
-        this.state = "MENU"; // MENU, PLAYING, PAUSED, GAME_OVER
+        this.state = "PLAYING"; // MENU, PLAYING, PAUSED, GAME_OVER
         this.score = 0;
         this.lives = 3;
 
