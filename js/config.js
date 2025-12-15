@@ -52,5 +52,5 @@ const Config = {
     }
     ,
     // Camera startup options: 'center' or 'bottom-left'
-    CAMERA_START: 'center'
+    CAMERA_START: 'bottom-left'
 };
