@@ -263,8 +263,87 @@
             } catch (e) {}
         });
 
+        const copyBtn = document.createElement('button');
+        copyBtn.id = 'touch-copy-logs';
+        copyBtn.textContent = 'Copy logs';
+        copyBtn.style.marginLeft = '8px';
+        copyBtn.style.fontSize = '11px';
+        copyBtn.style.padding = '4px 6px';
+        copyBtn.style.borderRadius = '4px';
+        copyBtn.style.border = 'none';
+        copyBtn.style.background = 'rgba(255,255,255,0.06)';
+        copyBtn.style.color = '#0f0';
+        copyBtn.addEventListener('click', async () => {
+            try {
+                const text = JSON.stringify(window.touchDebug || [], null, 2);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    copyBtn.textContent = 'Copied';
+                    setTimeout(()=> copyBtn.textContent = 'Copy logs', 2000);
+                    logTouchControlEvent('touchLogs_copied', {});
+                } else {
+                    // Fallback: prompt with the data so user can copy manually
+                    prompt('Copy touch logs (Ctrl+C):', text);
+                }
+            } catch (e) {
+                console.warn('copy logs failed', e);
+            }
+        });
+
+        const forceBtn = document.createElement('button');
+        forceBtn.id = 'touch-force-show';
+        forceBtn.textContent = localStorage.getItem('forceTouch') === '1' ? 'Always ON' : 'Always OFF';
+        forceBtn.style.marginLeft = '8px';
+        forceBtn.style.fontSize = '11px';
+        forceBtn.style.padding = '4px 6px';
+        forceBtn.style.borderRadius = '4px';
+        forceBtn.style.border = 'none';
+        forceBtn.style.background = 'rgba(255,255,255,0.06)';
+        forceBtn.style.color = '#0f0';
+        forceBtn.addEventListener('click', () => {
+            try {
+                const current = localStorage.getItem('forceTouch') === '1';
+                localStorage.setItem('forceTouch', current ? '0' : '1');
+                forceBtn.textContent = localStorage.getItem('forceTouch') === '1' ? 'Always ON' : 'Always OFF';
+                window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+                logTouchControlEvent('forceTouchToggled', { enabled: window._forceTouchControls });
+                // apply immediately
+                if (window._forceTouchControls) showTouchControls(3600000);
+            } catch (e) {}
+        });
+
         b.appendChild(send);
+        b.appendChild(copyBtn);
+        b.appendChild(forceBtn);
         document.body.appendChild(b);
+
+    // Initialize forced state from URL param or localStorage.
+    // Make the 'Always ON' mode the default for everyone.
+    try {
+        if (localStorage.getItem('forceTouch') === null) localStorage.setItem('forceTouch', '1');
+        const params = new URLSearchParams(location.search);
+        if (params.get('forceControls') === '1') {
+            localStorage.setItem('forceTouch', '1');
+        }
+        window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+        forceBtn.textContent = window._forceTouchControls ? 'Always ON' : 'Always OFF';
+        // If forced, keep controls visible for an extended duration
+        if (window._forceTouchControls) {
+            try { showTouchControls(3600000); } catch (e) {}
+        }
+    } catch (e) {}
+
+    // Toggle with `c` key to quickly force show/hide when testing
+    window.addEventListener('keydown', (e) => {
+        if (e.key && e.key.toLowerCase() === 'c') {
+            const cur = localStorage.getItem('forceTouch') === '1';
+            localStorage.setItem('forceTouch', cur ? '0' : '1');
+            window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+            forceBtn.textContent = window._forceTouchControls ? 'Always ON' : 'Always OFF';
+            logTouchControlEvent('forceTouchToggled_key', { enabled: window._forceTouchControls });
+            if (window._forceTouchControls) showTouchControls(3600000); else hideTouchControls();
+        }
+    });
     })();
 function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
@@ -536,6 +615,10 @@ window.hideTouchControls = function() {
     const tc = document.getElementById('touch-controls');
     if (!tc) return;
     try {
+        if (window._forceTouchControls) {
+            logTouchControlEvent('hideTouchControls_blockedByForce', {});
+            return;
+        }
         if (window._touchControlsLockUntil && Date.now() < window._touchControlsLockUntil) {
             // Do not hide while lock is active
             logTouchControlEvent('hideTouchControls_blockedByLock', { until: window._touchControlsLockUntil });
@@ -667,13 +750,15 @@ window.addEventListener('gameStateChange', function(e) {
         showTouchControls(800);
 
         // Re-assert visibility for a short duration to mitigate racing hides triggered by
-        // resize/orientation/fullscreen handlers on some devices (e.g., Galaxy S20)
+        // resize/orientation/fullscreen handlers on some devices (e.g., Galaxy S20).
+        // If controls are forced on, reassert for a much longer duration.
         (function reassert(nms){
-            const end = Date.now() + (nms || 700);
+            const duration = window._forceTouchControls ? 3600000 : (nms || 800);
+            const end = Date.now() + duration;
             const tid = setInterval(() => {
                 if (!tc) { clearInterval(tid); return; }
                 try {
-                    showTouchControls(800);
+                    showTouchControls(window._forceTouchControls ? 3600000 : 800);
                 } catch (e) {}
                 if (Date.now() >= end) clearInterval(tid);
             }, 120);
