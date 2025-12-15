@@ -5,7 +5,7 @@ const fs = require('fs');
   const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
 
   const devices = [
-    { name: 'lowend', viewport: { width: 360, height: 640 }, deviceScaleFactor: 0.75, userAgent: 'Mozilla/5.0 (Linux; Android 7.0; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36' },
+    { name: 'lowend', viewport: { width: 360, height: 640 }, deviceScaleFactor: 0.75, userAgent: 'Mozilla/5.0 (Linux; Android 7.0; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36', cameraStart: 'bottom-left' },
     { name: 'narrow', viewport: { width: 360, height: 800 }, deviceScaleFactor: 2, userAgent: 'Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36' },
     { name: 'tall', viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, userAgent: 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36' },
     { name: 'pixel6', viewport: { width: 393, height: 852 }, deviceScaleFactor: 3, userAgent: 'Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0 Mobile Safari/537.36' },
@@ -49,6 +49,18 @@ const fs = require('fs');
       })();
     });
 
+    // Optionally set camera start mode for this run
+    if (d.cameraStart) {
+      await page.evaluate((cs) => {
+        try {
+          if (window.Config) window.Config.CAMERA_START = cs;
+          if (window.game) {
+            window.game.viewWidth = window.game.viewWidth || window.innerWidth;
+            window.game.viewHeight = window.game.viewHeight || window.innerHeight;
+          }
+        } catch (e) { }
+      }, d.cameraStart).catch(() => {});
+    }
     // Start the game by sending Enter
     await page.keyboard.press('Enter');
 
