@@ -323,6 +323,40 @@ if (isMobile() && mobileStartBtn) {
     });
 }
 
+// --- ORIENTATION & MOBILE UI HANDLING ---
+function isLandscape() {
+    return window.matchMedia && window.matchMedia('(orientation: landscape)').matches || window.innerWidth > window.innerHeight;
+}
+
+function updateMobileUI() {
+    if (!isMobile()) return;
+
+    if (!isLandscape()) {
+        // Portrait: force rotate message, hide controls and start overlay
+        const rotate = document.getElementById('rotate-message');
+        if (rotate) rotate.style.display = 'flex';
+        hideMobileStartOverlay();
+        hideMobileRestartOverlay();
+        const tc = document.getElementById('touch-controls');
+        if (tc) tc.style.display = 'none';
+    } else {
+        // Landscape: allow overlays if appropriate
+        const rotate = document.getElementById('rotate-message');
+        if (rotate) rotate.style.display = 'none';
+        // Only show start overlay when game is in MENU and ready
+        if (window.gameReady && window.game && window.game.state === 'MENU') {
+            showMobileStartOverlay();
+        }
+        const tc = document.getElementById('touch-controls');
+        if (tc) tc.style.display = 'block';
+    }
+}
+
+window.addEventListener('orientationchange', updateMobileUI);
+window.addEventListener('resize', updateMobileUI);
+// run once on load
+updateMobileUI();
+
 if (isMobile() && mobileRestartBtn) {
     mobileRestartBtn.addEventListener('touchend', function(e) {
         e.preventDefault();
