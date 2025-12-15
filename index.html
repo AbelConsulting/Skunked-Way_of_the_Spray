@@ -718,7 +718,6 @@ window.hideTouchControls = function() {
 function updateMobileUI() {
     if (!isMobile()) return;
 
-    try { console.log('updateMobileUI invoked', { landscape: isLandscape(), width: window.innerWidth, height: window.innerHeight, pending: !!window._pendingStartGesture, gameReady: !!window.gameReady, state: window.game && window.game.state }); } catch (e) {}
     try { window && window.logTouchControlEvent && window.logTouchControlEvent('updateMobileUI', { landscape: isLandscape(), width: window.innerWidth, height: window.innerHeight }); } catch (e) {}
 
     if (!isLandscape()) {
@@ -745,7 +744,6 @@ function updateMobileUI() {
         // If a start gesture was requested while in portrait, and we are now
         // landscape + menu + ready, dispatch that pending gesture automatically.
         if (window._pendingStartGesture && window.gameReady && window.game && window.game.state === 'MENU') {
-            console.log('PENDING_DISPATCH_RUNNING', { pending: window._pendingStartGesture, gameReady: window.gameReady, state: window.game && window.game.state, landscape: isLandscape() });
             try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStart_pending_dispatch', {}); } catch (e) {}
             window._pendingStartGesture = false;
             if (mobileStartBtn) {
@@ -758,7 +756,6 @@ function updateMobileUI() {
             triggerKeyEvent('Enter', 'keydown');
             setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
             hideMobileStartOverlay();
-            console.log('PENDING_DISPATCH_COMPLETE');
         }
         const tc = document.getElementById('touch-controls');
         // Ensure controls exist and have listeners. Only hide them if the game is NOT playing.
@@ -873,20 +870,6 @@ window.addEventListener('gameStateChange', function(e) {
     } else {
         try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hiding', { state: e && e.detail && e.detail.state }); } catch (e) {}
         hideTouchControls();
-    }
-        // hide with animation
-        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hiding', { state: e && e.detail && e.detail.state }); } catch (e) {}
-        tc.classList.remove('visible');
-        // disable pointer events immediately to avoid ephemeral input
-        tc.style.pointerEvents = 'none';
-        // after transition, set display:none to remove from layout
-        const onEnd = (ev) => {
-            if (ev && ev.target !== tc) return;
-            tc.style.display = 'none';
-            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden', {}); } catch (e) {}
-            tc.removeEventListener('transitionend', onEnd);
-        };
-        tc.addEventListener('transitionend', onEnd);
     }
 });
 

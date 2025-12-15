@@ -6,10 +6,19 @@ const { chromium } = require('playwright');
   const context = await browser.newContext({viewport:{width:360,height:640}, userAgent: 'Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36'});
   const page = await context.newPage();
   page.on('console', msg => console.log('PAGE_CONSOLE:', msg.text()));
-  page.on('pageerror', err => console.log('PAGE_ERROR:', err.message));
+  page.on('pageerror', err => { console.log('PAGE_ERROR:', err.message); try { console.log('PAGE_ERROR_STACK:', err.stack); } catch (e) {} });
 
   // Inject a small hook before the page scripts run to delay spriteLoader.loadAllSprites
   await page.addInitScript(() => {
+    // Basic instrumentation for errors so tests can inspect the first parse/runtime error info
+    window.__lastPageError = null;
+    window.onerror = function(message, source, lineno, colno, error) {
+      window.__lastPageError = { message, source, lineno, colno, stack: error && error.stack };
+    };
+    window.addEventListener('error', function(ev) {
+      try { window.__lastPageError = { message: ev.message || (ev.error && ev.error.message) || 'unknown', source: ev.filename || ev.filename, lineno: ev.lineno, colno: ev.colno, stack: ev.error && ev.error.stack }; } catch (e) {}
+    });
+
     // expose test settings
     window.__delayedSpriteLoader = { delayMs: 3000 };
 
@@ -54,6 +63,8 @@ const { chromium } = require('playwright');
   await page.goto(SERVER);
   // Wait for the canvas element to be present in DOM (may be hidden during load)
   await page.waitForSelector('#game-canvas', { state: 'attached', timeout: 30000 });
+  const lastPageError = await page.evaluate(() => window.__lastPageError || null);
+  console.log('lastPageError on load:', lastPageError);
 
   // Ensure the mobile start overlay/button exists
   const hasBtn = await page.$('#mobile-start-btn');
