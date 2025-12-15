@@ -1,0 +1,34 @@
+{
+  "logs": [
+    {
+      "type": "log",
+      "text": "game.js loaded"
+    },
+    {
+      "type": "log",
+      "text": "Game class defined"
+    },
+    {
+      "type": "log",
+      "text": "Game.startGame() called"
+    },
+    {
+      "type": "log",
+      "text": "Spawn placed on floor at 608 628 floor: 0 700 1280 40"
+    },
+    {
+      "type": "log",
+      "text": "CameraY diagnostic {cameraY: 489, targetCameraY: 547.8907407407407, viewHeight: 231, levelHeight: 720}"
+    }
+  ],
+  "fps": 60,
+  "device": {
+    "name": "tall",
+    "viewport": {
+      "width": 412,
+      "height": 915
+    },
+    "deviceScaleFactor": 3,
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36"
+  }
+}

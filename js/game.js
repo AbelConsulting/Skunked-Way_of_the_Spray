@@ -366,11 +366,17 @@ class Game {
         // Clamp camera to level bounds
         this.cameraX = Utils.clamp(this.cameraX, 0, Math.max(0, this.level.width - this.width));
         // Vertical camera follow to keep player visible on short viewports.
-        // Bias the player lower on mobile so more floor is visible.
-        const verticalBias = this.isMobile ? 0.65 : 0.45;
+        // Use a slightly smaller bias on mobile so the camera stays lower (more floor visible).
+        const verticalBias = this.isMobile ? 0.35 : 0.45;
         const targetCameraY = this.player.y - this.viewHeight * verticalBias;
         this.cameraY = Utils.lerp(this.cameraY || 0, targetCameraY, 0.1);
         this.cameraY = Utils.clamp(this.cameraY, 0, Math.max(0, this.level.height - this.viewHeight));
+        // If the player is very close to the bottom of the level, ensure the camera
+        // snaps to show the floor (avoid small offsets that can hide the floor on some devices).
+        const nearFloorThreshold = 32;
+        if (this.player.y + this.player.height >= this.level.height - nearFloorThreshold) {
+            this.cameraY = Math.max(this.cameraY, Math.max(0, this.level.height - this.viewHeight));
+        }
         // Log first computed cameraY for diagnostics
         if (!this._loggedCameraY && this.state === 'PLAYING') {
             this._loggedCameraY = true;

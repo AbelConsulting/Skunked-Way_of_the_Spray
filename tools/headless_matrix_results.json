@@ -1,0 +1,32 @@
+[
+  {
+    "device": "lowend",
+    "fps": 60,
+    "screenshot": "tools/game_screenshot_lowend.png",
+    "logs": "tools/headless_logs_lowend.json"
+  },
+  {
+    "device": "narrow",
+    "fps": 60,
+    "screenshot": "tools/game_screenshot_narrow.png",
+    "logs": "tools/headless_logs_narrow.json"
+  },
+  {
+    "device": "tall",
+    "fps": 60,
+    "screenshot": "tools/game_screenshot_tall.png",
+    "logs": "tools/headless_logs_tall.json"
+  },
+  {
+    "device": "pixel6",
+    "fps": 60,
+    "screenshot": "tools/game_screenshot_pixel6.png",
+    "logs": "tools/headless_logs_pixel6.json"
+  },
+  {
+    "device": "galaxy-s9",
+    "fps": 60,
+    "screenshot": "tools/game_screenshot_galaxy-s9.png",
+    "logs": "tools/headless_logs_galaxy-s9.json"
+  }
+]

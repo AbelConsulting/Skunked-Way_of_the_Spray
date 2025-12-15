@@ -22,5 +22,13 @@
     }
   ],
   "fps": 60,
-  "device": "low-end-emulation"
+  "device": {
+    "name": "galaxy-s9",
+    "viewport": {
+      "width": 360,
+      "height": 740
+    },
+    "deviceScaleFactor": 3,
+    "userAgent": "Mozilla/5.0 (Linux; Android 8.0; SM-G960U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36"
+  }
 }

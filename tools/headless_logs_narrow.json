@@ -22,5 +22,13 @@
     }
   ],
   "fps": 60,
-  "device": "low-end-emulation"
+  "device": {
+    "name": "narrow",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "deviceScaleFactor": 2,
+    "userAgent": "Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36"
+  }
 }
