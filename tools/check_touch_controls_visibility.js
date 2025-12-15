@@ -34,18 +34,23 @@ const { chromium } = require('playwright');
     // Try clicking the mobile start button as a fallback (simulates user gesture)
     const hasBtn = await page.$('#mobile-start-btn');
     if (hasBtn) {
-      console.log('attempting click on #mobile-start-btn fallback');
-      await page.click('#mobile-start-btn');
+      console.log('attempting DOM click on #mobile-start-btn fallback');
+      // Use evaluate() to invoke .click() even if Playwright considers it not visible
+      await page.evaluate(() => {
+        const b = document.getElementById('mobile-start-btn');
+        if (b) { try { b.click(); } catch (e) { /* ignore */ } }
+      });
       try {
         await page.waitForFunction('window.game && window.game.state === "PLAYING"', { timeout: 5000 });
       } catch (e2) {
-        console.log('fallback click did not start game');
+        console.log('fallback DOM click did not start game');
         const cur2 = await page.evaluate(() => ({ ready: window.gameReady || false, state: (window.game && window.game.state) || null }));
         console.log('debug after fallback:', cur2);
       }
     }
   }
-  await page.waitForTimeout(200);
+  // Allow overlay transition and hide fallback to complete
+  await page.waitForTimeout(600);
   const after = await page.evaluate(()=>{
     const el = document.getElementById('touch-controls');
     if (!el) return {display: 'missing', opacity: null, classList: []};

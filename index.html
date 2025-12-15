@@ -333,12 +333,24 @@ function showMobileStartOverlay() {
 function hideMobileStartOverlay() {
     if (!mobileStartOverlay) return;
     mobileStartOverlay.classList.remove('visible');
+    // Use transitionend to hide after animation, but add a timeout fallback
+    let cleared = false;
     const onEnd = (ev) => {
         if (ev && ev.target !== mobileStartOverlay) return;
+        if (cleared) return;
+        cleared = true;
         mobileStartOverlay.style.display = 'none';
         mobileStartOverlay.removeEventListener('transitionend', onEnd);
+        if (timeoutId) clearTimeout(timeoutId);
     };
     mobileStartOverlay.addEventListener('transitionend', onEnd);
+    // Fallback: ensure element is hidden after transition duration + buffer (240ms + 120ms)
+    const timeoutId = setTimeout(() => {
+        if (cleared) return;
+        cleared = true;
+        mobileStartOverlay.style.display = 'none';
+        mobileStartOverlay.removeEventListener('transitionend', onEnd);
+    }, 400);
 }
 
 function showMobileRestartOverlay() {

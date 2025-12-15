@@ -92,6 +92,8 @@ class GameApp {
 
             // Create game instance (pass mobile flag)
             this.game = new Game(this.canvas, this.audioManager, this.isMobile);
+            // Expose for diagnostic tests and external tooling
+            try { window.game = this.game; window.gameApp = this; } catch (e) { /* ignore in strict contexts */ }
 
             // Mobile-friendly adjustments (debounced resize)
             this.adjustCanvasForMobile();
