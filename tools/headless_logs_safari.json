@@ -1,0 +1,26 @@
+{
+  "logs": [
+    {
+      "type": "log",
+      "text": "game.js loaded"
+    },
+    {
+      "type": "log",
+      "text": "Game class defined"
+    },
+    {
+      "type": "log",
+      "text": "Game.startGame() called"
+    },
+    {
+      "type": "log",
+      "text": "Spawn placed on floor at 608 628 floor: 0 700 1280 40"
+    },
+    {
+      "type": "log",
+      "text": "CameraY diagnostic {cameraY: 330, targetCameraY: 492.24074074074076, viewHeight: 390, levelHeight: 720}"
+    }
+  ],
+  "fps": 65,
+  "device": "safari-mobile-emulation"
+}

@@ -10,15 +10,29 @@ class AudioManager {
         this.soundEnabled = true;
         this.musicEnabled = true;
         
-        // Gain Nodes for Volume Control
-        this.masterGain = this.audioCtx.createGain();
-        this.sfxGain = this.audioCtx.createGain();
+        // Gain Nodes for Volume Control (guard for environments without WebAudio)
         this.musicGain = 1.0; // fallback if WebAudio music routing not used
-        this.musicGainNode = this.audioCtx.createGain();
-
-        this.masterGain.connect(this.audioCtx.destination);
-        this.sfxGain.connect(this.masterGain);
-        this.musicGainNode.connect(this.masterGain);
+        if (this.audioCtx) {
+            try {
+                this.masterGain = this.audioCtx.createGain();
+                this.sfxGain = this.audioCtx.createGain();
+                this.musicGainNode = this.audioCtx.createGain();
+                this.masterGain.connect(this.audioCtx.destination);
+                this.sfxGain.connect(this.masterGain);
+                this.musicGainNode.connect(this.masterGain);
+            } catch (e) {
+                // If WebAudio creation fails, fall back to nulls and continue
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: WebAudio initialization failed', e);
+                this.masterGain = null;
+                this.sfxGain = null;
+                this.musicGainNode = null;
+                this.audioCtx = null;
+            }
+        } else {
+            this.masterGain = null;
+            this.sfxGain = null;
+            this.musicGainNode = null;
+        }
         
         // Defaults
         this.setSoundVolume(0.7);
@@ -31,11 +45,15 @@ class AudioManager {
      */
     async initialize() {
         if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Initializing audio context...');
-        if (this.audioCtx.state === 'suspended') {
-            await this.audioCtx.resume();
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context resumed.');
+        if (this.audioCtx) {
+            if (this.audioCtx.state === 'suspended') {
+                await this.audioCtx.resume();
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context resumed.');
+            } else {
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context already running.');
+            }
         } else {
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context already running.');
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: WebAudio not available; running in fallback mode.');
         }
     }
 
@@ -183,13 +201,13 @@ class AudioManager {
         
         if (!this.musicEnabled) this.stopMusic();
         // Web Audio mute
-        if (this.audioCtx) this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1 : 0, this.audioCtx.currentTime);
+        if (this.audioCtx && this.masterGain) this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1 : 0, this.audioCtx.currentTime);
     }
 
     setSoundVolume(val) {
         // Clamp between 0 and 1
         const volume = Math.max(0, Math.min(1, val));
-        this.sfxGain.gain.setValueAtTime(volume, this.audioCtx.currentTime);
+        if (this.audioCtx && this.sfxGain) this.sfxGain.gain.setValueAtTime(volume, this.audioCtx.currentTime);
     }
 
     setMusicVolume(val) {
