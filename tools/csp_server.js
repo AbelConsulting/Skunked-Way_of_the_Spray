@@ -40,6 +40,28 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Accept POSTed touch logs for diagnostics
+  if (req.method === 'POST' && pathname === '/__touch_log') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const parsed = JSON.parse(body);
+        const destDir = path.join(ROOT, 'tmp-logs');
+        if (!fs.existsSync(destDir)) fs.mkdirSync(destDir);
+        const fname = `touchlog-${Date.now()}.json`;
+        fs.writeFileSync(path.join(destDir, fname), JSON.stringify(parsed, null, 2));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, file: fname }));
+        console.log('Saved touch log', fname);
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false }));
+      }
+    });
+    return;
+  }
+
   const filePath = path.join(ROOT, pathname);
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) return send404(res);

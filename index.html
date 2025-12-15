@@ -241,6 +241,29 @@
         b.style.padding = '6px 8px'; b.style.background = 'rgba(0,0,0,0.6)';
         b.style.color = '#0f0'; b.style.fontSize = '12px'; b.style.borderRadius = '6px';
         b.style.zIndex = 99999; b.style.display = 'none'; b.style.opacity = '0.6';
+
+        // Add a send-logs button when debugTouch is enabled so users can upload logs from device
+        const send = document.createElement('button');
+        send.id = 'touch-send-logs';
+        send.textContent = 'Send logs';
+        send.style.marginLeft = '8px';
+        send.style.fontSize = '11px';
+        send.style.padding = '4px 6px';
+        send.style.borderRadius = '4px';
+        send.style.border = 'none';
+        send.style.background = 'rgba(255,255,255,0.06)';
+        send.style.color = '#0f0';
+        send.addEventListener('click', () => {
+            try {
+                const payload = { logs: window.touchDebug || [], userAgent: navigator.userAgent };
+                fetch('/__touch_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(r => {
+                    if (r.ok) { send.textContent = 'Sent'; setTimeout(()=> send.textContent = 'Send logs', 2000); logTouchControlEvent('touchLogs_sent', {}); }
+                    else { send.textContent = 'Failed'; setTimeout(()=> send.textContent = 'Send logs', 2000); }
+                }).catch(e => { send.textContent = 'Error'; setTimeout(()=> send.textContent = 'Send logs', 2000); });
+            } catch (e) {}
+        });
+
+        b.appendChild(send);
         document.body.appendChild(b);
     })();
 function isMobile() {
@@ -466,8 +489,38 @@ function isLandscape() {
 }
 
 // Helper functions to show/hide touch controls robustly and log attempts.
+function ensureTouchControlsExists() {
+    let tc = document.getElementById('touch-controls');
+    if (tc) return tc;
+    // Re-insert static touch-controls block if it was removed
+    try {
+        const html = `
+        <div id="touch-controls" style="position:fixed; bottom:calc(20px + var(--safe-bottom)); left:0; right:0; transform:none; display:none; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:2000; padding:0 calc(20px + var(--safe-right));">
+            <div id="d-pad" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn" id="btn-left">&#8592;</button>
+                <button class="touch-btn" id="btn-right">&#8594;</button>
+            </div>
+            <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
+            </div>
+            <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
+                <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
+                <button class="touch-btn" id="btn-jump">&#8593;</button>
+                <button class="touch-btn" id="btn-pause">Pause</button>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', html);
+        tc = document.getElementById('touch-controls');
+        if (typeof initTouchControls === 'function') initTouchControls();
+        logTouchControlEvent('touchControls_reinserted', {});
+    } catch (e) { console.warn('ensureTouchControlsExists failed', e); }
+    return document.getElementById('touch-controls');
+}
+
 window.showTouchControls = function(timeoutMs = 1000) {
-    const tc = document.getElementById('touch-controls');
+    const tc = ensureTouchControlsExists();
     if (!tc) return;
     try {
         tc.style.display = 'flex';
@@ -520,6 +573,24 @@ window.hideTouchControls = function() {
     observe();
     setTimeout(observe, 500);
     setTimeout(observe, 2000);
+
+    // Global observer for childList changes to detect removals of touch-controls
+    try {
+        const docMo = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                if (m.type === 'childList') {
+                    for (const n of Array.from(m.removedNodes)) {
+                        try {
+                            if (n && n.id === 'touch-controls') {
+                                try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_removed', {}); } catch (e) {}
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+        });
+        docMo.observe(document.body, { childList: true, subtree: true });
+    } catch (e) { /* ignore */ }
 })();
 
 function updateMobileUI() {
