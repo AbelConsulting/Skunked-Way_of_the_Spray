@@ -46,12 +46,31 @@ class GameApp {
         const cssHeight = Math.max(1, Math.floor(Config.SCREEN_HEIGHT * cssScale));
 
         // Set CSS size so the canvas visually fits the viewport (prevents cutoff)
+        // Account for any on-screen touch UI that may occlude the bottom area.
+        let overlayH = 0;
+        try {
+            const tc = document.getElementById('touch-controls');
+            if (tc && getComputedStyle(tc).display !== 'none') {
+                overlayH = tc.offsetHeight || 0;
+            } else if (tc) {
+                // If controls are hidden but buttons exist, estimate overlay height
+                const btn = tc.querySelector('.touch-btn');
+                if (btn && btn.offsetHeight) overlayH = btn.offsetHeight + 32; // button + padding
+            }
+        } catch (e) {
+            overlayH = 0;
+        }
+
+        // Subtract overlay height from visible CSS height so logical viewport
+        // excludes the area covered by UI controls.
+        const effectiveCssHeight = Math.max(1, cssHeight - overlayH);
+
         this.canvas.style.width = cssWidth + 'px';
-        this.canvas.style.height = cssHeight + 'px';
+        this.canvas.style.height = effectiveCssHeight + 'px';
 
         // Set internal pixel buffer according to CSS size and capped DPR
         this.canvas.width = Math.floor(cssWidth * pixelScale);
-        this.canvas.height = Math.floor(cssHeight * pixelScale);
+        this.canvas.height = Math.floor(effectiveCssHeight * pixelScale);
 
         const ctx = this.canvas.getContext('2d');
         if (ctx) ctx.imageSmoothingEnabled = false;
@@ -60,7 +79,7 @@ class GameApp {
         // can be computed correctly when the canvas is scaled down on mobile.
         if (this.game) {
             this.game.viewWidth = cssWidth;
-            this.game.viewHeight = cssHeight;
+            this.game.viewHeight = effectiveCssHeight;
         }
     }
 
