@@ -122,13 +122,14 @@ class Level {
     }
 
     drawPlatform(ctx, p) {
-           // Cyberpunk neon shadow/glow
-           ctx.save();
-           ctx.shadowColor = this.theme.glow;
-           ctx.shadowBlur = 20;
-           ctx.fillStyle = 'rgba(0,255,247,0.15)';
-           ctx.fillRect(p.x - 8, p.y - 8, p.width + 16, p.height + 16);
-           ctx.restore();
+            // Cyberpunk neon shadow/glow (reduced on mobile for perf)
+            ctx.save();
+            ctx.shadowColor = this.theme.glow;
+            const glowBlur = this.useMobileOptimizations ? 6 : 20;
+            ctx.shadowBlur = glowBlur;
+            ctx.fillStyle = this.useMobileOptimizations ? 'rgba(0,255,247,0.08)' : 'rgba(0,255,247,0.15)';
+            ctx.fillRect(p.x - 8, p.y - 8, p.width + 16, p.height + 16);
+            ctx.restore();
 
            // Neon gradient fill
            const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
@@ -140,7 +141,8 @@ class Level {
            // Neon border
            ctx.save();
            ctx.shadowColor = this.theme.border;
-           ctx.shadowBlur = 10;
+           const borderBlur = this.useMobileOptimizations ? 3 : 10;
+           ctx.shadowBlur = borderBlur;
            ctx.strokeStyle = this.theme.border;
            ctx.lineWidth = 3;
            ctx.strokeRect(p.x, p.y, p.width, p.height);

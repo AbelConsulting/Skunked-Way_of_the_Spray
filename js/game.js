@@ -34,6 +34,8 @@ class Game {
         // Initialize game components
         this.player = new Player(100, 500, this.audioManager);
         this.level = new Level(this.width, this.height);
+        // Keep a flag so Level can reduce visual complexity on mobile
+        this.level.useMobileOptimizations = this.isMobile;
         // Default level data with platforms
         const levelData = {
             width: this.width,
