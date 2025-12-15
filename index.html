@@ -197,6 +197,10 @@
         <!-- legacy mobile restart overlay removed; on-screen touch controls provide restart -->
     </div>
 
+    <!-- Prefer prebuilt bundle when available (falls back to individual scripts) -->
+    <link rel="preload" href="dist/bundle.js" as="script">
+    <script src="dist/bundle.js" nonce="%CSP_NONCE%"></script>
+
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/spriteLoader.js"></script>
