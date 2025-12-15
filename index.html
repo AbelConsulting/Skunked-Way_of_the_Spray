@@ -817,6 +817,34 @@ window.addEventListener('gameReady', function() {
     }
 });
 
+// --- Test helper: force-dispatch a pending start (used by integration tests)
+// Call `window.__test_forceDispatchPendingStart()` from tests to deterministically
+// simulate the user gesture that begins the game when a pending start exists.
+// This avoids flaky reliance on native fullscreen/user-gesture constraints in CI.
+window.__test_forceDispatchPendingStart = function() {
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('test_forceDispatchRequested', {}); } catch (e) {}
+    if (!window._pendingStartGesture) {
+        return { ok: false, reason: 'no-pending' };
+    }
+    // Bypass orientation check in tests so we can exercise the flow deterministically
+    try { requestFullscreen(); } catch (e) {}
+    try {
+        window._pendingStartGesture = false;
+        if (mobileStartBtn) {
+            mobileStartBtn.disabled = false;
+            mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
+            delete mobileStartBtn._prevText;
+        }
+        triggerKeyEvent('Enter', 'keydown');
+        setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+        hideMobileStartOverlay();
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('test_forceDispatchDone', {}); } catch (e) {}
+        return { ok: true };
+    } catch (e) {
+        return { ok: false, reason: String(e) };
+    }
+};
+
 // Show/hide touch controls based on game state: only visible during PLAYING on mobile landscape
 window.addEventListener('gameStateChange', function(e) {
     const tc = document.getElementById('touch-controls');

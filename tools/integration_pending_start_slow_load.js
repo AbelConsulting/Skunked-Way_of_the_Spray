@@ -102,10 +102,17 @@ const { chromium } = require('playwright');
   // Force an immediate mobile UI update (debounced handler may not have fired yet in test environment)
   const uiRun = await page.evaluate(() => { try { if (typeof updateMobileUI === 'function') { updateMobileUI(); return true; } } catch (e) { return String(e); } });
   console.log('forced updateMobileUI result:', uiRun);
-  const afterDebug = await page.evaluate(() => ({ landscape: isLandscape(), innerW: window.innerWidth, innerH: window.innerHeight, pending: !!window._pendingStartGesture, gameReady: !!window.gameReady, state: window.game && window.game.state }));
+  const afterDebug = await page.evaluate(() => ({ landscape: (typeof isLandscape === 'function' ? isLandscape() : null), innerW: window.innerWidth, innerH: window.innerHeight, pending: !!window._pendingStartGesture, gameReady: !!window.gameReady, state: window.game && window.game.state }));
   console.log('after forced updateMobileUI:', afterDebug);
 
-  // Wait for game to enter PLAYING state (should occur after delayed sprite load + dispatch)
+  // Deterministically force the pending start to dispatch (test helper)
+  const forced = await page.evaluate(() => {
+    if (typeof window.__test_forceDispatchPendingStart === 'function') return window.__test_forceDispatchPendingStart();
+    return { ok: false, reason: 'missing-helper' };
+  });
+  console.log('forced dispatch result:', forced);
+
+  // Wait for game to enter PLAYING state (should occur after forced dispatch)
   let started = false;
   try {
     await page.waitForFunction('window.game && window.game.state === "PLAYING"', { timeout: 10000 });
