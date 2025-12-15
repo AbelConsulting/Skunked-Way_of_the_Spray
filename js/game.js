@@ -233,10 +233,16 @@ class Game {
                 this.player.y = floor.y - this.player.height - spawnPadding;
                 console.log('Spawn placed on floor at', this.player.x, this.player.y, 'floor:', floor.x, floor.y, floor.width, floor.height);
                 // Snap camera immediately to the player so the floor is visible on start
-                const targetCamX = this.player.x - (this.viewWidth || this.width) / 3;
-                this.cameraX = Utils.clamp(targetCamX, 0, Math.max(0, this.level.width - (this.viewWidth || this.width)));
-                const targetCamY = this.player.y - (this.viewHeight || this.height) * 0.45;
-                this.cameraY = Utils.clamp(targetCamY, 0, Math.max(0, this.level.height - (this.viewHeight || this.height)));
+                if (Config.CAMERA_START === 'bottom-left') {
+                    // bottom-left: x=0, y = level.height - viewHeight (show floor)
+                    this.cameraX = 0;
+                    this.cameraY = Math.max(0, this.level.height - (this.viewHeight || this.height));
+                } else {
+                    const targetCamX = this.player.x - (this.viewWidth || this.width) / 3;
+                    this.cameraX = Utils.clamp(targetCamX, 0, Math.max(0, this.level.width - (this.viewWidth || this.width)));
+                    const targetCamY = this.player.y - (this.viewHeight || this.height) * 0.45;
+                    this.cameraY = Utils.clamp(targetCamY, 0, Math.max(0, this.level.height - (this.viewHeight || this.height)));
+                }
             } else {
                 this.player.x = 100;
                 this.player.y = this.height - this.player.height - 8;

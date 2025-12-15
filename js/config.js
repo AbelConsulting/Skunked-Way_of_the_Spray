@@ -50,4 +50,7 @@ const Config = {
         enabled: true,
         sensitivity: 1.0 // multiplier for movement responsiveness (1.0 = default)
     }
+    ,
+    // Camera startup options: 'center' or 'bottom-left'
+    CAMERA_START: 'center'
 };
