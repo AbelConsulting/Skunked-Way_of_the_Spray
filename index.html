@@ -8,8 +8,11 @@
     
     <title>Skunk Fu - 2D Beat 'em Up</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
-    <!-- Allow Cloudflare Insights beacon when present; consider tightening in production -->
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com;">
+        <!-- Content Security Policy: configured via HTTP header for stronger enforcement. -->
+        <!-- Server should set a header similar to:
+            Content-Security-Policy: script-src 'self' 'nonce-<random>' https://static.cloudflareinsights.com; object-src 'none'; base-uri 'self';
+            The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
+        -->
     <link rel="stylesheet" href="styles.css">
 
     <style>
@@ -184,7 +187,7 @@
     <script src="js/game.js?v=6"></script>
     <script src="js/main.js"></script>
 
-<script>
+<script nonce="%CSP_NONCE%">
 // --- UTILITIES ---
 function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
