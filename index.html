@@ -149,23 +149,7 @@
             </div>
         </div>
 
-        <div id="touch-controls">
-            <div id="d-pad" class="control-group">
-                <button class="touch-btn" id="btn-left">&#8592;</button>
-                <button class="touch-btn" id="btn-right">&#8594;</button>
-            </div>
-            
-            <div id="actions" class="control-group">
-                <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
-                <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
-                <button class="touch-btn" id="btn-jump">&#8593;</button>
-                <button class="touch-btn" id="btn-pause">Pause</button>
-            </div>
-            
-            <div id="game-over-controls" class="control-group">
-                <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
-            </div>
-        </div>
+        <!-- Touch controls moved out of #game-container to avoid transform/layout issues -->
 
         <div id="mobile-start-overlay" style="display:none;">
             <button id="mobile-start-btn">Tap to Start</button>
@@ -211,25 +195,21 @@ function triggerKeyEvent(key, type) {
 }
 
 // --- CONTROLS LOGIC ---
-if (isMobile()) {
-    document.getElementById('touch-controls').style.display = 'block';
+function initTouchControls() {
+    if (!isMobile()) return;
 
     const setupBtn = (id, key) => {
         const btn = document.getElementById(id);
         if(!btn) return;
 
-        // Prevent context menu on long press
         btn.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); return false; };
 
-        // Handle Touch Start
         btn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Critical: stops mouse emulation and scrolling
+            e.preventDefault();
             triggerKeyEvent(key, 'keydown');
-            // Special case for Jump to also trigger 'ArrowUp' if your game logic needs it
-            if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown'); 
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown');
         }, { passive: false });
 
-        // Handle Touch End
         btn.addEventListener('touchend', (e) => {
             e.preventDefault();
             triggerKeyEvent(key, 'keyup');
@@ -239,12 +219,12 @@ if (isMobile()) {
 
     setupBtn('btn-left', 'ArrowLeft');
     setupBtn('btn-right', 'ArrowRight');
-    setupBtn('btn-jump', ' '); // Spacebar
-    setupBtn('btn-attack', 'x'); // Regular attack
-    setupBtn('btn-special', 'z'); // Special attack
-    setupBtn('btn-pause', 'Escape'); // Pause
+    setupBtn('btn-jump', ' ');
+    setupBtn('btn-attack', 'x');
+    setupBtn('btn-special', 'z');
+    setupBtn('btn-pause', 'Escape');
 
-    // Restart button - manual setup since conditional
+    // Restart button handler
     const restartBtn = document.getElementById('btn-restart');
     if (restartBtn) {
         restartBtn.addEventListener('touchstart', (e) => {
@@ -254,7 +234,7 @@ if (isMobile()) {
         }, { passive: false });
     }
 
-    // Listen for game state changes to show/hide restart
+    // Show/hide restart on game state
     window.addEventListener('gameStateChange', (e) => {
         if (restartBtn && e.detail.state === 'GAME_OVER') {
             restartBtn.style.display = 'block';
@@ -348,7 +328,9 @@ function updateMobileUI() {
             showMobileStartOverlay();
         }
         const tc = document.getElementById('touch-controls');
-        if (tc) tc.style.display = 'block';
+        if (tc) tc.style.display = 'flex';
+        // Ensure controls have listeners
+        initTouchControls();
     }
 }
 
@@ -408,6 +390,28 @@ if (isMobile() && mobileRestartBtn) {
         console.error(msg);
         showError(msg);
     });
+})();
+
+/* Re-insert touch controls as a fixed overlay so transforms on #game-container don't affect layout */
+(function() {
+    const html = `
+    <div id="touch-controls" style="position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:2000; padding:0 20px;">
+        <div id="d-pad" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <button class="touch-btn" id="btn-left">&#8592;</button>
+            <button class="touch-btn" id="btn-right">&#8594;</button>
+        </div>
+        <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
+        </div>
+        <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
+            <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
+            <button class="touch-btn" id="btn-jump">&#8593;</button>
+            <button class="touch-btn" id="btn-pause">Pause</button>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
 })();
 </script>
 </body>
