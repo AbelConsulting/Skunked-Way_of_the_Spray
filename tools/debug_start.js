@@ -22,9 +22,13 @@ const { chromium } = require('playwright');
       touchDisplay: tc ? getComputedStyle(tc).display : null,
       touchOpacity: tc ? getComputedStyle(tc).opacity : null,
       mobileStartDisplay: ms ? getComputedStyle(ms).display : null,
-      mobileStartClass: ms ? Array.from(ms.classList) : []
+      mobileStartClass: ms ? Array.from(ms.classList) : [],
+      debugLog: window.touchDebug || []
     };
   });
-  console.log('touch info:', touch);
+  console.log('touch info:', { touchExists: touch.touchExists, touchDisplay: touch.touchDisplay, touchOpacity: touch.touchOpacity, mobileStartDisplay: touch.mobileStartDisplay, mobileStartClass: touch.mobileStartClass, debugLogLen: (touch.debugLog||[]).length });
+  // Print last few debug entries for easier diagnosis
+  const debugLog = (touch.debugLog || []).slice(-10);
+  if (debugLog.length) console.log('last touchDebug entries:', debugLog);
   await browser.close();
 })();
