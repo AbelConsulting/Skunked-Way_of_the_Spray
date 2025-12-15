@@ -61,6 +61,14 @@
             pointer-events: none; /* Let touches pass through empty areas */
             z-index: 100;
             display: none; /* Hidden by default, shown via JS if mobile */
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        #touch-controls.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .control-group {
@@ -109,6 +117,9 @@
             z-index: 200;
             color: white;
             font-family: sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 240ms cubic-bezier(.2,.9,.2,1), transform 240ms cubic-bezier(.2,.9,.2,1);
         }
 
         #mobile-start-btn {
@@ -120,6 +131,11 @@
             border-radius: 8px;
             text-transform: uppercase;
             font-weight: bold;
+        }
+
+        #mobile-start-overlay.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         #mobile-restart-btn {
@@ -308,10 +324,21 @@ const mobileStartBtn = document.getElementById('mobile-start-btn');
 const mobileRestartOverlay = document.getElementById('mobile-restart-overlay');
 
 function showMobileStartOverlay() {
-    if (mobileStartOverlay) mobileStartOverlay.style.display = 'flex';
+    if (!mobileStartOverlay) return;
+    if (getComputedStyle(mobileStartOverlay).display === 'none') mobileStartOverlay.style.display = 'flex';
+    // trigger transition
+    void mobileStartOverlay.offsetWidth;
+    mobileStartOverlay.classList.add('visible');
 }
 function hideMobileStartOverlay() {
-    if (mobileStartOverlay) mobileStartOverlay.style.display = 'none';
+    if (!mobileStartOverlay) return;
+    mobileStartOverlay.classList.remove('visible');
+    const onEnd = (ev) => {
+        if (ev && ev.target !== mobileStartOverlay) return;
+        mobileStartOverlay.style.display = 'none';
+        mobileStartOverlay.removeEventListener('transitionend', onEnd);
+    };
+    mobileStartOverlay.addEventListener('transitionend', onEnd);
 }
 
 function showMobileRestartOverlay() {
@@ -421,9 +448,21 @@ window.addEventListener('gameStateChange', function(e) {
     if (!isMobile()) { tc.style.display = 'none'; return; }
     if (!isLandscape()) { tc.style.display = 'none'; return; }
     if (e && e.detail && e.detail.state === 'PLAYING') {
-        tc.style.display = 'flex';
+        // show with animation
+        if (tc.style.display === 'none' || getComputedStyle(tc).display === 'none') tc.style.display = 'flex';
+        // force reflow then add visible class to trigger transition
+        void tc.offsetWidth;
+        tc.classList.add('visible');
     } else {
-        tc.style.display = 'none';
+        // hide with animation
+        tc.classList.remove('visible');
+        // after transition, set display:none to remove from layout
+        const onEnd = (ev) => {
+            if (ev && ev.target !== tc) return;
+            tc.style.display = 'none';
+            tc.removeEventListener('transitionend', onEnd);
+        };
+        tc.addEventListener('transitionend', onEnd);
     }
 });
 

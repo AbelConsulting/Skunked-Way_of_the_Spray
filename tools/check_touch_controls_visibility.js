@@ -9,7 +9,13 @@ const { chromium } = require('playwright');
   await page.waitForSelector('#game-canvas');
   const before = await page.evaluate(()=>{
     const el = document.getElementById('touch-controls');
-    return el ? getComputedStyle(el).display : 'missing';
+    if (!el) return {display: 'missing', opacity: null, classList: []};
+    return { display: getComputedStyle(el).display, opacity: getComputedStyle(el).opacity, classList: Array.from(el.classList) };
+  });
+  const startBefore = await page.evaluate(()=>{
+    const el = document.getElementById('mobile-start-overlay');
+    if (!el) return {display: 'missing', opacity: null, classList: []};
+    return { display: getComputedStyle(el).display, opacity: getComputedStyle(el).opacity, classList: Array.from(el.classList) };
   });
   console.log('touch-controls before start:', before);
   // Wait for game readiness, then press Enter to start
@@ -24,8 +30,16 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(200);
   const after = await page.evaluate(()=>{
     const el = document.getElementById('touch-controls');
-    return el ? getComputedStyle(el).display : 'missing';
+    if (!el) return {display: 'missing', opacity: null, classList: []};
+    return { display: getComputedStyle(el).display, opacity: getComputedStyle(el).opacity, classList: Array.from(el.classList) };
+  });
+  const startAfter = await page.evaluate(()=>{
+    const el = document.getElementById('mobile-start-overlay');
+    if (!el) return {display: 'missing', opacity: null, classList: []};
+    return { display: getComputedStyle(el).display, opacity: getComputedStyle(el).opacity, classList: Array.from(el.classList) };
   });
   console.log('touch-controls after start:', after);
+  console.log('mobile-start-overlay before start:', startBefore);
+  console.log('mobile-start-overlay after start:', startAfter);
   await browser.close();
 })();
