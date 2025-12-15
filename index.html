@@ -212,6 +212,37 @@
 
     <script nonce="%CSP_NONCE%">
 // --- UTILITIES ---
+    // Touch-control visibility debug helper
+    window.touchDebug = window.touchDebug || [];
+    function logTouchControlEvent(name, data) {
+        try {
+            const ts = Date.now();
+            const entry = { ts, name, data };
+            window.touchDebug.push(entry);
+            // cap storage
+            if (window.touchDebug.length > 200) window.touchDebug.shift();
+            console.log('touchDebug:', name, data);
+            // update on-screen badge if present
+            const badge = document.getElementById('touch-debug-badge');
+            if (badge && (location.search.indexOf('debugTouch=1') !== -1 || localStorage.getItem('debugTouch') === '1')) {
+                badge.textContent = `${name} @ ${new Date(ts).toLocaleTimeString()}`;
+                badge.style.display = 'block';
+                badge.style.opacity = '1';
+                setTimeout(() => { badge.style.opacity = '0.6'; }, 1200);
+            }
+        } catch (e) { console.warn('logTouchControlEvent failed', e); }
+    }
+
+    // Small on-screen badge (only visible when debugTouch enabled via URL or localStorage)
+    ;(function(){
+        const b = document.createElement('div');
+        b.id = 'touch-debug-badge';
+        b.style.position = 'fixed'; b.style.right = '8px'; b.style.top = '8px';
+        b.style.padding = '6px 8px'; b.style.background = 'rgba(0,0,0,0.6)';
+        b.style.color = '#0f0'; b.style.fontSize = '12px'; b.style.borderRadius = '6px';
+        b.style.zIndex = 99999; b.style.display = 'none'; b.style.opacity = '0.6';
+        document.body.appendChild(b);
+    })();
 function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
@@ -265,8 +296,16 @@ function debounce(func, wait = 150) {
 // --- CONTROLS LOGIC ---
 function initTouchControls() {
     if (!isMobile()) return;
-    // If new TouchControls module exists, it will create controls and handle wiring.
-    if (window.TouchControls) return;
+    // If TouchControls class exists and no container is present, let it create and handle wiring.
+    if (window.TouchControls && !document.getElementById('touch-controls')) {
+        try {
+            new TouchControls({ enabled: true, sensitivity: Config.TOUCH_UI.sensitivity });
+        } catch (e) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('TouchControls init failed', e);
+        }
+        return;
+    }
+    // Otherwise bind handlers to existing DOM buttons (static HTML fallback)
 
     const setupBtn = (id, key) => {
         const btn = document.getElementById(id);
@@ -278,11 +317,13 @@ function initTouchControls() {
             try { e && e.preventDefault(); } catch (_) {}
             triggerKeyEvent(key, 'keydown');
             if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown');
+            logTouchControlEvent('touch_down', { button: id, key });
         };
         const upHandler = (e) => {
             try { e && e.preventDefault(); } catch (_) {}
             triggerKeyEvent(key, 'keyup');
             if(key === ' ') triggerKeyEvent('ArrowUp', 'keyup');
+            logTouchControlEvent('touch_up', { button: id, key });
         };
 
         btn.addEventListener('touchstart', downHandler, { passive: false });
@@ -450,6 +491,19 @@ function updateMobileUI() {
 const debouncedUpdateMobileUI = debounce(updateMobileUI, 180);
 window.addEventListener('orientationchange', debouncedUpdateMobileUI);
 window.addEventListener('resize', debouncedUpdateMobileUI);
+// Ensure fullscreen transitions also update mobile UI and re-show controls when appropriate
+document.addEventListener('fullscreenchange', () => {
+    // Let the browser stabilize then re-evaluate UI
+    setTimeout(() => debouncedUpdateMobileUI(), 150);
+    // If the game is playing after entering fullscreen, force-show controls
+    setTimeout(() => {
+        const tc = document.getElementById('touch-controls');
+        if (!tc) return;
+        if (window.game && window.game.state === 'PLAYING' && isMobile() && isLandscape()) {
+            tc.style.display = 'flex'; tc.style.pointerEvents = 'auto'; void tc.offsetWidth; tc.classList.add('visible');
+        }
+    }, 200);
+});
 // run once on load (use non-debounced immediate call so layout is correct)
 updateMobileUI();
 
@@ -457,17 +511,27 @@ updateMobileUI();
 window.addEventListener('gameStateChange', function(e) {
     const tc = document.getElementById('touch-controls');
     if (!tc) return;
-    if (!isMobile()) { tc.style.display = 'none'; return; }
-    if (!isLandscape()) { tc.style.display = 'none'; return; }
+    if (!isMobile()) { tc.style.display = 'none'; tc.style.pointerEvents = 'none'; return; }
+    if (!isLandscape()) { tc.style.display = 'none'; tc.style.pointerEvents = 'none'; return; }
     if (e && e.detail && e.detail.state === 'PLAYING') {
         // show with animation
         if (tc.style.display === 'none' || getComputedStyle(tc).display === 'none') tc.style.display = 'flex';
+        // enable pointer events so buttons are interactive
+        tc.style.pointerEvents = 'auto';
         // force reflow then add visible class to trigger transition
         void tc.offsetWidth;
         tc.classList.add('visible');
+        // guard against other listeners overriding display by re-applying after animation
+        setTimeout(() => {
+            if (getComputedStyle(tc).display !== 'flex') tc.style.display = 'flex';
+            if (!tc.classList.contains('visible')) tc.classList.add('visible');
+            tc.style.pointerEvents = 'auto';
+        }, 120);
     } else {
         // hide with animation
         tc.classList.remove('visible');
+        // disable pointer events immediately to avoid ephemeral input
+        tc.style.pointerEvents = 'none';
         // after transition, set display:none to remove from layout
         const onEnd = (ev) => {
             if (ev && ev.target !== tc) return;
