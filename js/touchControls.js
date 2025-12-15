@@ -109,8 +109,12 @@
             this._bindButton(attackBtn, 'attack');
             this._bindButton(restartBtn, 'restart');
 
+            // Log creation
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_created', { touchControls: true }); } catch (e) {}
+
             // Show/hide restart button on game state changes
             window.addEventListener('gameStateChange', (e) => {
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('gameStateChange', { state: e && e.detail && e.detail.state }); } catch (e) {}
                 if (!e || !e.detail) return;
                 const st = e.detail.state;
                 if (st === 'GAME_OVER') {
