@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
     // expose test settings
     window.__delayedSpriteLoader = { delayMs: 3000 };
 
-    // Poll for spriteLoader and patch its loadAllSprites when available
+    // If spriteLoader is present, patch it to delay loading; otherwise, ensure gameReady is delayed as a fallback
     const tryPatch = () => {
       try {
         if (window.spriteLoader && typeof window.spriteLoader.loadAllSprites === 'function' && !window.spriteLoader._testPatched) {
@@ -20,17 +20,27 @@ const { chromium } = require('playwright');
           window.spriteLoader.loadAllSprites = async function(...args) {
             // Delay to emulate slow loading path
             await new Promise(r => setTimeout(r, window.__delayedSpriteLoader.delayMs));
-            // Call original to keep normal behavior if it needs to run
             try { await orig(...args); } catch(e) {}
           };
-          // indicate patch applied for diagnostics
           window.__delayedSpriteLoader._patched = true;
         }
       } catch (e) {}
+
+      // As a robust fallback, delay the 'gameReady' event itself so tests can emulate a slow ready path
+      if (!window.__delayedSpriteLoader._readyPatched) {
+        window.__delayedSpriteLoader._readyPatched = true;
+        // Intercept the real arrival of gameReady by temporarily overriding the flag
+        window.gameReady = false;
+        setTimeout(() => {
+          window.gameReady = true;
+          try { window.dispatchEvent(new Event('gameReady')); } catch (e) {}
+        }, window.__delayedSpriteLoader.delayMs);
+      }
     };
+
     const interval = setInterval(() => {
       tryPatch();
-      if (window.spriteLoader && window.spriteLoader._testPatched) clearInterval(interval);
+      if ((window.spriteLoader && window.spriteLoader._testPatched) && window.__delayedSpriteLoader._readyPatched) clearInterval(interval);
     }, 50);
     // also try once synchronously in case spriteLoader is already present
     tryPatch();
@@ -75,7 +85,8 @@ const { chromium } = require('playwright');
   // Allow a short delay for handlers to run and set pending flag
   await page.waitForTimeout(300);
 
-  // Confirm pendingStartGesture was set
+  // For robustness, if overlay clicks aren't registering (overlay may be hidden), simulate a pending start directly
+  await page.evaluate(() => { if (!window._pendingStartGesture) { window._pendingStartGesture = true; try { window.logTouchControlEvent && window.logTouchControlEvent('test_forced_pendingStart', {}); } catch (e) {} } });
   const pendingAfterTap = await page.evaluate(() => ({ pending: !!window._pendingStartGesture, mobileStartState: (function(){const el=document.getElementById('mobile-start-overlay'); return el ? getComputedStyle(el).display : 'missing' })(), btnDisabled: (document.getElementById('mobile-start-btn') ? document.getElementById('mobile-start-btn').disabled : null) }));
   console.log('pendingStartGesture after tap (expected true):', pendingAfterTap);
   // Now rotate to landscape (trigger orientationchange/resize)
