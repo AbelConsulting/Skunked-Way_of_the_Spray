@@ -97,9 +97,9 @@ class EnemyManager {
         return false;
     }
 
-    draw(ctx, cameraX = 0) {
+    draw(ctx, cameraX = 0, cameraY = 0) {
         for (const enemy of this.enemies) {
-            enemy.draw(ctx, cameraX);
+            enemy.draw(ctx, cameraX, cameraY);
         }
     }
 

@@ -368,9 +368,9 @@ class Player {
         }
     }
 
-    draw(ctx, cameraX = 0) {
+    draw(ctx, cameraX = 0, cameraY = 0) {
         ctx.save();
-        ctx.translate(-cameraX, 0);
+        ctx.translate(-cameraX, -cameraY);
 
         // Draw shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';

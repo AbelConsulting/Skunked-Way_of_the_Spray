@@ -10,6 +10,9 @@ class Game {
         this.ctx = canvas.getContext('2d');
         this.width = Config.SCREEN_WIDTH;
         this.height = Config.SCREEN_HEIGHT;
+        // The viewport size (logical) - may be smaller than world on mobile
+        this.viewWidth = this.width;
+        this.viewHeight = this.height;
 
         // Mobile flag (passed from GameApp)
         this.isMobile = !!isMobile;
@@ -48,6 +51,7 @@ class Game {
 
         // Camera
         this.cameraX = 0;
+        this.cameraY = 0;
 
         // Input handling
         this._touchKeys = new Set();
@@ -228,6 +232,11 @@ class Game {
                 this.player.x = spawnX;
                 this.player.y = floor.y - this.player.height - spawnPadding;
                 console.log('Spawn placed on floor at', this.player.x, this.player.y, 'floor:', floor.x, floor.y, floor.width, floor.height);
+                // Snap camera immediately to the player so the floor is visible on start
+                const targetCamX = this.player.x - (this.viewWidth || this.width) / 3;
+                this.cameraX = Utils.clamp(targetCamX, 0, Math.max(0, this.level.width - (this.viewWidth || this.width)));
+                const targetCamY = this.player.y - (this.viewHeight || this.height) * 0.45;
+                this.cameraY = Utils.clamp(targetCamY, 0, Math.max(0, this.level.height - (this.viewHeight || this.height)));
             } else {
                 this.player.x = 100;
                 this.player.y = this.height - this.player.height - 8;
@@ -356,6 +365,15 @@ class Game {
         
         // Clamp camera to level bounds
         this.cameraX = Utils.clamp(this.cameraX, 0, Math.max(0, this.level.width - this.width));
+        // Vertical camera follow to keep player visible on short viewports
+        const targetCameraY = this.player.y - this.viewHeight * 0.45;
+        this.cameraY = Utils.lerp(this.cameraY || 0, targetCameraY, 0.1);
+        this.cameraY = Utils.clamp(this.cameraY, 0, Math.max(0, this.level.height - this.viewHeight));
+        // Log first computed cameraY for diagnostics
+        if (!this._loggedCameraY && this.state === 'PLAYING') {
+            this._loggedCameraY = true;
+            console.log('CameraY diagnostic', { cameraY: this.cameraY, targetCameraY, viewHeight: this.viewHeight, levelHeight: this.level.height });
+        }
     }
 
     render() {
@@ -365,8 +383,8 @@ class Game {
 
         // Compute scale so we can render the game in logical coordinates and map
         // them to the (possibly smaller) canvas size used on mobile devices.
-        const scaleX = this.ctx.canvas.width / this.width;
-        const scaleY = this.ctx.canvas.height / this.height;
+            const scaleX = this.ctx.canvas.width / this.viewWidth;
+            const scaleY = this.ctx.canvas.height / this.viewHeight;
 
         // Render game world in a scaled transform so world coordinates stay consistent
         this.ctx.save();
@@ -379,13 +397,13 @@ class Game {
         }
 
         // Render game world (level, player, enemies) using logical coordinates
-        this.level.draw(this.ctx, this.cameraX);
-        this.player.draw(this.ctx, this.cameraX);
-        this.enemyManager.draw(this.ctx, this.cameraX);
+        this.level.draw(this.ctx, this.cameraX, this.cameraY);
+        this.player.draw(this.ctx, this.cameraX, this.cameraY);
+        this.enemyManager.draw(this.ctx, this.cameraX, this.cameraY);
 
         // Render visual effects
         this.ctx.save();
-        this.ctx.translate(-this.cameraX, 0);
+        this.ctx.translate(-this.cameraX, -this.cameraY);
         for (const dn of this.damageNumbers) {
             dn.draw(this.ctx);
         }

@@ -15,6 +15,10 @@
     {
       "type": "log",
       "text": "Spawn placed on floor at 608 628 floor: 0 700 1280 40"
+    },
+    {
+      "type": "log",
+      "text": "CameraY diagnostic {cameraY: 518, targetCameraY: 537.8407407407408, viewHeight: 202, levelHeight: 720}"
     }
   ],
   "fps": 60,

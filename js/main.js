@@ -55,6 +55,13 @@ class GameApp {
 
         const ctx = this.canvas.getContext('2d');
         if (ctx) ctx.imageSmoothingEnabled = false;
+
+        // Inform game about the visible logical viewport so camera clamping
+        // can be computed correctly when the canvas is scaled down on mobile.
+        if (this.game) {
+            this.game.viewWidth = cssWidth;
+            this.game.viewHeight = cssHeight;
+        }
     }
 
     // Simple debounce helper used for resize/orientation handlers
