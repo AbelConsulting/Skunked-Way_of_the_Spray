@@ -637,17 +637,78 @@ function ensureTouchControlsExists() {
     return document.getElementById('touch-controls');
 }
 
-window.showTouchControls = function(timeoutMs = 1000) {
+// Visibility request helpers: prevents racing show/hide by tracking requests
+window._touchControlsVisibilityReqId = window._touchControlsVisibilityReqId || 0;
+window._touchControlsVisibilityCount = window._touchControlsVisibilityCount || 0;
+window._touchControlsReqTimers = window._touchControlsReqTimers || {};
+window.requestShowTouchControls = function(durationMs = 1000, options = {}) {
+    const id = ++window._touchControlsVisibilityReqId;
+    window._touchControlsVisibilityCount = (window._touchControlsVisibilityCount || 0) + 1;
     const tc = ensureTouchControlsExists();
-    if (!tc) return;
+    if (tc) {
+        tc.style.display = 'flex'; tc.style.pointerEvents = 'auto'; void tc.offsetWidth; tc.classList.add('visible'); tc.style.opacity = '1';
+    }
+    // Handle force option
+    window._touchControlsReqTimers[id] = { timeoutId: null, force: !!options.force };
+    if (options.force) {
+        window._forceTouchControls = true;
+    }
+    // Unless explicitly marked persistent, auto-release after duration to avoid leaking forced state
+    if (!options.persistent) {
+        const tid = setTimeout(() => { try { window.releaseShowTouchControls(id); } catch (e) {} }, durationMs + 50);
+        window._touchControlsReqTimers[id].timeoutId = tid;
+    }
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('requestShowTouchControls', { id, force: !!options.force, until: Date.now() + durationMs }); } catch (e) {}
+    return id;
+};
+
+window.releaseShowTouchControls = function(id) {
+    if (!id) return false;
     try {
-        tc.style.display = 'flex';
-        tc.style.pointerEvents = 'auto';
-        tc.classList.add('visible');
-        tc.style.opacity = '1';
-        window._touchControlsLockUntil = Date.now() + (timeoutMs || 1000);
-        logTouchControlEvent('showTouchControls', { lockUntil: window._touchControlsLockUntil });
-    } catch (e) { console.warn('showTouchControls failed', e); }
+        if (window._touchControlsReqTimers && window._touchControlsReqTimers[id]) {
+            const meta = window._touchControlsReqTimers[id];
+            if (meta.timeoutId) clearTimeout(meta.timeoutId);
+            if (meta.force) {
+                // clearing a forced request should clear the global force if no other forced requests exist
+                delete window._touchControlsReqTimers[id];
+                const hasOtherForce = Object.values(window._touchControlsReqTimers).some(x => x && x.force);
+                if (!hasOtherForce) window._forceTouchControls = false;
+            } else {
+                delete window._touchControlsReqTimers[id];
+            }
+        }
+        window._touchControlsVisibilityCount = Math.max(0, (window._touchControlsVisibilityCount || 1) - 1);
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('releaseShowTouchControls', { id, remaining: window._touchControlsVisibilityCount }); } catch (e) {}
+        if ((window._touchControlsVisibilityCount || 0) === 0 && !window._forceTouchControls && !(window._touchControlsLockUntil && Date.now() < window._touchControlsLockUntil)) {
+            const tc = document.getElementById('touch-controls');
+            if (!tc) return true;
+            tc.classList.remove('visible');
+            tc.style.pointerEvents = 'none';
+            const onEnd = (ev) => { if (ev && ev.target !== tc) return; tc.style.display = 'none'; tc.removeEventListener('transitionend', onEnd); try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_final', {}); } catch (e) {} };
+            tc.addEventListener('transitionend', onEnd);
+            setTimeout(() => { try { if (getComputedStyle(tc).display !== 'none') { tc.style.display = 'none'; try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_timeout', {}); } catch (e) {} } } catch (e) {} }, 500);
+        }
+        return true;
+    } catch (e) { console.warn('releaseShowTouchControls failed', e); return false; }
+};
+
+// Backwards-compatible show/hide that use the request helpers
+window.showTouchControls = function(timeoutMs = 1000) {
+    // use requestShowTouchControls to manage a visibility request
+    const id = window.requestShowTouchControls(timeoutMs, { force: false });
+    // legacy lock for short-term behavior
+    window._touchControlsLockUntil = Date.now() + (timeoutMs || 1000);
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('showTouchControls', { lockUntil: window._touchControlsLockUntil, reqId: id }); } catch (e) {}
+    return id;
+};
+
+// Immediate show that can optionally force visibility and bypass short-term locks.
+// options: { force: true|false, durationMs: number, persistent: boolean }
+window.showTouchControlsImmediate = function(options = {}) {
+    const duration = typeof options.durationMs === 'number' ? options.durationMs : 1000;
+    const force = !!options.force;
+    const persistent = !!options.persistent;
+    return window.requestShowTouchControls(duration, { force, persistent });
 };
 
 window.hideTouchControls = function() {
@@ -663,13 +724,18 @@ window.hideTouchControls = function() {
             logTouchControlEvent('hideTouchControls_blockedByLock', { until: window._touchControlsLockUntil });
             return;
         }
+        if (window._touchControlsVisibilityCount && window._touchControlsVisibilityCount > 0) {
+            logTouchControlEvent('hideTouchControls_blockedByRequests', { count: window._touchControlsVisibilityCount });
+            return;
+        }
+        // proceed to hide
         tc.classList.remove('visible');
         tc.style.pointerEvents = 'none';
         // Ensure display:none after transition or after a short timeout
-        const onEnd = (ev) => { if (ev && ev.target !== tc) return; tc.style.display = 'none'; tc.removeEventListener('transitionend', onEnd); logTouchControlEvent('touchControls_hidden_final', {}); };
+        const onEnd = (ev) => { if (ev && ev.target !== tc) return; tc.style.display = 'none'; tc.removeEventListener('transitionend', onEnd); try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_final', {}); } catch (e) {} };
         tc.addEventListener('transitionend', onEnd);
-        setTimeout(() => { try { if (getComputedStyle(tc).display !== 'none') { tc.style.display = 'none'; logTouchControlEvent('touchControls_hidden_timeout', {}); } } catch (e) {} }, 500);
-        logTouchControlEvent('hideTouchControls', {});
+        setTimeout(() => { try { if (getComputedStyle(tc).display !== 'none') { tc.style.display = 'none'; try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_timeout', {}); } catch (e) {} } } catch (e) {} }, 500);
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('hideTouchControls', {}); } catch (e) {}
     } catch (e) { console.warn('hideTouchControls failed', e); }
 };
 
