@@ -347,17 +347,26 @@ class Game {
     }
 
     render() {
-        // Clear screen
+        // Clear screen using actual canvas pixel buffer (handles mobile scaling)
         this.ctx.fillStyle = '#000000';
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-        // Apply screen shake
+        // Compute scale so we can render the game in logical coordinates and map
+        // them to the (possibly smaller) canvas size used on mobile devices.
+        const scaleX = this.ctx.canvas.width / this.width;
+        const scaleY = this.ctx.canvas.height / this.height;
+
+        // Render game world in a scaled transform so world coordinates stay consistent
+        this.ctx.save();
+        this.ctx.scale(scaleX, scaleY);
+
+        // Apply screen shake (in logical/world coordinates)
         if (this.screenShake && this.screenShake.isActive()) {
             this.ctx.save();
             this.ctx.translate(this.screenShake.offsetX, this.screenShake.offsetY);
         }
 
-        // Render game world
+        // Render game world (level, player, enemies) using logical coordinates
         this.level.draw(this.ctx, this.cameraX);
         this.player.draw(this.ctx, this.cameraX);
         this.enemyManager.draw(this.ctx, this.cameraX);
@@ -377,7 +386,8 @@ class Game {
         if (this.screenShake && this.screenShake.isActive()) {
             this.ctx.restore();
         }
-
+        // Restore scale transform
+        this.ctx.restore();
         // Render UI (always on top, no camera offset)
         if (this.state === "PLAYING") {
             this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount);
