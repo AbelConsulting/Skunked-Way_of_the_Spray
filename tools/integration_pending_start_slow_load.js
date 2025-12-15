@@ -44,18 +44,40 @@ const { chromium } = require('playwright');
   const hasBtn = await page.$('#mobile-start-btn');
   console.log('mobile-start-btn present?', !!hasBtn);
 
+  // Ensure the start overlay is visible (some builds hide it in portrait). Simulate user opening it.
+  await page.evaluate(() => {
+    const overlay = document.getElementById('mobile-start-overlay');
+    if (overlay && typeof showMobileStartOverlay === 'function') showMobileStartOverlay();
+    return { overlayPresent: !!overlay };
+  }).then(r => console.log('overlay ensure result:', r));
+
   // Attempt to start while in portrait: dispatch pointerup (simulates user gesture)
   await page.evaluate(() => {
     const b = document.getElementById('mobile-start-btn');
-    if (b) {
-      try { b.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' })); } catch (e) { try { b.click(); } catch (e2) {} }
+    const overlay = document.getElementById('mobile-start-overlay');
+    try {
+      window.__test_clicked = false;
+      if (b) {
+        // prefer dispatching a pointer event, but also call click as fallback
+        try {
+          b.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch' }));
+        } catch (e) {
+          try { b.click(); } catch (e2) {}
+        }
+        window.__test_clicked = true;
+      }
+      return { overlayDisplay: overlay ? getComputedStyle(overlay).display : null, btnDisabled: b ? b.disabled : null, clicked: window.__test_clicked };
+    } catch (e) {
+      return { error: String(e) };
     }
-  });
+  }).then(r => console.log('click attempt result:', r));
+
+  // Allow a short delay for handlers to run and set pending flag
+  await page.waitForTimeout(300);
 
   // Confirm pendingStartGesture was set
-  const pendingAfterTap = await page.evaluate(() => !!window._pendingStartGesture);
+  const pendingAfterTap = await page.evaluate(() => ({ pending: !!window._pendingStartGesture, mobileStartState: (function(){const el=document.getElementById('mobile-start-overlay'); return el ? getComputedStyle(el).display : 'missing' })(), btnDisabled: (document.getElementById('mobile-start-btn') ? document.getElementById('mobile-start-btn').disabled : null) }));
   console.log('pendingStartGesture after tap (expected true):', pendingAfterTap);
-
   // Now rotate to landscape (trigger orientationchange/resize)
   console.log('rotating viewport to landscape...');
   await page.setViewportSize({ width: 640, height: 360 });
@@ -75,8 +97,8 @@ const { chromium } = require('playwright');
     state: window.game && window.game.state,
     pending: !!window._pendingStartGesture,
     delayedPatched: !!(window.__delayedSpriteLoader && window.__delayedSpriteLoader._patched),
-    mobileStartVisible: getComputedStyle(document.getElementById('mobile-start-overlay')).display,
-    touchControlsVisible: getComputedStyle(document.getElementById('touch-controls')).display
+    mobileStartVisible: (function(){ const el = document.getElementById('mobile-start-overlay'); return el ? getComputedStyle(el).display : 'missing'; })(),
+    touchControlsVisible: (function(){ const el = document.getElementById('touch-controls'); return el ? getComputedStyle(el).display : 'missing'; })()
   }));
 
   console.log('started:', started);
