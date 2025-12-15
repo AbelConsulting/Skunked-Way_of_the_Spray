@@ -1,0 +1,30 @@
+{
+  "logs": [
+    {
+      "type": "log",
+      "text": "game.js loaded"
+    },
+    {
+      "type": "log",
+      "text": "Game class defined"
+    },
+    {
+      "type": "log",
+      "text": "AudioManager: Loading audio assets..."
+    },
+    {
+      "type": "log",
+      "text": "AudioManager: Initializing audio context..."
+    },
+    {
+      "type": "log",
+      "text": "AudioManager: Audio context resumed."
+    },
+    {
+      "type": "log",
+      "text": "AudioManager: All audio assets loaded."
+    }
+  ],
+  "fps": 60,
+  "device": "iPhone 12"
+}
