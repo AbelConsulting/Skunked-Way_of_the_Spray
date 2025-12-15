@@ -52,7 +52,16 @@ class Utils {
      * Convert hex color to RGB
      */
     static hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!hex) return null;
+        const h = hex.replace('#', '');
+        let r, g, b;
+        if (h.length === 3) {
+            r = parseInt(h[0] + h[0], 16);
+            g = parseInt(h[1] + h[1], 16);
+            b = parseInt(h[2] + h[2], 16);
+            return { r, g, b };
+        }
+        const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
         return result ? {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),

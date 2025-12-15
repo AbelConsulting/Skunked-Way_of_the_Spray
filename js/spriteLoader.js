@@ -22,14 +22,18 @@ class SpriteLoader {
                 resolve(img);
             };
             img.onerror = () => {
-                console.warn(`Failed to load sprite: ${path}, using placeholder`);
-                // Create a placeholder colored rectangle
+                // Record missing asset; create placeholder canvas sized reasonably
+                if (!this._missing) this._missing = [];
+                this._missing.push({ name, path });
                 const canvas = document.createElement('canvas');
                 canvas.width = 64;
                 canvas.height = 64;
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#808080';
-                ctx.fillRect(0, 0, 64, 64);
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(name || 'missing', 4, 12);
                 this.sprites[name] = canvas;
                 this.loadedCount++;
                 resolve(canvas);
@@ -61,6 +65,12 @@ class SpriteLoader {
         this.totalAssets = spritesToLoad.length;
         const promises = spritesToLoad.map(([name, path]) => this.loadSprite(name, path));
         await Promise.all(promises);
+
+        // Report missing assets once
+        if (this._missing && this._missing.length > 0) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('SpriteLoader: missing assets', this._missing.map(m => m.path));
+        }
+
         return this.sprites;
     }
 
@@ -98,8 +108,8 @@ class Animation {
      */
     update(dt) {
         this.timer += dt;
-        if (this.timer >= this.frameDuration) {
-            this.timer = 0;
+        while (this.timer >= this.frameDuration) {
+            this.timer -= this.frameDuration;
             this.currentFrame = (this.currentFrame + 1) % this.frameCount;
         }
     }
