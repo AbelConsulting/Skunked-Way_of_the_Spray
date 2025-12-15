@@ -11,6 +11,9 @@ const { chromium } = require('playwright');
     // expose test settings
     window.__delayedSpriteLoader = { delayMs: 3000 };
 
+    // Immediately mark a pending start so it exists before any delayed gameReady fires
+    window._pendingStartGesture = true;
+
     // If spriteLoader is present, patch it to delay loading; otherwise, ensure gameReady is delayed as a fallback
     const tryPatch = () => {
       try {
@@ -93,6 +96,9 @@ const { chromium } = require('playwright');
   console.log('rotating viewport to landscape...');
   await page.setViewportSize({ width: 640, height: 360 });
   await page.evaluate(() => { window.dispatchEvent(new Event('orientationchange')); window.dispatchEvent(new Event('resize')); });
+
+  // Force an immediate mobile UI update (debounced handler may not have fired yet in test environment)
+  await page.evaluate(() => { try { if (typeof updateMobileUI === 'function') updateMobileUI(); } catch (e) {} });
 
   // Wait for game to enter PLAYING state (should occur after delayed sprite load + dispatch)
   let started = false;
