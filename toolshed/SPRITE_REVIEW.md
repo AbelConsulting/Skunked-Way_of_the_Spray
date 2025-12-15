@@ -121,6 +121,7 @@ However, there are some optimization opportunities regarding file sizes and dime
 **Status:** ⚠️ **PARTIALLY ADDED (placeholders generated)** - Placeholder background images and tiles were missing; a small generator script has been added to create them automatically.
 
 **What changed:** Run `toolshed/generate_backgrounds.py` to create:
+
 - `forest_bg.png, city_bg.png, mountains_bg.png, cave_bg.png` (1920x1080)
 - `tiles/ground_tile.png, tiles/platform_tile.png, tiles/wall_tile.png` (32x32)
 
@@ -183,6 +184,7 @@ However, there are some optimization opportunities regarding file sizes and dime
 **Status:** ✅ **INTEGRATED**
 
 Sprite rendering has been implemented in the game code and is active:
+
 - `src/player.py`: loads `characters/ninja_*.png` and animates using `toolshed/sprite_loader` utilities
 - `src/enemy.py`: loads `enemies/*` sheets per enemy type and animates them
 
@@ -200,15 +202,16 @@ To use the loaded sprites in the game, you'll need to:
 
 4. **Recommended next steps:** Run the generator and then run the optimizer over `assets/sprites` (see `toolshed/README` suggestions below).
 
-4. **Example implementation structure:**
-```python
+5. **Example implementation structure:**
+
 # Pseudo-code for sprite loading
+
 self.sprites = {
     'idle': load_sprite_sheet('ninja_idle.png', frame_width=64, frame_height=64),
     'walk': load_sprite_sheet('ninja_walk.png', frame_width=64, frame_height=64),
     # ... etc
 }
-```
+
 
 ---
 
@@ -242,6 +245,7 @@ self.sprites = {
 ### 🎮 **YES, THE SPRITES WILL WORK FOR THE GAME**
 
 **Reasoning:**
+
 - All character and enemy sprites are present and valid
 - File format (PNG) is correct and pygame-compatible
 - Dimensions and frame counts exceed minimum requirements
@@ -249,6 +253,7 @@ self.sprites = {
 - No corruption or loading errors detected
 
 **Next Steps:**
+
 1. Implement sprite loading and animation system in code
 2. (Optional) Optimize PNG file sizes for faster loading
 3. (Future) Add background and tile sprites for visual polish
@@ -259,8 +264,7 @@ self.sprites = {
 
 ## Additional Notes
 
-- The sprite sheets contain MORE frames than specified in the README files, which is excellent for smooth animations
-- The consistent dimensions (2048x2048 for characters/basic, 1024x1024 for boss/flying) make them easy to work with
+- The sprite sheets contain MORE frames than specified in the README files, which is excellent for smooth animations- The consistent dimensions (2048x2048 for characters/basic, 1024x1024 for boss/flying) make them easy to work with
 - No visual artifacts or transparency issues detected
 - Sprite sheets appear to be AI-generated or professionally created with consistent art style
 
@@ -273,8 +277,8 @@ self.sprites = {
 - Ran `toolshed/validate_sprites.py` after changes — all sprites validated successfully (0 missing).
 
 If you'd like, I can:
+
 - Run an in-place optimization across all sprites (I will commit the optimized results to a new branch so you can review), or
 - Add CI checks to optionally warn about unoptimized or missing backgrounds.
-
 
 **Conclusion:** The loaded sprites are ready to be integrated into the game. They meet all technical requirements and will work correctly once the sprite rendering system is implemented in the game code.
