@@ -8,6 +8,16 @@ class SpriteLoader {
         this.loadQueue = [];
         this.loadedCount = 0;
         this.totalAssets = 0;
+        // Known animation frame counts for player sheets — used to synthesize
+        // placeholder sheets when the real asset is missing.
+        this.expectedFrames = {
+            'ninja_idle': 4,
+            'ninja_walk': 6,
+            'ninja_jump': 4,
+            'ninja_attack': 6,
+            'ninja_shadow_strike': 8,
+            'ninja_hurt': 2
+        };
     }
 
     /**
@@ -25,9 +35,38 @@ class SpriteLoader {
                 resolve(img);
             };
             img.onerror = () => {
-                // Record missing asset; create placeholder canvas sized reasonably
+                // Record missing asset
                 if (!this._missing) this._missing = [];
                 this._missing.push({ name, path });
+
+                // If this is a known sprite sheet (multiple frames), synthesize
+                // a simple placeholder sheet so animations keep working.
+                const frameCount = this.expectedFrames[name];
+                if (frameCount) {
+                    const frameW = 64;
+                    const pad = 1; // spacing between frames
+                    const canvas = document.createElement('canvas');
+                    canvas.width = frameCount * frameW + Math.max(0, frameCount - 1) * pad;
+                    canvas.height = frameW;
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
+
+                    for (let i = 0; i < frameCount; i++) {
+                        const sx = i * (frameW + pad);
+                        // alternating color bands for visual clarity
+                        ctx.fillStyle = i % 2 === 0 ? '#6b6b6b' : '#8b8b8b';
+                        ctx.fillRect(sx, 0, frameW, frameW);
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '12px monospace';
+                        ctx.fillText(String(i + 1), sx + 6, 18);
+                    }
+                    this.sprites[name] = canvas;
+                    this.loadedCount++;
+                    resolve(canvas);
+                    return;
+                }
+
+                // Fallback: single-tile placeholder
                 const canvas = document.createElement('canvas');
                 canvas.width = 64;
                 canvas.height = 64;
