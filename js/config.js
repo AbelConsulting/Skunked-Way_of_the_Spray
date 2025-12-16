@@ -51,6 +51,11 @@ const Config = {
         sensitivity: 1.0 // multiplier for movement responsiveness (1.0 = default)
     }
     ,
+    // Mobile view adjustments: scale the logical view width on mobile to show
+    // more horizontal area without changing the CSS canvas size.
+    // 1.0 = same as CSS width, >1.0 expands the logical viewport horizontally.
+    MOBILE_VIEW_SCALE: 1.2,
+
     // Camera startup options: 'center' or 'bottom-left'
     CAMERA_START: 'bottom-left'
 };

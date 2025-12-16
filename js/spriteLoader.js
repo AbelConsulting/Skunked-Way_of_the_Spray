@@ -18,6 +18,9 @@ class SpriteLoader {
             const img = new Image();
             img.onload = () => {
                 this.sprites[name] = img;
+                try {
+                    if (typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} -> ${img.width}x${img.height}`);
+                } catch (e) {}
                 this.loadedCount++;
                 resolve(img);
             };
@@ -66,6 +69,25 @@ class SpriteLoader {
         const promises = spritesToLoad.map(([name, path]) => this.loadSprite(name, path));
         await Promise.all(promises);
 
+        // Validate common player sprite sheet frame sizes and warn if mismatched
+        try {
+            const expectedFrames = {
+                'ninja_idle': 4,
+                'ninja_walk': 6,
+                'ninja_jump': 4,
+                'ninja_attack': 6,
+                'ninja_shadow_strike': 8,
+                'ninja_hurt': 2
+            };
+            for (const [name, count] of Object.entries(expectedFrames)) {
+                const img = this.sprites[name];
+                if (!img) continue;
+                if ((img.width % count) !== 0) {
+                    console.warn(`SpriteLoader: sprite ${name} width ${img.width} is not divisible by frameCount ${count} (frame width=${(img.width/count).toFixed(2)})`);
+                }
+            }
+        } catch (e) {}
+
         // Report missing assets once
         if (this._missing && this._missing.length > 0) {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('SpriteLoader: missing assets', this._missing.map(m => m.path));
@@ -99,8 +121,14 @@ class Animation {
         this.frameDuration = frameDuration;
         this.currentFrame = 0;
         this.timer = 0;
-        this.frameWidth = spriteSheet ? spriteSheet.width / frameCount : 64;
-        this.frameHeight = spriteSheet ? spriteSheet.height : 64;
+        // Backwards-compatible: accept an options object if provided as 4th arg
+        const opts = (arguments && arguments.length >= 4) ? arguments[3] : {};
+        // If explicit frameWidth provided, use it. Otherwise infer from sheet width.
+        this.frameWidth = opts.frameWidth || (spriteSheet ? (spriteSheet.width / frameCount) : 64);
+        this.frameHeight = opts.frameHeight || (spriteSheet ? spriteSheet.height : 64);
+        // If frames in the sheet have padding/spacing, frameStride is the distance
+        // between consecutive frames on the sheet. Default to frameWidth.
+        this.frameStride = opts.frameStride || this.frameWidth;
     }
 
     /**
@@ -128,7 +156,7 @@ class Animation {
     draw(ctx, x, y, width, height, flipHorizontal = false) {
         if (!this.spriteSheet) return;
 
-        const sx = this.currentFrame * this.frameWidth;
+        const sx = Math.floor(this.currentFrame * this.frameStride);
         const sy = 0;
 
         ctx.save();

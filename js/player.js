@@ -83,12 +83,12 @@ class Player {
         const ninja_hurt = spriteLoader.getSprite('ninja_hurt');
 
         this.animations = {
-            idle: new Animation(ninja_idle, 4, 0.15),
-            walk: new Animation(ninja_walk, 6, 0.1),
-            jump: new Animation(ninja_jump, 4, 0.12),
-            attack: new Animation(ninja_attack, 6, 0.08),
-            shadow_strike: new Animation(ninja_shadow_strike, 8, 0.05),
-            hurt: new Animation(ninja_hurt, 2, 0.1)
+            idle: new Animation(ninja_idle, 4, 0.15, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+            walk: new Animation(ninja_walk, 6, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+            jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+            attack: new Animation(ninja_attack, 6, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+            shadow_strike: new Animation(ninja_shadow_strike, 8, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+            hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
         };
 
         this.currentAnimation = this.animations.idle;

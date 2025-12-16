@@ -69,6 +69,16 @@ class Game {
         // Input handling
         this._touchKeys = new Set();
         this.setupInput();
+
+        // Debug helpers
+        this.debugOverlay = false;
+        if (typeof window !== 'undefined') {
+            try {
+                window.snapCameraToRight = () => { this.cameraX = Math.max(0, this.level.width - (this.viewWidth || this.width)); };
+                window.snapCameraToLeft = () => { this.cameraX = 0; };
+                window.toggleCameraDebug = () => { this.debugOverlay = !this.debugOverlay; };
+            } catch (e) {}
+        }
     }
 
     
@@ -102,6 +112,16 @@ class Game {
                 // Gameplay controls
                 if (this.state === 'PLAYING') {
                     this.player.handleInput(key, true);
+                }
+
+                // Debug shortcuts (always active)
+                if (key === 'bracketright') {
+                    // snap camera to right
+                    this.cameraX = Math.max(0, this.level.width - (this.viewWidth || this.width));
+                } else if (key === 'bracketleft') {
+                    this.cameraX = 0;
+                } else if (key === 'keyo') {
+                    this.debugOverlay = !this.debugOverlay;
                 }
             });
 
@@ -266,6 +286,8 @@ class Game {
         
                 if (this.audioManager) this.audioManager.playMusic && this.audioManager.playMusic('gameplay', true);
             this.dispatchGameStateChange();
+            // Ensure camera centers on player immediately after starting
+            try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) {}
         }
 
         // Key up handler
@@ -384,16 +406,24 @@ class Game {
         this.updateCamera();
     }
 
+    centerCameraOnPlayer() {
+        // Centers the camera on the player immediately, respecting logical view size
+        const viewW = this.viewWidth || this.width;
+        const viewH = this.viewHeight || this.height;
+        const playerCenterX = this.player.x + (this.player.width || 0) * 0.5;
+        const playerCenterY = this.player.y + (this.player.height || 0) * 0.5;
+        this.cameraX = Utils.clamp(playerCenterX - viewW * 0.5, 0, Math.max(0, this.level.width - viewW));
+        this.cameraY = Utils.clamp(playerCenterY - viewH * 0.5, 0, Math.max(0, this.level.height - viewH));
+    }
+
     updateCamera() {
-        // Centered horizontal follow — keep player centered smoothly
+        // Centered horizontal follow — instantly center player (no lerp)
         const viewW = this.viewWidth || this.width;
         // Player center X
         const playerCenterX = this.player.x + (this.player.width || 0) * 0.5;
         const targetCameraX = playerCenterX - viewW * 0.5;
-        const lerpFactorX = this.isMobile ? 0.12 : 0.10;
-        this.cameraX = Utils.lerp(this.cameraX || 0, targetCameraX, lerpFactorX);
-        // Clamp camera to level bounds
-        this.cameraX = Utils.clamp(this.cameraX, 0, Math.max(0, this.level.width - viewW));
+        // Snap camera immediately to the target and clamp to level bounds
+        this.cameraX = Utils.clamp(targetCameraX, 0, Math.max(0, this.level.width - viewW));
         // Vertical camera follow to keep player visible on short viewports.
         // Use a slightly smaller bias on mobile so the camera stays lower (more floor visible).
         const verticalBias = this.isMobile ? 0.35 : 0.45;
@@ -478,6 +508,35 @@ class Game {
             this.ui.drawPauseMenu(this.ctx);
         } else if (this.state === "GAME_OVER") {
             this.ui.drawGameOver(this.ctx, this.score, this.enemyManager.enemiesDefeated);
+        }
+
+        // Debug overlay (render in screen coordinates)
+        if (this.debugOverlay) {
+            try {
+                const ctx = this.ctx;
+                ctx.save();
+                // reset any transforms so we draw in canvas pixel space
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(8, 8, 320, 110);
+                ctx.fillStyle = '#0f0';
+                ctx.font = '12px monospace';
+                const lines = [
+                    `cameraX: ${this.cameraX.toFixed(1)}`,
+                    `player.x: ${this.player.x.toFixed(1)}`,
+                    `level.width: ${this.level.width}`,
+                    `viewWidth: ${this.viewWidth}`,
+                    `cameraMax: ${Math.max(0, this.level.width - (this.viewWidth || this.width)).toFixed(1)}`,
+                    `state: ${this.state}`
+                ];
+                for (let i = 0; i < lines.length; i++) {
+                    ctx.fillText(lines[i], 16, 26 + i * 16);
+                }
+                ctx.fillStyle = '#fff';
+                ctx.font = '11px monospace';
+                ctx.fillText('Keys: [ ] snap L/R, O toggle overlay', 16, 26 + lines.length * 16);
+                ctx.restore();
+            } catch (e) {}
         }
     }
 }

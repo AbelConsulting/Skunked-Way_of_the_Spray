@@ -96,12 +96,14 @@ class GameApp {
         // Inform game about the visible logical viewport so camera clamping
         // can be computed correctly when the canvas is scaled down on mobile.
         if (this.game) {
-            // Keep `viewWidth` equal to the logical CSS width, but set
-            // `viewHeight` to the effective height excluding any
-            // bottom overlay so the camera won't position important
-            // content underneath it.
-            this.game.viewWidth = cssWidth;
+            // Allow mobile to expand the logical horizontal viewport so more
+            // of the level is visible without changing the CSS canvas size.
+            // Use `Config.MOBILE_VIEW_SCALE` when running on mobile devices.
+            const mobileScale = (this.isMobile && (typeof Config !== 'undefined')) ? (Config.MOBILE_VIEW_SCALE || 1.0) : 1.0;
+            this.game.viewWidth = Math.max(1, Math.floor(cssWidth * mobileScale));
             this.game.viewHeight = (typeof finalEffectiveCssHeight !== 'undefined') ? finalEffectiveCssHeight : effectiveCssHeight;
+            // Ensure camera recenters immediately for mobile UX changes
+            try { if (typeof this.game.centerCameraOnPlayer === 'function') this.game.centerCameraOnPlayer(); } catch (e) {}
         }
     }
 
