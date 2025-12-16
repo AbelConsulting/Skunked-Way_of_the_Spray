@@ -57,5 +57,8 @@ const Config = {
     MOBILE_VIEW_SCALE: 1.2,
 
     // Camera startup options: 'center' or 'bottom-left'
-    CAMERA_START: 'bottom-left'
+    CAMERA_START: 'bottom-left',
+
+    // Enable tile-based platform graphics when assets are present
+    USE_TILE_GRAPHICS: true
 };

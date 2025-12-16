@@ -36,16 +36,19 @@ class Game {
         this.level = new Level(this.width, this.height);
         // Keep a flag so Level can reduce visual complexity on mobile
         this.level.useMobileOptimizations = this.isMobile;
+        // Prefer tile-based platform rendering if tile assets are available
+        this.level.tileMode = 'tiles';
+
         // Default level data with platforms (make world wider than viewport so horizontal panning is possible)
         const worldWidth = Math.max(this.width * 2, 1920);
         const levelData = {
             width: worldWidth,
             height: this.height,
             platforms: [
-                { x: 100, y: 600, width: 400, height: 32, type: 'static' },
-                { x: 600, y: 500, width: 200, height: 32, type: 'static' },
-                { x: 900, y: 400, width: 250, height: 32, type: 'static' },
-                { x: 0, y: 700, width: worldWidth, height: 40, type: 'static' }
+                { x: 100, y: 600, width: 400, height: 32, type: 'static', tile: 'platform_tile' },
+                { x: 600, y: 500, width: 200, height: 32, type: 'static', tile: 'platform_tile' },
+                { x: 900, y: 400, width: 250, height: 32, type: 'static', tile: 'platform_tile' },
+                { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' }
             ]
         };
         this.level.loadLevel(levelData);
@@ -417,13 +420,36 @@ class Game {
     }
 
     updateCamera() {
-        // Centered horizontal follow — instantly center player (no lerp)
+        // Centered horizontal follow — snap camera to keep player centered.
+        // Snapping avoids the player running off-screen on narrow/mobile viewports.
         const viewW = this.viewWidth || this.width;
-        // Player center X
         const playerCenterX = this.player.x + (this.player.width || 0) * 0.5;
         const targetCameraX = playerCenterX - viewW * 0.5;
-        // Snap camera immediately to the target and clamp to level bounds
-        this.cameraX = Utils.clamp(targetCameraX, 0, Math.max(0, this.level.width - viewW));
+        // Clamp camera to level bounds
+        const clampMaxX = Math.max(0, this.level.width - viewW);
+        this.cameraX = Utils.clamp(targetCameraX, 0, clampMaxX);
+
+        // Short diagnostics on first frames while playing
+        if (!this._camDiagInitialized) {
+            this._camDiagInitialized = true;
+            this._camDiagCount = 0;
+        }
+        if (this.state === 'PLAYING' && this._camDiagCount < 20) {
+            console.log('CameraX trace', {
+                frame: this._camDiagCount,
+                playerX: this.player.x,
+                playerCenterX,
+                cameraX: this.cameraX,
+                targetCameraX,
+                clampMaxX,
+                viewWidth: this.viewWidth,
+                levelWidth: this.level.width
+            });
+            this._camDiagCount++;
+            if (this._camDiagCount === 20 && clampMaxX === 0) {
+                console.warn('No horizontal room to pan: level.width <= viewWidth', { levelWidth: this.level.width, viewWidth: this.viewWidth });
+            }
+        }
         // Vertical camera follow to keep player visible on short viewports.
         // Use a slightly smaller bias on mobile so the camera stays lower (more floor visible).
         const verticalBias = this.isMobile ? 0.35 : 0.45;
@@ -435,11 +461,6 @@ class Game {
         const nearFloorThreshold = 32;
         if (this.player.y + this.player.height >= this.level.height - nearFloorThreshold) {
             this.cameraY = Math.max(this.cameraY, Math.max(0, this.level.height - this.viewHeight));
-        }
-        // Log first computed cameraX for diagnostics
-        if (!this._loggedCameraX && this.state === 'PLAYING') {
-            this._loggedCameraX = true;
-            console.log('CameraX diagnostic', { cameraX: this.cameraX, targetCameraX, viewWidth: this.viewWidth, levelWidth: this.level.width });
         }
         // Log first computed cameraY for diagnostics
         if (!this._loggedCameraY && this.state === 'PLAYING') {

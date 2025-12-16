@@ -102,8 +102,6 @@ class GameApp {
             const mobileScale = (this.isMobile && (typeof Config !== 'undefined')) ? (Config.MOBILE_VIEW_SCALE || 1.0) : 1.0;
             this.game.viewWidth = Math.max(1, Math.floor(cssWidth * mobileScale));
             this.game.viewHeight = (typeof finalEffectiveCssHeight !== 'undefined') ? finalEffectiveCssHeight : effectiveCssHeight;
-            // Ensure camera recenters immediately for mobile UX changes
-            try { if (typeof this.game.centerCameraOnPlayer === 'function') this.game.centerCameraOnPlayer(); } catch (e) {}
         }
     }
 

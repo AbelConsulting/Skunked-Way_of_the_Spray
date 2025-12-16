@@ -62,7 +62,12 @@ class SpriteLoader {
             ['basic_idle', 'assets/sprites/enemies/basic_idle.png'],
             ['basic_walk', 'assets/sprites/enemies/basic_walk.png'],
             ['basic_attack', 'assets/sprites/enemies/basic_attack.png'],
-            ['basic_hurt', 'assets/sprites/enemies/basic_hurt.png']
+            ['basic_hurt', 'assets/sprites/enemies/basic_hurt.png'],
+
+            // Background / tile sprites
+            ['ground_tile', 'assets/sprites/backgrounds/tiles/ground_tile.png'],
+            ['platform_tile', 'assets/sprites/backgrounds/tiles/platform_tile.png'],
+            ['wall_tile', 'assets/sprites/backgrounds/tiles/wall_tile.png']
         ];
 
         this.totalAssets = spritesToLoad.length;

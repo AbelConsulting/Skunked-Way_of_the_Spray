@@ -121,8 +121,63 @@ class Level {
         ctx.restore();
     }
 
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.platforms = [];
+        this.backgroundGradient = null;
+        this.tileMode = 'tiles'; // 'tiles' or 'neon' - controls platform rendering
+        this._tilePatterns = {}; // cache for canvas patterns
+        
+        // Cyberpunk style config
+        this.theme = {
+            bgTop: '#0f0026',      // Deep purple/blue night sky
+            bgMid: '#2d0a4b',      // Neon purple
+            bgBot: '#0a0a23',      // Dark blue/black
+            platTop: '#00fff7',    // Neon cyan
+            platBot: '#ff00ea',    // Neon magenta
+            border: '#fffb00',     // Bright yellow border
+            glow: '#00fff7',       // Neon cyan glow
+        };
+    }
+
     drawPlatform(ctx, p) {
-            // Cyberpunk neon shadow/glow (reduced on mobile for perf)
+        // If tile mode is enabled and sprite exists, draw a tiled fill
+        if (this.tileMode === 'tiles') {
+            const tileName = p.tile || 'platform_tile';
+            const tileImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(tileName) : null;
+            if (tileImg) {
+                if (!this._tilePatterns) this._tilePatterns = {};
+                if (!this._tilePatterns[tileName]) {
+                    try {
+                        this._tilePatterns[tileName] = ctx.createPattern(tileImg, 'repeat');
+                    } catch (e) {
+                        this._tilePatterns[tileName] = null;
+                    }
+                }
+                const pattern = this._tilePatterns[tileName];
+                if (pattern) {
+                    ctx.save();
+                    ctx.fillStyle = pattern;
+                    ctx.fillRect(p.x, p.y, p.width, p.height);
+                    ctx.restore();
+
+                    // Subtle border and highlight for readability
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(p.x, p.y, p.width, p.height);
+                    ctx.globalAlpha = 0.25;
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(p.x, p.y, p.width, 4);
+                    ctx.restore();
+
+                    return; // done
+                }
+            }
+        }
+
+            // Fallback: Cyberpunk neon shadow/glow (reduced on mobile for perf)
             ctx.save();
             ctx.shadowColor = this.theme.glow;
             const glowBlur = this.useMobileOptimizations ? 6 : 20;
