@@ -56,6 +56,15 @@ class Game {
         this.cameraX = 0;
         this.cameraY = 0;
 
+        // Expose a minimal pan helper for debugging/manual pan
+        if (typeof window !== 'undefined') {
+            try {
+                window.gamePan = (dx) => { this.panCamera(dx); };
+            } catch (e) {
+                // ignore strict contexts
+            }
+        }
+
         // Input handling
         this._touchKeys = new Set();
         this.setupInput();
@@ -368,15 +377,26 @@ class Game {
     }
 
     updateCamera() {
-        // Smooth camera following
-        // Use the logical viewport width so horizontal panning works correctly on narrow mobile viewports
-        const horizontalBias = this.isMobile ? 0.28 : (1 / 3);
-        const targetCameraX = this.player.x - (this.viewWidth || this.width) * horizontalBias;
-        const lerpFactorX = this.isMobile ? 0.12 : 0.1;
-        this.cameraX = Utils.lerp(this.cameraX || 0, targetCameraX, lerpFactorX);
-        
+        // Horizontal auto-follow using a deadzone so the camera only moves
+        // when the player crosses a left/right threshold. This prevents
+        // small player motion from jiggling the camera while ensuring
+        // horizontal panning works reliably on all viewport sizes.
+        const viewW = this.viewWidth || this.width;
+        const leftThreshold = viewW * 0.33;
+        const rightThreshold = viewW * 0.66;
+        const curCamX = this.cameraX || 0;
+        let desiredCamX = curCamX;
+        // If player moves left of the left threshold, pan left
+        if (this.player.x < curCamX + leftThreshold) {
+            desiredCamX = this.player.x - leftThreshold;
+        } else if (this.player.x > curCamX + rightThreshold) {
+            // If player moves past the right threshold, pan right
+            desiredCamX = this.player.x - rightThreshold;
+        }
+        const lerpFactorX = this.isMobile ? 0.18 : 0.14;
+        this.cameraX = Utils.lerp(curCamX, desiredCamX, lerpFactorX);
         // Clamp camera to level bounds (use viewWidth so camera can move on narrow mobile viewports)
-        this.cameraX = Utils.clamp(this.cameraX, 0, Math.max(0, this.level.width - (this.viewWidth || this.width)));
+        this.cameraX = Utils.clamp(this.cameraX, 0, Math.max(0, this.level.width - viewW));
         // Vertical camera follow to keep player visible on short viewports.
         // Use a slightly smaller bias on mobile so the camera stays lower (more floor visible).
         const verticalBias = this.isMobile ? 0.35 : 0.45;
@@ -399,6 +419,15 @@ class Game {
             this._loggedCameraY = true;
             console.log('CameraY diagnostic', { cameraY: this.cameraY, targetCameraY, viewHeight: this.viewHeight, levelHeight: this.level.height });
         }
+
+    }
+
+    panCamera(deltaX) {
+        // Simple pan helper — moves camera by delta and clamps to level bounds
+        const cur = this.cameraX || 0;
+        const maxX = Math.max(0, this.level.width - (this.viewWidth || this.width));
+        const next = Utils.clamp(cur + (deltaX || 0), 0, maxX);
+        this.cameraX = next;
     }
 
     render() {
