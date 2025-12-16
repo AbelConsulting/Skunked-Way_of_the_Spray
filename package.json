@@ -7,10 +7,11 @@
     "dev": "node scripts/dev.js",
     "start": "node tools/csp_server.js",
     "test:touch-landscape": "node tools/touch_controls_landscape_test.js",
+    "test:mobile-perf": "node tools/mobile_performance_test.js",
+    "test:mobile-probe": "node tools/mobile_probe_test.js",
     "playwright:install": "npx playwright install"
-    ,"test:mobile-perf": "node tools/mobile_performance_test.js"
   },
-    ,"test:mobile-probe": "node tools/mobile_probe_test.js"
+  "devDependencies": {
     "esbuild": "^0.19.12",
     "playwright": "^1.40.0"
   }
