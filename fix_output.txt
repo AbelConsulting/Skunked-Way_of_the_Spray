@@ -1,0 +1,7 @@
+  - Missing sprite for 'ninja_idle' (searched: ;, type, fix_output.txt)
+  - Missing sprite for 'ninja_walk' (searched: ;, type, fix_output.txt)
+  - Missing sprite for 'ninja_jump' (searched: ;, type, fix_output.txt)
+  - Missing sprite for 'ninja_attack' (searched: ;, type, fix_output.txt)
+  - Missing sprite for 'ninja_shadow_strike' (searched: ;, type, fix_output.txt)
+  - Missing sprite for 'ninja_hurt' (searched: ;, type, fix_output.txt)
+Done. Inspected 6 sprites; processed 0/6 (dry_run=False).

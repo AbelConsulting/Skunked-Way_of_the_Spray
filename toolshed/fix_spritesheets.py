@@ -62,13 +62,13 @@ def process_sheet(path: Path, frame_count: int, backup=False, dry_run=False, ver
     try:
         img = Image.open(path).convert('RGBA')
     except Exception as e:
-        print(f"  ✗ Failed to open {path}: {e}")
+        print(f"  [ERR] Failed to open {path}: {e}")
         return False
 
     w, h = img.size
     if w % frame_count == 0:
         if verbose:
-            print(f"  ✓ Width {w} already divisible by {frame_count} (frame width={w//frame_count})")
+            print(f"  [OK] Width {w} already divisible by {frame_count} (frame width={w//frame_count})")
         return True
 
     # Compute new frame width (ceil to avoid cropping), target width and padding
@@ -78,7 +78,7 @@ def process_sheet(path: Path, frame_count: int, backup=False, dry_run=False, ver
     pad_left = pad_total // 2
     pad_right = pad_total - pad_left
 
-    print(f"  ⚠ {path.name}: width {w} not divisible by {frame_count}; target frameWidth={frame_width}, pad left={pad_left} right={pad_right} -> new width {target_width}")
+    print(f"  [WARN] {path.name}: width {w} not divisible by {frame_count}; target frameWidth={frame_width}, pad left={pad_left} right={pad_right} -> new width {target_width}")
 
     if dry_run:
         return True
@@ -87,16 +87,16 @@ def process_sheet(path: Path, frame_count: int, backup=False, dry_run=False, ver
     if backup:
         bak = path.with_suffix(path.suffix + '.bak')
         shutil.copy2(path, bak)
-        print(f"    · Backup saved to {bak}")
+        print(f"    - Backup saved to {bak}")
 
     # Create padded image and overwrite
     new_img = pad_image(img, pad_left, pad_right)
     try:
         new_img.save(path, optimize=True)
-        print(f"    · Wrote fixed image to {path}")
+        print(f"    - Wrote fixed image to {path}")
         return True
     except Exception as e:
-        print(f"    ✗ Failed to write fixed image: {e}")
+        print(f"    [ERR] Failed to write fixed image: {e}")
         return False
 
 
