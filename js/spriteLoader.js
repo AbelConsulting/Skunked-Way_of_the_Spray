@@ -8,6 +8,15 @@ class SpriteLoader {
         this.loadQueue = [];
         this.loadedCount = 0;
         this.totalAssets = 0;
+        // Enable cache-busting in development when Config.DEBUG is true to avoid stale browser cache
+        // Enable cache-busting in development when Config.DEBUG is true
+        // or when the URL includes ?devcache=1 (useful for local debugging without changing Config)
+        try {
+            const force = (typeof Config !== 'undefined' && Config.DEBUG) || (typeof location !== 'undefined' && (new URL(location.href)).searchParams.get('devcache') === '1');
+            this._cacheBuster = force ? Date.now() : null;
+        } catch (e) {
+            this._cacheBuster = null;
+        }
         // Known animation frame counts for player sheets — used to synthesize
         // placeholder sheets when the real asset is missing.
         this.expectedFrames = {
@@ -88,7 +97,7 @@ class SpriteLoader {
      * Load all game sprites
      */
     async loadAllSprites() {
-        const spritesToLoad = [
+        const baseList = [
             // Player sprites
             ['ninja_idle', 'assets/sprites/characters/ninja_idle.png'],
             ['ninja_walk', 'assets/sprites/characters/ninja_walk.png'],
@@ -113,6 +122,12 @@ class SpriteLoader {
             ['bg_mountains', 'assets/sprites/backgrounds/mountains_bg.png'],
             ['bg_cave', 'assets/sprites/backgrounds/cave_bg.png']
         ];
+
+        // Optionally add a cache-buster to asset paths when debugging to avoid stale caches
+        const spritesToLoad = baseList.map(([n, p]) => {
+            if (this._cacheBuster) return [n, p + '?cb=' + this._cacheBuster];
+            return [n, p];
+        });
 
         this.totalAssets = spritesToLoad.length;
         const promises = spritesToLoad.map(([name, path]) => this.loadSprite(name, path));
