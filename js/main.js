@@ -262,9 +262,7 @@ class GameApp {
                     this.stop();
                 } else {
                     if (!this.running) {
-                        this.running = true;
-                        this.lastTime = performance.now();
-                        this.gameLoop(this.lastTime);
+                        this.start();
                     }
                 }
             });
@@ -386,6 +384,28 @@ class GameApp {
         this.loadingProgress.style.width = `${percent}%`;
     }
 
+    stop() {
+        this.running = false;
+        try {
+            if (this.audioManager && typeof this.audioManager.pause === 'function') this.audioManager.pause();
+        } catch (e) {}
+        try {
+            if (this.game && typeof this.game.pause === 'function') this.game.pause();
+        } catch (e) {}
+    }
+
+    start() {
+        if (this.running) return;
+        this.running = true;
+        this.lastTime = performance.now();
+        this.gameLoop(this.lastTime);
+    }
+
+    // Alias for backwards compatibility
+    resume() {
+        this.start();
+    }
+
     gameLoop(currentTime) {
         if (!this.running) return;
 
@@ -437,7 +457,6 @@ class GameApp {
 
             // Ensure camera recenters immediately for mobile UX changes
             try { if (typeof this.game.centerCameraOnPlayer === 'function') this.game.centerCameraOnPlayer(); } catch (e) {}
-        this.running = false;
     }
 }
 
