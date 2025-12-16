@@ -44,6 +44,9 @@ class Game {
         const levelData = {
             width: worldWidth,
             height: this.height,
+            // Use a scenic background by default so the level renders a
+            // panorama instead of the fallback gradient.
+            background: 'bg_forest',
             platforms: [
                 { x: 100, y: 600, width: 400, height: 32, type: 'static', tile: 'platform_tile' },
                 { x: 600, y: 500, width: 200, height: 32, type: 'static', tile: 'platform_tile' },

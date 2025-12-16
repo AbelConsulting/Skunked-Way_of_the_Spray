@@ -8,6 +8,8 @@ class Level {
         this.height = levelData.height || this.height;
         // Optional background name (matches keys from spriteLoader)
         this.backgroundName = levelData.background || levelData.backgroundName || this.backgroundName || 'bg_city';
+        // Per-level background parallax factor (0..1). Lower = slower (farther away).
+        this.backgroundParallax = (typeof levelData.backgroundParallax !== 'undefined') ? levelData.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
         
         // Initialize platforms (static and moving)
         this.platforms = levelData.platforms.map(p => ({
@@ -87,13 +89,13 @@ class Level {
             // Draw a simple parallax: background stretched horizontally to level width
             // and vertically to cover the view height. Use cameraX to offset for parallax.
             try {
-                // Compute scale so bg image covers the visible area horizontally
+                // Compute scale so bg image covers the visible area vertically
                 const scaleY = h / bgImg.height;
                 const scaledW = Math.ceil(bgImg.width * scaleY);
                 // Determine repeated tiles needed to cover level width
                 const repeatCount = Math.ceil((this.width) / scaledW) + 1;
-                // Draw repeated background with slight parallax (0.5)
-                const parallax = 0.5;
+                // Draw repeated background with configurable parallax
+                const parallax = (typeof this.backgroundParallax !== 'undefined') ? this.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
                 const startX = Math.floor(-((cameraX * parallax) % scaledW));
                 for (let i = 0; i < repeatCount; i++) {
                     const dx = startX + i * scaledW;
