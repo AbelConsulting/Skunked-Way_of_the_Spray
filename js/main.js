@@ -333,6 +333,11 @@ class GameApp {
             if (this.game) this.game.update(step);
             this._accumulator -= step;
             try {
+                // Place any code that might throw here, or remove try if not needed
+            } catch (e) {
+                console.error('Error during game update:', e);
+            }
+            steps++;
         }
 
         // Render once with the current state. Throttle renders on mobile to
