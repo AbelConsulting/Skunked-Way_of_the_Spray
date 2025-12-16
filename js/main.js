@@ -165,6 +165,50 @@ class GameApp {
             // Expose for diagnostic tests and external tooling
             try { window.game = this.game; window.gameApp = this; } catch (e) { /* ignore in strict contexts */ }
 
+            // Allow overriding mobile parallax via URL or runtime change for quick tuning.
+            // URL: ?mobileParallax=0.2  (applies when app initializes)
+            const initMobileParallax = (() => {
+                try {
+                    const params = new URLSearchParams(location.search);
+                    const v = params.get('mobileParallax');
+                    if (v !== null) {
+                        const num = parseFloat(v);
+                        if (!Number.isNaN(num)) return num;
+                    }
+                    const stored = localStorage.getItem('mobileParallax');
+                    if (stored !== null) {
+                        const snum = parseFloat(stored);
+                        if (!Number.isNaN(snum)) return snum;
+                    }
+                } catch (e) {}
+                return null;
+            })();
+            if (initMobileParallax !== null && this.isMobile) {
+                try { Config.BACKGROUND_PARALLAX_MOBILE = initMobileParallax; console.log('Applied mobileParallax override from URL/localStorage', initMobileParallax); } catch (e) {}
+            }
+
+            // Expose helpers to change mobile parallax at runtime and persist choice
+            window.setMobileParallax = (val, persist = true) => {
+                try {
+                    const v = parseFloat(val);
+                    if (Number.isNaN(v)) return false;
+                    Config.BACKGROUND_PARALLAX_MOBILE = v;
+                    if (window.game && window.game.level) window.game.level.backgroundParallax = v;
+                    if (persist) localStorage.setItem('mobileParallax', String(v));
+                    console.log('Mobile parallax set to', v);
+                    return true;
+                } catch (e) { console.warn('setMobileParallax failed', e); return false; }
+            };
+
+            window.cycleMobileParallax = () => {
+                const choices = [0.2, 0.3, 0.4];
+                const curr = typeof Config !== 'undefined' ? (Config.BACKGROUND_PARALLAX_MOBILE || 0.3) : 0.3;
+                let idx = choices.indexOf(curr);
+                idx = (idx + 1) % choices.length;
+                window.setMobileParallax(choices[idx], true);
+                return choices[idx];
+            };
+
             // Mobile-friendly adjustments (debounced resize)
             this.adjustCanvasForMobile();
             const debouncedAdjust = this.debounce(() => this.adjustCanvasForMobile(), 150);
