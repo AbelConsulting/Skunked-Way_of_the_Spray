@@ -55,9 +55,19 @@ class Game {
                 { x: 420, y: 560, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
                 { x: 1000, y: 480, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
                 { x: 1400, y: 420, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1200, y: 300, width: 200, height: 24, type: 'moving', tile: 'platform_tile', axis: 'x', range: 120, speed: 0.8 },
+                { x: 1200, y: 300, width: 200, height: 24, type: 'moving', tile: 'platform_tile', axis: 'x', range: 160, speed: 1.0 },
+                { x: 1600, y: 360, width: 160, height: 24, type: 'moving', tile: 'platform_tile', axis: 'y', range: 80, speed: 0.9 },
                 { x: 900, y: 400, width: 250, height: 32, type: 'static', tile: 'platform_tile' },
                 { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' }
+            ]
+            ,
+            hazards: [
+                { x: 520, y: 680, width: 120, height: 20, type: 'spike' },
+                { x: 1100, y: 680, width: 180, height: 20, type: 'spike' },
+                // moving spike (vertical)
+                { x: 1480, y: 260, width: 48, height: 24, type: 'moving_spike', axis: 'y', range: 160, speed: 1.1 },
+                // horizontal sweeping spike
+                { x: 700, y: 520, width: 120, height: 20, type: 'moving_spike', axis: 'x', range: 200, speed: 0.6 }
             ]
         };
         this.level.loadLevel(levelData);
@@ -84,12 +94,27 @@ class Game {
 
         // Debug helpers
         this.debugOverlay = false;
+        this.levelDebugVisuals = false; // show spawn/hazard visuals
         if (typeof window !== 'undefined') {
             try {
                 window.snapCameraToRight = () => { this.cameraX = Math.max(0, this.level.width - (this.viewWidth || this.width)); };
                 window.snapCameraToLeft = () => { this.cameraX = 0; };
                 window.toggleCameraDebug = () => { this.debugOverlay = !this.debugOverlay; };
                 window.rebuildStaticLayer = () => { try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { console.warn('rebuildStaticLayer failed', e); } };
+                window.toggleHazardIndicators = (enable) => {
+                    try {
+                        if (typeof enable === 'boolean') Config.HAZARD_INDICATORS = enable;
+                        else Config.HAZARD_INDICATORS = !Config.HAZARD_INDICATORS;
+                        console.log('HAZARD_INDICATORS =', Config.HAZARD_INDICATORS);
+                    } catch (e) { console.warn('toggleHazardIndicators failed', e); }
+                };
+                window.toggleLevelDebugVisuals = (enable) => {
+                    try {
+                        if (typeof enable === 'boolean') this.levelDebugVisuals = enable;
+                        else this.levelDebugVisuals = !this.levelDebugVisuals;
+                        console.log('levelDebugVisuals =', this.levelDebugVisuals);
+                    } catch (e) { console.warn('toggleLevelDebugVisuals failed', e); }
+                };
             } catch (e) {}
         }
     }
@@ -367,6 +392,26 @@ class Game {
         // Update player
         this.player.update(dt, this.level);
 
+        // Check hazards (spikes etc.) that can damage the player
+        try {
+            if (this.level && this.level.hazards && this.level.hazards.length > 0) {
+                const prect = { x: this.player.x, y: this.player.y, width: this.player.width, height: this.player.height };
+                for (const h of this.level.hazards) {
+                    if (h && Utils.rectCollision(prect, { x: h.x, y: h.y, width: h.width, height: h.height })) {
+                        if (h.type === 'spike') {
+                            // Small damage on contact; player's invulnerability timer prevents rapid repeats
+                            const died = this.player.takeDamage(20, null);
+                            if (died) {
+                                this.state = 'GAME_OVER';
+                                this.audioManager.stopMusic && this.audioManager.stopMusic();
+                                this.audioManager.playSound && this.audioManager.playSound('game_over', 1.0);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) { /* ignore hazard check errors */ }
+
         // Update enemies
         this.enemyManager.update(dt, this.player, this.level);
 
@@ -524,6 +569,50 @@ class Game {
         for (const hs of this.hitSparks) {
             hs.draw(this.ctx);
         }
+
+        // Level debug visuals: spawn points and hazard bounds
+        if (this.levelDebugVisuals && this.level) {
+            try {
+                const ctx = this.ctx;
+                ctx.save();
+                ctx.translate(-this.cameraX, -this.cameraY);
+                // Spawn points
+                if (Array.isArray(this.level.spawnPoints)) {
+                    for (const sp of this.level.spawnPoints) {
+                        let sx = (typeof sp.x === 'number') ? sp.x : (sp.x === 'left' ? 16 : this.level.width - 16);
+                        const sy = (typeof sp.y === 'number') ? sp.y : 300;
+                        ctx.fillStyle = 'rgba(0,255,0,0.9)';
+                        ctx.beginPath();
+                        ctx.moveTo(sx - 8, sy + 12);
+                        ctx.lineTo(sx + 8, sy + 12);
+                        ctx.lineTo(sx, sy - 6);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = '#000'; ctx.font = '10px monospace'; ctx.fillText('SP', sx + 10, sy + 4);
+                    }
+                }
+
+                // Hazards
+                if (Array.isArray(this.level.hazards)) {
+                    for (const h of this.level.hazards) {
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(255,0,0,0.9)';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([4,4]);
+                        ctx.strokeRect(h.x, h.y, h.width, h.height);
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = 'rgba(255,0,0,0.06)';
+                        ctx.fillRect(h.x, h.y, h.width, h.height);
+                        ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
+                        const label = h.type || 'hazard';
+                        ctx.fillText(label, h.x + 4, h.y - 6);
+                        ctx.restore();
+                    }
+                }
+
+                ctx.restore();
+            } catch (e) {}
+        }
         this.ctx.restore();
 
         // Restore after screen shake
@@ -555,12 +644,13 @@ class Game {
                 ctx.fillStyle = '#0f0';
                 ctx.font = '12px monospace';
                 const lines = [
-                    `cameraX: ${this.cameraX.toFixed(1)}`,
+                        `cameraX: ${this.cameraX.toFixed(1)}`,
                     `player.x: ${this.player.x.toFixed(1)}`,
                     `level.width: ${this.level.width}`,
                     `viewWidth: ${this.viewWidth}`,
                     `cameraMax: ${Math.max(0, this.level.width - (this.viewWidth || this.width)).toFixed(1)}`,
-                    `state: ${this.state}`
+                    `state: ${this.state}`,
+                    `levelVisuals: ${this.levelDebugVisuals ? 'ON' : 'OFF'}`
                 ];
                 for (let i = 0; i < lines.length; i++) {
                     ctx.fillText(lines[i], 16, 26 + i * 16);

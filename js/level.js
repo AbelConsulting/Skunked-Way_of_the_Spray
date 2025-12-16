@@ -23,6 +23,8 @@ class Level {
         this.spawnPoints = Array.isArray(levelData.spawnPoints) ? levelData.spawnPoints.slice() : null;
         // Mark static layer dirty so it will be re-rendered on next draw
         this._staticNeedsUpdate = true;
+        // Hazards (e.g., spikes) - array of rects: { x,y,width,height,type }
+        this.hazards = Array.isArray(levelData.hazards) ? levelData.hazards.map(h => ({ ...h })) : [];
     }
 
     update(deltaTime) {
@@ -45,6 +47,23 @@ class Level {
                 }
             }
         });
+
+        // Update moving hazards (if any)
+        if (this.hazards && this.hazards.length > 0) {
+            this.hazards.forEach(h => {
+                if (h.axis && h.range && (h.type === 'moving_spike' || h.moving)) {
+                    const speed = h.speed || 1.0;
+                    if (!('initialX' in h)) h.initialX = h.x;
+                    if (!('initialY' in h)) h.initialY = h.y;
+                    if (!('timeOffset' in h)) h.timeOffset = Math.random() * Math.PI * 2;
+                    if (h.axis === 'y') {
+                        h.y = h.initialY + Math.sin(time * speed + h.timeOffset) * h.range;
+                    } else {
+                        h.x = h.initialX + Math.sin(time * speed + h.timeOffset) * h.range;
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -153,6 +172,79 @@ class Level {
         // Always draw moving platforms on top
         for (const platform of this.platforms) {
             if (platform.type === 'moving') this.drawPlatform(ctx, platform);
+        }
+
+        // 3. Draw hazards (spikes etc.) on top of platforms
+        if (this.hazards && this.hazards.length > 0) {
+            const now = Date.now() / 1000;
+            for (const h of this.hazards) {
+                try {
+                    // If enabled, draw path indicator for moving hazards
+                    const showIndicator = (typeof Config !== 'undefined') ? !!Config.HAZARD_INDICATORS : true;
+                    if (showIndicator && (h.axis && h.range)) {
+                        ctx.save();
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = 'rgba(255,200,0,0.25)';
+                        ctx.setLineDash([6, 6]);
+                        if (h.axis === 'x') {
+                            const minX = h.x - h.range;
+                            const maxX = h.x + h.range;
+                            const midY = h.y + h.height / 2;
+                            ctx.beginPath(); ctx.moveTo(minX, midY); ctx.lineTo(maxX, midY); ctx.stroke();
+                            // draw endpoints
+                            ctx.fillStyle = 'rgba(255,200,0,0.12)'; ctx.fillRect(minX - 3, h.y, 6, h.height); ctx.fillRect(maxX - 3, h.y, 6, h.height);
+                        } else {
+                            const minY = h.y - h.range;
+                            const maxY = h.y + h.range;
+                            const midX = h.x + h.width / 2;
+                            ctx.beginPath(); ctx.moveTo(midX, minY); ctx.lineTo(midX, maxY); ctx.stroke();
+                            ctx.fillStyle = 'rgba(255,200,0,0.12)'; ctx.fillRect(h.x, minY - 3, h.width, 6); ctx.fillRect(h.x, maxY - 3, h.width, 6);
+                        }
+                        ctx.restore();
+                    }
+
+                    // Draw simple spikes for type === 'spike' and moving_spike
+                    if (h.type === 'spike' || h.type === 'moving_spike') {
+                        const step = 8;
+                        const spikeH = Math.min(14, Math.max(8, Math.floor(h.height * 0.9)));
+                        const left = h.x;
+                        const top = h.y;
+                        const right = h.x + h.width;
+                        const n = Math.ceil(h.width / step);
+                        ctx.save();
+                        ctx.fillStyle = '#ff4d4d';
+                        for (let i = 0; i < n; i++) {
+                            const sx = left + i * step;
+                            const sw = Math.min(step, right - sx);
+                            ctx.beginPath();
+                            ctx.moveTo(sx, top + h.height);
+                            ctx.lineTo(sx + sw / 2, top + h.height - spikeH);
+                            ctx.lineTo(sx + sw, top + h.height);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+
+                        // timing indicator: small pulse above spikes for moving spikes
+                        if (h.type === 'moving_spike' && showIndicator) {
+                            try {
+                                const phase = Math.sin(now * (h.speed || 1) + (h.timeOffset || 0));
+                                const intensity = (phase + 1) / 2; // 0..1
+                                const cx = h.x + h.width / 2;
+                                const cy = h.y - 8;
+                                ctx.globalAlpha = 0.6 * intensity + 0.2;
+                                ctx.fillStyle = '#ffef8a';
+                                ctx.beginPath(); ctx.arc(cx, cy, 6 + intensity * 4, 0, Math.PI * 2); ctx.fill();
+                                ctx.globalAlpha = 1.0;
+                            } catch (e) {}
+                        }
+
+                        ctx.restore();
+                    } else {
+                        // Generic hazard box
+                        ctx.save(); ctx.fillStyle = 'rgba(255,0,0,0.12)'; ctx.fillRect(h.x, h.y, h.width, h.height); ctx.restore();
+                    }
+                } catch (e) {}
+            }
         }
 
         ctx.restore();

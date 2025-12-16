@@ -66,6 +66,8 @@ const Config = {
     BACKGROUND_PARALLAX: 0.5,
     // Reduced parallax on mobile for performance and readability
     BACKGROUND_PARALLAX_MOBILE: 0.3,
+    // Visual indicators for moving hazards (show path and timing indicators)
+    HAZARD_INDICATORS: true,
 
     // Enable tile-based platform graphics when assets are present
     USE_TILE_GRAPHICS: true
