@@ -131,7 +131,7 @@ class Game {
                 if (key === ' ' || key === 'spacebar' || key === 'space') return 'space';
                 // Keep named keys like 'arrowleft' etc.
                 return key;
-            };"
+            };
 
             // Key down handler
             window.addEventListener('keydown', (event) => {
