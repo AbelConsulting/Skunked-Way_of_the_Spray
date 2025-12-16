@@ -19,6 +19,8 @@ class Level {
             initialY: p.y,
             timeOffset: Math.random() * Math.PI * 2 // Randomize start phase
         }));
+        // Optional enemy spawn points (array of { x: number|'left'|'right', y: number })
+        this.spawnPoints = Array.isArray(levelData.spawnPoints) ? levelData.spawnPoints.slice() : null;
         // Mark static layer dirty so it will be re-rendered on next draw
         this._staticNeedsUpdate = true;
     }

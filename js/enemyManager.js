@@ -25,11 +25,28 @@ class EnemyManager {
             return;
         }
 
-        // Random spawn position (off screen to the right)
-        const spawnX = level.width + 50;
-        const spawnY = 300 + Utils.randomInt(-50, 50);
+        // Choose spawn point: prefer level.spawnPoints if provided
+        let sx = null;
+        let sy = null;
+        try {
+            if (level && Array.isArray(level.spawnPoints) && level.spawnPoints.length > 0) {
+                const sp = level.spawnPoints[Utils.randomInt(0, level.spawnPoints.length - 1)];
+                // sp.x can be 'left'|'right' or a number
+                if (typeof sp.x === 'string') {
+                    if (sp.x === 'left') sx = -50;
+                    else if (sp.x === 'right') sx = level.width + 50;
+                } else if (typeof sp.x === 'number') {
+                    sx = sp.x;
+                }
+                sy = (typeof sp.y === 'number') ? sp.y : (300 + Utils.randomInt(-50, 50));
+            }
+        } catch (e) { /* ignore */ }
 
-        const enemy = new Enemy(spawnX, spawnY, "BASIC", this.audioManager);
+        // Fallback spawn right if none selected
+        if (sx === null) sx = level.width + 50;
+        if (sy === null) sy = 300 + Utils.randomInt(-50, 50);
+
+        const enemy = new Enemy(sx, sy, "BASIC", this.audioManager);
         this.enemies.push(enemy);
     }
 

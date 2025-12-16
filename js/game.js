@@ -47,9 +47,15 @@ class Game {
             // Use a scenic background by default so the level renders a
             // panorama instead of the fallback gradient.
             background: 'bg_forest',
+            // Two spawn points: right (default behavior) and left (new)
+            spawnPoints: [ { x: 'right', y: 300 }, { x: 'left', y: 300 } ],
             platforms: [
                 { x: 100, y: 600, width: 400, height: 32, type: 'static', tile: 'platform_tile' },
                 { x: 600, y: 500, width: 200, height: 32, type: 'static', tile: 'platform_tile' },
+                { x: 420, y: 560, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1000, y: 480, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1400, y: 420, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1200, y: 300, width: 200, height: 24, type: 'moving', tile: 'platform_tile', axis: 'x', range: 120, speed: 0.8 },
                 { x: 900, y: 400, width: 250, height: 32, type: 'static', tile: 'platform_tile' },
                 { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' }
             ]
