@@ -1,4 +1,4 @@
-/**
+side tr/**
  * Game class - Main game controller
  */
 
@@ -369,14 +369,36 @@ class Game {
 
     updateCamera() {
         // Smooth camera following
-        // Use the logical viewport width so horizontal panning works correctly on narrow mobile viewports
         const horizontalBias = this.isMobile ? 0.28 : (1 / 3);
         const targetCameraX = this.player.x - (this.viewWidth || this.width) * horizontalBias;
         const lerpFactorX = this.isMobile ? 0.12 : 0.1;
         this.cameraX = Utils.lerp(this.cameraX || 0, targetCameraX, lerpFactorX);
         
         // Clamp camera to level bounds (use viewWidth so camera can move on narrow mobile viewports)
-        this.cameraX = Utils.clamp(this.cameraX, 0, Math.max(0, this.level.width - (this.viewWidth || this.width)));
+        const clampMaxX = Math.max(0, this.level.width - (this.viewWidth || this.width));
+        this.cameraX = Utils.clamp(this.cameraX, 0, clampMaxX);
+
+        // Diagnostics: emit a short trace for the first few frames while playing to capture values
+        if (!this._camDiagInitialized) {
+            this._camDiagInitialized = true;
+            this._camDiagCount = 0;
+        }
+        if (this.state === 'PLAYING' && this._camDiagCount < 20) {
+            console.log('CameraX trace', {
+                frame: this._camDiagCount,
+                playerX: this.player.x,
+                cameraX: this.cameraX,
+                targetCameraX,
+                clampMaxX,
+                viewWidth: this.viewWidth,
+                levelWidth: this.level.width
+            });
+            this._camDiagCount++;
+            if (this._camDiagCount === 20 && clampMaxX === 0) {
+                console.warn('No horizontal room to pan: level.width <= viewWidth', { levelWidth: this.level.width, viewWidth: this.viewWidth });
+            }
+        }
+
         // Vertical camera follow to keep player visible on short viewports.
         // Use a slightly smaller bias on mobile so the camera stays lower (more floor visible).
         const verticalBias = this.isMobile ? 0.35 : 0.45;
@@ -388,11 +410,6 @@ class Game {
         const nearFloorThreshold = 32;
         if (this.player.y + this.player.height >= this.level.height - nearFloorThreshold) {
             this.cameraY = Math.max(this.cameraY, Math.max(0, this.level.height - this.viewHeight));
-        }
-        // Log first computed cameraX for diagnostics
-        if (!this._loggedCameraX && this.state === 'PLAYING') {
-            this._loggedCameraX = true;
-            console.log('CameraX diagnostic', { cameraX: this.cameraX, targetCameraX, viewWidth: this.viewWidth, levelWidth: this.level.width });
         }
         // Log first computed cameraY for diagnostics
         if (!this._loggedCameraY && this.state === 'PLAYING') {

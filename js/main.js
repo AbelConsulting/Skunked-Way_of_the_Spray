@@ -102,6 +102,28 @@ class GameApp {
             // content underneath it.
             this.game.viewWidth = cssWidth;
             this.game.viewHeight = (typeof finalEffectiveCssHeight !== 'undefined') ? finalEffectiveCssHeight : effectiveCssHeight;
+
+            // Ensure the level/world is wider than the visible viewport so
+            // horizontal camera panning is possible on narrow mobile viewports.
+            // If the level is too narrow, increase its width and extend any
+            // floor/platforms that span the bottom of the level.
+            try {
+                if (this.game.level) {
+                    const minWorldWidth = (this.game.viewWidth || cssWidth) + 240; // allow room to pan
+                    if (this.game.level.width < minWorldWidth) {
+                        this.game.level.width = minWorldWidth;
+                        for (const p of this.game.level.platforms) {
+                            // If platform is the floor or reaches bottom, extend it
+                            if (p.y + p.height >= this.game.level.height - 8) {
+                                p.width = Math.max(p.width, this.game.level.width - p.x);
+                            }
+                        }
+                        console.log('Adjusted level.width to allow horizontal panning', { levelWidth: this.game.level.width, viewWidth: this.game.viewWidth });
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to adjust level width for mobile panning', e);
+            }
         }
     }
 
