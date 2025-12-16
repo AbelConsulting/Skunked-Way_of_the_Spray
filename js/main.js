@@ -131,6 +131,8 @@ class GameApp {
             } catch (e) {
                 console.warn('Failed to adjust level width for mobile panning', e);
             }
+            // Re-render static layer if available (platform tiles etc.)
+            try { if (this.game.level && typeof this.game.level.renderStaticLayer === 'function') this.game.level.renderStaticLayer(this.game.viewWidth, this.game.viewHeight); } catch (e) {}
         }
     }
 

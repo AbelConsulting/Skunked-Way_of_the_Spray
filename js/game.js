@@ -83,6 +83,7 @@ class Game {
                 window.snapCameraToRight = () => { this.cameraX = Math.max(0, this.level.width - (this.viewWidth || this.width)); };
                 window.snapCameraToLeft = () => { this.cameraX = 0; };
                 window.toggleCameraDebug = () => { this.debugOverlay = !this.debugOverlay; };
+                window.rebuildStaticLayer = () => { try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { console.warn('rebuildStaticLayer failed', e); } };
             } catch (e) {}
         }
     }
@@ -294,6 +295,8 @@ class Game {
             this.dispatchGameStateChange();
             // Ensure camera centers on player immediately after starting
             try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) {}
+            // Pre-render static layer (platform tiles) so visuals are ready
+            try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) {}
         }
 
         // Key up handler

@@ -135,6 +135,26 @@ class SpriteLoader {
                     console.warn(`SpriteLoader: sprite ${name} width ${img.width} is not divisible by frameCount ${count} (frame width=${(img.width/count).toFixed(2)})`);
                 }
             }
+            // Ensure tile sprites are upscaled to 64x64 for consistent tiling
+            const tileNames = ['ground_tile', 'platform_tile', 'wall_tile'];
+            for (const t of tileNames) {
+                const img = this.sprites[t];
+                if (!img) continue;
+                try {
+                    if (img.width !== 64 || img.height !== 64) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 64;
+                        canvas.height = 64;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) ctx.imageSmoothingEnabled = false;
+                        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, 64, 64);
+                        this.sprites[t] = canvas;
+                        console.log(`SpriteLoader: upscaled tile ${t} from ${img.width}x${img.height} to 64x64`);
+                    }
+                } catch (e) {
+                    // ignore scaling errors
+                }
+            }
         } catch (e) {}
 
         // Report missing assets once

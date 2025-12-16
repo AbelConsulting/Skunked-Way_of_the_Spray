@@ -19,6 +19,8 @@ class Level {
             initialY: p.y,
             timeOffset: Math.random() * Math.PI * 2 // Randomize start phase
         }));
+        // Mark static layer dirty so it will be re-rendered on next draw
+        this._staticNeedsUpdate = true;
     }
 
     update(deltaTime) {
@@ -127,9 +129,28 @@ class Level {
         ctx.save();
         ctx.translate(-cameraX, -cameraY);
 
-        // 2. Draw Platforms
+        // 2. Draw Platforms — use pre-rendered static layer for non-moving
+        // platforms to speed up rendering on low-end devices.
+        if (this._staticLayerCanvas && !this._staticNeedsUpdate) {
+            try {
+                ctx.imageSmoothingEnabled = false;
+                // Draw entire static layer stretched to the level size.
+                ctx.drawImage(this._staticLayerCanvas, 0, 0, this._staticLayerCanvas.width, this._staticLayerCanvas.height, 0, 0, this.width, this.height);
+            } catch (e) {
+                // fallback to per-platform draw
+                for (const platform of this.platforms) {
+                    if (platform.type !== 'moving') this.drawPlatform(ctx, platform);
+                }
+            }
+        } else {
+            for (const platform of this.platforms) {
+                if (platform.type !== 'moving') this.drawPlatform(ctx, platform);
+            }
+        }
+
+        // Always draw moving platforms on top
         for (const platform of this.platforms) {
-            this.drawPlatform(ctx, platform);
+            if (platform.type === 'moving') this.drawPlatform(ctx, platform);
         }
 
         ctx.restore();
@@ -223,5 +244,73 @@ class Level {
            ctx.fillStyle = '#fff';
            ctx.fillRect(p.x, p.y, p.width, 6);
            ctx.restore();
+    }
+
+    // ----- Static layer pre-rendering for non-moving platforms -----
+    // Call when level content or viewport size changes
+    renderStaticLayer(viewWidth = null, viewHeight = null) {
+        try {
+            const MAX_STATIC_WIDTH = 4096; // cap to avoid excessive memory use
+            const targetW = Math.min(this.width, MAX_STATIC_WIDTH);
+            // We'll render at the level height so vertical content is preserved
+            const targetH = Math.max(1, Math.floor(this.height));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.floor(targetW));
+            canvas.height = Math.max(1, Math.floor(targetH));
+            const c = canvas.getContext('2d');
+            c.imageSmoothingEnabled = false;
+
+            // Clear
+            c.fillStyle = 'rgba(0,0,0,0)';
+            c.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw static (non-moving) platforms into the static canvas
+            for (const p of this.platforms) {
+                if (p.type === 'moving') continue; // skip moving platforms
+
+                const sx = Math.floor((p.x / this.width) * canvas.width);
+                const sy = Math.floor((p.y / this.height) * canvas.height);
+                const sw = Math.max(1, Math.floor((p.width / this.width) * canvas.width));
+                const sh = Math.max(1, Math.floor((p.height / this.height) * canvas.height));
+
+                // If tile mode with a pattern, create pattern on the static ctx
+                if (this.tileMode === 'tiles') {
+                    const tileName = p.tile || 'platform_tile';
+                    const tileImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(tileName) : null;
+                    if (tileImg) {
+                        try {
+                            const pattern = c.createPattern(tileImg, 'repeat');
+                            if (pattern) {
+                                c.save();
+                                c.fillStyle = pattern;
+                                c.fillRect(sx, sy, sw, sh);
+                                c.restore();
+                                // subtle border
+                                c.save(); c.strokeStyle = 'rgba(0,0,0,0.6)'; c.lineWidth = 2; c.strokeRect(sx, sy, sw, sh); c.restore();
+                                continue;
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                // Fallback neon style
+                c.save();
+                const grad = c.createLinearGradient(sx, sy, sx, sy + sh);
+                grad.addColorStop(0, this.theme.platTop);
+                grad.addColorStop(1, this.theme.platBot);
+                c.fillStyle = grad;
+                c.fillRect(sx, sy, sw, sh);
+                c.restore();
+            }
+
+            this._staticLayerCanvas = canvas;
+            this._staticLayerScale = canvas.width / this.width;
+            this._staticNeedsUpdate = false;
+        } catch (e) {
+            this._staticLayerCanvas = null;
+            this._staticNeedsUpdate = true;
+            console.warn('renderStaticLayer failed', e);
+        }
     }
 }
