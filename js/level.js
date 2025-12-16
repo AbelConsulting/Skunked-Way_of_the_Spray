@@ -92,14 +92,20 @@ class Level {
                 // Compute scale so bg image covers the visible area vertically
                 const scaleY = h / bgImg.height;
                 const scaledW = Math.ceil(bgImg.width * scaleY);
-                // Determine repeated tiles needed to cover level width
-                const repeatCount = Math.ceil((this.width) / scaledW) + 1;
-                // Draw repeated background with configurable parallax
+                // Determine repeated tiles needed to cover level width. On mobile
+                // use a single stretched background to reduce draw calls.
                 const parallax = (typeof this.backgroundParallax !== 'undefined') ? this.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
-                const startX = Math.floor(-((cameraX * parallax) % scaledW));
+                let repeatCount = Math.ceil((this.width) / scaledW) + 1;
+                let drawScaledW = scaledW;
+                if (this.useMobileOptimizations) {
+                    // Stretch the background to the level width and draw it once.
+                    drawScaledW = Math.max(1, Math.ceil(this.width));
+                    repeatCount = 1;
+                }
+                const startX = Math.floor(-((cameraX * parallax) % drawScaledW));
                 for (let i = 0; i < repeatCount; i++) {
-                    const dx = startX + i * scaledW;
-                    ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, dx, cameraY, scaledW, h);
+                    const dx = startX + i * drawScaledW;
+                    ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, dx, cameraY, drawScaledW, h);
                 }
             } catch (e) {
                 // fallback to gradient if draw fails

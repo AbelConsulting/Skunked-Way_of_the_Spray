@@ -99,7 +99,14 @@ class GameApp {
             // Allow mobile to expand the logical horizontal viewport so more
             // of the level is visible without changing the CSS canvas size.
             // Use `Config.MOBILE_VIEW_SCALE` when running on mobile devices.
-            const mobileScale = (this.isMobile && (typeof Config !== 'undefined')) ? (Config.MOBILE_VIEW_SCALE || 1.0) : 1.0;
+            // Respect configured mobile scale, but clamp it to sane bounds to
+            // avoid making the logical viewport too large on tiny phones.
+            let mobileScale = (this.isMobile && (typeof Config !== 'undefined')) ? (Config.MOBILE_VIEW_SCALE || 1.0) : 1.0;
+            if (typeof Config !== 'undefined') {
+                const min = Config.MOBILE_VIEW_SCALE_MIN || 1.0;
+                const max = Config.MOBILE_VIEW_SCALE_MAX || Math.max(min, mobileScale);
+                mobileScale = Math.max(min, Math.min(max, mobileScale));
+            }
             this.game.viewWidth = Math.max(1, Math.floor(cssWidth * mobileScale));
             this.game.viewHeight = (typeof finalEffectiveCssHeight !== 'undefined') ? finalEffectiveCssHeight : effectiveCssHeight;
 
@@ -281,7 +288,7 @@ class GameApp {
         while (this._accumulator >= step && steps < maxSteps) {
             if (this.game) this.game.update(step);
             this._accumulator -= step;
-            steps++;
+            try {
         }
 
         // Render once with the current state. Throttle renders on mobile to
@@ -298,9 +305,18 @@ class GameApp {
         }
 
         requestAnimationFrame((time) => this.gameLoop(time));
-    }
+            // Apply mobile-friendly background/parallax defaults
+            try {
+                if (this.game.level) {
+                    this.game.level.useMobileOptimizations = true;
+                    if (typeof Config !== 'undefined' && typeof Config.BACKGROUND_PARALLAX_MOBILE !== 'undefined') {
+                        this.game.level.backgroundParallax = Config.BACKGROUND_PARALLAX_MOBILE;
+                    }
+                }
+            } catch (e) {}
 
-    stop() {
+            // Ensure camera recenters immediately for mobile UX changes
+            try { if (typeof this.game.centerCameraOnPlayer === 'function') this.game.centerCameraOnPlayer(); } catch (e) {}
         this.running = false;
     }
 }

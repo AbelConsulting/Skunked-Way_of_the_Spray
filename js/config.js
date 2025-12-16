@@ -55,12 +55,17 @@ const Config = {
     // more horizontal area without changing the CSS canvas size.
     // 1.0 = same as CSS width, >1.0 expands the logical viewport horizontally.
     MOBILE_VIEW_SCALE: 1.2,
+    // Mobile scale clamps to avoid excessively large logical viewports
+    MOBILE_VIEW_SCALE_MIN: 1.0,
+    MOBILE_VIEW_SCALE_MAX: 1.3,
 
     // Camera startup options: 'center' or 'bottom-left'
     CAMERA_START: 'bottom-left',
 
     // Background parallax default (0 = static, 1 = move with camera)
     BACKGROUND_PARALLAX: 0.5,
+    // Reduced parallax on mobile for performance and readability
+    BACKGROUND_PARALLAX_MOBILE: 0.3,
 
     // Enable tile-based platform graphics when assets are present
     USE_TILE_GRAPHICS: true
