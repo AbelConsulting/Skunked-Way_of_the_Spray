@@ -184,6 +184,43 @@ class GameApp {
                 Config.FPS = Math.min(Config.FPS || 60, Config.MOBILE_FPS || 30);
             }
 
+            // Runtime mobile performance presets: 'low' | 'mid' | 'high'
+            window.setMobilePerformanceMode = (mode) => {
+                try {
+                    if (!this.isMobile) {
+                        console.log('setMobilePerformanceMode: not mobile, still applying settings');
+                    }
+                    if (mode === 'low') {
+                        Config.MOBILE_FPS = 20;
+                        Config.MOBILE_DPR_SCALE_REDUCTION = 0.5;
+                        Config.MOBILE_MAX_PARTICLES = 0;
+                        Config.MOBILE_MAX_DAMAGE_NUMBERS = 0;
+                        Config.BACKGROUND_PARALLAX_MOBILE = 0.08;
+                    } else if (mode === 'mid') {
+                        Config.MOBILE_FPS = 30;
+                        Config.MOBILE_DPR_SCALE_REDUCTION = 0.6;
+                        Config.MOBILE_MAX_PARTICLES = 1;
+                        Config.MOBILE_MAX_DAMAGE_NUMBERS = 1;
+                        Config.BACKGROUND_PARALLAX_MOBILE = 0.2;
+                    } else {
+                        // high / default
+                        Config.MOBILE_FPS = 40;
+                        Config.MOBILE_DPR_SCALE_REDUCTION = 0.7;
+                        Config.MOBILE_MAX_PARTICLES = 2;
+                        Config.MOBILE_MAX_DAMAGE_NUMBERS = 2;
+                        Config.BACKGROUND_PARALLAX_MOBILE = 0.3;
+                    }
+                    // Apply immediate changes
+                    if (this.isMobile) {
+                        Config.FPS = Math.min(Config.FPS || 60, Config.MOBILE_FPS || 30);
+                        try { this.adjustCanvasForMobile(); } catch (e) {}
+                    }
+                    try { console.log('Mobile performance mode set to', mode, { MOBILE_FPS: Config.MOBILE_FPS, MOBILE_DPR_SCALE_REDUCTION: Config.MOBILE_DPR_SCALE_REDUCTION }); } catch (e) {}
+                    try { localStorage.setItem('mobilePerfMode', mode); } catch (e) {}
+                    return true;
+                } catch (e) { console.warn('setMobilePerformanceMode failed', e); return false; }
+            };
+
             // Apply persisted mobile performance preset if present
             try {
                 const pm = localStorage.getItem('mobilePerfMode');
@@ -274,43 +311,6 @@ class GameApp {
                 idx = (idx + 1) % choices.length;
                 window.setMobileParallax(choices[idx], true);
                 return choices[idx];
-            };
-
-            // Runtime mobile performance presets: 'low' | 'mid' | 'high'
-            window.setMobilePerformanceMode = (mode) => {
-                try {
-                    if (!this.isMobile) {
-                        console.log('setMobilePerformanceMode: not mobile, still applying settings');
-                    }
-                    if (mode === 'low') {
-                        Config.MOBILE_FPS = 20;
-                        Config.MOBILE_DPR_SCALE_REDUCTION = 0.5;
-                        Config.MOBILE_MAX_PARTICLES = 0;
-                        Config.MOBILE_MAX_DAMAGE_NUMBERS = 0;
-                        Config.BACKGROUND_PARALLAX_MOBILE = 0.08;
-                    } else if (mode === 'mid') {
-                        Config.MOBILE_FPS = 30;
-                        Config.MOBILE_DPR_SCALE_REDUCTION = 0.6;
-                        Config.MOBILE_MAX_PARTICLES = 1;
-                        Config.MOBILE_MAX_DAMAGE_NUMBERS = 1;
-                        Config.BACKGROUND_PARALLAX_MOBILE = 0.2;
-                    } else {
-                        // high / default
-                        Config.MOBILE_FPS = 40;
-                        Config.MOBILE_DPR_SCALE_REDUCTION = 0.7;
-                        Config.MOBILE_MAX_PARTICLES = 2;
-                        Config.MOBILE_MAX_DAMAGE_NUMBERS = 2;
-                        Config.BACKGROUND_PARALLAX_MOBILE = 0.3;
-                    }
-                    // Apply immediate changes
-                    if (this.isMobile) {
-                        Config.FPS = Math.min(Config.FPS || 60, Config.MOBILE_FPS || 30);
-                        try { this.adjustCanvasForMobile(); } catch (e) {}
-                    }
-                    try { console.log('Mobile performance mode set to', mode, { MOBILE_FPS: Config.MOBILE_FPS, MOBILE_DPR_SCALE_REDUCTION: Config.MOBILE_DPR_SCALE_REDUCTION }); } catch (e) {}
-                    try { localStorage.setItem('mobilePerfMode', mode); } catch (e) {}
-                    return true;
-                } catch (e) { console.warn('setMobilePerformanceMode failed', e); return false; }
             };
 
             // Mobile-friendly adjustments (debounced resize)
