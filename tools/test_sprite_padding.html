@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sprite Padding Detection Test</title>
+  <!-- Ensure relative asset paths resolve to project root when opened via file:// -->
+  <base href="../">
+</head>
+<body>
+  <script src="js/spriteLoader.js"></script>
+  <script>
+    (async () => {
+      const s = new SpriteLoader();
+      await s.loadAllSprites();
+      const result = {};
+      const names = ['ninja_idle','ninja_walk','ninja_jump','ninja_attack','ninja_shadow_strike','ninja_hurt'];
+      for (const name of names) {
+        const img = s.getSprite(name);
+        result[name] = {
+          width: img ? img.width : null,
+          detectedPad: img ? (img._detectedPad || null) : null,
+          detectedFrameWidth: img ? (img._detectedFrameWidth || null) : null,
+          detectedFrameStride: img ? (img._detectedFrameStride || null) : null
+        };
+      }
+      // Expose for Playwright runner
+      window.__SPRITE_PADDING_RESULT = result;
+      console.log('SPRITE_PADDING_RESULT', JSON.stringify(result));
+    })();
+  </script>
+</body>
+</html>
