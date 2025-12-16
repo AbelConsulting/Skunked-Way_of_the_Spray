@@ -109,6 +109,34 @@ class SpriteLoader {
     }
 
     /**
+     * Convenience: create an Animation for a named sprite sheet using
+     * sensible defaults or auto-detected frame stride when the sheet
+     * width isn't perfectly divisible by frameCount.
+     */
+    createAnimation(name, frameCount, frameDuration = 0.1, opts = {}) {
+        const sheet = this.getSprite(name);
+        if (!sheet) return new Animation(null, frameCount, frameDuration, opts);
+
+        const inferredFrameWidth = opts.frameWidth || Math.floor(sheet.width / frameCount);
+        const inferredFrameHeight = opts.frameHeight || sheet.height || 64;
+
+        let frameStride = opts.frameStride;
+        if (!frameStride) {
+            if ((sheet.width % frameCount) === 0) {
+                frameStride = inferredFrameWidth;
+            } else {
+                // Choose the nearest integer stride and warn — this handles
+                // sheets that include padding between frames.
+                frameStride = Math.round(sheet.width / frameCount);
+                try { console.warn(`SpriteLoader: ${name} width ${sheet.width} not divisible by ${frameCount}; using inferred stride ${frameStride}`); } catch (e) {}
+            }
+        }
+
+        const cfg = Object.assign({}, opts, { frameWidth: inferredFrameWidth, frameHeight: inferredFrameHeight, frameStride });
+        return new Animation(sheet, frameCount, frameDuration, cfg);
+    }
+
+    /**
      * Get loading progress (0-1)
      */
     getProgress() {

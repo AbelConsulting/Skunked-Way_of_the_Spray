@@ -82,14 +82,27 @@ class Player {
         const ninja_shadow_strike = spriteLoader.getSprite('ninja_shadow_strike');
         const ninja_hurt = spriteLoader.getSprite('ninja_hurt');
 
-        this.animations = {
-            idle: new Animation(ninja_idle, 4, 0.15, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-            walk: new Animation(ninja_walk, 6, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-            jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-            attack: new Animation(ninja_attack, 6, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-            shadow_strike: new Animation(ninja_shadow_strike, 8, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-            hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
-        };
+        // Use spriteLoader.createAnimation when available so frameStride can be
+        // inferred from sheet dimensions (handles padding between frames).
+        if (spriteLoader && typeof spriteLoader.createAnimation === 'function') {
+            this.animations = {
+                idle: spriteLoader.createAnimation('ninja_idle', 4, 0.15),
+                walk: spriteLoader.createAnimation('ninja_walk', 6, 0.1),
+                jump: spriteLoader.createAnimation('ninja_jump', 4, 0.12),
+                attack: spriteLoader.createAnimation('ninja_attack', 6, 0.08),
+                shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 8, 0.05),
+                hurt: spriteLoader.createAnimation('ninja_hurt', 2, 0.1)
+            };
+        } else {
+            this.animations = {
+                idle: new Animation(ninja_idle, 4, 0.15, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                walk: new Animation(ninja_walk, 6, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                attack: new Animation(ninja_attack, 6, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                shadow_strike: new Animation(ninja_shadow_strike, 8, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
+            };
+        }
 
         this.currentAnimation = this.animations.idle;
     }
