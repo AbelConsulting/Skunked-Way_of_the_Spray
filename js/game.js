@@ -123,9 +123,15 @@ class Game {
         setupInput() {
             // Normalize input and use consistent keys (use event.code when available)
             const normalize = (ev) => {
-                const raw = ev.code || ev.key || '';
-                return String(raw).toLowerCase();
-            };
+                // Prefer event.code (hardware key) when present; fall back to event.key.
+                const code = (ev.code || '').toLowerCase();
+                const key = (ev.key || '').toLowerCase();
+                if (code) return code;
+                // Normalize space key variants (' ', 'Spacebar') to 'space'
+                if (key === ' ' || key === 'spacebar' || key === 'space') return 'space';
+                // Keep named keys like 'arrowleft' etc.
+                return key;
+            };"
 
             // Key down handler
             window.addEventListener('keydown', (event) => {
@@ -399,7 +405,8 @@ class Game {
                 const prect = { x: this.player.x, y: this.player.y, width: this.player.width, height: this.player.height };
                 for (const h of this.level.hazards) {
                     if (h && Utils.rectCollision(prect, { x: h.x, y: h.y, width: h.width, height: h.height })) {
-                        if (h.type === 'spike') {
+                        // Treat spike and moving_spike the same: they deal damage on contact
+                        if (h.type === 'spike' || h.type === 'moving_spike') {
                             // Small damage on contact; player's invulnerability timer prevents rapid repeats
                             const died = this.player.takeDamage(20, null);
                             if (died) {
