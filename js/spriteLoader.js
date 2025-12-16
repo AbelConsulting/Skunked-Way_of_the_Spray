@@ -196,7 +196,15 @@ class SpriteLoader {
             }
         }
 
-        const cfg = Object.assign({}, opts, { frameWidth: inferredFrameWidth, frameHeight: inferredFrameHeight, frameStride });
+        // Compute optional centered offset for spritesheets that contain
+        // padding or margins so we sample frames from the center region.
+        const totalUsed = frameStride * frameCount;
+        let frameOffset = opts.frameOffset || 0;
+        if (sheet.width > totalUsed) {
+            frameOffset = Math.floor((sheet.width - totalUsed) / 2);
+        }
+
+        const cfg = Object.assign({}, opts, { frameWidth: inferredFrameWidth, frameHeight: inferredFrameHeight, frameStride, frameOffset });
         return new Animation(sheet, frameCount, frameDuration, cfg);
     }
 
@@ -226,6 +234,8 @@ class Animation {
         // If frames in the sheet have padding/spacing, frameStride is the distance
         // between consecutive frames on the sheet. Default to frameWidth.
         this.frameStride = opts.frameStride || this.frameWidth;
+        // Optional offset to account for centered padding/margins on the sheet
+        this.frameOffset = opts.frameOffset || 0;
     }
 
     /**
@@ -253,7 +263,7 @@ class Animation {
     draw(ctx, x, y, width, height, flipHorizontal = false) {
         if (!this.spriteSheet) return;
 
-        const sx = Math.floor(this.currentFrame * this.frameStride);
+        const sx = Math.floor(this.frameOffset + (this.currentFrame * this.frameStride));
         const sy = 0;
 
         ctx.save();

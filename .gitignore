@@ -38,3 +38,6 @@ Thumbs.db
 
 # Game specific
 *.log
+# Backups created by sprite repair tools
+*.bak
+toolshed/backups/

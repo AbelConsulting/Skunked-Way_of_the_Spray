@@ -6,6 +6,7 @@ This folder contains utilities to help with sprite asset management.
 Usage:
 
 - Generate placeholder backgrounds and tiles:
+- Fix sprite sheet widths (pad to integer frame widths): `fix_spritesheets.py` - pads known sprite sheets so sheet width is a multiple of their expected frame count (use `--backup` to keep originals).
 
   ```sh
   python toolshed/generate_backgrounds.py
