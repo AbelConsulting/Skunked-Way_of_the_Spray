@@ -205,15 +205,35 @@ class GameApp {
 
     async init() {
         try {
-            // Warn if opened via file:// — audio and other networked assets will fail due to browser restrictions
+            // Warn if opened via file:// — audio and some assets may fail due to browser restrictions
             if (location && location.protocol === 'file:') {
                 try {
-                    const overlay = document.getElementById('error-overlay');
-                    const content = document.getElementById('error-content');
-                    if (overlay && content) {
-                        overlay.style.display = 'block';
-                        content.textContent = 'Detected file:// protocol. Please serve the project over HTTP (e.g. run `python -m http.server 8000` from the project root and open http://localhost:8000) to avoid CORS and fetch errors.';
+                    // Prefer the friendly file-protocol overlay with a "Start Anyway" option
+                    const fileOverlay = document.getElementById('file-protocol-overlay');
+                    if (fileOverlay) {
+                        fileOverlay.style.display = 'block';
+                        // Attach handlers for the overlay buttons
+                        const closeBtn = document.getElementById('file-overlay-close');
+                        if (closeBtn) closeBtn.addEventListener('click', () => { fileOverlay.style.display = 'none'; });
+                        const startBtn = document.getElementById('file-overlay-start');
+                        if (startBtn) startBtn.addEventListener('click', () => {
+                            window._allowFileStart = true;
+                            fileOverlay.style.display = 'none';
+                            try { console.log('User opted to start anyway on file:// (audio may be disabled)'); } catch (e) {}
+                        });
+                    } else {
+                        // Fallback to showing error-overlay if file-protocol overlay isn't present
+                        const overlay = document.getElementById('error-overlay');
+                        const content = document.getElementById('error-content');
+                        if (overlay && content) {
+                            overlay.style.display = 'block';
+                            content.textContent = 'Detected file:// protocol. Please serve the project over HTTP (e.g. run `python -m http.server 8000` from the project root and open http://localhost:8000) to avoid CORS and fetch errors.';
+                        }
                     }
+
+                    // Set a flag so later asset-loading can gracefully skip audio
+                    window._fileProtocol = true;
+                    try { console.warn('Running from file:// — audio and some assets may not load. You can click "Start Anyway" to continue in a degraded mode.'); } catch (e) {}
                 } catch (e) {}
             }
 
@@ -509,11 +529,20 @@ class GameApp {
         // Defer music loading until game start to reduce initial bandwidth and decoding on mobile
         const musicList = [];
 
-        // Enable audio on first user interaction (required by browsers)
-        window.addEventListener('keydown', () => this.audioManager.initialize(), { once: true });
-        window.addEventListener('mousedown', () => this.audioManager.initialize(), { once: true });
+        // If running from file://, skip audio loading (browsers often block it) unless user clicked "Start Anyway"
+        if (window._fileProtocol && !window._allowFileStart) {
+            try { console.warn('File protocol detected: skipping audio asset loading. Click "Start Anyway" to attempt enabling audio.'); } catch (e) {}
+        } else {
+            // Enable audio on first user interaction (required by browsers)
+            window.addEventListener('keydown', () => this.audioManager.initialize(), { once: true });
+            window.addEventListener('mousedown', () => this.audioManager.initialize(), { once: true });
 
-        await this.audioManager.loadAssets(soundList, musicList);
+            try {
+                await this.audioManager.loadAssets(soundList, musicList);
+            } catch (e) {
+                console.warn('Audio loading failed; continuing without audio.', e);
+            }
+        }
 
         // Update progress
         this.updateLoadingProgress(100);

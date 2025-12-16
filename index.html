@@ -260,9 +260,12 @@
 
         <!-- Informational overlay shown when running from file:// to explain fetch/CORS issues -->
         <div id="file-protocol-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4001; padding:20px; overflow:auto;">
-            <h2 style="margin-bottom:8px;">Serving over HTTP is required</h2>
-            <p style="font-size:14px; max-width:800px;">It looks like you opened the game directly from the file system (file://). Modern browsers block cross-origin resource requests when the page is loaded from file:// which will prevent audio and other assets from loading. To run locally, run <code>python -m http.server 8000</code> in the project root and open <a href="http://localhost:8000" style="color:#9ad;">http://localhost:8000</a>.</p>
-            <div style="margin-top:12px;"><button id="file-overlay-close" style="padding:8px 12px; background:#2ecc71; color:#000; border-radius:6px;">Close</button></div>
+            <h2 style="margin-bottom:8px;">Serving over HTTP is recommended</h2>
+            <p style="font-size:14px; max-width:800px;">It looks like you opened the game directly from the file system (file://). Modern browsers block some cross-origin resource requests when the page is loaded from file:// which may prevent audio and other assets from loading. To run locally, run <code>python -m http.server 8000</code> in the project root and open <a href="http://localhost:8000" style="color:#9ad;">http://localhost:8000</a>.</p>
+            <div style="margin-top:12px;">
+                <button id="file-overlay-start" style="padding:8px 12px; background:#ffcc33; color:#000; border-radius:6px;">Start Anyway (limited)</button>
+                <button id="file-overlay-close" style="padding:8px 12px; background:#2ecc71; color:#000; border-radius:6px; margin-left:8px;">Close</button>
+            </div>
         </div>
 
         <!-- legacy mobile restart overlay removed; on-screen touch controls provide restart -->
