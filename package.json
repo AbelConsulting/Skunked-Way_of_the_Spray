@@ -8,6 +8,7 @@
     "start": "node tools/csp_server.js",
     "test:touch-landscape": "node tools/touch_controls_landscape_test.js",
     "playwright:install": "npx playwright install"
+    ,"test:mobile-perf": "node tools/mobile_performance_test.js"
   },
   "devDependencies": {
     "esbuild": "^0.19.12",

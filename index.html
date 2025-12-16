@@ -158,6 +158,22 @@
             backdrop-filter: blur(4px);
         }
 
+        /* Mobile performance toggle (small button) */
+        #perf-mode-btn {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 501;
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            display: none; /* shown via JS only on mobile */
+            cursor: pointer;
+        }
+
         #pause-btn:hover { background: rgba(255,255,255,0.06); }
 
         #mobile-restart-btn {
@@ -204,6 +220,7 @@
 
         <!-- Pause Button (desktop & mobile) -->
         <button id="pause-btn" aria-label="Pause game" title="Pause" style="display:none;">⏸</button>
+        <button id="perf-mode-btn" title="Performance mode">Perf</button>
 
         <div id="mobile-start-overlay" style="display:none;">
             <button id="mobile-start-btn">Tap to Start</button>
@@ -550,6 +567,26 @@ try {
 } catch (e) {}
 
 // --- MOBILE START & FULLSCREEN ---
+
+// Mobile performance button wiring (cycles low/mid/high)
+(function(){
+    const btn = document.getElementById('perf-mode-btn');
+    if (!btn) return;
+    const modes = ['low','mid','high'];
+    let idx = 2; // default to 'high'
+    try { const saved = localStorage.getItem('mobilePerfMode'); if (saved) idx = modes.indexOf(saved) !== -1 ? modes.indexOf(saved) : idx; } catch (e) {}
+    const updateText = () => { btn.textContent = 'Perf: ' + modes[idx]; };
+    updateText();
+    btn.addEventListener('click', (e) => {
+        try { e && e.preventDefault(); } catch (e) {}
+        idx = (idx + 1) % modes.length;
+        updateText();
+        try { if (typeof window.setMobilePerformanceMode === 'function') window.setMobilePerformanceMode(modes[idx]); } catch (e) { console.warn('perf mode click failed', e); }
+    });
+    // Show button only on mobile
+    try { if (isMobile()) { btn.style.display = 'flex'; btn.style.alignItems = 'center'; } } catch (e) {}
+})();
+
 const mobileStartOverlay = document.getElementById('mobile-start-overlay');
 const mobileStartBtn = document.getElementById('mobile-start-btn');
 const mobileRestartOverlay = document.getElementById('mobile-restart-overlay');

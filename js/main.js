@@ -132,7 +132,17 @@ class GameApp {
                 console.warn('Failed to adjust level width for mobile panning', e);
             }
             // Re-render static layer if available (platform tiles etc.)
-            try { if (this.game.level && typeof this.game.level.renderStaticLayer === 'function') this.game.level.renderStaticLayer(this.game.viewWidth, this.game.viewHeight); } catch (e) {}
+            try {
+                if (this.game.level && typeof this.game.level.renderStaticLayer === 'function') {
+                    const now = performance.now();
+                    this._lastStaticRender = this._lastStaticRender || 0;
+                    // Throttle static re-renders to avoid expensive redraws during rapid resize/orientation changes
+                    if (now - this._lastStaticRender > 500) {
+                        this.game.level.renderStaticLayer(this.game.viewWidth, this.game.viewHeight);
+                        this._lastStaticRender = now;
+                    }
+                }
+            } catch (e) {}
         }
     }
 
@@ -215,6 +225,34 @@ class GameApp {
             if (initMobileParallax !== null && this.isMobile) {
                 try { Config.BACKGROUND_PARALLAX_MOBILE = initMobileParallax; console.log('Applied mobileParallax override from URL/localStorage', initMobileParallax); } catch (e) {}
             }
+
+            // Optionally apply mobile performance preset from URL: ?mobilePerf=low|mid|high
+            try {
+                const params = new URLSearchParams(location.search);
+                const mp = params.get('mobilePerf');
+                if (mp && this.isMobile && typeof window.setMobilePerformanceMode === 'function') {
+                    try { window.setMobilePerformanceMode(mp); console.log('Applied mobile performance preset from URL', mp); } catch (e) {}
+                }
+            } catch (e) {}
+
+            // Auto-detect low-end mobile devices and apply conservative presets
+            try {
+                const detectLowEndDevice = () => {
+                    try {
+                        const hw = navigator.hardwareConcurrency || 4;
+                        const dm = navigator.deviceMemory || 4;
+                        const dpr = window.devicePixelRatio || 1;
+                        const sw = Math.min(window.screen.width, window.screen.height) || 0;
+                        // Heuristic: low-end if <=2 logical cores or <=2GB RAM or small screen or low DPR
+                        if (hw <= 2 || dm <= 2 || sw <= 360 || dpr <= 1) return true;
+                    } catch (e) {}
+                    return false;
+                };
+                const pm = localStorage.getItem('mobilePerfMode');
+                if (this.isMobile && !pm && detectLowEndDevice()) {
+                    try { window.setMobilePerformanceMode('low'); console.log('Auto-applied mobilePerf=low based on device heuristics'); } catch (e) {}
+                }
+            } catch (e) {}
 
             // Expose helpers to change mobile parallax at runtime and persist choice
             window.setMobileParallax = (val, persist = true) => {
