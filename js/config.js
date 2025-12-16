@@ -65,7 +65,12 @@ const Config = {
     // Background parallax default (0 = static, 1 = move with camera)
     BACKGROUND_PARALLAX: 0.5,
     // Reduced parallax on mobile for performance and readability
-    BACKGROUND_PARALLAX_MOBILE: 0.3,
+    BACKGROUND_PARALLAX_MOBILE: 0.25,
+    // Mobile performance tuning
+    MOBILE_FPS: 30, // target FPS cap on mobile devices
+    MOBILE_DPR_SCALE_REDUCTION: 0.6, // multiply devicePixelRatio by this on mobile to save pixels
+    MOBILE_MAX_PARTICLES: 0, // number of spark particles allowed on mobile (0 = disabled)
+    MOBILE_MAX_DAMAGE_NUMBERS: 1, // limit on-screen damage numbers on mobile
     // Visual indicators for moving hazards (show path and timing indicators)
     HAZARD_INDICATORS: true,
 

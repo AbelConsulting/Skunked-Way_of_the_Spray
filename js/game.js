@@ -424,23 +424,30 @@ class Game {
             // Create visual feedback (limit on mobile)
             for (const enemy of this.enemyManager.getEnemies()) {
                 if (this.player.hitEnemies.has(enemy)) {
-                    // On mobile, limit damage numbers to reduce overdraw
-                    if (!this.isMobile || this.damageNumbers.length < 2) {
-                        this.damageNumbers.push(new DamageNumber(
-                            enemy.x + enemy.width / 2,
-                            enemy.y,
-                            Math.floor(attackResult.totalDamage / attackResult.enemiesHit),
-                            this.player.isShadowStriking
-                        ));
-                    }
+                    // Limit damage numbers to reduce overdraw on mobile
+                    try {
+                        const maxDn = (this.isMobile && typeof Config !== 'undefined' && typeof Config.MOBILE_MAX_DAMAGE_NUMBERS === 'number') ? Config.MOBILE_MAX_DAMAGE_NUMBERS : Infinity;
+                        if (!this.isMobile || this.damageNumbers.length < maxDn) {
+                            this.damageNumbers.push(new DamageNumber(
+                                enemy.x + enemy.width / 2,
+                                enemy.y,
+                                Math.floor(attackResult.totalDamage / attackResult.enemiesHit),
+                                this.player.isShadowStriking
+                            ));
+                        }
+                    } catch (e) { this.damageNumbers.push(new DamageNumber(enemy.x + enemy.width / 2, enemy.y, Math.floor(attackResult.totalDamage / attackResult.enemiesHit), this.player.isShadowStriking)); }
 
-                    // Skip spark particles on mobile
-                    if (!this.isMobile) {
-                        this.hitSparks.push(new HitSpark(
-                            enemy.x + enemy.width / 2,
-                            enemy.y + enemy.height / 2
-                        ));
-                    }
+                    // Spawn hit sparks only if allowed by mobile config
+                    try {
+                        const maxParticles = (this.isMobile && typeof Config !== 'undefined' && typeof Config.MOBILE_MAX_PARTICLES === 'number') ? Config.MOBILE_MAX_PARTICLES : Infinity;
+                        if (!this.isMobile || (maxParticles > 0 && this.hitSparks.length < maxParticles)) {
+                            this.hitSparks.push(new HitSpark(
+                                enemy.x + enemy.width / 2,
+                                enemy.y + enemy.height / 2
+                            ));
+                        }
+                    } catch (e) { /* ignore particle spawn errors */ }
+
                 }
             }
 
