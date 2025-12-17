@@ -10,7 +10,7 @@ import logging
 import traceback
 from urllib.parse import unquote, urlparse
 
-PORT = 8000
+PORT = 8001
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Enable basic logging

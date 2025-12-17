@@ -115,7 +115,12 @@ class Level {
         const h = viewHeight || this.height || ctx.canvas.height;
 
         let bgImg = null;
-        try { bgImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(this.backgroundName) : null; } catch (e) { bgImg = null; }
+        try {
+            if (!this.cachedSprites[this.backgroundName]) {
+                this.cachedSprites[this.backgroundName] = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(this.backgroundName) : null;
+            }
+            bgImg = this.cachedSprites[this.backgroundName];
+        } catch (e) { bgImg = null; }
         if (bgImg) {
             // Draw a simple parallax: background stretched horizontally to level width
             // and vertically to cover the view height. Use cameraX to offset for parallax.
@@ -269,6 +274,7 @@ class Level {
         this.backgroundGradient = null;
         this.tileMode = 'tiles'; // 'tiles' or 'neon' - controls platform rendering
         this._tilePatterns = {}; // cache for canvas patterns
+        this.cachedSprites = {}; // cache for sprite images
         
         // Cyberpunk style config
         this.theme = {
@@ -286,7 +292,11 @@ class Level {
         // If tile mode is enabled and sprite exists, draw a tiled fill
         if (this.tileMode === 'tiles') {
             const tileName = p.tile || 'platform_tile';
-            const tileImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(tileName) : null;
+            let tileImg = this.cachedSprites[tileName];
+            if (!tileImg) {
+                tileImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(tileName) : null;
+                if (tileImg) this.cachedSprites[tileName] = tileImg;
+            }
             if (tileImg) {
                 if (!this._tilePatterns) this._tilePatterns = {};
                 if (!this._tilePatterns[tileName]) {
@@ -383,7 +393,11 @@ class Level {
                 // If tile mode with a pattern, create pattern on the static ctx
                 if (this.tileMode === 'tiles') {
                     const tileName = p.tile || 'platform_tile';
-                    const tileImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(tileName) : null;
+                    let tileImg = this.cachedSprites[tileName];
+                    if (!tileImg) {
+                        tileImg = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(tileName) : null;
+                        if (tileImg) this.cachedSprites[tileName] = tileImg;
+                    }
                     if (tileImg) {
                         try {
                             const pattern = c.createPattern(tileImg, 'repeat');
