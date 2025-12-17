@@ -61,14 +61,7 @@ class Game {
                 { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' }
             ]
             ,
-            hazards: [
-                { x: 520, y: 680, width: 120, height: 20, type: 'spike' },
-                { x: 1100, y: 680, width: 180, height: 20, type: 'spike' },
-                // moving spike (vertical)
-                { x: 1480, y: 260, width: 48, height: 24, type: 'moving_spike', axis: 'y', range: 160, speed: 1.1 },
-                // horizontal sweeping spike
-                { x: 700, y: 520, width: 120, height: 20, type: 'moving_spike', axis: 'x', range: 200, speed: 0.6 }
-            ]
+            hazards: []
         };
         this.level.loadLevel(levelData);
         this.enemyManager = new EnemyManager(this.audioManager);
