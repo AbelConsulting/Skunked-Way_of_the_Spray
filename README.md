@@ -117,7 +117,7 @@ SkunkFU/
 │   ├── spriteLoader.js     # Sprite loading and animation
 │   ├── audioManager.js     # Audio system
 │   └── visualEffects.js    # Visual effects (damage numbers, etc.)
-├── src/                    # Python/Pygame version
+├── python/                 # Python/Pygame version (tucked away)
 │   ├── main.py             # Game entry point
 │   ├── game.py             # Main game controller
 │   ├── config.py           # Game configuration and constants

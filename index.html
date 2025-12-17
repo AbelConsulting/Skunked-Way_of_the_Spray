@@ -226,6 +226,12 @@
             <button id="mobile-start-btn">Tap to Start</button>
         </div>
 
+        <!-- Pause Overlay for Mobile -->
+        <div id="pause-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; flex-direction:column;">
+            <h1 style="color:#fff; font-size:48px; margin:0;">PAUSED</h1>
+            <button id="resume-btn" style="margin-top:20px; padding:12px 24px; font-size:18px; background:#00fff7; color:#000; border:none; border-radius:8px; cursor:pointer;">Resume</button>
+        </div>
+
         <!-- Level Editor Toggle & Panel -->
         <button id="editor-toggle-btn" title="Toggle Level Editor" style="position:absolute; left:12px; top:12px; z-index:800; padding:8px 10px; border-radius:6px; background:rgba(0,0,0,0.6); color:#fff; display:none;">🛠️ Editor</button>
 
@@ -565,6 +571,26 @@ try {
                     triggerKeyEvent('Escape', 'keydown');
                 }
             } catch (err) { console.warn('pause button handler failed', err); }
+        });
+    }
+} catch (e) {}
+
+// Wire resume button in pause overlay
+try {
+    const resumeBtn = document.getElementById('resume-btn');
+    if (resumeBtn) {
+        resumeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            try {
+                if (window.game && typeof window.game.togglePause === 'function') {
+                    window.game.togglePause();
+                } else if (typeof window.toggleGamePause === 'function') {
+                    window.toggleGamePause();
+                } else {
+                    // Fallback: synthesize Escape key
+                    triggerKeyEvent('Escape', 'keydown');
+                }
+            } catch (err) { console.warn('resume button handler failed', err); }
         });
     }
 } catch (e) {}

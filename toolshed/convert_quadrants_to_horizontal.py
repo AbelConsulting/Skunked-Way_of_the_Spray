@@ -147,4 +147,4 @@ if __name__ == "__main__":
     convert_sprites()
     
     print("\nReady to test the game with properly formatted sprites!")
-    print("Run: python src/main.py")
+    print("Run: python python/main.py")

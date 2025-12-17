@@ -8,6 +8,8 @@ class Level {
         this.height = levelData.height || this.height;
         // Optional background name (matches keys from spriteLoader)
         this.backgroundName = levelData.background || levelData.backgroundName || this.backgroundName || 'bg_city';
+        // Additional background layers
+        this.backgroundLayers = Array.isArray(levelData.backgroundLayers) ? levelData.backgroundLayers.map(layer => ({ ...layer })) : [];
         // Per-level background parallax factor (0..1). Lower = slower (farther away).
         this.backgroundParallax = (typeof levelData.backgroundParallax !== 'undefined') ? levelData.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
         
@@ -113,6 +115,35 @@ class Level {
         // 1. Draw Background (panorama if available, otherwise gradient)
         const w = viewWidth || this.width || ctx.canvas.width;
         const h = viewHeight || this.height || ctx.canvas.height;
+
+        // Draw background layers (distant elements)
+        for (const layer of this.backgroundLayers) {
+            let layerImg = null;
+            try {
+                if (!this.cachedSprites[layer.name]) {
+                    this.cachedSprites[layer.name] = (typeof spriteLoader !== 'undefined') ? spriteLoader.getSprite(layer.name) : null;
+                }
+                layerImg = this.cachedSprites[layer.name];
+            } catch (e) { layerImg = null; }
+            if (layerImg) {
+                try {
+                    const scaleY = h / layerImg.height;
+                    const scaledW = Math.ceil(layerImg.width * scaleY);
+                    const parallax = layer.parallax || 0.5;
+                    let repeatCount = Math.ceil((this.width) / scaledW) + 1;
+                    let drawScaledW = scaledW;
+                    if (this.useMobileOptimizations) {
+                        drawScaledW = Math.max(1, Math.ceil(this.width));
+                        repeatCount = 1;
+                    }
+                    const startX = Math.floor(-((cameraX * parallax) % drawScaledW));
+                    for (let i = 0; i < repeatCount; i++) {
+                        const dx = startX + i * drawScaledW;
+                        ctx.drawImage(layerImg, 0, 0, layerImg.width, layerImg.height, dx, cameraY, drawScaledW, h);
+                    }
+                } catch (e) {}
+            }
+        }
 
         let bgImg = null;
         try {

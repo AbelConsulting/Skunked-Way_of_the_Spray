@@ -47,6 +47,11 @@ class Game {
             // Use a scenic background by default so the level renders a
             // panorama instead of the fallback gradient.
             background: 'bg_forest',
+            // Additional background layers for depth (drawn behind main background)
+            backgroundLayers: [
+                { name: 'bg_mountains', parallax: 0.1 },
+                { name: 'bg_clouds', parallax: 0.3 }
+            ],
             // Two spawn points: right (default behavior) and left (new)
             spawnPoints: [ { x: 'right', y: 300 }, { x: 'left', y: 300 } ],
             platforms: [
@@ -358,10 +363,18 @@ class Game {
                 this.state = 'PAUSED';
                 this.audioManager.playSound && this.audioManager.playSound('pause');
                 this.audioManager.pauseMusic && this.audioManager.pauseMusic();
+                if (this.isMobile) {
+                    const overlay = document.getElementById('pause-overlay');
+                    if (overlay) overlay.style.display = 'flex';
+                }
                 this.dispatchGameStateChange();
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
+                if (this.isMobile) {
+                    const overlay = document.getElementById('pause-overlay');
+                    if (overlay) overlay.style.display = 'none';
+                }
                 this.dispatchGameStateChange();
             }
         }

@@ -128,7 +128,7 @@ If the transparency isn't perfect:
 2. Adjust the tolerance parameter (default: 20)
 3. Manually edit _original.png files for better results
 
-TEST: Run python src/main.py to see the sprites with transparent backgrounds!
+TEST: Run python python/main.py to see the sprites with transparent backgrounds!
 """)
 
 
