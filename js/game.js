@@ -686,7 +686,7 @@ class Game {
             this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount);
         } else if (this.state === "MENU") {
             this.ui.drawMenu(this.ctx);
-        } else if (this.state === "PAUSED") {
+        } else if (this.state === "PAUSED" && !this.isMobile) {
             this.ui.drawPauseMenu(this.ctx);
         } else if (this.state === "GAME_OVER") {
             this.ui.drawGameOver(this.ctx, this.score, this.enemyManager.enemiesDefeated);
