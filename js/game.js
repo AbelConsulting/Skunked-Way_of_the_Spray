@@ -57,24 +57,16 @@ class Game {
             // Two spawn points: right (default behavior) and left (new)
             spawnPoints: [ { x: 'right', y: 300 }, { x: 'left', y: 300 } ],
             platforms: [
-                { x: 100, y: 600, width: 400, height: 32, type: 'static', tile: 'platform_tile' },
-                { x: 600, y: 500, width: 200, height: 32, type: 'static', tile: 'platform_tile' },
-                { x: 420, y: 560, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1000, y: 480, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1400, y: 420, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1200, y: 300, width: 200, height: 24, type: 'moving', tile: 'platform_tile', axis: 'x', range: 160, speed: 1.0 },
-                { x: 1600, y: 360, width: 160, height: 24, type: 'moving', tile: 'platform_tile', axis: 'y', range: 80, speed: 0.9 },
-                { x: 900, y: 400, width: 250, height: 32, type: 'static', tile: 'platform_tile' },
-                { x: 1800, y: 520, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 2100, y: 450, width: 200, height: 32, type: 'static', tile: 'platform_tile' },
-                { x: 2400, y: 380, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 2600, y: 320, width: 220, height: 24, type: 'moving', tile: 'platform_tile', axis: 'x', range: 100, speed: 0.8 },
-                { x: 2900, y: 480, width: 160, height: 32, type: 'static', tile: 'platform_tile' },
-                { x: 3200, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 3500, y: 350, width: 200, height: 32, type: 'static', tile: 'platform_tile' },
-                { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' }
-            ]
-            ,
+                // Simple evenly-spaced static platforms for easier gameplay and testing
+                { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' },
+                { x: 120, y: 540, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 420, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 720, y: 500, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1020, y: 480, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1320, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1620, y: 500, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+                { x: 1920, y: 480, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
+            ],
             hazards: []
         };
         this.level.loadLevel(levelData);

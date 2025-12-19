@@ -89,6 +89,21 @@ python main.py
 
 ## Controls
 
+### Useful developer scripts (npm)
+
+- **Start local Node server:** `npm start` (runs `tools/csp_server.js`)
+- **Start simple Python HTTP server:** `npm run serve:py`
+- **Run Playwright tests (landscape):** `npm run test:touch-landscape`
+- **Run full mobile test suite:** `npm run test:mobile-all` (runs several playwright tests)
+- **Check sprite frames (Python):** `npm run check:sprite-frames` (validates frame/padding)
+- **Fix sprite sheets (Python):** `npm run fix:sprites` (pads sprite sheets where needed, creates backups)
+- **Extract ninja walk frames (Python):** `npm run extract:ninja-walk` (writes frames to `tmp-frames`)
+- **Preview sprites (Python):** `npm run preview:sprites` (opens a small pygame preview window)
+
+These scripts run tools in `tools/` and `toolshed/` to help testing, sprite maintenance and diagnostics.
+
+## Controls
+
 | Action | Keys |
 |--------|------|
 | Move Left/Right | Arrow Keys or A/D |

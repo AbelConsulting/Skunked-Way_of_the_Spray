@@ -6,10 +6,35 @@
     "build": "node scripts/build.js",
     "dev": "node scripts/dev.js",
     "start": "node tools/csp_server.js",
+
+    // Server helpers
+    "serve:py": "python -m http.server 8000",
+
+    // Sprite tools (Python)
+    "check:sprite-frames": "python toolshed/check_sprite_frames.py",
+    "fix:sprites": "python toolshed/fix_spritesheets.py --backup --verbose",
+    "extract:ninja-walk": "python toolshed/extract_ninja_walk_frames.py",
+    "preview:sprites": "python toolshed/preview_sprites.py",
+
+    // Node/Playwright tests
     "test:touch-landscape": "node tools/touch_controls_landscape_test.js",
+    "test:portrait-rotate": "node tools/portrait_start_rotate_test.js",
+    "test:touch-present": "node tools/touch_controls_present_on_start_test.js",
+    "test:touch-immediate": "node tools/touch_controls_immediate_test.js",
+
+    // Mobile diagnostics
     "test:mobile-perf": "node tools/mobile_performance_test.js",
     "test:mobile-probe": "node tools/mobile_probe_test.js",
+    "test:mobile-diagnostics": "node tools/mobile_diagnostics.js",
+    "test:mobile-diagnostics-landscape": "node tools/mobile_diagnostics_landscape.js",
+
+    // Aggregate test targets
+    "test:mobile-all": "npm run test:touch-landscape && npm run test:portrait-rotate && npm run test:touch-present && npm run test:touch-immediate && npm run test:mobile-perf && npm run test:mobile-probe",
+
+    // Sprite checks already present
     "test:sprite-padding": "node tools/check_sprite_padding.js",
+
+    // Playwright installer helper
     "playwright:install": "npx playwright install"
   },
   "devDependencies": {
