@@ -22,33 +22,21 @@ class Level:
         self.create_boundaries()
     
     def create_platforms(self):
-        """Create platform layout with proper clearance (80px vertical, 80px horizontal min)"""
+        """Create a simplified platform layout (evenly spaced static platforms)"""
         # Ground platform (full width)
         self.platforms.append(pygame.Rect(0, 580, self.width, 40))
-        
-        # Starting area platforms - proper spacing (player is 64px wide/tall)
-        self.platforms.append(pygame.Rect(200, 480, 150, 20))  # 100px clearance above
-        self.platforms.append(pygame.Rect(430, 420, 150, 20))  # 80px gap from prev, 160px clearance above
-        
-        # Mid-section with varied heights - ensuring passable gaps
-        self.platforms.append(pygame.Rect(680, 460, 180, 20))  # 100px gap, 120px clearance
-        self.platforms.append(pygame.Rect(960, 380, 150, 20))  # 100px gap, 200px clearance - high platform
-        self.platforms.append(pygame.Rect(1210, 440, 150, 20))  # 100px gap, 140px clearance
-        self.platforms.append(pygame.Rect(1460, 360, 180, 20))  # 100px gap, 220px clearance - high platform
-        
-        # High platforms section - accessible jumps with ground passage
-        self.platforms.append(pygame.Rect(1740, 300, 150, 20))  # 100px gap, 280px clearance - high platform
-        self.platforms.append(pygame.Rect(1990, 360, 140, 20))  # 100px gap, 220px clearance
-        
-        # Raised floor sections - blocking ground passage intentionally
-        self.platforms.append(pygame.Rect(2230, 540, 180, 40))  # 100px gap, raised floor at 540
-        self.platforms.append(pygame.Rect(2510, 500, 180, 40))  # 100px gap, raised floor at 500
-        
-        # Staircase on raised sections
-        self.platforms.append(pygame.Rect(2790, 430, 120, 20))  # 100px gap, 150px clearance
-        
-        # Final area - accessible from staircase with gap
-        self.platforms.append(pygame.Rect(3000, 400, 0, 20))  # At boundary (no actual platform needed here)
+
+        # Simple evenly-spaced platforms for straightforward mobile play
+        x = 120
+        platforms_count = max(6, self.width // 400)
+        for i in range(platforms_count):
+            # Vary y slightly for interest but keep reachable distances
+            y = 540 - (i % 3) * 20
+            self.platforms.append(pygame.Rect(x + i * 300, y, 220, 20))
+
+        # Add a couple of small ledges near the end
+        self.platforms.append(pygame.Rect(self.width - 800, 520, 180, 20))
+        self.platforms.append(pygame.Rect(self.width - 520, 480, 180, 20))
     
     def create_clouds(self):
         """Create parallax clouds across the level"""
