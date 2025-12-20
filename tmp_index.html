@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<!-- Force rebuild 2024 -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Skunk Fu - 2D Beat 'em Up</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+        <!-- Content Security Policy: configured via HTTP header for stronger enforcement. -->
+        <!-- Server should set a header similar to:
+            Content-Security-Policy: script-src 'self' 'nonce-<random>' https://static.cloudflareinsights.com; object-src 'none'; base-uri 'self';
+            The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
+        -->
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* expose safe-area insets as CSS variables so JS can read them */
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+        /* INLINE STYLES FOR MOBILE OPTIMIZATION */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden; /* Prevent scroll */
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* CRITICAL: Stops browser handling gestures */
+            touch-action: none; 
+        }
+
+        /* Ensure canvas respects device safe areas (notches) */
+        canvas {
+            max-width: calc(100vw - var(--safe-left) - var(--safe-right));
+            max-height: calc(100vh - var(--safe-top) - var(--safe-bottom));
+            object-fit: contain;
+            display: block;
+        }
+
+        /* --- TOUCH CONTROLS UI --- */
+        #touch-controls {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Let touches pass through empty areas */
+            z-index: 100;
+            display: none; /* Hidden by default, shown via JS if mobile */
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        #touch-controls.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .control-group {
+            position: absolute;
+            bottom: 20px;
+            pointer-events: auto;
+        }
+
+        #d-pad { left: 20px; }
+        #actions { right: 20px; }
+        #game-over-controls { bottom: 100px; left: 50%; transform: translateX(-50%); }
+
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px;
+            user-select: none;
+            outline: none;
+            /* Disable browser touch actions */
+            touch-action: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.95);
+        }
+
+        /* --- OVERLAYS --- */
+        #mobile-start-overlay, #rotate-message {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 200;
+            color: white;
+            font-family: sans-serif;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 240ms cubic-bezier(.2,.9,.2,1), transform 240ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        #mobile-start-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        #mobile-start-overlay.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Pause button (top-right) */
+        #pause-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 500;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Mobile performance toggle (small button) */
+        #perf-mode-btn {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 501;
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            display: none; /* shown via JS only on mobile */
+            cursor: pointer;
+        }
+
+        #pause-btn:hover { background: rgba(255,255,255,0.06); }
+
+        #mobile-restart-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: #4dff4d;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* --- ORIENTATION CHECK --- */
+        #rotate-message { display: none; }
+        
+        @media screen and (orientation: portrait) {
+            #rotate-message { display: flex; }
+            #game-container { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="rotate-message">
+        <h1>Please Rotate Your Device</h1>
+        <p>Landscape mode required</p>
+    </div>
+
+    <div id="game-container">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+        
+        <div id="loading-screen">
+            <div class="loading-content">
+                <h1>Skunk Fu</h1>
+                <div class="loading-bar">
+                    <div id="loading-progress" class="loading-progress"></div>
+                </div>
+                <p id="loading-text">Loading assets...</p>
+            </div>
+        </div>
+
+        <!-- Touch controls moved out of #game-container to avoid transform/layout issues -->
+
+        <!-- Pause Button (desktop & mobile) -->
+        <button id="pause-btn" aria-label="Pause game" title="Pause" style="display:none;">⏸</button>
+        <button id="perf-mode-btn" title="Performance mode">Perf</button>
+
+        <div id="mobile-start-overlay" style="display:none;">
+            <button id="mobile-start-btn">Tap to Start</button>
+        </div>
+
+        <!-- Pause Overlay for Mobile -->
+        <div id="pause-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; flex-direction:column;">
+            <h1 style="color:#fff; font-size:48px; margin:0;">PAUSED</h1>
+            <button id="resume-btn" style="margin-top:20px; padding:12px 24px; font-size:18px; background:#00fff7; color:#000; border:none; border-radius:8px; cursor:pointer;">Resume</button>
+        </div>
+
+        <!-- Level Editor Toggle & Panel -->
+        <button id="editor-toggle-btn" title="Toggle Level Editor" style="position:absolute; left:12px; top:12px; z-index:800; padding:8px 10px; border-radius:6px; background:rgba(0,0,0,0.6); color:#fff; display:none;">🛠️ Editor</button>
+
+        <div id="level-editor-panel" style="display:none; position:absolute; left:12px; top:56px; z-index:801; width:360px; max-height:70%; overflow:auto; background:rgba(10,10,12,0.96); border:1px solid rgba(255,255,255,0.06); color:#fff; padding:10px; border-radius:8px; font-family:sans-serif;">
+            <h3 style="margin:0 0 8px 0; font-size:16px;">Level Editor</h3>
+            <div style="display:flex; gap:8px;">
+                <div style="flex:1">
+                    <div style="font-size:12px; margin-bottom:6px;">Platforms</div>
+                    <div id="editor-platform-list" style="background:rgba(255,255,255,0.02); padding:6px; border-radius:6px; max-height:300px; overflow:auto;"></div>
+                </div>
+                <div style="width:160px">
+                    <div style="font-size:12px; margin-bottom:6px;">Tile Palette</div>
+                    <div id="editor-tile-palette" style="background:rgba(255,255,255,0.02); padding:6px; border-radius:6px; display:flex; gap:6px; flex-wrap:wrap; align-items:flex-start;"></div>
+                </div>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button id="editor-save-btn" style="flex:1; padding:8px; border-radius:6px; border:none; background:#2ecc71;">Save</button>
+                <button id="editor-export-btn" style="flex:1; padding:8px; border-radius:6px; border:none; background:#34495e;">Export</button>
+                <button id="editor-import-btn" style="flex:1; padding:8px; border-radius:6px; border:none; background:#3498db;">Import</button>
+            </div>
+        </div>
+
+        <!-- Error overlay (shown when runtime errors occur) -->
+        <div id="error-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4000; padding:20px; overflow:auto;">
+            <h2 style="margin-bottom:8px;">Runtime Error</h2>
+            <pre id="error-content" style="white-space:pre-wrap; font-size:13px; line-height:1.4;"></pre>
+            <div style="margin-top:12px;">
+                <button id="error-close" style="padding:8px 12px; margin-right:8px;">Close</button>
+                <button id="error-copy" style="padding:8px 12px;">Copy</button>
+            </div>
+        </div>
+
+        <!-- Informational overlay shown when running from file:// to explain fetch/CORS issues -->
+        <div id="file-protocol-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4001; padding:20px; overflow:auto;">
+            <h2 style="margin-bottom:8px;">Serving over HTTP is recommended</h2>
+            <p style="font-size:14px; max-width:800px;">It looks like you opened the game directly from the file system (file://). Modern browsers block some cross-origin resource requests when the page is loaded from file:// which may prevent audio and other assets from loading. To run locally, run <code>python -m http.server 8000</code> in the project root and open <a href="http://localhost:8000" style="color:#9ad;">http://localhost:8000</a>.</p>
+            <div style="margin-top:12px;">
+                <button id="file-overlay-start" style="padding:8px 12px; background:#ffcc33; color:#000; border-radius:6px;">Start Anyway (limited)</button>
+                <button id="file-overlay-close" style="padding:8px 12px; background:#2ecc71; color:#000; border-radius:6px; margin-left:8px;">Close</button>
+            </div>
+        </div>
+
+        <!-- legacy mobile restart overlay removed; on-screen touch controls provide restart -->
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/spriteLoader.js"></script>
+    <script src="js/audioManager.js"></script>
+    <script src="js/visualEffects.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/levelEditor.js"></script>
+    <script src="js/player.js?v=11"></script>
+    <script src="js/enemy.js?v=11"></script>
+    <script src="js/enemyManager.js?v=11"></script>
+    <script src="js/ui.js?v=11"></script>
+    <script src="js/game.js?v=11"></script>
+    <script src="js/main.js?v=11"></script>
+
+    <script nonce="%CSP_NONCE%">
+// --- UTILITIES ---
+    // Touch-control visibility debug helper
+    window.touchDebug = window.touchDebug || [];
+    function logTouchControlEvent(name, data) {
+        try {
+            const ts = Date.now();
+            const entry = { ts, name, data };
+            window.touchDebug.push(entry);
+            // cap storage
+            if (window.touchDebug.length > 200) window.touchDebug.shift();
+            console.log('touchDebug:', name, data);
+            // update on-screen badge if present
+            const badge = document.getElementById('touch-debug-badge');
+            if (badge && (location.search.indexOf('debugTouch=1') !== -1 || localStorage.getItem('debugTouch') === '1')) {
+                badge.textContent = `${name} @ ${new Date(ts).toLocaleTimeString()}`;
+                badge.style.display = 'block';
+                badge.style.opacity = '1';
+                setTimeout(() => { badge.style.opacity = '0.6'; }, 1200);
+            }
+        } catch (e) { console.warn('logTouchControlEvent failed', e); }
+    }
+
+    // Small on-screen badge (only visible when debugTouch enabled via URL or localStorage)
+    ;(function(){
+        const b = document.createElement('div');
+        b.id = 'touch-debug-badge';
+        b.style.position = 'fixed'; b.style.right = '8px'; b.style.top = '8px';
+        b.style.padding = '6px 8px'; b.style.background = 'rgba(0,0,0,0.6)';
+        b.style.color = '#0f0'; b.style.fontSize = '12px'; b.style.borderRadius = '6px';
+        b.style.zIndex = 99999; b.style.display = 'none'; b.style.opacity = '0.6';
+
+        // Add a send-logs button when debugTouch is enabled so users can upload logs from device
+        const send = document.createElement('button');
+        send.id = 'touch-send-logs';
+        send.textContent = 'Send logs';
+        send.style.marginLeft = '8px';
+        send.style.fontSize = '11px';
+        send.style.padding = '4px 6px';
+        send.style.borderRadius = '4px';
+        send.style.border = 'none';
+        send.style.background = 'rgba(255,255,255,0.06)';
+        send.style.color = '#0f0';
+        send.addEventListener('click', () => {
+            try {
+                const payload = { logs: window.touchDebug || [], userAgent: navigator.userAgent };
+                fetch('/__touch_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(r => {
+                    if (r.ok) { send.textContent = 'Sent'; setTimeout(()=> send.textContent = 'Send logs', 2000); logTouchControlEvent('touchLogs_sent', {}); }
+                    else { send.textContent = 'Failed'; setTimeout(()=> send.textContent = 'Send logs', 2000); }
+                }).catch(e => { send.textContent = 'Error'; setTimeout(()=> send.textContent = 'Send logs', 2000); });
+            } catch (e) {}
+        });
+
+        const copyBtn = document.createElement('button');
+        copyBtn.id = 'touch-copy-logs';
+        copyBtn.textContent = 'Copy logs';
+        copyBtn.style.marginLeft = '8px';
+        copyBtn.style.fontSize = '11px';
+        copyBtn.style.padding = '4px 6px';
+        copyBtn.style.borderRadius = '4px';
+        copyBtn.style.border = 'none';
+        copyBtn.style.background = 'rgba(255,255,255,0.06)';
+        copyBtn.style.color = '#0f0';
+        copyBtn.addEventListener('click', async () => {
+            try {
+                const text = JSON.stringify(window.touchDebug || [], null, 2);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    copyBtn.textContent = 'Copied';
+                    setTimeout(()=> copyBtn.textContent = 'Copy logs', 2000);
+                    logTouchControlEvent('touchLogs_copied', {});
+                } else {
+                    // Fallback: prompt with the data so user can copy manually
+                    prompt('Copy touch logs (Ctrl+C):', text);
+                }
+            } catch (e) {
+                console.warn('copy logs failed', e);
+            }
+        });
+
+        const forceBtn = document.createElement('button');
+        forceBtn.id = 'touch-force-show';
+        forceBtn.textContent = localStorage.getItem('forceTouch') === '1' ? 'Always ON' : 'Always OFF';
+        forceBtn.style.marginLeft = '8px';
+        forceBtn.style.fontSize = '11px';
+        forceBtn.style.padding = '4px 6px';
+        forceBtn.style.borderRadius = '4px';
+        forceBtn.style.border = 'none';
+        forceBtn.style.background = 'rgba(255,255,255,0.06)';
+        forceBtn.style.color = '#0f0';
+        forceBtn.addEventListener('click', () => {
+            try {
+                const current = localStorage.getItem('forceTouch') === '1';
+                localStorage.setItem('forceTouch', current ? '0' : '1');
+                forceBtn.textContent = localStorage.getItem('forceTouch') === '1' ? 'Always ON' : 'Always OFF';
+                window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+                logTouchControlEvent('forceTouchToggled', { enabled: window._forceTouchControls });
+                // apply immediately
+                if (window._forceTouchControls) showTouchControls(3600000);
+            } catch (e) {}
+        });
+
+        b.appendChild(send);
+        b.appendChild(copyBtn);
+        b.appendChild(forceBtn);
+        document.body.appendChild(b);
+
+    // Initialize forced state from URL param or localStorage.
+    // Make the 'Always ON' mode the default for everyone.
+    try {
+        if (localStorage.getItem('forceTouch') === null) localStorage.setItem('forceTouch', '1');
+        const params = new URLSearchParams(location.search);
+        if (params.get('forceControls') === '1') {
+            localStorage.setItem('forceTouch', '1');
+        }
+        window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+        forceBtn.textContent = window._forceTouchControls ? 'Always ON' : 'Always OFF';
+        // If forced, keep controls visible for an extended duration
+        if (window._forceTouchControls) {
+            try { showTouchControls(3600000); } catch (e) {}
+        }
+    } catch (e) {}
+
+    // Toggle with `c` key to quickly force show/hide when testing
+    window.addEventListener('keydown', (e) => {
+        if (e.key && e.key.toLowerCase() === 'c') {
+            const cur = localStorage.getItem('forceTouch') === '1';
+            localStorage.setItem('forceTouch', cur ? '0' : '1');
+            window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+            forceBtn.textContent = window._forceTouchControls ? 'Always ON' : 'Always OFF';
+            logTouchControlEvent('forceTouchToggled_key', { enabled: window._forceTouchControls });
+            if (window._forceTouchControls) showTouchControls(3600000); else hideTouchControls();
+        }
+    });
+    })();
+
+    // Wire file-protocol overlay close (if present)
+    try {
+        const fbtn = document.getElementById('file-overlay-close');
+        if (fbtn) fbtn.addEventListener('click', () => { document.getElementById('file-protocol-overlay').style.display = 'none'; });
+    } catch (e) {}
+function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+
+function triggerKeyEvent(key, type) {
+    // Normalize synthetic KeyboardEvent to provide both `key` and standard `code`.
+    // Accept calls like triggerKeyEvent('ArrowLeft','keydown') or triggerKeyEvent('x','keydown').
+    let k = key;
+    let code = undefined;
+
+    if (typeof key === 'string') {
+        const lower = key.toLowerCase();
+        if (lower === ' ' || lower === 'space' || lower === 'spacebar') {
+            k = ' ';
+            code = 'Space';
+        } else if (/^arrow(left|right|up|down)$/i.test(key)) {
+            // Arrow keys passed as 'ArrowLeft' etc.
+            code = key;
+            k = key;
+        } else if (lower === 'enter') {
+            k = 'Enter';
+            code = 'Enter';
+        } else if (lower === 'escape' || lower === 'esc') {
+            k = 'Escape';
+            code = 'Escape';
+        } else if (lower === 'x') {
+            k = 'x';
+            code = 'KeyX';
+        } else if (lower === 'z') {
+            k = 'z';
+            code = 'KeyZ';
+        } else {
+            // Default: use provided string for both fields
+            code = key;
+        }
+    }
+
+    try {
+        if (typeof console !== 'undefined' && console.log) console.log('triggerKeyEvent', { key: k, code, type });
+    } catch (e) {}
+    const event = new KeyboardEvent(type, { key: k, code: code, bubbles: true, cancelable: true });
+    window.dispatchEvent(event);
+}
+
+// Debounce helper for global UI handlers
+function debounce(func, wait = 150) {
+    let timeout = null;
+    return function(...args) {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// --- CONTROLS LOGIC ---
+function initTouchControls() {
+    if (!isMobile()) return;
+    // If TouchControls class exists and no container is present, let it create and handle wiring.
+    if (window.TouchControls && !document.getElementById('touch-controls')) {
+        try {
+            new TouchControls({ enabled: true, sensitivity: Config.TOUCH_UI.sensitivity });
+        } catch (e) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('TouchControls init failed', e);
+        }
+        // If TouchControls created the DOM element, we're done. Otherwise fall through
+        // to the static HTML fallback (useful in headless/test environments where
+        // touch detection may report no native touch support).
+        if (document.getElementById('touch-controls')) return;
+    }
+    // Otherwise bind handlers to existing DOM buttons (static HTML fallback)
+
+    const setupBtn = (id, key) => {
+        const btn = document.getElementById(id);
+        if(!btn) return;
+
+        btn.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); return false; };
+
+        const downHandler = (e) => {
+            try { e && e.preventDefault(); } catch (_) {}
+            triggerKeyEvent(key, 'keydown');
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown');
+            logTouchControlEvent('touch_down', { button: id, key });
+        };
+        const upHandler = (e) => {
+            try { e && e.preventDefault(); } catch (_) {}
+            triggerKeyEvent(key, 'keyup');
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keyup');
+            logTouchControlEvent('touch_up', { button: id, key });
+        };
+
+        btn.addEventListener('touchstart', downHandler, { passive: false });
+        btn.addEventListener('touchend', upHandler, { passive: false });
+        btn.addEventListener('pointerdown', downHandler);
+        btn.addEventListener('pointerup', upHandler);
+    };
+
+    setupBtn('btn-left', 'ArrowLeft');
+    setupBtn('btn-right', 'ArrowRight');
+    setupBtn('btn-jump', ' ');
+    setupBtn('btn-attack', 'x');
+    setupBtn('btn-special', 'z');
+    setupBtn('btn-pause', 'Escape');
+
+    // Restart button handler
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) {
+        restartBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerKeyEvent('Enter', 'keydown');
+            setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+        }, { passive: false });
+    }
+
+    // Show/hide restart on game state
+    window.addEventListener('gameStateChange', (e) => {
+        if (restartBtn && e.detail.state === 'GAME_OVER') {
+            restartBtn.style.display = 'block';
+        } else if (restartBtn) {
+            restartBtn.style.display = 'none';
+        }
+    });
+}
+
+// Wire pause button: show on non-loading UI, call game's togglePause when clicked
+try {
+    const pauseBtn = document.getElementById('pause-btn');
+    if (pauseBtn) {
+        pauseBtn.style.display = 'flex';
+        pauseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            try {
+                if (window.game && typeof window.game.togglePause === 'function') {
+                    window.game.togglePause();
+                } else if (typeof window.toggleGamePause === 'function') {
+                    window.toggleGamePause();
+                } else {
+                    // Fallback: synthesize Escape key
+                    triggerKeyEvent('Escape', 'keydown');
+                }
+            } catch (err) { console.warn('pause button handler failed', err); }
+        });
+    }
+} catch (e) {}
+
+// Wire resume button in pause overlay
+try {
+    const resumeBtn = document.getElementById('resume-btn');
+    if (resumeBtn) {
+        resumeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            try {
+                if (window.game && typeof window.game.togglePause === 'function') {
+                    window.game.togglePause();
+                } else if (typeof window.toggleGamePause === 'function') {
+                    window.toggleGamePause();
+                } else {
+                    // Fallback: synthesize Escape key
+                    triggerKeyEvent('Escape', 'keydown');
+                }
+            } catch (err) { console.warn('resume button handler failed', err); }
+        });
+    }
+} catch (e) {}
+
+// --- MOBILE START & FULLSCREEN ---
+
+// Mobile performance button wiring (cycles low/mid/high)
+(function(){
+    const btn = document.getElementById('perf-mode-btn');
+    if (!btn) return;
+    const modes = ['low','mid','high'];
+    let idx = 2; // default to 'high'
+    try { const saved = localStorage.getItem('mobilePerfMode'); if (saved) idx = modes.indexOf(saved) !== -1 ? modes.indexOf(saved) : idx; } catch (e) {}
+    const updateText = () => { btn.textContent = 'Perf: ' + modes[idx]; };
+    updateText();
+    btn.addEventListener('click', (e) => {
+        try { e && e.preventDefault(); } catch (e) {}
+        idx = (idx + 1) % modes.length;
+        updateText();
+        try { if (typeof window.setMobilePerformanceMode === 'function') window.setMobilePerformanceMode(modes[idx]); } catch (e) { console.warn('perf mode click failed', e); }
+    });
+    // Show button only on mobile
+    try { if (isMobile()) { btn.style.display = 'flex'; btn.style.alignItems = 'center'; } } catch (e) {}
+})();
+
+const mobileStartOverlay = document.getElementById('mobile-start-overlay');
+const mobileStartBtn = document.getElementById('mobile-start-btn');
+const mobileRestartOverlay = document.getElementById('mobile-restart-overlay');
+
+function showMobileStartOverlay() {
+    if (!mobileStartOverlay) return;
+    if (getComputedStyle(mobileStartOverlay).display === 'none') mobileStartOverlay.style.display = 'flex';
+    // trigger transition
+    void mobileStartOverlay.offsetWidth;
+    mobileStartOverlay.classList.add('visible');
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStartShown', {}); } catch (e) {}
+}
+function hideMobileStartOverlay() {
+    if (!mobileStartOverlay) return;
+    mobileStartOverlay.classList.remove('visible');
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStartHidden', {}); } catch (e) {}
+    // Use transitionend to hide after animation, but add a timeout fallback
+    let cleared = false;
+    const onEnd = (ev) => {
+        if (ev && ev.target !== mobileStartOverlay) return;
+        if (cleared) return;
+        cleared = true;
+        mobileStartOverlay.style.display = 'none';
+        mobileStartOverlay.removeEventListener('transitionend', onEnd);
+        if (timeoutId) clearTimeout(timeoutId);
+    };
+    mobileStartOverlay.addEventListener('transitionend', onEnd);
+    // Fallback: ensure element is hidden after transition duration + buffer (240ms + 120ms)
+    const timeoutId = setTimeout(() => {
+        if (cleared) return;
+        cleared = true;
+        mobileStartOverlay.style.display = 'none';
+        mobileStartOverlay.removeEventListener('transitionend', onEnd);
+    }, 400);
+}
+
+function showMobileRestartOverlay() {
+    if (mobileRestartOverlay) mobileRestartOverlay.style.display = 'flex';
+}
+function hideMobileRestartOverlay() {
+    if (mobileRestartOverlay) mobileRestartOverlay.style.display = 'none';
+}
+
+function requestFullscreen() {
+    const docEl = document.documentElement;
+    const requestMethod = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+    if (requestMethod) {
+        requestMethod.call(docEl).catch(err => {
+            // Silently fail if user denies or browser blocks
+            console.log("Fullscreen request denied:", err);
+        });
+    }
+}
+
+if (isMobile() && mobileStartBtn) {
+    showMobileStartOverlay();
+    const startHandler = (e) => {
+        try { e && e.preventDefault(); } catch (_) {}
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStartPressed', {}); } catch (e) {}
+
+        // If device is not in landscape, store a pending start and prompt the user to rotate
+        if (!isLandscape()) {
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStart_pending_rotate', {}); } catch (e) {}
+            window._pendingStartGesture = true;
+            if (mobileStartBtn) {
+                mobileStartBtn._prevText = mobileStartBtn.textContent;
+                mobileStartBtn.textContent = 'Rotate to play';
+                mobileStartBtn.disabled = true;
+            }
+            const rotate = document.getElementById('rotate-message');
+            if (rotate) rotate.style.display = 'flex';
+
+            // If the game isn't ready yet, listen for gameReady and attempt to dispatch
+            // the pending start automatically once ready and we're in a good orientation.
+            if (!window.gameReady) {
+                const onReadyPending = () => {
+                    try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStart_pending_ready', {}); } catch (e) {}
+                    window.removeEventListener('gameReady', onReadyPending);
+                    // Only dispatch now if landscape and still in MENU
+                    if (isLandscape() && window.game && window.game.state === 'MENU') {
+                        try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStart_pending_autoDispatch_onReady', {}); } catch (e) {}
+                        window._pendingStartGesture = false;
+                        if (mobileStartBtn) {
+                            mobileStartBtn.disabled = false;
+                            mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
+                            delete mobileStartBtn._prevText;
+                        }
+                        requestFullscreen();
+                        triggerKeyEvent('Enter', 'keydown');
+                        setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+                        hideMobileStartOverlay();
+                    }
+                };
+                window.addEventListener('gameReady', onReadyPending);
+            }
+
+            return;
+        }
+
+        const proceed = () => {
+            // Enter Fullscreen and start the game in the same user gesture
+            requestFullscreen();
+            triggerKeyEvent('Enter', 'keydown');
+            setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+            hideMobileStartOverlay();
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('startGestureDispatched', {}); } catch (e) {}
+        };
+
+        if (window.gameReady) {
+            proceed();
+        } else {
+            // Indicate loading and wait for the gameReady event
+            mobileStartBtn.disabled = true;
+            const prevText = mobileStartBtn.textContent;
+            mobileStartBtn.textContent = 'Loading...';
+            const onReady = () => {
+                mobileStartBtn.disabled = false;
+                mobileStartBtn.textContent = prevText;
+                window.removeEventListener('gameReady', onReady);
+                proceed();
+            };
+            window.addEventListener('gameReady', onReady);
+        }
+    };
+
+    mobileStartBtn.addEventListener('pointerup', startHandler, { passive: false });
+    mobileStartBtn.addEventListener('click', (e) => startHandler(e));
+
+    // Re-show overlay if game goes back to Menu
+    window.addEventListener('gameStateChange', function(e) {
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('gameStateChange_menu', { state: e && e.detail && e.detail.state }); } catch (e) {}
+        if (e.detail && e.detail.state === 'MENU') {
+            showMobileStartOverlay();
+        } else {
+            hideMobileStartOverlay();
+        }
+    });
+}
+
+// --- ORIENTATION & MOBILE UI HANDLING ---
+function isLandscape() {
+    return window.matchMedia && window.matchMedia('(orientation: landscape)').matches || window.innerWidth > window.innerHeight;
+}
+
+// Helper functions to show/hide touch controls robustly and log attempts.
+function ensureTouchControlsExists() {
+    let tc = document.getElementById('touch-controls');
+    if (tc) return tc;
+    // Re-insert static touch-controls block if it was removed
+    try {
+        const html = `
+        <div id="touch-controls" style="position:fixed; bottom:calc(20px + var(--safe-bottom)); left:0; right:0; transform:none; display:none; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:2000; padding:0 calc(20px + var(--safe-right));">
+            <div id="d-pad" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn" id="btn-left">&#8592;</button>
+                <button class="touch-btn" id="btn-right">&#8594;</button>
+            </div>
+            <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
+            </div>
+            <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
+                <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
+                <button class="touch-btn" id="btn-jump">&#8593;</button>
+                <button class="touch-btn" id="btn-pause">Pause</button>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', html);
+        tc = document.getElementById('touch-controls');
+        if (typeof initTouchControls === 'function') initTouchControls();
+        logTouchControlEvent('touchControls_reinserted', {});
+    } catch (e) { console.warn('ensureTouchControlsExists failed', e); }
+    return document.getElementById('touch-controls');
+}
+
+// Visibility request helpers: prevents racing show/hide by tracking requests
+window._touchControlsVisibilityReqId = window._touchControlsVisibilityReqId || 0;
+window._touchControlsVisibilityCount = window._touchControlsVisibilityCount || 0;
+window._touchControlsReqTimers = window._touchControlsReqTimers || {};
+window.requestShowTouchControls = function(durationMs = 1000, options = {}) {
+    const id = ++window._touchControlsVisibilityReqId;
+    window._touchControlsVisibilityCount = (window._touchControlsVisibilityCount || 0) + 1;
+    const tc = ensureTouchControlsExists();
+
+    // Defensive: avoid re-applying visual state if already visible to prevent repeated layout thrash
+    try {
+        if (tc) {
+            const computed = getComputedStyle(tc);
+            const isVisible = computed.display !== 'none' && tc.classList.contains('visible');
+            if (!isVisible) {
+                // Keep container pointer-events disabled by default so it doesn't block elements above it;
+                // but when a caller requests a forced immediate show (options.force === true) we enable pointer events
+                tc.style.display = 'flex'; void tc.offsetWidth; tc.classList.add('visible'); tc.style.opacity = '1';
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_shown', {}); } catch (e) {}
+            } else {
+                // Already visible: just ensure opacity is set without toggling class/display
+                if (tc.style.opacity !== '1') tc.style.opacity = '1';
+            }
+            // Respect force option: allow callers to force pointer interactions even if container would otherwise be inert
+            try { tc.style.pointerEvents = options && options.force ? 'auto' : 'none'; } catch (e) {}
+        }
+    } catch (e) {}
+
+    // Handle force option
+    window._touchControlsReqTimers[id] = { timeoutId: null, force: !!options.force };
+    if (options.force) {
+        window._forceTouchControls = true;
+    }
+    // Unless explicitly marked persistent, auto-release after duration to avoid leaking forced state
+    if (!options.persistent) {
+        const tid = setTimeout(() => { try { window.releaseShowTouchControls(id); } catch (e) {} }, durationMs + 50);
+        window._touchControlsReqTimers[id].timeoutId = tid;
+    }
+
+    // Debounce request logging a bit to reduce noise when many callers ping rapidly
+    try {
+        const now = Date.now();
+        window._lastTouchControlsReqLog = window._lastTouchControlsReqLog || 0;
+        if (now - window._lastTouchControlsReqLog > 150) {
+            window._lastTouchControlsReqLog = now;
+            window && window.logTouchControlEvent && window.logTouchControlEvent('requestShowTouchControls', { id, force: !!options.force, until: Date.now() + durationMs });
+        }
+    } catch (e) {}
+
+    return id;
+};
+
+window.releaseShowTouchControls = function(id) {
+    if (!id) return false;
+    try {
+        if (window._touchControlsReqTimers && window._touchControlsReqTimers[id]) {
+            const meta = window._touchControlsReqTimers[id];
+            if (meta.timeoutId) clearTimeout(meta.timeoutId);
+            if (meta.force) {
+                // clearing a forced request should clear the global force if no other forced requests exist
+                delete window._touchControlsReqTimers[id];
+                const hasOtherForce = Object.values(window._touchControlsReqTimers).some(x => x && x.force);
+                if (!hasOtherForce) window._forceTouchControls = false;
+            } else {
+                delete window._touchControlsReqTimers[id];
+            }
+        }
+        window._touchControlsVisibilityCount = Math.max(0, (window._touchControlsVisibilityCount || 1) - 1);
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('releaseShowTouchControls', { id, remaining: window._touchControlsVisibilityCount }); } catch (e) {}
+        if ((window._touchControlsVisibilityCount || 0) === 0 && !window._forceTouchControls && !(window._touchControlsLockUntil && Date.now() < window._touchControlsLockUntil)) {
+            const tc = document.getElementById('touch-controls');
+            if (!tc) return true;
+            tc.classList.remove('visible');
+            tc.style.pointerEvents = 'none';
+            const onEnd = (ev) => { if (ev && ev.target !== tc) return; tc.style.display = 'none'; tc.removeEventListener('transitionend', onEnd); try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_final', {}); } catch (e) {} };
+            tc.addEventListener('transitionend', onEnd);
+            setTimeout(() => { try { if (getComputedStyle(tc).display !== 'none') { tc.style.display = 'none'; try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_timeout', {}); } catch (e) {} } } catch (e) {} }, 500);
+        }
+        return true;
+    } catch (e) { console.warn('releaseShowTouchControls failed', e); return false; }
+};
+
+// Backwards-compatible show/hide that use the request helpers
+window.showTouchControls = function(timeoutMs = 1000) {
+    // use requestShowTouchControls to manage a visibility request
+    const id = window.requestShowTouchControls(timeoutMs, { force: false });
+    // legacy lock for short-term behavior
+    window._touchControlsLockUntil = Date.now() + (timeoutMs || 1000);
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('showTouchControls', { lockUntil: window._touchControlsLockUntil, reqId: id }); } catch (e) {}
+    return id;
+};
+
+// Immediate show that can optionally force visibility and bypass short-term locks.
+// options: { force: true|false, durationMs: number, persistent: boolean }
+window.showTouchControlsImmediate = function(options = {}) {
+    const duration = typeof options.durationMs === 'number' ? options.durationMs : 1000;
+    const force = !!options.force;
+    const persistent = !!options.persistent;
+    return window.requestShowTouchControls(duration, { force, persistent });
+};
+
+window.hideTouchControls = function() {
+    const tc = document.getElementById('touch-controls');
+    if (!tc) return;
+    try {
+        if (window._forceTouchControls) {
+            logTouchControlEvent('hideTouchControls_blockedByForce', {});
+            return;
+        }
+        if (window._touchControlsLockUntil && Date.now() < window._touchControlsLockUntil) {
+            // Do not hide while lock is active
+            logTouchControlEvent('hideTouchControls_blockedByLock', { until: window._touchControlsLockUntil });
+            return;
+        }
+        if (window._touchControlsVisibilityCount && window._touchControlsVisibilityCount > 0) {
+            logTouchControlEvent('hideTouchControls_blockedByRequests', { count: window._touchControlsVisibilityCount });
+            return;
+        }
+        // proceed to hide
+        tc.classList.remove('visible');
+        tc.style.pointerEvents = 'none';
+        // Ensure display:none after transition or after a short timeout
+        const onEnd = (ev) => { if (ev && ev.target !== tc) return; tc.style.display = 'none'; tc.removeEventListener('transitionend', onEnd); try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_final', {}); } catch (e) {} };
+        tc.addEventListener('transitionend', onEnd);
+        setTimeout(() => { try { if (getComputedStyle(tc).display !== 'none') { tc.style.display = 'none'; try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_timeout', {}); } catch (e) {} } } catch (e) {} }, 500);
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('hideTouchControls', {}); } catch (e) {}
+    } catch (e) { console.warn('hideTouchControls failed', e); }
+};
+
+// Monitor touch-controls for unexpected style/class changes (MutationObserver)
+(function(){
+    const tc = () => document.getElementById('touch-controls');
+    function observe() {
+        const el = tc();
+        if (!el) return;
+        try {
+            const mo = new MutationObserver((mutations) => {
+                for (const m of mutations) {
+                    if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
+                        try {
+                            // Only log when an actual state change (style/class/display/opacity) differs from last logged state
+                            window._lastTouchControlsState = window._lastTouchControlsState || {};
+                            const state = {
+                                style: el.getAttribute('style') || '',
+                                classList: Array.from(el.classList).join(' '),
+                                display: getComputedStyle(el).display,
+                                opacity: getComputedStyle(el).opacity
+                            };
+                            const last = window._lastTouchControlsState;
+                            if (state.style !== last.style || state.classList !== last.classList || state.display !== last.display || state.opacity !== last.opacity) {
+                                window._lastTouchControlsState = state;
+                                try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_mutation', { attribute: m.attributeName, style: state.style, classList: state.classList.split(' '), display: state.display, opacity: state.opacity }); } catch (e) {}
+                            }
+                        } catch (e) {}
+                    }
+                }
+            });
+            mo.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_observer_attached', {}); } catch (e) {}
+        } catch (e) { /* ignore */ }
+    }
+    // attempt to observe now and again after small delay if element isn't present yet
+    observe();
+    setTimeout(observe, 500);
+    setTimeout(observe, 2000);
+
+    // Global observer for childList changes to detect removals of touch-controls
+    try {
+        const docMo = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                if (m.type === 'childList') {
+                    for (const n of Array.from(m.removedNodes)) {
+                        try {
+                            if (n && n.id === 'touch-controls') {
+                                try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_removed', {}); } catch (e) {}
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+        });
+        docMo.observe(document.body, { childList: true, subtree: true });
+    } catch (e) { /* ignore */ }
+})();
+
+function updateMobileUI() {
+    if (!isMobile()) return;
+
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('updateMobileUI', { landscape: isLandscape(), width: window.innerWidth, height: window.innerHeight }); } catch (e) {}
+
+    if (!isLandscape()) {
+        // Portrait: force rotate message, hide controls and start overlay
+        const rotate = document.getElementById('rotate-message');
+        if (rotate) rotate.style.display = 'flex';
+        hideMobileStartOverlay();
+        hideMobileRestartOverlay();
+        const tc = document.getElementById('touch-controls');
+        if (tc) {
+            tc.style.display = 'none';
+            tc.style.pointerEvents = 'none';
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_portrait', {}); } catch (e) {}
+        }
+    } else {
+        // Landscape: allow overlays if appropriate
+        const rotate = document.getElementById('rotate-message');
+        if (rotate) rotate.style.display = 'none';
+        // Only show start overlay when game is in MENU and ready
+        if (window.gameReady && window.game && window.game.state === 'MENU') {
+            showMobileStartOverlay();
+        }
+
+        // If a start gesture was requested while in portrait, and we are now
+        // landscape + menu + ready, dispatch that pending gesture automatically.
+        if (window._pendingStartGesture && window.gameReady && window.game && window.game.state === 'MENU') {
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStart_pending_dispatch', {}); } catch (e) {}
+            window._pendingStartGesture = false;
+            if (mobileStartBtn) {
+                mobileStartBtn.disabled = false;
+                mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
+                delete mobileStartBtn._prevText;
+            }
+            // Simulate the proceed flow (important to be done in a user-gesture context ideally)
+            requestFullscreen();
+            triggerKeyEvent('Enter', 'keydown');
+            setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+            hideMobileStartOverlay();
+        }
+        const tc = document.getElementById('touch-controls');
+        // Ensure controls exist and have listeners. Only hide them if the game is NOT playing.
+        if (tc) {
+            const isPlaying = window.game && window.game.state === 'PLAYING';
+            initTouchControls();
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_init', { exists: true, isPlaying }); } catch (e) {}
+            if (!isPlaying) {
+                hideTouchControls();
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_init_not_playing', {}); } catch (e) {}
+            } else {
+                // Ensure controls remain visible when gameplay is active
+                showTouchControls(800);
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_keep_visible', {}); } catch (e) {}
+            }
+        }
+    }
+}
+
+const debouncedUpdateMobileUI = debounce(updateMobileUI, 180);
+window.addEventListener('orientationchange', debouncedUpdateMobileUI);
+window.addEventListener('resize', debouncedUpdateMobileUI);
+// Ensure fullscreen transitions also update mobile UI and re-show controls when appropriate
+document.addEventListener('fullscreenchange', () => {
+    // Let the browser stabilize then re-evaluate UI
+    setTimeout(() => debouncedUpdateMobileUI(), 150);
+    // If the game is playing after entering fullscreen, force-show controls
+    setTimeout(() => {
+        const tc = document.getElementById('touch-controls');
+        if (!tc) return;
+        if (window.game && window.game.state === 'PLAYING' && isMobile() && isLandscape()) {
+            tc.style.display = 'flex'; tc.style.pointerEvents = 'auto'; void tc.offsetWidth; tc.classList.add('visible');
+        }
+    }, 200);
+});
+// run once on load (use non-debounced immediate call so layout is correct)
+updateMobileUI();
+
+// If gameReady fires while a pending start exists, and device is landscape + in MENU,
+// ensure we auto-dispatch the pending gesture (covers cases where startHandler did not
+// register an onReady listener because the pending flag was set externally by tests).
+window.addEventListener('gameReady', function() {
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('gameReady_pending_check', {}); } catch (e) {}
+    if (window._pendingStartGesture && isLandscape() && window.game && window.game.state === 'MENU') {
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileStart_pending_autoDispatch_onGameReady', {}); } catch (e) {}
+        window._pendingStartGesture = false;
+        if (mobileStartBtn) {
+            mobileStartBtn.disabled = false;
+            mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
+            delete mobileStartBtn._prevText;
+        }
+        requestFullscreen();
+        triggerKeyEvent('Enter', 'keydown');
+        setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+        hideMobileStartOverlay();
+    }
+});
+
+// --- Test helper: force-dispatch a pending start (used by integration tests)
+// Call `window.__test_forceDispatchPendingStart()` from tests to deterministically
+// simulate the user gesture that begins the game when a pending start exists.
+// This avoids flaky reliance on native fullscreen/user-gesture constraints in CI.
+window.__test_forceDispatchPendingStart = function() {
+    try { window && window.logTouchControlEvent && window.logTouchControlEvent('test_forceDispatchRequested', {}); } catch (e) {}
+    if (!window._pendingStartGesture) {
+        return { ok: false, reason: 'no-pending' };
+    }
+    // Bypass orientation check in tests so we can exercise the flow deterministically
+    try { requestFullscreen(); } catch (e) {}
+    try {
+        window._pendingStartGesture = false;
+        if (mobileStartBtn) {
+            mobileStartBtn.disabled = false;
+            mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
+            delete mobileStartBtn._prevText;
+        }
+        triggerKeyEvent('Enter', 'keydown');
+        setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+        hideMobileStartOverlay();
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('test_forceDispatchDone', {}); } catch (e) {}
+        return { ok: true };
+    } catch (e) {
+        return { ok: false, reason: String(e) };
+    }
+};
+
+// Show/hide touch controls based on game state: only visible during PLAYING on mobile landscape
+window.addEventListener('gameStateChange', function(e) {
+    // Ensure the controls exist (may be dynamically re-inserted if missing)
+    ensureTouchControlsExists();
+    const tcNow = document.getElementById('touch-controls');
+    if (!tcNow) return;
+
+    // If not mobile / not landscape, ensure controls are hidden
+    if (!isMobile()) {
+        tcNow.style.display = 'none'; tcNow.style.pointerEvents = 'none';
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_nonmobile', {}); } catch (e) {}
+        return;
+    }
+    if (!isLandscape()) {
+        tcNow.style.display = 'none'; tcNow.style.pointerEvents = 'none';
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hidden_portrait', {}); } catch (e) {}
+        return;
+    }
+
+    if (e && e.detail && e.detail.state === 'PLAYING') {
+        // Ensure controls are ready to show
+        tcNow.style.display = 'flex'; tcNow.style.pointerEvents = 'auto'; void tcNow.offsetWidth; tcNow.classList.add('visible');
+
+        // show with animation
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_showing', { state: e.detail.state }); } catch (e) {}
+        showTouchControls(800);
+
+        // Re-assert visibility for a short duration to mitigate racing hides triggered by
+        // resize/orientation/fullscreen handlers on some devices (e.g., Galaxy S20).
+        // If controls are forced on, reassert for a much longer duration.
+        (function reassert(nms){
+            const duration = window._forceTouchControls ? 3600000 : (nms || 800);
+            const end = Date.now() + duration;
+            const tid = setInterval(() => {
+                const cur = document.getElementById('touch-controls');
+                if (!cur) { clearInterval(tid); return; }
+                try {
+                    cur.style.display = 'flex'; cur.style.pointerEvents = 'auto'; void cur.offsetWidth; cur.classList.add('visible');
+                    showTouchControls(window._forceTouchControls ? 3600000 : 800);
+                } catch (e) {}
+                if (Date.now() >= end) clearInterval(tid);
+            }, 120);
+        })(800);
+    } else {
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hiding', { state: e && e.detail && e.detail.state }); } catch (e) {}
+        hideTouchControls();
+    }
+});
+
+// --- RUNTIME ERROR CAPTURE ---
+(function () {
+    const overlay = document.getElementById('error-overlay');
+    const content = document.getElementById('error-content');
+    const closeBtn = document.getElementById('error-close');
+    const copyBtn = document.getElementById('error-copy');
+
+    function showError(msg) {
+        if (!overlay || !content) return;
+        content.textContent = msg;
+        overlay.style.display = 'block';
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', () => { overlay.style.display = 'none'; });
+    if (copyBtn) copyBtn.addEventListener('click', () => { if (navigator.clipboard) navigator.clipboard.writeText(content.textContent || ''); });
+
+    window.addEventListener('error', (e) => {
+        const msg = `${e.message} at ${e.filename}:${e.lineno}:${e.colno}\n${e.error && e.error.stack ? e.error.stack : ''}`;
+        console.error('Captured error:', msg);
+        showError(msg);
+    });
+
+    window.addEventListener('unhandledrejection', (ev) => {
+        const reason = ev.reason ? (ev.reason.stack || ev.reason) : 'Unknown';
+        const msg = `Unhandled Rejection: ${reason}`;
+        console.error(msg);
+        showError(msg);
+    });
+})();
+
+/* Re-insert touch controls as a fixed overlay so transforms on #game-container don't affect layout */
+(function() {
+    const html = `
+    <div id="touch-controls" style="position:fixed; bottom:calc(20px + var(--safe-bottom)); left:0; right:0; transform:none; display:none; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:2000; padding:0 calc(20px + var(--safe-right));">
+        <div id="d-pad" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <button class="touch-btn" id="btn-left">&#8592;</button>
+            <button class="touch-btn" id="btn-right">&#8594;</button>
+        </div>
+        <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
+        </div>
+        <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
+            <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
+            <button class="touch-btn" id="btn-jump">&#8593;</button>
+            <button class="touch-btn" id="btn-pause">Pause</button>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    // Ensure touch control handlers are bound now that elements exist
+    if (typeof initTouchControls === 'function') initTouchControls();
+})();
+
+/* --- DEBUG OVERLAY (toggle with 'd') --- */
+(function() {
+    const css = `
+    #debug-overlay { position: fixed; right: 12px; top: 12px; background: rgba(0,0,0,0.7); color: #0f0; font-family: monospace; font-size:12px; padding:8px 10px; border-radius:6px; z-index:9999; display:none; pointer-events:none; max-width:260px; }
+    #debug-overlay b { color: #fff; }
+    `;
+    const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'debug-overlay';
+    overlay.innerHTML = '<div><b>Debug</b></div><div id="dbg-info"></div>';
+    document.body.appendChild(overlay);
+
+    const info = overlay.querySelector('#dbg-info');
+    const canvas = document.getElementById('game-canvas');
+    function fmt(n) { return (n===undefined || n===null) ? '-' : n; }
+
+    function readSafe(name) {
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--safe-' + name) || '0px';
+        return parseFloat(v) || 0;
+    }
+
+    let rafId = null;
+    function render() {
+        const cs = getComputedStyle(canvas);
+        const cssW = cs.width;
+        const cssH = cs.height;
+        const intW = canvas.width;
+        const intH = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
+        const safeTop = readSafe('top');
+        const safeBottom = readSafe('bottom');
+        const safeLeft = readSafe('left');
+        const safeRight = readSafe('right');
+
+        info.innerHTML = `CSS: ${cssW} × ${cssH}<br>Internal: ${intW} × ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
+        rafId = requestAnimationFrame(render);
+    }
+
+    function show() {
+        overlay.style.display = 'block';
+        if (!rafId) render();
+    }
+    function hide() {
+        overlay.style.display = 'none';
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    }
+
+    // toggle with `d`
+    window.addEventListener('keydown', (e) => {
+        if (e.key && e.key.toLowerCase() === 'd') {
+            if (overlay.style.display === 'none' || overlay.style.display === '') show(); else hide();
+        }
+    });
+
+    // Update overlay after debounced UI updates
+    const deb = debounce(() => {
+        if (overlay.style.display !== 'none') {
+            // force one immediate re-render
+            if (rafId) cancelAnimationFrame(rafId);
+            render();
+        }
+    }, 200);
+    window.addEventListener('resize', deb);
+    window.addEventListener('orientationchange', deb);
+})();
+</script>
+</body>
+</html>
