@@ -298,15 +298,18 @@ class Game {
             if (this.enemyManager && typeof this.enemyManager.reset === 'function') this.enemyManager.reset();
             this.damageNumbers = [];
             this.hitSparks = [];
-            // Place player on the floor so they don't start on small platforms
+            // Place player on a platform (not the ground floor for mobile)
             if (this.level.platforms && this.level.platforms.length > 0) {
-                const floor = this.level.platforms.reduce((a, b) => (b.y > a.y ? b : a), this.level.platforms[0]);
+                // Filter out the ground platform (assume it's the one with largest y or full width)
+                const nonGroundPlatforms = this.level.platforms.filter(p => p.y < this.level.height - 50 || p.width < this.level.width * 0.8);
+                const platforms = nonGroundPlatforms.length > 0 ? nonGroundPlatforms : this.level.platforms;
+                const floor = platforms.reduce((a, b) => (b.y > a.y ? b : a), platforms[0]);
                 const spawnX = Math.floor(floor.x + (floor.width - this.player.width) / 2);
                 const spawnPadding = 8; // px above the platform
                 this.player.x = spawnX;
                 this.player.y = floor.y - this.player.height - spawnPadding;
-                console.log('Spawn placed on floor at', this.player.x, this.player.y, 'floor:', floor.x, floor.y, floor.width, floor.height);
-                // Snap camera immediately to the player so the floor is visible on start
+                console.log('Spawn placed on platform at', this.player.x, this.player.y, 'platform:', floor.x, floor.y, floor.width, floor.height);
+                // Snap camera immediately to the player so the platform is visible on start
                 if (Config.CAMERA_START === 'bottom-left') {
                     // bottom-left: x=0, y = level.height - viewHeight (show floor)
                     this.cameraX = 0;
