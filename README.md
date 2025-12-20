@@ -100,6 +100,22 @@ python main.py
 
 These scripts run tools in `tools/` and `toolshed/` to help testing, sprite maintenance and diagnostics.
 
+### Entrypoint & CI/Docker 🔧
+
+- **Expected entrypoint:** `index.js` (root shim) with `"main": "index.js"` in `package.json`. `npm start` still runs `node tools/csp_server.js` for local development.
+- **Docker / container platforms:** If your platform runs `node index.js` by default, no change is needed. To override, set the container CMD/ENTRYPOINT, for example:
+
+```Dockerfile
+# Run the root shim
+CMD ["node", "index.js"]
+# or run the server directly
+CMD ["node", "tools/csp_server.js"]
+```
+
+- **CI (GitHub Actions / other):** Use `npm start` or `node index.js` to start the server in your job. If you prefer a different entrypoint, update the `main` field in `package.json` or set the explicit command in your CI job.
+
+> Tip: keep `npm start` pointing to the dev server (`tools/csp_server.js`) so local `npm start` behavior is predictable.
+
 ## Controls
 
 | Action | Keys |
