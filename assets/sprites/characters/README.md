@@ -6,9 +6,9 @@ This directory contains sprite assets for the Ninja Skunk character.
 
 ### Animation Sprite Sheets
 - `ninja_idle.png` - Idle stance (4 frames)
-- `ninja_walk.png` - Running animation (6 frames)
+- `ninja_walk.png` - Running animation (4 frames)
 - `ninja_jump.png` - Jump/fall animation (4 frames)
-- `ninja_attack.png` - Basic attack combo (6 frames)
+- `ninja_attack.png` - Basic attack combo (4 frames)
 - `ninja_shadow_strike.png` - Shadow Strike dash (8 frames with motion blur)
 - `ninja_hurt.png` - Taking damage (2 frames)
 

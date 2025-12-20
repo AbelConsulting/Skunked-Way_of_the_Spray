@@ -10,7 +10,7 @@ const { chromium } = require('playwright');
 
   const info = await page.evaluate(() => {
     try {
-      const anim = spriteLoader.createAnimation('ninja_walk', 6);
+      const anim = spriteLoader.createAnimation('ninja_walk', 4);
       return { frameWidth: anim.frameWidth, frameHeight: anim.frameHeight, frameStride: anim.frameStride, frameOffset: anim.frameOffset };
     } catch (e) {
       return { error: String(e) };

@@ -30,9 +30,9 @@ However, there are some optimization opportunities regarding file sizes and dime
 | Sprite File | Dimensions | File Size | Calculated Frames | Spec Requirement |
 |------------|-----------|-----------|-------------------|------------------|
 | ninja_idle.png | 2048x2048px | 4.69 MB | ~32 frames @ 64px | 4 frames |
-| ninja_walk.png | 2048x2048px | 4.84 MB | ~32 frames @ 64px | 6 frames |
+| ninja_walk.png | 2048x2048px | 4.84 MB | ~32 frames @ 64px | 4 frames |
 | ninja_jump.png | 2048x2048px | 5.18 MB | ~32 frames @ 64px | 4 frames |
-| ninja_attack.png | 2048x2048px | 5.10 MB | ~32 frames @ 64px | 6 frames |
+| ninja_attack.png | 2048x2048px | 5.10 MB | ~32 frames @ 64px | 4 frames |
 | ninja_shadow_strike.png | 2048x2048px | 5.16 MB | ~32 frames @ 64px | 8 frames |
 | ninja_hurt.png | 2048x2048px | 5.49 MB | ~32 frames @ 64px | 2 frames |
 

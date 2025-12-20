@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 from PIL import Image
-names = [('ninja_idle',4),('ninja_walk',6),('ninja_jump',4),('ninja_attack',6),('ninja_shadow_strike',8),('ninja_hurt',2)]
+names = [('ninja_idle',4),('ninja_walk',4),('ninja_jump',4),('ninja_attack',4),('ninja_shadow_strike',8),('ninja_hurt',2)]
 for name, frames in names:
     p = Path('assets/sprites/characters') / f'{name}.png'
     if not p.exists():

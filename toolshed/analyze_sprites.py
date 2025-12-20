@@ -49,9 +49,9 @@ def analyze_all_sprites():
     
     expected_ninja = {
         'ninja_idle.png': {'frames': 4, 'size': 64},
-        'ninja_walk.png': {'frames': 6, 'size': 64},
+        'ninja_walk.png': {'frames': 4, 'size': 64},
         'ninja_jump.png': {'frames': 4, 'size': 64},
-        'ninja_attack.png': {'frames': 6, 'size': 64},
+        'ninja_attack.png': {'frames': 4, 'size': 64},
         'ninja_shadow_strike.png': {'frames': 8, 'size': 64},
         'ninja_hurt.png': {'frames': 2, 'size': 64}
     }

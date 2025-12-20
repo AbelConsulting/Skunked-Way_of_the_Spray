@@ -78,7 +78,7 @@ class Player {
         const ninja_idle = spriteLoader.getSprite('ninja_idle');
         const ninja_walk = spriteLoader.getSprite('ninja_walk');
         const ninja_jump = spriteLoader.getSprite('ninja_jump');
-        const ninja_attack = spriteLoader.getSprite('ninja_attack');
+                const ninja_attack = spriteLoader.getSprite('ninja_attack');
         const ninja_shadow_strike = spriteLoader.getSprite('ninja_shadow_strike');
         const ninja_hurt = spriteLoader.getSprite('ninja_hurt');
 
@@ -89,18 +89,18 @@ class Player {
             // per-sheet padding) instead of forcing a hardcoded value.
             this.animations = {
                 idle: spriteLoader.createAnimation('ninja_idle', 4, 0.15),
-                walk: spriteLoader.createAnimation('ninja_walk', 6, 0.1),
+                        walk: spriteLoader.createAnimation('ninja_walk', 4, 0.1),
                 jump: spriteLoader.createAnimation('ninja_jump', 4, 0.12),
-                attack: spriteLoader.createAnimation('ninja_attack', 6, 0.08),
+                        attack: spriteLoader.createAnimation('ninja_attack', 4, 0.08),
                 shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 8, 0.05),
                 hurt: spriteLoader.createAnimation('ninja_hurt', 2, 0.1)
             };
         } else {
             this.animations = {
                 idle: new Animation(ninja_idle, 4, 0.15, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                walk: new Animation(ninja_walk, 6, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                        walk: new Animation(ninja_walk, 4, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                attack: new Animation(ninja_attack, 6, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                        attack: new Animation(ninja_attack, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 shadow_strike: new Animation(ninja_shadow_strike, 8, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
             };

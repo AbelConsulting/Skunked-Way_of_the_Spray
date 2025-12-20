@@ -13,9 +13,9 @@ def process_ninja_sprites():
     # Ninja sprite configuration
     ninja_sprites = {
         'ninja_idle.png': {'frames': 4, 'target_size': 64},
-        'ninja_walk.png': {'frames': 6, 'target_size': 64},
+        'ninja_walk.png': {'frames': 4, 'target_size': 64},
         'ninja_jump.png': {'frames': 4, 'target_size': 64},
-        'ninja_attack.png': {'frames': 6, 'target_size': 64},
+        'ninja_attack.png': {'frames': 4, 'target_size': 64},
         'ninja_shadow_strike.png': {'frames': 8, 'target_size': 64},
         'ninja_hurt.png': {'frames': 2, 'target_size': 64}
     }

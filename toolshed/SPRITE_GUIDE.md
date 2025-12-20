@@ -10,7 +10,7 @@ All sprite sheets use **horizontal strips** where frames are arranged side-by-si
 [Frame 0][Frame 1][Frame 2][Frame 3][Frame 4][Frame 5]
 ```
 
-Example: `ninja_walk.png` (6 frames @ 64x64) = **384 x 64 pixels**
+Example: `ninja_walk.png` (4 frames @ 64x64) = **256 x 64 pixels**
 
 ## Quick Start
 

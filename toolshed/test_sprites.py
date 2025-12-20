@@ -44,9 +44,9 @@ def main():
 
     player_sheets = [
         ("characters/ninja_idle.png", (64, 64), 4),
-        ("characters/ninja_walk.png", (64, 64), 6),
+        ("characters/ninja_walk.png", (64, 64), 4),
         ("characters/ninja_jump.png", (64, 64), 4),
-        ("characters/ninja_attack.png", (64, 64), 6),
+        ("characters/ninja_attack.png", (64, 64), 4),
         ("characters/ninja_shadow_strike.png", (64, 64), 8),
         ("characters/ninja_hurt.png", (64, 64), 2),
     ]
