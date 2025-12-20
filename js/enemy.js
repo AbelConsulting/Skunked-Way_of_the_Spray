@@ -113,6 +113,8 @@ class Enemy {
         }
         return false;
     }
+
+    update(dt, player, level) {
         // Update timers
         if (this.hitStunTimer > 0) {
             this.hitStunTimer -= dt;
