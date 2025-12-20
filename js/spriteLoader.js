@@ -137,7 +137,7 @@ class SpriteLoader {
         try {
             const expectedFrames = {
                 'ninja_idle': 4,
-                'ninja_walk': 6,
+                'ninja_walk': 4,
                 'ninja_jump': 4,
                 'ninja_attack': 6,
                 'ninja_shadow_strike': 8,
