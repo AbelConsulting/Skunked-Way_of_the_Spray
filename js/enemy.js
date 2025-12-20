@@ -308,6 +308,25 @@ class Enemy {
         ctx.restore();
     }
 
+    checkGround(x, y, level) {
+        // Check if there's a platform that would support standing at this position
+        // Create a small test rectangle at the bottom of the enemy
+        const testRect = {
+            x: x,
+            y: y + this.height - 1, // Just below the enemy's feet
+            width: this.width,
+            height: 2 // Small height to check for platform intersection
+        };
+
+        // Check collision with all platforms
+        for (const platform of level.platforms) {
+            if (Utils.rectCollision(testRect, platform)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     getRect() {
         return { x: this.x, y: this.y, width: this.width, height: this.height };
     }
