@@ -806,11 +806,12 @@ window.requestShowTouchControls = function(durationMs = 1000, options = {}) {
             const computed = getComputedStyle(tc);
             const isVisible = computed.display !== 'none' && tc.classList.contains('visible');
             if (!isVisible) {
-                tc.style.display = 'flex'; tc.style.pointerEvents = 'auto'; void tc.offsetWidth; tc.classList.add('visible'); tc.style.opacity = '1';
+                // Keep container pointer-events disabled so it doesn't block elements above it;
+                // only control groups inside have pointer-events set to 'auto'.
+                tc.style.display = 'flex'; void tc.offsetWidth; tc.classList.add('visible'); tc.style.opacity = '1';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_shown', {}); } catch (e) {}
             } else {
-                // Already visible: just ensure pointer events and opacity are set without toggling class/display
-                tc.style.pointerEvents = 'auto';
+                // Already visible: just ensure opacity is set without toggling class/display
                 if (tc.style.opacity !== '1') tc.style.opacity = '1';
             }
         }
