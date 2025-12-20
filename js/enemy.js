@@ -153,7 +153,7 @@ class Enemy {
             // Execute state behavior
             switch (this.state) {
                 case "PATROL":
-                    this.patrol(dt);
+                    this.patrol(dt, level);
                     break;
                 case "CHASE":
                     this.chase(dt, player);
@@ -200,7 +200,7 @@ class Enemy {
         this.x = Utils.clamp(this.x, 0, level.width - this.width);
     }
 
-    patrol(dt) {
+    patrol(dt, level) {
         // Check for ledge before moving
         const nextX = this.x + this.velocityX * dt;
         if (!this.checkGround(nextX, this.y, level)) {
