@@ -1,6 +1,7 @@
 {
   "name": "skunkfu",
   "version": "0.1.0",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
