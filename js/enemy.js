@@ -204,40 +204,47 @@ class Enemy {
         // Defensive: ensure level is provided (safeguard for older builds/clients)
         if (!level) {
             try {
-                if (typeof console !== 'undefined' && console.warn) console.warn('Enemy.patrol called without level; skipping patrol step.');
-                // Increment ephemeral counter for telemetry
-                window._enemyPatrolMissingLevelCount = (window._enemyPatrolMissingLevelCount || 0) + 1;
+                if (typeof console !== 'undefined' && console.warn) console.warn('Enemy.patrol called without level; attempting fallback to window.game.level.');
+                // Try fallback to global game-level if available (emergency mitigation for older cached clients)
+                level = (typeof window !== 'undefined' && window.game && window.game.level) ? window.game.level : null;
 
-                // Lazily install a reporter to aggregate and send counts infrequently
-                if (!window._reportEnemyPatrolMissingLevel) {
-                    window._reportEnemyPatrolMissingLevel = function(sendNow = false) {
-                        try {
-                            const cnt = window._enemyPatrolMissingLevelCount || 0;
-                            if (cnt <= 0 && !sendNow) return;
-                            const payload = { ts: Date.now(), event: 'enemy.patrol_missing_level', count: cnt, ua: (navigator && navigator.userAgent) ? navigator.userAgent : '' };
-                            const body = JSON.stringify({ logs: [payload] });
-                            // Prefer sendBeacon for reliability during unload
-                            if (navigator && typeof navigator.sendBeacon === 'function') {
-                                try { navigator.sendBeacon('/__touch_log', body); } catch (e) { /* ignore */ }
-                            } else {
-                                try { fetch('/__touch_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(()=>{}); } catch (e) {}
-                            }
-                        } catch (e) {}
-                        // Reset counter after attempt
-                        window._enemyPatrolMissingLevelCount = 0;
-                    };
+                if (!level) {
+                    // No fallback available — record telemetry and return
+                    window._enemyPatrolMissingLevelCount = (window._enemyPatrolMissingLevelCount || 0) + 1;
 
-                    // Periodically send aggregated counts (every 60s)
-                    try { window._reportEnemyPatrolMissingLevelTimer = setInterval(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) {} }, 60000); } catch (e) {}
+                    // Lazily install a reporter to aggregate and send counts infrequently
+                    if (!window._reportEnemyPatrolMissingLevel) {
+                        window._reportEnemyPatrolMissingLevel = function(sendNow = false) {
+                            try {
+                                const cnt = window._enemyPatrolMissingLevelCount || 0;
+                                if (cnt <= 0 && !sendNow) return;
+                                const payload = { ts: Date.now(), event: 'enemy.patrol_missing_level', count: cnt, ua: (navigator && navigator.userAgent) ? navigator.userAgent : '' };
+                                const body = JSON.stringify({ logs: [payload] });
+                                // Prefer sendBeacon for reliability during unload
+                                if (navigator && typeof navigator.sendBeacon === 'function') {
+                                    try { navigator.sendBeacon('/__touch_log', body); } catch (e) { /* ignore */ }
+                                } else {
+                                    try { fetch('/__touch_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(()=>{}); } catch (e) {}
+                                }
+                            } catch (e) {}
+                            // Reset counter after attempt
+                            window._enemyPatrolMissingLevelCount = 0;
+                        };
 
-                    // Ensure a final send on unload
-                    try { window.addEventListener('beforeunload', () => { try { window._reportEnemyPatrolMissingLevel(true); } catch (e) {} }); } catch (e) {}
+                        // Periodically send aggregated counts (every 60s)
+                        try { window._reportEnemyPatrolMissingLevelTimer = setInterval(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) {} }, 60000); } catch (e) {}
 
-                    // Kick off a short delayed send so low-frequency occurrences are reported quickly
-                    try { setTimeout(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) {} }, 10000); } catch (e) {}
+                        // Ensure a final send on unload
+                        try { window.addEventListener('beforeunload', () => { try { window._reportEnemyPatrolMissingLevel(true); } catch (e) {} }); } catch (e) {}
+
+                        // Kick off a short delayed send so low-frequency occurrences are reported quickly
+                        try { setTimeout(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) {} }, 10000); } catch (e) {}
+                    }
+                    return;
+                } else {
+                    if (typeof console !== 'undefined' && console.log) console.log('Enemy.patrol: used fallback window.game.level');
                 }
             } catch (e) {}
-            return;
         }
 
         // Check for ledge before moving
