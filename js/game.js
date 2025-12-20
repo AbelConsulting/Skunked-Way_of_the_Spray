@@ -102,7 +102,7 @@ class Game {
 
         // Debug helpers
         this.debugOverlay = false;
-        this.levelDebugVisuals = false; // show spawn/hazard visuals
+        this.levelDebugVisuals = false; // show spawn visuals
         if (typeof window !== 'undefined') {
             try {
                 window.snapCameraToRight = () => { this.cameraX = Math.max(0, this.level.width - (this.viewWidth || this.width)); };
