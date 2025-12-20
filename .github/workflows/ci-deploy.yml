@@ -73,13 +73,17 @@ jobs:
 
       - name: Publish to Cloudflare Pages
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_PAGES_PROJECT: ${{ secrets.CF_PAGES_PROJECT }}
         run: |
           if ! command -v wrangler >/dev/null 2>&1; then
-            npm install -g wrangler@2
+            # Install modern Wrangler CLI (v4+) which supports non-interactive auth
+            npm install -g wrangler@4
           fi
-          # Publish dist directory; CF_PAGES_PROJECT should contain the Pages project name
-          wrangler pages publish ./dist --project-name "${{ secrets.CF_PAGES_PROJECT }}"
+          # Confirm wrangler version
+          wrangler --version
+          # Publish dist directory; requires secret CLOUDFLARE_API_TOKEN and CF_PAGES_PROJECT to be set
+          wrangler pages publish ./dist --project-name "${CF_PAGES_PROJECT}"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
