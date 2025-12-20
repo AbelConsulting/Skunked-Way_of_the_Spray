@@ -1,0 +1,21 @@
+mobile-start-btn present? true
+pendingStartGesture after attempt (expected true): true
+rotating viewport to landscape...
+midState after rotate: {
+  landscape: true,
+  innerW: 640,
+  innerH: 360,
+  pending: true,
+  gameReady: false,
+  state: undefined,
+  mobileStartVisible: 'flex',
+  touchControlsVisible: 'none'
+}
+started: true
+final state: {
+  gameReady: true,
+  state: 'PLAYING',
+  pending: false,
+  mobileStartVisible: 'none',
+  touchControlsVisible: 'flex'
+}

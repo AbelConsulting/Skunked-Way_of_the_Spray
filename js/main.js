@@ -247,6 +247,24 @@ class GameApp {
             const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             this.isMobile = isMobileDevice;
 
+            // Disable spike hazards on mobile and on the public host by default to avoid
+            // frustrating instant-death hazards on phones or the live site. Allow URL
+            // override via ?spikes=1 to force-enable or ?spikes=0 to force-disable.
+            try {
+                const params = new URLSearchParams(location.search);
+                if (params.has('spikes')) {
+                    // spikes=1 means enable spikes; spikes=0 means disable spikes
+                    Config.DISABLE_SPIKES = (params.get('spikes') === '0');
+                    console.log('Spikes override from URL (spikes param):', params.get('spikes'), '-> DISABLE_SPIKES=', Config.DISABLE_SPIKES);
+                } else if (location && location.host && location.host.indexOf('skunksquad.com') !== -1) {
+                    Config.DISABLE_SPIKES = true;
+                    console.log('Spikes disabled on skunksquad.com by default (Config.DISABLE_SPIKES=true)');
+                } else if (isMobileDevice) {
+                    Config.DISABLE_SPIKES = true;
+                    console.log('Spikes disabled on mobile device by default (Config.DISABLE_SPIKES=true)');
+                }
+            } catch (e) { /* noop */ }
+
             // Lower target FPS on mobile to save CPU/battery (configurable)
             if (isMobileDevice) {
                 Config.FPS = Math.min(Config.FPS || 60, Config.MOBILE_FPS || 30);
