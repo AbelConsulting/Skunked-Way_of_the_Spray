@@ -24,8 +24,14 @@ jobs:
 
       - name: Start static server
         run: |
-          nohup python3 -m http.server 8001 &
-          sleep 1
+          nohup python3 -m http.server 8000 &
+          # Wait up to 5s for the server to respond on port 8000
+          for i in 1 2 3 4 5; do
+            if curl -sSf http://localhost:8000/ >/dev/null; then
+              echo "Server is up"; break
+            fi
+            sleep 1
+          done
 
       - name: Run touch controls landscape test
         run: node tools/touch_controls_landscape_test.js
