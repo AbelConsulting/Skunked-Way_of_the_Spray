@@ -76,6 +76,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_PAGES_PROJECT: ${{ secrets.CF_PAGES_PROJECT }}
         run: |
+          # Fail early with helpful message when required secrets are missing
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Error: CLOUDFLARE_API_TOKEN is not set. Create a repository secret named CLOUDFLARE_API_TOKEN with a token that has 'Pages:write' and 'Account:read' permissions." >&2
+            exit 1
+          fi
+          if [ -z "$CF_PAGES_PROJECT" ]; then
+            echo "Error: CF_PAGES_PROJECT is not set. Create a repository secret named CF_PAGES_PROJECT with your Pages project name." >&2
+            exit 1
+          fi
+
           if ! command -v wrangler >/dev/null 2>&1; then
             # Install modern Wrangler CLI (v4+) which supports non-interactive auth
             npm install -g wrangler@4
