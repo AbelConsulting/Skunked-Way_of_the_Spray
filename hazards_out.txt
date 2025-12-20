@@ -1,1 +1,1 @@
-hazards length 0 Config.DISABLE_SPIKES= true
+hazards length 0
