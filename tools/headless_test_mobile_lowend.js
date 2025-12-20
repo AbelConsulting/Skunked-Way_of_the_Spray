@@ -14,7 +14,7 @@ const fs = require('fs');
   page.on('console', msg => logs.push({type: msg.type(), text: msg.text()}));
   page.on('pageerror', err => logs.push({type: 'pageerror', text: err.message}));
 
-  const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+  const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
   await page.goto(SERVER);
 
   // Wait for game readiness

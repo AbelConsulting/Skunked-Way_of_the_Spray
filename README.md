@@ -43,14 +43,12 @@ cd SkunkFU
 
      ```bash
      # Python 3
-     python -m http.server 8001
-     # Then open http://localhost:8001 in your browser
-     
-     # Or with Node.js
-     npx http-server -p 8001
-     # Then open http://localhost:8001 in your browser
-     ```
-
+    python -m http.server 8000
+    # Then open http://localhost:8000 in your browser
+    
+    # Or with Node.js
+    npx http-server -p 8000
+    # Then open http://localhost:8000 in your browser
 2. Start playing! No installation required.
 
 **Browser Requirements:**

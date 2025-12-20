@@ -1,9 +1,9 @@
 const { chromium } = require('playwright');
 
 // Integration test: ensure touch controls stay visible after starting game
-// Usage: TEST_SERVER=http://localhost:8001 node tools/integration_touch_persistence.js
+// Usage: TEST_SERVER=http://localhost:8000 node tools/integration_touch_persistence.js
 
-const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 

@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch();
   const context = await browser.newContext({viewport:{width:640,height:360}, deviceScaleFactor:0.75, userAgent: 'Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36'});
   const page = await context.newPage();
-  await page.goto(process.env.TEST_SERVER || 'http://localhost:8001');
+  await page.goto(process.env.TEST_SERVER || 'http://localhost:8000');
 
   // Ensure touch controls exist
   await page.waitForSelector('#touch-controls', { state: 'attached', timeout: 5000 }).catch(() => {});

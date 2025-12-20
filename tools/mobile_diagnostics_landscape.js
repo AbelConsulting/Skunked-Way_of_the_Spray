@@ -5,7 +5,7 @@ const { chromium, devices } = require('playwright');
   const context = await browser.newContext({ ...device, viewport: { width: 844, height: 390 } });
   const page = await context.newPage();
 
-  const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+  const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
   await page.goto(SERVER);
   await page.waitForTimeout(1000);
 

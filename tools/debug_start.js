@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
   page.on('console', msg => console.log('CONSOLE:', msg.type(), msg.text()));
   page.on('pageerror', err => console.log('PAGEERROR:', err.message));
 
-  await page.goto('http://localhost:8001');
+  await page.goto('http://localhost:8000');
   await page.waitForTimeout(2000);
   const scripts = await page.evaluate(()=>Array.from(document.scripts).map(s => ({src: s.src, nonce: s.nonce, async: s.async, defer: s.defer})).slice(0,20));
   console.log('scripts snapshot:', scripts);

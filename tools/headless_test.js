@@ -14,7 +14,7 @@ const fs = require('fs');
     logs.push({type: 'fps', text: `frames=${frames}`});
   });
 
-  const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+  const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
   await page.goto(SERVER);
 
   // Wait for gameReady flag set by main

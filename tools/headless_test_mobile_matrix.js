@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 (async () => {
-  const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+  const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
 
   const devices = [
     { name: 'lowend', viewport: { width: 360, height: 640 }, deviceScaleFactor: 0.75, userAgent: 'Mozilla/5.0 (Linux; Android 7.0; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36', cameraStart: 'bottom-left' },

@@ -1,6 +1,6 @@
 const { chromium } = require('playwright');
 (async ()=>{
-  const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+  const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
   const browser = await chromium.launch();
   // Start in portrait to force "rotate to play" flow
   const context = await browser.newContext({viewport:{width:360,height:640}, userAgent: 'Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0 Mobile Safari/537.36'});

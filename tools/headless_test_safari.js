@@ -1,7 +1,7 @@
 const { webkit } = require('playwright');
 const fs = require('fs');
 (async () => {
-  const SERVER = process.env.TEST_SERVER || 'http://localhost:8001';
+  const SERVER = process.env.TEST_SERVER || 'http://localhost:8000';
 
   // Emulate Safari (WebKit) on a mobile device in landscape
   const browser = await webkit.launch();
