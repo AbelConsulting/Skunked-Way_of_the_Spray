@@ -34,7 +34,8 @@
     "esbuild": "^0.19.12",
     "playwright": "^1.40.0"
   },
-  "dependencies": {
+  "dependencies": {},
+  "optionalDependencies": {
     "@esbuild/win32-x64": "^0.27.2"
   }
 }
