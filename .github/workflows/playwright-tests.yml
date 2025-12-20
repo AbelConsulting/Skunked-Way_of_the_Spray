@@ -17,10 +17,13 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Playwright
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
         run: |
-          npm install -g playwright@latest
-          npx playwright install --with-deps || true
+          # Use the locally-installed playwright package so `require('playwright')` works
+          npx playwright install --with-deps
 
       - name: Start static server
         run: |
