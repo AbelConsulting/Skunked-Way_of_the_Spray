@@ -298,9 +298,23 @@ class Game {
             if (this.enemyManager && typeof this.enemyManager.reset === 'function') this.enemyManager.reset();
             this.damageNumbers = [];
             this.hitSparks = [];
-            // Place player on a platform (not the ground floor for mobile)
-            if (this.level.platforms && this.level.platforms.length > 0) {
-                // Filter out the ground platform (assume it's the one with largest y or full width)
+            // Place player at spawn point (mobile: left, desktop: right)
+            if (this.level.spawnPoints && this.level.spawnPoints.length > 0) {
+                const spawnSide = this.isMobile ? 'left' : 'right';
+                let sp = this.level.spawnPoints.find(s => s.x === spawnSide);
+                if (!sp) sp = this.level.spawnPoints[0];
+                let spawnX = (typeof sp.x === 'number') ? sp.x : (sp.x === 'left' ? 16 : this.level.width - 16);
+                let spawnY = (typeof sp.y === 'number') ? sp.y : 300;
+                // Ensure spawn is on a platform
+                const platform = this.level.platforms.find(p => spawnX >= p.x && spawnX <= p.x + p.width && spawnY + this.player.height >= p.y);
+                if (platform) {
+                    spawnY = platform.y - this.player.height - 8;
+                }
+                this.player.x = spawnX;
+                this.player.y = spawnY;
+                console.log('Spawn placed at spawn point', this.player.x, this.player.y, 'spawn:', sp.x, sp.y);
+            } else {
+                // Fallback to platform spawn
                 const nonGroundPlatforms = this.level.platforms.filter(p => !(p.y >= this.level.height - 50 && p.width >= this.level.width * 0.8));
                 const platforms = nonGroundPlatforms.length > 0 ? nonGroundPlatforms : this.level.platforms;
                 const floor = platforms.reduce((a, b) => (b.y > a.y ? b : a), platforms[0]);
@@ -309,20 +323,6 @@ class Game {
                 this.player.x = spawnX;
                 this.player.y = floor.y - this.player.height - spawnPadding;
                 console.log('Spawn placed on platform at', this.player.x, this.player.y, 'platform:', floor.x, floor.y, floor.width, floor.height);
-                // Snap camera immediately to the player so the platform is visible on start
-                if (Config.CAMERA_START === 'bottom-left') {
-                    // bottom-left: x=0, y = level.height - viewHeight (show floor)
-                    this.cameraX = 0;
-                    this.cameraY = Math.max(0, this.level.height - (this.viewHeight || this.height));
-                } else {
-                    const targetCamX = this.player.x - (this.viewWidth || this.width) / 3;
-                    this.cameraX = Utils.clamp(targetCamX, 0, Math.max(0, this.level.width - (this.viewWidth || this.width)));
-                    const targetCamY = this.player.y - (this.viewHeight || this.height) * 0.45;
-                    this.cameraY = Utils.clamp(targetCamY, 0, Math.max(0, this.level.height - (this.viewHeight || this.height)));
-                }
-            } else {
-                this.player.x = 100;
-                this.player.y = this.height - this.player.height - 8;
             }
         
                 // Ensure gameplay music is loaded (deferred for mobile performance)
