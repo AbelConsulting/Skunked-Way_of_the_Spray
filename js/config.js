@@ -76,9 +76,6 @@ const Config = {
     // FPS probe thresholds: <LOW -> low, <MID -> mid, else high
     MOBILE_FPS_PROBE_LOW: 22,
     MOBILE_FPS_PROBE_MID: 36,
-    // Visual indicators for moving hazards (show path and timing indicators)
-    HAZARD_INDICATORS: true,
-
     // Enable tile-based platform graphics when assets are present
     USE_TILE_GRAPHICS: true
 };

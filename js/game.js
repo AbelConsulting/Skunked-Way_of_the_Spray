@@ -109,13 +109,7 @@ class Game {
                 window.snapCameraToLeft = () => { this.cameraX = 0; };
                 window.toggleCameraDebug = () => { this.debugOverlay = !this.debugOverlay; };
                 window.rebuildStaticLayer = () => { try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { console.warn('rebuildStaticLayer failed', e); } };
-                window.toggleHazardIndicators = (enable) => {
-                    try {
-                        if (typeof enable === 'boolean') Config.HAZARD_INDICATORS = enable;
-                        else Config.HAZARD_INDICATORS = !Config.HAZARD_INDICATORS;
-                        console.log('HAZARD_INDICATORS =', Config.HAZARD_INDICATORS);
-                    } catch (e) { console.warn('toggleHazardIndicators failed', e); }
-                };
+
                 window.toggleLevelDebugVisuals = (enable) => {
                     try {
                         if (typeof enable === 'boolean') this.levelDebugVisuals = enable;
@@ -610,23 +604,7 @@ class Game {
                     }
                 }
 
-                // Hazards
-                if (Array.isArray(this.level.hazards)) {
-                    for (const h of this.level.hazards) {
-                        ctx.save();
-                        ctx.strokeStyle = 'rgba(255,0,0,0.9)';
-                        ctx.lineWidth = 2;
-                        ctx.setLineDash([4,4]);
-                        ctx.strokeRect(h.x, h.y, h.width, h.height);
-                        ctx.setLineDash([]);
-                        ctx.fillStyle = 'rgba(255,0,0,0.06)';
-                        ctx.fillRect(h.x, h.y, h.width, h.height);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
-                        const label = h.type || 'hazard';
-                        ctx.fillText(label, h.x + 4, h.y - 6);
-                        ctx.restore();
-                    }
-                }
+                // Hazards removed: nothing to draw here.
 
                 // Editor overlays (selection / hover) — draw in world coordinates
                 if (this._editorOverlay) {
