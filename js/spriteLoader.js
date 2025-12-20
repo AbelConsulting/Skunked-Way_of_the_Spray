@@ -21,7 +21,7 @@ class SpriteLoader {
         // placeholder sheets when the real asset is missing.
         this.expectedFrames = {
             'ninja_idle': 4,
-            'ninja_walk': 6,
+            'ninja_walk': 4,
             'ninja_jump': 4,
             'ninja_attack': 6,
             'ninja_shadow_strike': 8,
@@ -134,15 +134,8 @@ class SpriteLoader {
         await Promise.all(promises);
 
         // Validate common player sprite sheet frame sizes and warn if mismatched
-        try {
-            const expectedFrames = {
-                'ninja_idle': 4,
-                'ninja_walk': 4,
-                'ninja_jump': 4,
-                'ninja_attack': 6,
-                'ninja_shadow_strike': 8,
-                'ninja_hurt': 2
-            };
+            try {
+            const expectedFrames = this.expectedFrames;
             for (const [name, count] of Object.entries(expectedFrames)) {
                 const img = this.sprites[name];
                 if (!img) continue;
