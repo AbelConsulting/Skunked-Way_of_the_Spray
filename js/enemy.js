@@ -201,6 +201,12 @@ class Enemy {
     }
 
     patrol(dt, level) {
+        // Defensive: ensure level is provided (safeguard for older builds/clients)
+        if (!level) {
+            if (typeof console !== 'undefined' && console.warn) console.warn('Enemy.patrol called without level; skipping patrol step.');
+            return;
+        }
+
         // Check for ledge before moving
         const nextX = this.x + this.velocityX * dt;
         if (!this.checkGround(nextX, this.y, level)) {
