@@ -11,6 +11,29 @@ class Level {
         this.backgroundName = levelData.background || levelData.backgroundName || this.backgroundName || 'bg_city';
         // Additional background layers
         this.backgroundLayers = Array.isArray(levelData.backgroundLayers) ? levelData.backgroundLayers.map(layer => ({ ...layer })) : [];
+        // Lazy-load background panoramas (non-blocking). Construct a simple
+        // path mapping from sprite key to expected asset path and request
+        // the spriteLoader to fetch them only when a level references them.
+        try {
+            if (typeof spriteLoader !== 'undefined') {
+                const ensureLoaded = (name) => {
+                    if (!name) return;
+                    if (spriteLoader.getSprite(name)) return; // already present
+                    // map bg_xxx -> assets/sprites/backgrounds/xxx_bg.png
+                    const base = name.replace(/^bg_/, '');
+                    const path = `assets/sprites/backgrounds/${base}_bg.png`;
+                    // Fire-and-forget; when loaded, cache into level.cachedSprites
+                    spriteLoader.loadSprite(name, path).then(img => {
+                        try { this.cachedSprites[name] = img; } catch (e) {}
+                    }).catch(() => {});
+                };
+
+                ensureLoaded(this.backgroundName);
+                for (const layer of this.backgroundLayers) {
+                    if (layer && layer.name) ensureLoaded(layer.name);
+                }
+            }
+        } catch (e) {}
         // Per-level background parallax factor (0..1). Lower = slower (farther away).
         this.backgroundParallax = (typeof levelData.backgroundParallax !== 'undefined') ? levelData.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
         

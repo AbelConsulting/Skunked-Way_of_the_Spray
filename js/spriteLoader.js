@@ -116,11 +116,9 @@ class SpriteLoader {
             ['ground_tile', 'assets/sprites/backgrounds/tiles/ground_tile.png'],
             ['platform_tile', 'assets/sprites/backgrounds/tiles/platform_tile.png'],
             ['wall_tile', 'assets/sprites/backgrounds/tiles/wall_tile.png'],
-            // Background panoramas
-            ['bg_city', 'assets/sprites/backgrounds/city_bg.png'],
-            ['bg_forest', 'assets/sprites/backgrounds/forest_bg.png'],
-            ['bg_mountains', 'assets/sprites/backgrounds/mountains_bg.png'],
-            ['bg_cave', 'assets/sprites/backgrounds/cave_bg.png']
+            // Background panoramas are large; load them lazily per-level to
+            // avoid decoding and memory spikes on startup. Leave them out of
+            // the global preload list so Level can request only what it needs.
         ];
 
         // Optionally add a cache-buster to asset paths when debugging to avoid stale caches
