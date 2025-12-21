@@ -310,6 +310,56 @@ class GameApp {
             // Expose for diagnostic tests and external tooling
             try { window.game = this.game; window.gameApp = this; } catch (e) { /* ignore in strict contexts */ }
 
+            // Create a mobile score badge outside the canvas so score remains visible
+            try {
+                if (this.isMobile) {
+                    let badge = document.getElementById('mobile-score-badge');
+                    const container = document.getElementById('game-container') || document.body;
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.id = 'mobile-score-badge';
+                        // Inline styles keep layout local and avoid touching CSS files
+                        Object.assign(badge.style, {
+                            position: 'absolute',
+                            top: '12px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 1200,
+                            padding: '6px 12px',
+                            background: 'rgba(0,0,0,0.55)',
+                            color: '#fff',
+                            borderRadius: '10px',
+                            fontSize: '16px',
+                            fontFamily: 'sans-serif',
+                            display: 'none',
+                            pointerEvents: 'none'
+                        });
+                        container.appendChild(badge);
+                    }
+
+                    const updateBadge = (score) => {
+                        try { badge.textContent = 'Score: ' + (typeof score === 'number' ? score : (this.game && this.game.score || 0)); } catch (e) {}
+                    };
+
+                    window.addEventListener('scoreChange', (ev) => {
+                        try { updateBadge(ev && ev.detail && typeof ev.detail.score !== 'undefined' ? ev.detail.score : (this.game && this.game.score)); badge.style.display = 'block'; } catch (e) {}
+                    });
+
+                    window.addEventListener('gameStateChange', (ev) => {
+                        try {
+                            const s = ev && ev.detail && ev.detail.state;
+                            if (s === 'PLAYING') badge.style.display = 'block';
+                            else if (s === 'MENU') badge.style.display = 'none';
+                            else if (s === 'PAUSED') badge.style.display = 'block';
+                            else if (s === 'GAME_OVER') badge.style.display = 'block';
+                        } catch (e) {}
+                    });
+
+                    // Initialize with current game score/state
+                    try { updateBadge(this.game && this.game.score || 0); if (this.game && this.game.state === 'PLAYING') badge.style.display = 'block'; } catch (e) {}
+                }
+            } catch (e) { console.warn('Failed to create mobile score badge', e); }
+
             // If the Game instance indicated a forced DPR (iPad Safari), apply
             // conservative mobile performance defaults to reduce FPS and DPR
             // pressure. This avoids visible jank on iPad Safari caused by large
