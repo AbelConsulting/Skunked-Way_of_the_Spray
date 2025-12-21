@@ -68,18 +68,9 @@ class Game {
                 { x: 1320, y: 564, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
                 { x: 1620, y: 544, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
                 { x: 1920, y: 544, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
-            ],
-            hazards: []
+            ]
         };
         this.level.loadLevel(levelData);
-        // Remove all hazards at runtime to ensure none spawn unexpectedly
-        try {
-            const before = (this.level.hazards && this.level.hazards.length) || 0;
-            if (before > 0) {
-                console.log('Removed', before, 'hazards at runtime (global hazard removal)');
-            }
-            this.level.hazards = [];
-        } catch (e) { /* ignore */ }
 
         this.enemyManager = new EnemyManager(this.audioManager);
         this.ui = new UI(this.width, this.height);
