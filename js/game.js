@@ -503,6 +503,28 @@ class Game {
             this.audioManager.playSound('game_over', 1.0);
             // Notify UI layers (mobile touch controls) about state change
             try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch(e) {}
+
+            // High score flow: prompt for initials if this score qualifies
+            try {
+                if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
+                    try {
+                        Highscores.promptForInitials(this.score, (updated) => {
+                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                            // If a DOM target exists, show the scoreboard there
+                            try {
+                                const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
+                                if (target) {
+                                    const board = Highscores.renderScoreboard();
+                                    target.innerHTML = '';
+                                    target.appendChild(board);
+                                } else {
+                                    console.log('Highscores updated', updated);
+                                }
+                            } catch (e) { console.warn('Failed to render scoreboard', e); }
+                        });
+                    } catch (e) { console.warn('Highscores prompt failed', e); }
+                }
+            } catch (e) { /* ignore highscores errors */ }
         }
 
         // Update camera to follow player

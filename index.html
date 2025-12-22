@@ -235,6 +235,7 @@
         <!-- Pause Button (desktop & mobile) -->
         <button id="pause-btn" aria-label="Pause game" title="Pause" style="display:none;">⏸</button>
         <button id="perf-mode-btn" title="Performance mode">Perf</button>
+        <button id="view-highscores-btn" title="View High Scores" style="position:absolute; top:12px; right:72px; z-index:502; padding:8px 10px; border-radius:6px; background:rgba(0,0,0,0.6); color:#fff; border:none;">🏆 Scores</button>
 
         <div id="mobile-start-overlay" style="display:none;">
             <button id="mobile-start-btn">Tap to Start</button>
@@ -289,6 +290,7 @@
         </div>
 
         <!-- legacy mobile restart overlay removed; on-screen touch controls provide restart -->
+        <div id="score-container" style="position:absolute; right:12px; top:88px; z-index:900; max-width:320px; color:#fff; display:none;"></div>
     </div>
 
     <script src="js/config.js"></script>
@@ -405,6 +407,67 @@
                 // apply immediately
                 if (window._forceTouchControls) showTouchControls(3600000);
             } catch (e) {}
+        });
+
+        // Highscores overlay helper: show scoreboard in dismissible overlay
+        function showHighscoresOverlay() {
+            try {
+                if (!window.Highscores) {
+                    alert('Highscores not available');
+                    return;
+                }
+                let overlay = document.getElementById('highscore-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'highscore-overlay';
+                    overlay.style.position = 'fixed';
+                    overlay.style.left = 0; overlay.style.top = 0; overlay.style.right = 0; overlay.style.bottom = 0;
+                    overlay.style.background = 'rgba(0,0,0,0.85)';
+                    overlay.style.display = 'flex';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.zIndex = 99999;
+
+                    const box = document.createElement('div');
+                    box.style.maxWidth = '420px';
+                    box.style.width = '90%';
+                    box.style.background = '#071018';
+                    box.style.border = '1px solid rgba(255,255,255,0.06)';
+                    box.style.padding = '14px';
+                    box.style.borderRadius = '10px';
+                    box.style.color = '#fff';
+                    box.style.fontFamily = 'sans-serif';
+
+                    const close = document.createElement('button');
+                    close.textContent = 'Close';
+                    close.style.marginBottom = '8px';
+                    close.style.padding = '8px 10px';
+                    close.style.border = 'none';
+                    close.style.background = '#ff6b6b';
+                    close.style.color = '#fff';
+                    close.style.borderRadius = '6px';
+                    close.addEventListener('click', () => { try { document.body.removeChild(overlay); } catch(e){} });
+
+                    box.appendChild(close);
+                    const board = Highscores.renderScoreboard();
+                    box.appendChild(board);
+                    overlay.appendChild(box);
+                    document.body.appendChild(overlay);
+                }
+            } catch (e) { console.warn('showHighscoresOverlay failed', e); }
+        }
+
+        // Attach handler to the new button once DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const b = document.getElementById('view-highscores-btn');
+                if (b) {
+                    b.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        showHighscoresOverlay();
+                    });
+                }
+            } catch (e) { console.warn('Highscores button attach failed', e); }
         });
 
         b.appendChild(send);
