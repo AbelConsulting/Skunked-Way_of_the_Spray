@@ -95,6 +95,16 @@
         const initials = (input.value || '---').slice(0,3);
         const updated = addScore(score, initials);
         try { document.body.removeChild(overlay); } catch(e) {}
+        // Attempt to submit to serverless leaderboard (best-effort)
+        try {
+          if (window.Highscores && typeof Highscores.submitToServer === 'function') {
+            Highscores.submitToServer(score, initials).then((resp) => {
+              if (resp && resp.ok) {
+                console.log('Submitted highscore to server', resp);
+              }
+            }).catch(()=>{});
+          }
+        } catch (e) {}
         if (onDone) onDone(updated);
       };
 
@@ -162,6 +172,29 @@
     addScore,
     promptForInitials,
     renderScoreboard,
+    // Submit to serverless endpoint (Netlify) if available
+    async submitToServer(score, initials) {
+      try {
+        const res = await fetch('/.netlify/functions/submit-score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ score: Math.floor(score), initials: String(initials).toUpperCase().slice(0,3) })
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          console.warn('submitToServer failed', res.status, txt);
+          return null;
+        }
+        return await res.json();
+      } catch (e) { console.warn('submitToServer error', e); return null; }
+    },
+    async fetchFromServer() {
+      try {
+        const res = await fetch('/.netlify/functions/get-leaderboard');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) { return null; }
+    },
     MAX_SCORES
   };
 
