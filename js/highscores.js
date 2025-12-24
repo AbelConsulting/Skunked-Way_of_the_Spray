@@ -91,20 +91,32 @@
       const ok = document.createElement('button');
       ok.textContent = 'Save';
       ok.style.padding = '6px 12px';
-      ok.onclick = () => {
+      ok.onclick = async () => {
         const initials = (input.value || '---').slice(0,3);
         const updated = addScore(score, initials);
+        // Show quick submitting feedback
+        const status = document.createElement('div'); status.style.marginTop = '8px'; status.style.fontSize = '12px'; status.style.color = '#cfe'; status.textContent = 'Submitting...';
+        box.appendChild(status);
         try { document.body.removeChild(overlay); } catch(e) {}
         // Attempt to submit to serverless leaderboard (best-effort)
         try {
           if (window.Highscores && typeof Highscores.submitToServer === 'function') {
-            Highscores.submitToServer(score, initials).then((resp) => {
-              if (resp && resp.ok) {
-                console.log('Submitted highscore to server', resp);
-              }
-            }).catch(()=>{});
+            const resp = await Highscores.submitToServer(score, initials);
+            if (resp && resp.ok) {
+              console.log('Submitted highscore to server', resp);
+              status.textContent = 'Submitted ✓';
+              setTimeout(()=> { try { status.remove(); } catch(e){} }, 1200);
+            } else if (resp && resp.error) {
+              status.textContent = `Submit failed: ${resp.error}`;
+              console.warn('submit response error', resp);
+              // keep the status visible so user can retry later
+            } else if (resp && resp.status === 429) {
+              status.textContent = 'Rate limited — try again later';
+            } else {
+              status.textContent = 'Submit failed — will retry later';
+            }
           }
-        } catch (e) {}
+        } catch (e) { console.warn('submit attempt failed', e); }
         if (onDone) onDone(updated);
       };
 
@@ -175,17 +187,40 @@
     // Submit to serverless endpoint (Netlify) if available
     async submitToServer(score, initials) {
       try {
+        // If reCAPTCHA site key is provided on the global, request a token
+        let recaptchaToken = null;
+        try {
+          const siteKey = window.RECAPTCHA_SITE_KEY;
+          if (siteKey) {
+            if (typeof grecaptcha === 'undefined') {
+              await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+                s.onload = resolve; s.onerror = reject;
+                document.head.appendChild(s);
+              });
+            }
+            await grecaptcha.ready(async () => {
+              try { recaptchaToken = await grecaptcha.execute(siteKey, { action: 'submit_score' }); } catch (e) { recaptchaToken = null; }
+            });
+          }
+        } catch (e) { console.warn('recaptcha client fail', e); }
+
+        const payload = { score: Math.floor(score), initials: String(initials).toUpperCase().slice(0,3) };
+        if (recaptchaToken) payload.recaptchaToken = recaptchaToken;
+
         const res = await fetch('/.netlify/functions/submit-score', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ score: Math.floor(score), initials: String(initials).toUpperCase().slice(0,3) })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) {
           const txt = await res.text();
           console.warn('submitToServer failed', res.status, txt);
-          return null;
+          return { ok: false, status: res.status, text: txt };
         }
-        return await res.json();
+        const json = await res.json();
+        return json;
       } catch (e) { console.warn('submitToServer error', e); return null; }
     },
     async fetchFromServer() {
