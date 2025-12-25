@@ -86,56 +86,53 @@ exports.handler = async function(event, context) {
     console.warn('RECAPTCHA_SECRET not set: skipping verification (dev only)');
   }
 
-  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(filePath)}`;
+  // Switch to S3-backed storage
+  const S3_BUCKET = process.env.S3_BUCKET;
+  const S3_KEY = process.env.S3_KEY || (process.env.FILE_PATH || 'leaderboard.json');
+  const AWS_REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1';
 
-  const headersAuth = {
-    'Authorization': `token ${token}`,
-    'User-Agent': 'SkunkFU-Highscores-Function'
-  };
-
-  // Helper to fetch existing file (to get sha and content)
-  async function getFile() {
-    const res = await fetch(`${apiBase}?ref=${branch}`, { headers: headersAuth });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error('GitHub get content failed: ' + res.status);
-    return await res.json();
+  if (!S3_BUCKET) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'missing_s3_config' }) };
   }
 
+  const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+  const s3 = new S3Client({ region: AWS_REGION });
+
+  const streamToString = async (stream) => {
+    return await new Promise((resolve, reject) => {
+      const chunks = [];
+      stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+      stream.on('error', reject);
+      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    });
+  };
+
   try {
-    const file = await getFile();
+    // Fetch existing leaderboard
     let arr = [];
-    if (file && file.content) {
-      const raw = Buffer.from(file.content, 'base64').toString('utf8');
-      try { arr = JSON.parse(raw); if (!Array.isArray(arr)) arr = []; } catch (e) { arr = []; }
+    try {
+      const getRes = await s3.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: S3_KEY }));
+      const bodyStr = await streamToString(getRes.Body);
+      try { arr = JSON.parse(bodyStr); if (!Array.isArray(arr)) arr = []; } catch (e) { arr = []; }
+    } catch (e) {
+      // Not found or parse error -> start with empty
+      arr = [];
     }
 
-    const entry = { score, initials, date: new Date().toISOString(), ip: ip === 'unknown' ? undefined : ip };
+    const entry = { score, initials, date: new Date().toISOString() };
     arr.push(entry);
     arr.sort((a,b)=>b.score - a.score || new Date(a.date) - new Date(b.date));
     arr = arr.slice(0, MAX_ENTRIES);
 
-    const newContent = Buffer.from(JSON.stringify(arr, null, 2)).toString('base64');
-
-    const putBody = {
-      message: `Add high score ${initials} ${score}`,
-      content: newContent,
-      branch
-    };
-    if (file && file.sha) putBody.sha = file.sha;
-
-    const putRes = await fetch(`${apiBase}`, { method: 'PUT', headers: { ...headersAuth, 'Content-Type': 'application/json' }, body: JSON.stringify(putBody) });
-    if (!putRes.ok) {
-      const txt = await putRes.text();
-      console.error('GitHub PUT failed', putRes.status, txt);
-      return { statusCode: 500, body: JSON.stringify({ error: 'git_put_failed' }) };
-    }
+    // Write back to S3
+    const putRes = await s3.send(new PutObjectCommand({ Bucket: S3_BUCKET, Key: S3_KEY, Body: JSON.stringify(arr, null, 2), ContentType: 'application/json' }));
 
     return {
       statusCode: 200,
       body: JSON.stringify({ ok: true, leaderboard: arr })
     };
   } catch (e) {
-    console.error('submit-score error', e);
+    console.error('submit-score (s3) error', e);
     return { statusCode: 500, body: JSON.stringify({ error: 'server_error' }) };
   }
 };

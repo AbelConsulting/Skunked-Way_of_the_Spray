@@ -10,7 +10,11 @@ Required environment variables (set in Netlify Site → Site settings → Build 
 - RECAPTCHA_SECRET: (recommended) Server-side secret for Google reCAPTCHA verification
 - RECAPTCHA_MIN_SCORE: (optional) Minimum score for v3 reCAPTCHA (default: 0.3)
 - RATE_LIMIT_MAX: (optional) Max submissions per IP per hour (default: 10)
+- S3_BUCKET: (required for S3 mode) S3 bucket name to store `leaderboard.json`
+- S3_KEY: (optional) Key/path inside bucket for leaderboard file (default: leaderboard.json)
+- AWS_REGION: (optional) AWS region of the S3 bucket (default: us-east-1)
 
+If S3 env vars are configured, the submit/get functions will use S3 storage instead of attempting to write to the GitHub repo.
 Notes:
 - This repo currently uses a Netlify function that commits leaderboard updates to the repository using the GitHub API. This is simple but not recommended for heavy/public usage because:
   - It writes to git history and can be abused/spammed.
