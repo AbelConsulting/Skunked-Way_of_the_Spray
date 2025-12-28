@@ -36,7 +36,9 @@ class EnemyManager:
         if self.spawn_timer >= self.spawn_interval:
             self.spawn_timer = 0
             # Spawn enemy off-screen to the right
-            self.spawn_enemy(player.x + 800, 500, "BASIC")
+            import random
+            enemy_type = "BASIC" if random.random() < 0.7 else "FAST_BASIC"
+            self.spawn_enemy(player.x + 800, 500, enemy_type)
         
         # Update spawn timer for flying enemies
         self.flying_spawn_timer += dt

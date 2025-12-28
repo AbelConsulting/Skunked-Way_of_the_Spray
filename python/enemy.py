@@ -18,7 +18,7 @@ class Enemy:
         self.load_sprites()
         
         # Set size based on type
-        if enemy_type == "BASIC":
+        if enemy_type == "BASIC" or enemy_type == "FAST_BASIC":
             self.width = 48
             self.height = 48
             self.sprite_width = 48
@@ -40,11 +40,18 @@ class Enemy:
         self.rect = pygame.Rect(x, y, self.width, self.height)
         
         # Stats
-        self.health = ENEMY_HEALTH
-        self.max_health = ENEMY_HEALTH
-        self.speed = ENEMY_SPEED
-        self.attack_damage = ENEMY_ATTACK_DAMAGE
-        self.points = ENEMY_POINTS
+        if enemy_type == "FAST_BASIC":
+            self.health = int(ENEMY_HEALTH * 0.8)  # 80% health
+            self.max_health = self.health
+            self.speed = ENEMY_SPEED * 1.5  # 50% faster
+            self.attack_damage = ENEMY_ATTACK_DAMAGE
+            self.points = int(ENEMY_POINTS * 1.2)  # 20% more points
+        else:
+            self.health = ENEMY_HEALTH
+            self.max_health = ENEMY_HEALTH
+            self.speed = ENEMY_SPEED
+            self.attack_damage = ENEMY_ATTACK_DAMAGE
+            self.points = ENEMY_POINTS
         
         # Movement
         self.velocity_x = -self.speed
@@ -86,10 +93,10 @@ class Enemy:
     
     def load_sprites(self):
         """Load sprites based on enemy type"""
-        prefix = "basic" if self.enemy_type == "BASIC" else "fly" if self.enemy_type == "FLYING" else "boss"
+        prefix = "basic" if (self.enemy_type == "BASIC" or self.enemy_type == "FAST_BASIC") else "fly" if self.enemy_type == "FLYING" else "boss"
         
         try:
-            if self.enemy_type == "BASIC":
+            if self.enemy_type == "BASIC" or self.enemy_type == "FAST_BASIC":
                 # Load sprite sheets for basic enemy (48x48 per frame in 192x48 sheets)
                 idle_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_idle.png", 48, 48, 4, (48, 48))
                 walk_frames = sprite_loader.load_spritesheet(f"enemies/{prefix}_walk.png", 48, 48, 4, (48, 48))

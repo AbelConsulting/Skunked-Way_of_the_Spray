@@ -236,6 +236,7 @@
         <button id="pause-btn" aria-label="Pause game" title="Pause" style="display:none;">⏸</button>
         <button id="perf-mode-btn" title="Performance mode">Perf</button>
         <button id="view-highscores-btn" title="View High Scores" style="position:absolute; top:12px; right:72px; z-index:502; padding:8px 10px; border-radius:6px; background:rgba(0,0,0,0.6); color:#fff; border:none;">🏆 Scores</button>
+        <button id="view-achievements-btn" title="View Achievements" style="position:absolute; top:12px; right:140px; z-index:502; padding:8px 10px; border-radius:6px; background:rgba(0,0,0,0.6); color:#fff; border:none;">🎖️ Achievements</button>
 
         <div id="mobile-start-overlay" style="display:none;">
             <button id="mobile-start-btn">Tap to Start</button>
@@ -449,12 +450,62 @@
                     close.addEventListener('click', () => { try { document.body.removeChild(overlay); } catch(e){} });
 
                     box.appendChild(close);
-                    const board = Highscores.renderScoreboard();
+                    const board = Highscores.renderScoreboard(null, true);
                     box.appendChild(board);
                     overlay.appendChild(box);
                     document.body.appendChild(overlay);
                 }
             } catch (e) { console.warn('showHighscoresOverlay failed', e); }
+        }
+
+        // Achievements overlay helper: show achievements in dismissible overlay
+        function showAchievementsOverlay() {
+            try {
+                if (!window.Highscores) {
+                    alert('Achievements not available');
+                    return;
+                }
+
+                let overlay = document.getElementById('achievements-overlay');
+                if (overlay) {
+                    try { document.body.removeChild(overlay); } catch(e){}
+                }
+
+                overlay = document.createElement('div');
+                overlay.id = 'achievements-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.left = 0; overlay.style.top = 0; overlay.style.right = 0; overlay.style.bottom = 0;
+                overlay.style.background = 'rgba(0,0,0,0.8)';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.zIndex = 1000;
+
+                const box = document.createElement('div');
+                box.style.background = '#111';
+                box.style.color = '#fff';
+                box.style.padding = '20px';
+                box.style.borderRadius = '12px';
+                box.style.maxWidth = '500px';
+                box.style.maxHeight = '80vh';
+                box.style.overflowY = 'auto';
+
+                const close = document.createElement('button');
+                close.textContent = 'Close';
+                close.style.marginBottom = '8px';
+                close.style.padding = '8px 10px';
+                close.style.border = 'none';
+                close.style.background = '#ff6b6b';
+                close.style.color = '#fff';
+                close.style.borderRadius = '6px';
+                close.addEventListener('click', () => { try { document.body.removeChild(overlay); } catch(e){} });
+
+                box.appendChild(close);
+                const board = Highscores.renderAchievements();
+                box.appendChild(board);
+                overlay.appendChild(box);
+                document.body.appendChild(overlay);
+            } catch (e) { console.warn('showAchievementsOverlay failed', e); }
         }
 
         // Attach handler to the new button once DOM is ready
@@ -465,6 +516,13 @@
                     b.addEventListener('click', (ev) => {
                         ev.preventDefault();
                         showHighscoresOverlay();
+                    });
+                }
+                const ab = document.getElementById('view-achievements-btn');
+                if (ab) {
+                    ab.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        showAchievementsOverlay();
                     });
                 }
             } catch (e) { console.warn('Highscores button attach failed', e); }

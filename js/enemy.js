@@ -10,7 +10,7 @@ class Enemy {
         this.audioManager = audioManager;
 
         // Set size based on type
-        if (enemyType === "BASIC") {
+        if (enemyType === "BASIC" || enemyType === "FAST_BASIC") {
             this.width = 48;
             this.height = 48;
         } else if (enemyType === "FLYING") {
@@ -28,11 +28,19 @@ class Enemy {
         this.loadSprites();
 
         // Stats
-        this.health = Config.ENEMY_HEALTH;
-        this.maxHealth = Config.ENEMY_HEALTH;
-        this.speed = Config.ENEMY_SPEED;
-        this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
-        this.points = Config.ENEMY_POINTS;
+        if (this.enemyType === "FAST_BASIC") {
+            this.health = Math.floor(Config.ENEMY_HEALTH * 0.8); // 80% health
+            this.maxHealth = this.health;
+            this.speed = Config.ENEMY_SPEED * 1.5; // 50% faster
+            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.points = Math.floor(Config.ENEMY_POINTS * 1.2); // 20% more points
+        } else {
+            this.health = Config.ENEMY_HEALTH;
+            this.maxHealth = Config.ENEMY_HEALTH;
+            this.speed = Config.ENEMY_SPEED;
+            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.points = Config.ENEMY_POINTS;
+        }
 
         // Movement
         this.velocityX = -this.speed;
@@ -64,7 +72,7 @@ class Enemy {
     }
 
     loadSprites() {
-        const prefix = this.enemyType === "BASIC" ? "basic" : 
+        const prefix = (this.enemyType === "BASIC" || this.enemyType === "FAST_BASIC") ? "basic" : 
                       this.enemyType === "FLYING" ? "fly" : "boss";
 
         const idle_sprite = spriteLoader.getSprite(`${prefix}_idle`);

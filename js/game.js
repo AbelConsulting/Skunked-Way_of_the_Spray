@@ -53,6 +53,19 @@ class Game {
         this.score = 0;
         this.lives = 3;
 
+        // Game statistics for high scores
+        this.gameStats = {
+            startTime: 0,
+            timeSurvived: 0,
+            enemiesDefeated: 0,
+            maxCombo: 0,
+            currentCombo: 0,
+            totalDamage: 0,
+            attacksAttempted: 0,
+            attacksHit: 0,
+            accuracy: 0
+        };
+
         // Visual effects
         this.screenShake = null;
         this.hitPauseTimer = 0;
@@ -314,6 +327,20 @@ class Game {
             this.state = 'PLAYING';
             this.score = 0;
             this.lives = 3;
+            
+            // Reset game statistics
+            this.gameStats = {
+                startTime: Date.now() / 1000, // Convert to seconds
+                timeSurvived: 0,
+                enemiesDefeated: 0,
+                maxCombo: 0,
+                currentCombo: 0,
+                totalDamage: 0,
+                attacksAttempted: 0,
+                attacksHit: 0,
+                accuracy: 0
+            };
+            
             if (this.player && typeof this.player.reset === 'function') this.player.reset();
             if (this.enemyManager && typeof this.enemyManager.reset === 'function') this.enemyManager.reset();
             this.damageNumbers = [];
@@ -405,9 +432,12 @@ class Game {
         update(dt) {
             if (this.state !== "PLAYING") {
                 return;
-        }
+            }
 
-        // Update screen shake
+            // Update game statistics
+            this.gameStats.timeSurvived += dt;
+
+            // Update screen shake
         if (this.screenShake) {
             this.screenShake.update(dt);
             if (!this.screenShake.isActive()) {
@@ -449,10 +479,29 @@ class Game {
         // Check player attacks hitting enemies
         const attackResult = this.enemyManager.checkPlayerAttack(this.player);
         if (attackResult.hit) {
+            // Track attack statistics
+            this.gameStats.attacksAttempted++;
+            this.gameStats.attacksHit++;
+            this.gameStats.totalDamage += attackResult.totalDamage;
+            
             this.score += attackResult.totalDamage * 10;
             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
             // trigger score pulse animation
             try { this._scorePulse = 1.0; } catch (e) {}
+        } else if (this.player.isAttacking) {
+            // Track missed attacks
+            this.gameStats.attacksAttempted++;
+        }
+
+        // Sync stats from other systems
+        this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
+        this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
+        this.gameStats.currentCombo = this.player.comboCount || 0;
+        
+        // Calculate accuracy
+        if (this.gameStats.attacksAttempted > 0) {
+            this.gameStats.accuracy = this.gameStats.attacksHit / this.gameStats.attacksAttempted;
+        }
             
             // Create visual feedback (limit on mobile)
             for (const enemy of this.enemyManager.getEnemies()) {
@@ -504,17 +553,35 @@ class Game {
             // Notify UI layers (mobile touch controls) about state change
             try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch(e) {}
 
+            // Finalize game statistics
+            this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
+            this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
+            this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
+            this.gameStats.score = this.score; // Add score to stats for achievements
+
+            // Check for new achievements
+            let newAchievements = [];
+            try {
+                if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
+                    newAchievements = Highscores.checkAchievements(this.gameStats);
+                    if (newAchievements.length > 0) {
+                        console.log('New achievements unlocked:', newAchievements);
+                        // Could show achievement notification here
+                    }
+                }
+            } catch (e) { console.warn('Achievement check failed', e); }
+
             // High score flow: prompt for initials if this score qualifies
             try {
                 if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
                     try {
-                        Highscores.promptForInitials(this.score, (updated) => {
+                        Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
                             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
                             // If a DOM target exists, show the scoreboard there
                             try {
                                 const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
                                 if (target) {
-                                    const board = Highscores.renderScoreboard();
+                                    const board = Highscores.renderScoreboard(target, true);
                                     target.innerHTML = '';
                                     target.appendChild(board);
                                 } else {
