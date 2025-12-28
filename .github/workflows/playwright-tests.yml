@@ -67,3 +67,6 @@ jobs:
 
       - name: Run slow-load pending-start test
         run: node tools/integration_pending_start_slow_load.js
+
+      - name: Run second sprites presence test
+        run: node tools/second_sprites_presence_test.js
