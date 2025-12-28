@@ -30,7 +30,8 @@
     "test:sprite-padding": "node tools/check_sprite_padding.js",
 
     "playwright:install": "npx playwright install",
-    "deploy:wrangler": "npm run build && npx wrangler deploy --assets=./dist"
+    "deploy:wrangler": "npm run build && npx wrangler deploy --assets=./dist",
+    "deploy:pages": "npm run build && npx wrangler pages publish ./dist --project-name \"$CF_PAGES_PROJECT\""
   },
   "devDependencies": {
     "esbuild": "^0.19.12",

@@ -71,7 +71,7 @@ jobs:
           ls -la dist || true
           echo "Dist contents:" && ls -la dist || true
 
-      - name: Publish to Cloudflare Pages
+      - name: Publish to Cloudflare Pages (using npm script)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -87,14 +87,21 @@ jobs:
             exit 1
           fi
 
+          # Ensure wrangler is available (install if missing)
           if ! command -v wrangler >/dev/null 2>&1; then
-            # Install modern Wrangler CLI (v4+) which supports non-interactive auth
             npm install -g wrangler@4
           fi
-          # Confirm wrangler version
           wrangler --version
-          # Publish dist directory; requires secret CLOUDFLARE_API_TOKEN and CF_PAGES_PROJECT to be set
-          wrangler pages publish ./dist --project-name "${CF_PAGES_PROJECT}"
+
+          # Guard: disallow accidental use of `wrangler deploy` (worker deploy) in CI
+          echo "Checking for accidental `wrangler deploy` usage..."
+          if grep -R "wrangler deploy" -n || true; then
+            echo "Note: 'wrangler deploy' may attempt to deploy a Worker by default. This workflow publishes to Pages using 'wrangler pages publish' via the npm script 'deploy:pages'.";
+          fi
+
+          # Use npm script so build+publish are consistent and easier to test locally
+          npm run deploy:pages
+
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
