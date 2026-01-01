@@ -575,6 +575,27 @@
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const importedScores = JSON.parse(e.target.result);
+              if (Array.isArray(importedScores)) {
+                const validScores = importedScores.filter(s => s.score && s.initials).slice(0, MAX_SCORES);
+                if (validScores.length > 0) {
+                  saveScores(validScores);
+                  renderScoreboard(container, showDetails);
+                  alert(`Imported ${validScores.length} high scores!`);
+                }
+              }
+            } catch (err) {
+              alert('Invalid file format');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    };
+
     const shareCodeBtn = document.createElement('button');
     shareCodeBtn.textContent = '🔗 Share Code';
     shareCodeBtn.style.padding = '6px 12px';
@@ -592,11 +613,7 @@
       promptDiv.style.background = 'rgba(0,0,0,0.95)';
       promptDiv.style.padding = '20px';
       promptDiv.style.borderRadius = '8px';
-      promptDiv.style.z
-    validateScore,
-    encodeScore,
-    decodeScore,
-    importScoreCode,Index = '10000';
+      promptDiv.style.zIndex = '10000';
       promptDiv.style.minWidth = '300px';
       
       const title = document.createElement('div');
