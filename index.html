@@ -943,6 +943,15 @@ function ensureTouchControlsExists() {
     return document.getElementById('touch-controls');
 }
 
+// Initialize touch controls early for tests and mobile devices
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => ensureTouchControlsExists());
+    } else {
+        ensureTouchControlsExists();
+    }
+}
+
 // Visibility request helpers: prevents racing show/hide by tracking requests
 window._touchControlsVisibilityReqId = window._touchControlsVisibilityReqId || 0;
 window._touchControlsVisibilityCount = window._touchControlsVisibilityCount || 0;
