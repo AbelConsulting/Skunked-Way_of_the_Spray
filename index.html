@@ -1397,30 +1397,6 @@ window.addEventListener('gameStateChange', function(e) {
     });
 })();
 
-/* Re-insert touch controls as a fixed overlay so transforms on #game-container don't affect layout */
-(function() {
-    const html = `
-    <div id="touch-controls" style="position:fixed; bottom:calc(20px + var(--safe-bottom)); left:0; right:0; transform:none; display:none; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:2000; padding:0 calc(20px + var(--safe-right));">
-        <div id="d-pad" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
-            <button class="touch-btn" id="btn-left">&#8592;</button>
-            <button class="touch-btn" id="btn-right">&#8594;</button>
-        </div>
-        <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
-            <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
-        </div>
-        <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
-            <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
-            <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
-            <button class="touch-btn" id="btn-jump">&#8593;</button>
-            <button class="touch-btn" id="btn-pause">Pause</button>
-        </div>
-    </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    // Ensure touch control handlers are bound now that elements exist
-    if (typeof initTouchControls === 'function') initTouchControls();
-})();
-
 /* --- DEBUG OVERLAY (toggle with 'd') --- */
 (function() {
     const css = `
