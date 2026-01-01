@@ -68,6 +68,18 @@
     }
   });
 
+  function loadScores(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const scores = JSON.parse(raw);
+      return Array.isArray(scores) ? scores : [];
+    } catch(e){ 
+      console.warn('Failed to load highscores', e);
+      return []; 
+    }
+  }
+
   function loadAchievements(){
     try {
       const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
@@ -411,38 +423,6 @@
 
       skip.onmouseover = () => skip.style.background = '#d32f2f';
       skip.onmouseout = () => skip.style.background = '#f44336';
-        const status = document.createElement('div'); status.style.marginTop = '8px'; status.style.fontSize = '12px'; status.style.color = '#cfe'; status.textContent = 'Submitting...';
-        box.appendChild(status);
-        try { document.body.removeChild(overlay); } catch(e) {}
-        // Attempt to submit to serverless leaderboard (best-effort)
-        try {
-          if (window.Highscores && typeof Highscores.submitToServer === 'function') {
-            const resp = await Highscores.submitToServer(score, initials);
-            if (resp && resp.ok) {
-              console.log('Submitted highscore to server', resp);
-              status.textContent = 'Submitted ✓';
-              setTimeout(()=> { try { status.remove(); } catch(e){} }, 1200);
-            } else if (resp && resp.error) {
-              status.textContent = `Submit failed: ${resp.error}`;
-              console.warn('submit response error', resp);
-              // keep the status visible so user can retry later
-            } else if (resp && resp.status === 429) {
-              status.textContent = 'Rate limited — try again later';
-            } else {
-              status.textContent = 'Submit failed — will retry later';
-            }
-          }
-        } catch (e) { console.warn('submit attempt failed', e); }
-        if (onDone) onDone(updated);
-      };
-
-      const skip = document.createElement('button');
-      skip.textContent = 'Skip';
-      skip.style.padding = '6px 12px';
-      skip.onclick = () => {
-        try { document.body.removeChild(overlay); } catch(e) {}
-        if (onDone) onDone(loadScores());
-      };
 
       input.addEventListener('keydown', (e)=>{
         if (e.key === 'Enter') ok.click();
@@ -454,6 +434,7 @@
 
       box.appendChild(title);
       box.appendChild(scoreLine);
+      if (statsDiv.textContent) box.appendChild(statsDiv);
       box.appendChild(input);
       box.appendChild(btnRow);
       overlay.appendChild(box);
@@ -682,29 +663,7 @@
 
     buttonRow.appendChild(exportBtn);
     buttonRow.appendChild(importBtn);
-    buttonRow.appendChild(shareCode
-              const importedScores = JSON.parse(e.target.result);
-              if (Array.isArray(importedScores)) {
-                // Validate and merge scores
-                const validScores = importedScores.filter(s => s.score && s.initials).slice(0, MAX_SCORES);
-                if (validScores.length > 0) {
-                  saveScores(validScores);
-                  renderScoreboard(container, showDetails); // Refresh display
-                  alert(`Imported ${validScores.length} high scores!`);
-                }
-              }
-            } catch (err) {
-              alert('Invalid file format');
-            }
-          };
-          reader.readAsText(file);
-        }
-      };
-      input.click();
-    };
-
-    buttonRow.appendChild(exportBtn);
-    buttonRow.appendChild(importBtn);
+    buttonRow.appendChild(shareCodeBtn);
     container.appendChild(buttonRow);
 
     return container;
@@ -721,6 +680,10 @@
     saveAchievements,
     checkAchievements,
     renderAchievements,
+    validateScore,
+    encodeScore,
+    decodeScore,
+    importScoreCode,
     // Submit to serverless endpoint (Netlify) if available
     async submitToServer(score, initials) {
       try {
