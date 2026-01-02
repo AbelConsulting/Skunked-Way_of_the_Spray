@@ -2,7 +2,8 @@
 const { chromium } = require('playwright');
 
 (async () => {
-  const url = process.argv[2] || 'https://skunkfu-worker.marcfabel.workers.dev';
+  // Default to the Pages URL if no argument is provided
+  const url = process.argv[2] || 'https://skunkfu-game.pages.dev';
   console.log('Playwright smoke test for:', url);
 
   const browser = await chromium.launch();
