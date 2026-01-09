@@ -88,26 +88,46 @@ jobs:
             exit 1
           fi
 
-          # Ensure wrangler is available (install if missing)
-          if ! command -v wrangler >/dev/null 2>&1; then
-            npm install -g wrangler@4
+          # Basic sanity check: Cloudflare account IDs are 32 hex chars
+          if ! echo "$CLOUDFLARE_ACCOUNT_ID" | grep -Eq '^[0-9a-fA-F]{32}$'; then
+            echo "Error: CLOUDFLARE_ACCOUNT_ID does not look like a valid account id (expected 32 hex characters)." >&2
+            exit 1
           fi
-          wrangler --version
+
+          # Use npx to ensure a consistent wrangler version in CI
+          npx --yes wrangler@4 --version
+
+          # Confirm token/account context (safe; account id may be masked by GitHub logs)
+          npx --yes wrangler@4 whoami || true
 
           # Guard: disallow accidental use of `wrangler deploy` (worker deploy) in CI
           echo "Checking for accidental `wrangler deploy` usage..."
-          if grep -R "wrangler deploy" -n || true; then
+          if grep -R "wrangler deploy" -n .; then
             echo "Note: 'wrangler deploy' may attempt to deploy a Worker by default. This workflow publishes to Pages using 'wrangler pages publish' via the npm script 'deploy:pages'.";
           fi
 
-          # Use npm script so build+publish are consistent and easier to test locally
-          if [ -n "$CLOUDFLARE_PAGES_PROJECT" ]; then
-            echo "Deploying to specific project: $CLOUDFLARE_PAGES_PROJECT"
-            npm run deploy:pages -- --project-name "$CLOUDFLARE_PAGES_PROJECT"
-          else
-            echo "Deploying using project name from wrangler config"
-            npm run deploy:pages
+          # Determine Pages project name
+          PROJECT_NAME="$CLOUDFLARE_PAGES_PROJECT"
+          if [ -z "$PROJECT_NAME" ]; then
+            # Parse wrangler.jsonc (JSON-with-comments) to extract the configured name
+            PROJECT_NAME=$(node -e "const fs=require('fs'); const t=fs.readFileSync('wrangler.jsonc','utf8'); const noComments=t.replace(/\/\/.*$/mg,'').replace(/\/\*[\s\S]*?\*\//g,''); const j=JSON.parse(noComments); process.stdout.write(String(j.name||''));")
           fi
+          if [ -z "$PROJECT_NAME" ]; then
+            echo "Error: Cloudflare Pages project name is not set. Set repo secret CLOUDFLARE_PAGES_PROJECT or set 'name' in wrangler.jsonc." >&2
+            exit 1
+          fi
+
+          echo "Deploying to Cloudflare Pages project: $PROJECT_NAME"
+
+          # Optional preflight: ensure the Pages project exists (create if missing)
+          # If your token cannot create projects, this will fail with a clear error.
+          if ! npx --yes wrangler@4 pages project list --account-id "$CLOUDFLARE_ACCOUNT_ID" | grep -Fq "$PROJECT_NAME"; then
+            echo "Pages project '$PROJECT_NAME' not found; attempting to create it..."
+            npx --yes wrangler@4 pages project create "$PROJECT_NAME" --production-branch main --account-id "$CLOUDFLARE_ACCOUNT_ID"
+          fi
+
+          # Deploy the already-built dist output (build step ran earlier in this workflow)
+          npx --yes wrangler@4 pages deploy ./dist --project-name "$PROJECT_NAME" --account-id "$CLOUDFLARE_ACCOUNT_ID"
 
 
       - name: Upload build artifacts
