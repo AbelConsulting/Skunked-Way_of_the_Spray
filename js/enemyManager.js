@@ -116,7 +116,7 @@ class EnemyManager {
                     const damage = isShadow ? (player.attackDamage * 1.75) : player.attackDamage;
                     
                     if (isShadow) {
-                        enemy.takeDamage(damage, knockbackDir, { knockback: 340, hitStun: 0.45 });
+                        enemy.takeDamage(damage, knockbackDir, { knockback: 420, hitStun: 0.45 });
                     } else {
                         enemy.takeDamage(damage, knockbackDir);
                     }
