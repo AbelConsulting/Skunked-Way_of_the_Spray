@@ -346,8 +346,12 @@ class SpriteLoader {
         // Compute the total used width for frames: start of last frame + frameWidth
         // (i.e., (frameCount - 1) * frameStride + frameWidth)
         const totalUsed = (frameCount - 1) * frameStride + inferredFrameWidth;
-        let frameOffset = opts.frameOffset || 0;
-        if (sheet.width > totalUsed) {
+
+        // Respect an explicitly provided frameOffset (including 0). Only auto-center
+        // when the caller did not provide a frameOffset.
+        const hasFrameOffset = Object.prototype.hasOwnProperty.call(opts, 'frameOffset');
+        let frameOffset = hasFrameOffset ? opts.frameOffset : 0;
+        if (!hasFrameOffset && sheet.width > totalUsed) {
             frameOffset = Math.floor((sheet.width - totalUsed) / 2);
         }
 

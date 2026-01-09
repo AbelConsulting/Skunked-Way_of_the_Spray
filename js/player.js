@@ -103,8 +103,10 @@ class Player {
                         walk: spriteLoader.createAnimation('ninja_walk', 4, 0.1),
                 jump: spriteLoader.createAnimation('ninja_jump', 4, 0.12),
                         attack: spriteLoader.createAnimation('ninja_attack', 4, 0.08),
-                // Shadow Strike is a 4-frame sheet.
-                    shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 4, 0.04),
+                // Shadow Strike: play 4 frames, extra-snappy timing.
+                // Explicitly lock sheet slicing (and disable auto-centering) so we
+                // always use the first frames even if the source sheet has more frames.
+                shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 4, 0.035, { frameWidth: 64, frameHeight: 64, frameStride: 65, frameOffset: 0 }),
                 hurt: spriteLoader.createAnimation('ninja_hurt', 2, 0.1)
             };
         } else {
@@ -113,7 +115,7 @@ class Player {
                         walk: new Animation(ninja_walk, 4, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                         attack: new Animation(ninja_attack, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                    shadow_strike: new Animation(ninja_shadow_strike, 4, 0.04, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                    shadow_strike: new Animation(ninja_shadow_strike, 4, 0.035, { frameWidth: 64, frameHeight: 64, frameStride: 65, frameOffset: 0 }),
                 hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
             };
         }
