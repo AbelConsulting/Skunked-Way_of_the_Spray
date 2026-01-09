@@ -9,6 +9,19 @@ const LEVEL_CONFIGS = [
         name: "Forest Outskirts",
         id: "level_1",
         width: 5000, 
+        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
+        completion: {
+            bossTriggerX: 5000 - 800,
+            exitX: 5000 - 100
+        },
+        boss: {
+            type: "BOSS",
+            spawnX: 5000 - 520,
+            spawnY: 520,
+            healthMultiplier: 5.0,
+            speedMultiplier: 0.9,
+            attackDamageMultiplier: 1.8
+        },
         background: 'bg_forest',
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
@@ -51,6 +64,19 @@ const LEVEL_CONFIGS = [
         name: "Skunk City",
         id: "level_2",
         width: 6000,
+        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
+        completion: {
+            bossTriggerX: 6000 - 900,
+            exitX: 6000 - 100
+        },
+        boss: {
+            type: "BOSS",
+            spawnX: 6000 - 520,
+            spawnY: 520,
+            healthMultiplier: 6.0,
+            speedMultiplier: 1.0,
+            attackDamageMultiplier: 2.0
+        },
         background: 'bg_city',
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
@@ -100,6 +126,19 @@ const LEVEL_CONFIGS = [
         name: "Shadow Dojo",
         id: "level_3",
         width: 7500,
+        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
+        completion: {
+            bossTriggerX: 7500 - 1000,
+            exitX: 7500 - 100
+        },
+        boss: {
+            type: "BOSS",
+            spawnX: 7500 - 520,
+            spawnY: 520,
+            healthMultiplier: 7.0,
+            speedMultiplier: 1.05,
+            attackDamageMultiplier: 2.2
+        },
         background: 'bg_dojo', 
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
