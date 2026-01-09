@@ -24,7 +24,7 @@ class SpriteLoader {
             'ninja_walk': 4,
             'ninja_jump': 4,
             'ninja_attack': 4,
-            'ninja_shadow_strike': 8,
+            'ninja_shadow_strike': 4,
             'ninja_hurt': 2,
             'basic_idle': 4,
             'basic_walk': 4,
@@ -375,6 +375,11 @@ class Animation {
         this.timer = 0;
         // Backwards-compatible: accept an options object if provided as 4th arg
         const opts = (arguments && arguments.length >= 4) ? arguments[3] : {};
+        // Optional: sample frames from a larger sheet (e.g., use 4 frames out of an 8-frame sheet)
+        this.frameIndices = (opts && Array.isArray(opts.frameIndices) && opts.frameIndices.length > 0) ? opts.frameIndices.slice() : null;
+        if (this.frameIndices) {
+            this.frameCount = this.frameIndices.length;
+        }
         // If explicit frameWidth provided, use it. Otherwise infer from sheet width.
         this.frameWidth = opts.frameWidth || (spriteSheet ? (spriteSheet.width / frameCount) : 64);
         this.frameHeight = opts.frameHeight || (spriteSheet ? spriteSheet.height : 64);
@@ -410,7 +415,8 @@ class Animation {
     draw(ctx, x, y, width, height, flipHorizontal = false) {
         if (!this.spriteSheet) return;
 
-        const sx = Math.floor(this.frameOffset + (this.currentFrame * this.frameStride));
+        const sheetFrameIndex = this.frameIndices ? (this.frameIndices[this.currentFrame] || 0) : this.currentFrame;
+        const sx = Math.floor(this.frameOffset + (sheetFrameIndex * this.frameStride));
         const sy = 0;
 
         ctx.save();
