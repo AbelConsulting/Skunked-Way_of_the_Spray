@@ -83,33 +83,30 @@ class Game {
         // Prefer tile-based platform rendering if tile assets are available
         this.level.tileMode = 'tiles';
 
-        // Default level data with platforms (make world wider than viewport so horizontal panning is possible)
-        const worldWidth = Math.max(this.width * 2, 1920);
-        const levelData = {
-            width: worldWidth,
-            height: this.height,
-            // Use a scenic background by default so the level renders a
-            // panorama instead of the fallback gradient.
-            background: 'bg_forest',
-            // Additional background layers for depth (drawn behind main background)
-            backgroundLayers: [],
-            // Three spawn points: right, center, and left
-            // center uses the numeric world center so enemies can spawn in the middle
-            spawnPoints: [ { x: 'right', y: 300 }, { x: Math.floor(worldWidth / 2), y: 300 }, { x: 'left', y: 300 } ],
-            platforms: [
-                // Simple evenly-spaced static platforms for easier gameplay and testing
-                { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' },
-                // Lowered Y positions slightly to make platforms easier to jump onto
-                { x: 120, y: 584, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 420, y: 564, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 720, y: 544, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1020, y: 544, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1320, y: 564, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1620, y: 544, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-                { x: 1920, y: 544, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
-            ]
-        };
-        this.level.loadLevel(levelData);
+        // Initialize Level logic
+        this.currentLevelIndex = 0;
+        
+        // Load the first level
+        // (LEVEL_CONFIGS is defined in levelData.js)
+        if (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS.length > 0) {
+            this.loadLevel(this.currentLevelIndex);
+        } else {
+            console.warn('LEVEL_CONFIGS not found, falling back to default level.');
+            // Fallback default level data
+            const worldWidth = Math.max(this.width * 2, 1920);
+            const levelData = {
+                width: worldWidth,
+                height: this.height,
+                background: 'bg_forest',
+                backgroundLayers: [],
+                spawnPoints: [ { x: 'right', y: 300 }, { x: Math.floor(worldWidth / 2), y: 300 }, { x: 'left', y: 300 } ],
+                platforms: [
+                    { x: 0, y: 700, width: worldWidth, height: 40, type: 'static', tile: 'ground_tile' },
+                    { x: 120, y: 584, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
+                ]
+            };
+            this.level.loadLevel(levelData);
+        }
 
         this.enemyManager = new EnemyManager(this.audioManager);
         this.ui = new UI(this.width, this.height);
@@ -428,6 +425,77 @@ class Game {
                 if (overlay) overlay.style.display = 'none';
                 this.dispatchGameStateChange();
             }
+        }
+
+        /**
+         * Load a specific level by index from LEVEL_CONFIGS
+         * @param {number} index 
+         */
+        loadLevel(index) {
+            if Check Level Completion (Player reached right edge)
+            // Use width - 100 as the goal line
+            if (this.player.x > this.level.width - 100) {
+                this.completeLevel();
+                return;
+            }
+
+            // (typeof LEVEL_CONFIGS === 'undefined' || !LEVEL_CONFIGS[index]) {
+                console.error('Level not found:', index);
+                return;
+            }
+
+            const config = LEVEL_CONFIGS[index];
+            console.log(`Loading Level ${index + 1}: ${config.name}`);
+            
+            this.level.loadLevel(config);
+            this.currentLevelIndex = index;
+
+            // Update Enemy settings
+            if (this.enemyManager && config.enemyConfig) {
+                this.enemyManager.spawnInterval = config.enemyConfig.spawnInterval || 3.0;
+                this.enemyManager.maxEnemies = config.enemyConfig.maxEnemies || 5;
+            }
+            
+            // Reset player position safely
+            if (this.player) {
+                this.player.x = 100;
+                this.player.y = 500;
+                this.player.velocityX = 0;
+            }
+
+            // Show level toast if UI available
+            // (Assumes UI has been updated to support this, or we can just log for now)
+            try {
+                if (this.ui && this.ui.showLevelTitle) {
+                    this.ui.showLevelTitle(config.name, index + 1);
+                }
+            } catch(e) {}
+        }
+
+        completeLevel() {
+            if (this.state === 'LEVEL_COMPLETE') return;
+            
+            this.state = 'LEVEL_COMPLETE';
+            console.log('Level Complete!');
+            this.audioManager.playSound && this.audioManager.playSound('powerup'); // Use a positive sound
+            
+            // Wait then transition
+            setTimeout(() => {
+                const nextIndex = this.currentLevelIndex + 1;
+                if (typeof LEVEL_CONFIGS !== 'undefined' && nextIndex < LEVEL_CONFIGS.length) {
+                    this.loadLevel(nextIndex);
+                    this.state = 'PLAYING';
+                    // Reset spawn timer
+                    if (this.enemyManager) this.enemyManager.spawnTimer = 0;
+                } else {
+                    this.victory();
+                }
+            }, 3000);
+        }
+
+        victory() {
+            this.state = 'VICTORY'; // Handle this in draw
+            console.log('GAME VICTORY!');
         }
 
         update(dt) {
