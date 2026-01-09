@@ -52,7 +52,10 @@ class Player {
 
         // Shadow strike state
         this.isShadowStriking = false;
-        this.shadowStrikeDuration = 0.25;
+        // Keep the move duration in sync with the animation timing.
+        // Asset spec: 8 frames at 0.05s/frame (20 FPS) => 0.4s total.
+        const shadowStrikeAnim = this.animations && this.animations.shadow_strike;
+        this.shadowStrikeDuration = shadowStrikeAnim ? (shadowStrikeAnim.frameCount * shadowStrikeAnim.frameDuration) : 0.4;
         this.shadowStrikeSpeed = 600;
 
         // Combo system
@@ -92,7 +95,10 @@ class Player {
                         walk: spriteLoader.createAnimation('ninja_walk', 4, 0.1),
                 jump: spriteLoader.createAnimation('ninja_jump', 4, 0.12),
                         attack: spriteLoader.createAnimation('ninja_attack', 4, 0.08),
-                shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 8, 0.05),
+            // Tune Shadow Strike to 4 frames. The sprite sheet has 8 frames,
+            // so we must pin frameWidth/stride to avoid incorrect inference
+            // (4-frame inference would treat the sheet as 4 wide frames).
+            shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 4, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 hurt: spriteLoader.createAnimation('ninja_hurt', 2, 0.1)
             };
         } else {
@@ -101,7 +107,7 @@ class Player {
                         walk: new Animation(ninja_walk, 4, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                         attack: new Animation(ninja_attack, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                shadow_strike: new Animation(ninja_shadow_strike, 8, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+            shadow_strike: new Animation(ninja_shadow_strike, 4, 0.05, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
             };
         }

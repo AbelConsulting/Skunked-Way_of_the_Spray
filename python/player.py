@@ -58,7 +58,11 @@ class Player:
         
         # Shadow strike state
         self.is_shadow_striking = False
-        self.shadow_strike_duration = 0.25  # Animation duration
+        # Keep duration in sync with animation timing (frame_duration * frames).
+        shadow_anim = self.animations.get("shadow_strike") if self.animations else None
+        self.shadow_strike_duration = (
+            (len(shadow_anim.frames) * shadow_anim.frame_duration) if shadow_anim else 0.25
+        )
         self.shadow_strike_speed = 600  # Dash speed in pixels/second
         
         # Combo system
