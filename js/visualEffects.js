@@ -43,7 +43,7 @@ class DamageNumber {
 }
 
 class HitSpark {
-    constructor(x, y) {
+    constructor(x, y, opts = null) {
         this.x = x;
         this.y = y;
         this.particles = [];
@@ -51,10 +51,17 @@ class HitSpark {
         this.age = 0;
 
         // Create particles
-        const particleCount = 8;
+        let particleCount = 8;
+        let speedMin = 100;
+        let speedMax = 200;
+        if (opts && typeof opts === 'object') {
+            if (typeof opts.particleCount === 'number') particleCount = opts.particleCount;
+            if (typeof opts.speedMin === 'number') speedMin = opts.speedMin;
+            if (typeof opts.speedMax === 'number') speedMax = opts.speedMax;
+        }
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount;
-            const speed = Utils.randomFloat(100, 200);
+            const speed = Utils.randomFloat(speedMin, speedMax);
             this.particles.push({
                 x: 0,
                 y: 0,

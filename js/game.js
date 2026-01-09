@@ -529,9 +529,11 @@ class Game {
                         try {
                             const maxParticles = (this.isMobile && typeof Config !== 'undefined' && typeof Config.MOBILE_MAX_PARTICLES === 'number') ? Config.MOBILE_MAX_PARTICLES : Infinity;
                             if (!this.isMobile || (maxParticles > 0 && this.hitSparks.length < maxParticles)) {
+                                const isShadow = !!this.player.isShadowStriking;
                                 this.hitSparks.push(new HitSpark(
                                     enemy.x + enemy.width / 2,
-                                    enemy.y + enemy.height / 2
+                                    enemy.y + enemy.height / 2,
+                                    isShadow ? { particleCount: 14, speedMin: 140, speedMax: 260 } : null
                                 ));
                             }
                         } catch (e) { /* ignore particle spawn errors */ }
@@ -542,8 +544,8 @@ class Game {
 
             // Screen shake and hit pause for impactful hits
             if (this.player.isShadowStriking) {
-                this.screenShake = new ScreenShake(0.1, 8);
-                this.hitPauseTimer = 0.05;
+                this.screenShake = new ScreenShake(0.12, 10);
+                this.hitPauseTimer = 0.07;
             } else if (this.player.comboCount >= 3) {
                 this.screenShake = new ScreenShake(0.08, 5);
                 this.audioManager.playSound('combo', 0.8);

@@ -97,10 +97,24 @@ class Enemy {
         this.currentAnimation = this.animations.idle;
     }
 
-    takeDamage(damage, knockbackDirection = 1) {
+    takeDamage(damage, knockbackDirection = 1, opts = null) {
         this.health -= damage;
-        this.hitStunTimer = 0.3;
-        this.knockbackVelocityX = knockbackDirection * 200;
+
+        // Backwards compatible signature:
+        // - takeDamage(damage, dir)
+        // - takeDamage(damage, dir, { knockback: number, hitStun: number })
+        // - takeDamage(damage, dir, knockbackNumber)
+        let knockback = 200;
+        let hitStun = 0.3;
+        if (typeof opts === 'number') {
+            knockback = opts;
+        } else if (opts && typeof opts === 'object') {
+            if (typeof opts.knockback === 'number') knockback = opts.knockback;
+            if (typeof opts.hitStun === 'number') hitStun = opts.hitStun;
+        }
+
+        this.hitStunTimer = hitStun;
+        this.knockbackVelocityX = knockbackDirection * knockback;
 
         if (this.audioManager) {
             if (this.health <= 0) {
