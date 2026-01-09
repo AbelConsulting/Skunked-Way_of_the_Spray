@@ -286,9 +286,11 @@ class Level {
 
         // Cyberpunk style config
         this.theme = {
-            bgTop: '#0f0026',      // Deep purple/blue night sky
-            bgMid: '#2d0a4b',      // Neon purple
-            bgBot: '#0a0a23',      // Dark blue/black
+            // Default/fallback background: light pastel green gradient
+            // (used when no panorama is available or when low-end mobile perf mode disables it)
+            bgTop: '#eefaf0',
+            bgMid: '#d6f3da',
+            bgBot: '#bfecc6',
             platTop: '#00fff7',    // Neon cyan
             platBot: '#ff00ea',    // Neon magenta
             border: '#fffb00',     // Bright yellow border
