@@ -46,9 +46,16 @@ class EnemyManager {
         if (sx === null) sx = level.width + 50;
         if (sy === null) sy = 300 + Utils.randomInt(-50, 50);
 
-        // Randomly choose enemy type (adjusted): 45% BASIC, 20% FAST_BASIC, 35% SECOND_BASIC
-        const rand = Math.random();
-        const enemyType = rand < 0.45 ? "BASIC" : rand < 0.65 ? "FAST_BASIC" : "SECOND_BASIC";
+        // Check for allowed types, otherwise default
+        let enemyType = "BASIC";
+        if (this.allowedEnemyTypes && Array.isArray(this.allowedEnemyTypes) && this.allowedEnemyTypes.length > 0) {
+            enemyType = this.allowedEnemyTypes[Utils.randomInt(0, this.allowedEnemyTypes.length - 1)];
+        } else {
+            // Default distribution
+            const rand = Math.random();
+            enemyType = rand < 0.45 ? "BASIC" : rand < 0.65 ? "FAST_BASIC" : "SECOND_BASIC";
+        }
+        
         const enemy = new Enemy(sx, sy, enemyType, this.audioManager);
         this.enemies.push(enemy);
         try {

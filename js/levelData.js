@@ -55,7 +55,8 @@ const LEVEL_CONFIGS = [
         enemyConfig: {
             spawnInterval: 3.0,
             maxEnemies: 5,
-            aggression: 0.5
+            aggression: 0.5,
+            allowedTypes: ['BASIC']
         }
     },
 
@@ -117,13 +118,14 @@ const LEVEL_CONFIGS = [
         enemyConfig: {
             spawnInterval: 2.2,
             maxEnemies: 7,
-            aggression: 0.7
+            aggression: 0.7,
+            allowedTypes: ['BASIC', 'FAST_BASIC']
         }
     },
 
     // --- LEVEL 3: THE DOJO ---
     {
-        name: "Shadow Dojo",
+        name: "Mountain Dojo",
         id: "level_3",
         width: 7500,
         // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
@@ -139,7 +141,7 @@ const LEVEL_CONFIGS = [
             speedMultiplier: 1.05,
             attackDamageMultiplier: 2.2
         },
-        background: 'bg_dojo', 
+        background: 'bg_mountains', 
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -181,7 +183,8 @@ const LEVEL_CONFIGS = [
         ],
         enemyConfig: {
             spawnInterval: 1.8,
-            maxEnemies: 8,
+            maxEnemies: 8,,
+            allowedTypes: ['FAST_BASIC', 'SECOND_BASIC']
             aggression: 1.0
         }
     }
