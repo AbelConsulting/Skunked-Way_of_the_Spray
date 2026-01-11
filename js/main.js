@@ -620,11 +620,27 @@ class GameApp {
         // Update loading text
         this.loadingText.textContent = 'Loading sprites...';
 
-        // Load sprites
-        await spriteLoader.loadAllSprites();
+        // Progress tracking: reflect real asset loads (sprites + initial audio)
+        let audioLoaded = 0;
+        let audioTotal = 0;
+        const computeAndSetProgress = () => {
+            const spriteLoaded = (spriteLoader && typeof spriteLoader.loadedCount === 'number') ? spriteLoader.loadedCount : 0;
+            const spriteTotal = (spriteLoader && typeof spriteLoader.totalAssets === 'number') ? spriteLoader.totalAssets : 0;
+            const total = spriteTotal + audioTotal;
+            const loaded = spriteLoaded + audioLoaded;
+            const pct = total > 0 ? Math.max(0, Math.min(100, Math.floor((loaded / total) * 100))) : 0;
+            this.updateLoadingProgress(pct);
+        };
 
-        // Update progress
-        this.updateLoadingProgress(50);
+        // Load sprites, while polling SpriteLoader counters to keep the bar moving
+        const spritePromise = spriteLoader.loadAllSprites();
+        const spritePoll = setInterval(() => {
+            try { computeAndSetProgress(); } catch (e) {}
+        }, 50);
+        await spritePromise;
+        clearInterval(spritePoll);
+        computeAndSetProgress();
+
         this.loadingText.textContent = 'Loading audio...';
 
 
@@ -664,23 +680,36 @@ class GameApp {
         ];
         // Defer music loading until game start to reduce initial bandwidth and decoding on mobile
         const musicList = [];
+        audioTotal = (soundList ? soundList.length : 0) + (musicList ? musicList.length : 0);
+        audioLoaded = 0;
+        computeAndSetProgress();
 
         // If running from file://, skip audio loading (browsers often block it) unless user clicked "Start Anyway"
         if (window._fileProtocol && !window._allowFileStart) {
             try { console.warn('File protocol detected: skipping audio asset loading. Click "Start Anyway" to attempt enabling audio.'); } catch (e) {}
+            // Treat skipped audio as "done" for progress purposes
+            audioLoaded = audioTotal;
+            computeAndSetProgress();
         } else {
             // Enable audio on first user interaction (required by browsers)
             window.addEventListener('keydown', () => this.audioManager.initialize(), { once: true });
             window.addEventListener('mousedown', () => this.audioManager.initialize(), { once: true });
 
             try {
-                await this.audioManager.loadAssets(soundList, musicList);
+                await this.audioManager.loadAssets(soundList, musicList, (loaded, total) => {
+                    audioLoaded = (typeof loaded === 'number') ? loaded : audioLoaded;
+                    audioTotal = (typeof total === 'number') ? total : audioTotal;
+                    computeAndSetProgress();
+                });
             } catch (e) {
                 console.warn('Audio loading failed; continuing without audio.', e);
+                // Don't stall the progress bar if audio fails
+                audioLoaded = audioTotal;
+                computeAndSetProgress();
             }
         }
 
-        // Update progress
+        // Ensure we end at 100%
         this.updateLoadingProgress(100);
         this.loadingText.textContent = 'Ready!';
 
