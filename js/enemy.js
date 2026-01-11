@@ -328,7 +328,6 @@ class Enemy {
         }
     }
 
-    chase(dt, player) {
     chase(dt, player, level) {
         // Move towards player (prefer center-to-center direction)
         const playerCenterX = (player.x || 0) + (player.width || 0) * 0.5;
