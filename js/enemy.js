@@ -60,7 +60,7 @@ class Enemy {
         this.attackTimer = 0;
         this.attackDuration = 0.5;
         // Small windup before the hitbox becomes damaging (fair reaction time)
-        this.attackWindup = 0.12;
+        this.attackWindup = 0.18;
         this.attackCooldown = 2.0;
         this.attackCooldownTimer = 0;
         this.attackRange = 80;
@@ -70,7 +70,7 @@ class Enemy {
         if (this.enemyType === 'BOSS') {
             this.attackRange = 120;
             this.attackDuration = 0.65;
-            this.attackWindup = 0.18;
+            this.attackWindup = 0.26;
             this.attackCooldown = 1.6;
             this.attackHitbox = { x: 0, y: 0, width: 120, height: 80 };
         }
