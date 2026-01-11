@@ -694,6 +694,10 @@ class GameApp {
             // Enable audio on first user interaction (required by browsers)
             window.addEventListener('keydown', () => this.audioManager.initialize(), { once: true });
             window.addEventListener('mousedown', () => this.audioManager.initialize(), { once: true });
+            // Mobile / touch devices may never emit mousedown/keydown.
+            // Use pointer/touch hooks so iOS Safari and Android unlock audio reliably.
+            window.addEventListener('pointerdown', () => this.audioManager.initialize(), { once: true });
+            window.addEventListener('touchstart', () => this.audioManager.initialize(), { once: true, passive: true });
 
             try {
                 await this.audioManager.loadAssets(soundList, musicList, (loaded, total) => {

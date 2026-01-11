@@ -515,7 +515,7 @@ class Game {
             if (this.state === 'LEVEL_COMPLETE') return;
             
             this.state = 'LEVEL_COMPLETE';
-            console.log('Level Complete!');
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
             this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
             
             // Save progress
@@ -539,7 +539,7 @@ class Game {
 
         victory() {
             this.state = 'VICTORY'; // Handle this in draw
-            console.log('GAME VICTORY!');
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('GAME VICTORY!');
         }
 
         update(dt) {
@@ -616,7 +616,7 @@ class Game {
                 // Check if boss instance is dead
                 if (this.enemyManager.bossInstance && (this.enemyManager.bossInstance.health <= 0 || this.enemyManager.enemies.indexOf(this.enemyManager.bossInstance) === -1)) {
                      this.bossDefeated = true;
-                     console.log('Boss Defeated! Exit Unlocked.');
+                         if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Boss Defeated! Exit Unlocked.');
                      // Boss defeat sound
                      if (this.audioManager && this.audioManager.playSound) {
                          this.audioManager.playSound('boss_defeat', 0.9);
@@ -802,7 +802,7 @@ class Game {
                 if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
                     newAchievements = Highscores.checkAchievements(this.gameStats);
                     if (newAchievements.length > 0) {
-                        console.log('New achievements unlocked:', newAchievements);
+                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked:', newAchievements);
                         // Could show achievement notification here
                     }
                 }
@@ -822,7 +822,7 @@ class Game {
                                     target.innerHTML = '';
                                     target.appendChild(board);
                                 } else {
-                                    console.log('Highscores updated', updated);
+                                    if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated', updated);
                                 }
                             } catch (e) { console.warn('Failed to render scoreboard', e); }
                         });

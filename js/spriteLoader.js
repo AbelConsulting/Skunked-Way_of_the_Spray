@@ -343,7 +343,7 @@ class SpriteLoader {
                 // Choose the nearest integer stride and warn — this handles
                 // sheets that include padding or fractional frames.
                 frameStride = Math.round(sheet.width / frameCount);
-                try { console.warn(`SpriteLoader: ${name} width ${sheet.width} not divisible by ${frameCount}; using inferred stride ${frameStride}`); } catch (e) {}
+                try { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`SpriteLoader: ${name} width ${sheet.width} not divisible by ${frameCount}; using inferred stride ${frameStride}`); } catch (e) {}
             }
         }
 
