@@ -64,6 +64,14 @@ class Enemy {
         this.attackRange = 80;
         this.attackHitbox = { x: 0, y: 0, width: 60, height: 40 };
 
+        // Type-specific combat tuning (kept conservative)
+        if (this.enemyType === 'BOSS') {
+            this.attackRange = 120;
+            this.attackDuration = 0.65;
+            this.attackCooldown = 1.6;
+            this.attackHitbox = { x: 0, y: 0, width: 120, height: 80 };
+        }
+
         // Hit feedback
         this.hitStunTimer = 0;
         this.knockbackVelocityX = 0;
@@ -175,12 +183,28 @@ class Enemy {
 
         // AI behavior (only if not stunned)
         if (this.hitStunTimer <= 0) {
-            const distanceToPlayer = Math.abs(this.x - player.x);
+            const playerRect = (player && typeof player.getRect === 'function')
+                ? player.getRect()
+                : { x: player.x, y: player.y, width: player.width || 0, height: player.height || 0 };
+            const enemyRect = this.getRect();
+
+            // Horizontal gap between rect edges (0 if overlapping)
+            const enemyRight = enemyRect.x + enemyRect.width;
+            const playerRight = playerRect.x + playerRect.width;
+            let horizontalGap = 0;
+            if (enemyRight < playerRect.x) horizontalGap = playerRect.x - enemyRight;
+            else if (playerRight < enemyRect.x) horizontalGap = enemyRect.x - playerRight;
+
+            // Only attack if the player is roughly on the same vertical band.
+            const verticalSlack = 50;
+            const verticallyAligned =
+                (playerRect.y < (enemyRect.y + enemyRect.height + verticalSlack)) &&
+                ((playerRect.y + playerRect.height) > (enemyRect.y - verticalSlack));
 
             // Determine state
-            if (distanceToPlayer < this.attackRange && this.attackCooldownTimer <= 0) {
+            if (verticallyAligned && horizontalGap < this.attackRange && this.attackCooldownTimer <= 0) {
                 this.state = "ATTACK";
-            } else if (distanceToPlayer < this.detectionRange) {
+            } else if (horizontalGap < this.detectionRange) {
                 this.state = "CHASE";
             } else {
                 this.state = "PATROL";
@@ -192,7 +216,7 @@ class Enemy {
                     this.patrol(dt, level);
                     break;
                 case "CHASE":
-                    this.chase(dt, player);
+                    this.chase(dt, player, level);
                     break;
                 case "ATTACK":
                     this.attack(dt);
@@ -305,8 +329,12 @@ class Enemy {
     }
 
     chase(dt, player) {
-        // Move towards player
-        if (this.x < player.x) {
+    chase(dt, player, level) {
+        // Move towards player (prefer center-to-center direction)
+        const playerCenterX = (player.x || 0) + (player.width || 0) * 0.5;
+        const enemyCenterX = this.x + this.width * 0.5;
+
+        if (enemyCenterX < playerCenterX) {
             this.velocityX = this.speed;
             this.facingRight = true;
         } else {
@@ -314,7 +342,17 @@ class Enemy {
             this.facingRight = false;
         }
 
-        this.x += this.velocityX * dt;
+        const nextX = this.x + this.velocityX * dt;
+        // If we have level info, avoid chasing off ledges (same rule as patrol).
+        if (level && typeof this.checkGround === 'function') {
+            if (this.checkGround(nextX, this.y, level)) {
+                this.x = nextX;
+            } else {
+                this.velocityX = 0;
+            }
+        } else {
+            this.x = nextX;
+        }
     }
 
     attack(dt) {
