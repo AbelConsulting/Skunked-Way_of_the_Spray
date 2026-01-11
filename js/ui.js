@@ -246,4 +246,22 @@ class UI {
             ctx.strokeRect(cooldownBarX, cooldownBarY, cooldownBarWidth, cooldownBarHeight);
         }
     }
+
+    drawTransition(ctx, alpha, text = "") {
+        if (alpha <= 0) return;
+        
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+        ctx.fillRect(0, 0, this.width, this.height);
+
+        if (text && alpha > 0.5) {
+            ctx.save();
+            ctx.globalAlpha = (alpha - 0.5) * 2; // Fade text in later
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 32px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, this.width / 2, this.height / 2);
+            ctx.restore();
+        }
+    }
 }

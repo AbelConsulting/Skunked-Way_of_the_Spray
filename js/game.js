@@ -341,6 +341,12 @@ class Game {
         async startGame(levelIndex = 0) {
             console.log('Game.startGame() called, level:', levelIndex);
             
+            // Start with a fade in
+            this.transitionState = 'FADE_IN';
+            this.transitionAlpha = 1.0;
+            this.transitionTimer = 0;
+            this.transitionDuration = 1.0;
+            
             // If starting a new game (level 0), reset progress unless this logic is handled elsewhere
             // But we want to allow replaying unlocked levels? For now, standard arcade: unlocked levels are checkpoints.
             
@@ -526,6 +532,43 @@ class Game {
         }
 
         update(dt) {
+            // Handle transitions
+            if (this.transitionState) {
+                this.transitionTimer += dt;
+                const progress = Math.min(1.0, this.transitionTimer / this.transitionDuration);
+                
+                if (this.transitionState === 'FADE_IN') {
+                    // Fade from black (1.0) to transparent (0.0)
+                    this.transitionAlpha = 1.0 - progress;
+                    if (progress >= 1.0) {
+                        this.transitionState = null;
+                        this.transitionAlpha = 0;
+                    }
+                } else if (this.transitionState === 'FADE_OUT') {
+                    // Fade from transparent (0.0) to black (1.0)
+                    this.transitionAlpha = progress;
+                    if (progress >= 1.0) {
+                        this.transitionState = 'FADE_IN'; // Start fading in next frame
+                        this.transitionTimer = 0;
+                        this.transitionAlpha = 1.0;
+                        
+                        // Execute level switch
+                        const nextIndex = this.currentLevelIndex + 1;
+                        if (typeof LEVEL_CONFIGS !== 'undefined' && nextIndex < LEVEL_CONFIGS.length) {
+                            this.loadLevel(nextIndex);
+                            this.state = 'PLAYING';
+                            if (this.enemyManager) this.enemyManager.spawnTimer = 0;
+                        } else {
+                            this.victory();
+                            this.transitionState = null; // No fade in for victory screen
+                        }
+                    }
+                }
+                
+                // If fading out, we might still want to update logic or pause it.
+                // For now, let's allow logic to run but maybe freeze player input?
+            }
+
             if (this.state !== "PLAYING") {
                 return;
             }
