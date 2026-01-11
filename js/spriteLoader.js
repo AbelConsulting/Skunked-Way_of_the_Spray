@@ -72,19 +72,19 @@ class SpriteLoader {
                             const bitmap = await createImageBitmap(img);
                             this.sprites[name] = bitmap;
                             this.loadedCount++;
-                            try { if (typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${bitmap.width}x${bitmap.height}`); } catch (e) {}
+                            try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${bitmap.width}x${bitmap.height}`); } catch (e) {}
                             return bitmap;
                         } catch (e) {
                             // fallback to image element if bitmap creation fails
                             this.sprites[name] = img;
                             this.loadedCount++;
-                            try { if (typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) {}
+                            try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) {}
                             return img;
                         }
                     } else {
                         this.sprites[name] = img;
                         this.loadedCount++;
-                        try { if (typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) {}
+                        try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) {}
                         return img;
                     }
                 } catch (e) {
@@ -128,7 +128,7 @@ class SpriteLoader {
                 const finishWith = (stored) => {
                     this.sprites[name] = stored;
                     try {
-                        if (typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} -> ${stored.width}x${stored.height}`);
+                        if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} -> ${stored.width}x${stored.height}`);
                     } catch (e) {}
                     this.loadedCount++;
                     resolve(stored);
@@ -274,11 +274,11 @@ class SpriteLoader {
                         img._detectedFrameWidth = detectedFrameWidth;
                         img._detectedFrameStride = detectedFrameWidth + detectedPad;
                         try {
-                            console.info(`SpriteLoader: sprite ${name} width ${img.width}; detected uniform ${detectedPad}px padding (frameWidth=${detectedFrameWidth}, stride=${img._detectedFrameStride})`);
+                            if (typeof Config !== 'undefined' && Config.DEBUG) console.info(`SpriteLoader: sprite ${name} width ${img.width}; detected uniform ${detectedPad}px padding (frameWidth=${detectedFrameWidth}, stride=${img._detectedFrameStride})`);
                         } catch (e) {}
                     } else if ((img.width % count) !== 0) {
                         try {
-                            console.warn(`SpriteLoader: sprite ${name} width ${img.width} is not divisible by frameCount ${count} (frame width=${(img.width/count).toFixed(2)})`);
+                            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`SpriteLoader: sprite ${name} width ${img.width} is not divisible by frameCount ${count} (frame width=${(img.width/count).toFixed(2)})`);
                         } catch (e) {}
                     }
             }
@@ -296,7 +296,7 @@ class SpriteLoader {
                         if (ctx) ctx.imageSmoothingEnabled = false;
                         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, 64, 64);
                         this.sprites[t] = canvas;
-                        console.log(`SpriteLoader: upscaled tile ${t} from ${img.width}x${img.height} to 64x64`);
+                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`SpriteLoader: upscaled tile ${t} from ${img.width}x${img.height} to 64x64`);
                     }
                 } catch (e) {
                     // ignore scaling errors

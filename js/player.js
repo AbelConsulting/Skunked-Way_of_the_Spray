@@ -87,6 +87,10 @@ class Player {
 
         // Input
         this.keys = {};
+
+        // Attack stats hooks (consumed by Game for accuracy tracking)
+        this._attackJustStarted = false;
+        this._attackDidHit = false;
     }
 
     loadSprites() {
@@ -161,6 +165,10 @@ class Player {
             this.attackCooldownTimer = this.attackCooldown;
             this.hitEnemies.clear();
 
+            // Mark attack start for Game stats (count once per attack)
+            this._attackJustStarted = true;
+            this._attackDidHit = false;
+
             // Ensure hitbox is positioned immediately (not one frame later)
             this.attackHitbox.width = this.defaultAttackWidth;
             this.attackHitbox.height = this.defaultAttackHeight;
@@ -195,6 +203,10 @@ class Player {
             this.attackTimer = this.shadowStrikeDuration;
             this.attackCooldownTimer = this.attackCooldown * 1.5;
             this.hitEnemies.clear();
+
+            // Mark attack start for Game stats (count once per attack)
+            this._attackJustStarted = true;
+            this._attackDidHit = false;
 
             // Enhanced hitbox for shadow strike
             this.attackHitbox.width = this.shadowStrikeHitboxWidth;
@@ -388,6 +400,7 @@ class Player {
             if (this.attackTimer <= 0) {
                 this.isAttacking = false;
                 this.isShadowStriking = false;
+                this._attackDidHit = false;
                 this.attackHitbox.width = this.defaultAttackWidth;
                 this.attackHitbox.height = this.defaultAttackHeight;
                 if (Math.abs(this.velocityX) > this.speed) {
@@ -464,7 +477,7 @@ class Player {
         }
 
         // Debug: draw hitbox
-        if (this.isAttacking) {
+        if (this.isAttacking && typeof Config !== 'undefined' && Config.DEBUG) {
             ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
             ctx.strokeRect(this.attackHitbox.x, this.attackHitbox.y, this.attackHitbox.width, this.attackHitbox.height);
         }

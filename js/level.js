@@ -38,7 +38,9 @@ class Level {
         this.backgroundParallax = (typeof levelData.backgroundParallax !== 'undefined') ? levelData.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
         
         // Initialize platforms (static and moving)
-        this.platforms = levelData.platforms.map(p => ({
+        // Accept partial data: if platforms is missing, keep existing platforms.
+        const incomingPlatforms = Array.isArray(levelData.platforms) ? levelData.platforms : this.platforms;
+        this.platforms = (Array.isArray(incomingPlatforms) ? incomingPlatforms : []).map(p => ({
             ...p,
             // If it's a moving platform, set initial state
             initialX: p.x,
@@ -57,7 +59,7 @@ class Level {
         // Hazards removed: clear all hazards on load to prevent spawning
         const hadHazards = Array.isArray(levelData.hazards) && levelData.hazards.length > 0;
         this.hazards = [];
-        if (hadHazards && typeof console !== 'undefined' && console.log) console.log(`Removed ${levelData.hazards.length} hazards from level load (global hazard removal).`);
+        if (hadHazards && typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined' && console.log) console.log(`Removed ${levelData.hazards.length} hazards from level load (global hazard removal).`);
     }
 
     /**

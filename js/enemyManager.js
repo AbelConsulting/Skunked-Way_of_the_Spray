@@ -73,7 +73,7 @@ class EnemyManager {
         this.enemies.push(boss);
         this.bossInstance = boss;
         try {
-            console.log('EnemyManager.spawnBoss', { x: boss.x, y: boss.y, hp: boss.maxHealth });
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('EnemyManager.spawnBoss', { x: boss.x, y: boss.y, hp: boss.maxHealth });
         } catch (e) {}
         return boss;
     }
@@ -117,7 +117,7 @@ class EnemyManager {
         const enemy = new Enemy(sx, sy, enemyType, this.audioManager);
         this.enemies.push(enemy);
         try {
-            console.log('EnemyManager.spawnEnemy', { type: enemyType, x: enemy.x, y: enemy.y, levelWidth: level && level.width, total: this.enemies.length });
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('EnemyManager.spawnEnemy', { type: enemyType, x: enemy.x, y: enemy.y, levelWidth: level && level.width, total: this.enemies.length });
         } catch (e) {}
     }
 

@@ -3,6 +3,10 @@
  */
 
 const Config = {
+    // Debugging / diagnostics
+    // When true, enables verbose console logs and cache-busting helpers.
+    DEBUG: false,
+
     // Screen settings
     SCREEN_WIDTH: 1280,
     SCREEN_HEIGHT: 720,

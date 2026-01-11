@@ -2,7 +2,7 @@
  * Game class - Main game controller
  */
 
-console.log('game.js loaded');
+try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('game.js loaded'); } catch (e) {}
 
 class Game {
     constructor(canvas, audioManager, isMobile = false) {
@@ -174,7 +174,7 @@ class Game {
             // Key down handler
             window.addEventListener('keydown', (event) => {
                 const key = normalize(event);
-                try { if (typeof console !== 'undefined' && console.log) console.log('Game.keydown', { key, state: this.state }); } catch (e) {}
+                try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined' && console.log) console.log('Game.keydown', { key, state: this.state }); } catch (e) {}
 
                 // Prevent default for primary game keys
                 if (['space', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)) {
@@ -339,7 +339,7 @@ class Game {
 
         // Start or restart the game (New Game)
         async startGame(levelIndex = 0) {
-            console.log('Game.startGame() called, level:', levelIndex);
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game.startGame() called, level:', levelIndex);
             
             // Start with a fade in
             this.transitionState = 'FADE_IN';
@@ -392,7 +392,7 @@ class Game {
                 const spawnY = spawnPlatform.y - this.player.height - 8;
                 this.player.x = spawnX;
                 this.player.y = spawnY;
-                console.log('Spawn placed on platform at', this.player.x, this.player.y, 'platform:', spawnPlatform.x, spawnPlatform.y, spawnPlatform.width, spawnPlatform.height);
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Spawn placed on platform at', this.player.x, this.player.y, 'platform:', spawnPlatform.x, spawnPlatform.y, spawnPlatform.width, spawnPlatform.height);
             } else {
                 this.player.x = 100;
                 this.player.y = this.height - this.player.height - 8;
@@ -472,7 +472,7 @@ class Game {
             }
 
             const config = LEVEL_CONFIGS[index];
-            console.log(`Loading Level ${index + 1}: ${config.name}`);
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`Loading Level ${index + 1}: ${config.name}`);
             
             this.level.loadLevel(config);
             this.currentLevelIndex = index;
@@ -688,7 +688,7 @@ class Game {
         // Hazard collision checks disabled: hazards and related damage are removed.
         try {
             if (this.level && this.level.hazards && this.level.hazards.length > 0) {
-                if (typeof console !== 'undefined' && console.log) console.log('Clearing hazards at runtime before collision checks (hazards disabled).');
+                if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined' && console.log) console.log('Clearing hazards at runtime before collision checks (hazards disabled).');
                 this.level.hazards = [];
             }
         } catch (e) { /* ignore hazard check errors */ }
@@ -696,21 +696,30 @@ class Game {
         // Update enemies
         this.enemyManager.update(dt, this.player, this.level);
 
+        // Track attack attempts once per attack (instead of per-frame)
+        try {
+            if (this.player && this.player._attackJustStarted) {
+                this.gameStats.attacksAttempted++;
+                this.player._attackJustStarted = false;
+            }
+        } catch (e) {}
+
         // Check player attacks hitting enemies
         const attackResult = this.enemyManager.checkPlayerAttack(this.player);
         if (attackResult.hit) {
-            // Track attack statistics
-            this.gameStats.attacksAttempted++;
-            this.gameStats.attacksHit++;
+            // Track attack statistics (count hits once per attack)
+            try {
+                if (this.player && !this.player._attackDidHit) {
+                    this.gameStats.attacksHit++;
+                    this.player._attackDidHit = true;
+                }
+            } catch (e) {}
             this.gameStats.totalDamage += attackResult.totalDamage;
             
             this.score += attackResult.totalDamage * 10;
             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
             // trigger score pulse animation
             try { this._scorePulse = 1.0; } catch (e) {}
-        } else if (this.player.isAttacking) {
-            // Track missed attacks
-            this.gameStats.attacksAttempted++;
         }
 
         // Sync stats from other systems
@@ -854,19 +863,21 @@ class Game {
             this._camDiagCount = 0;
         }
         if (this.state === 'PLAYING' && this._camDiagCount < 20) {
-            console.log('CameraX trace', {
-                frame: this._camDiagCount,
-                playerX: this.player.x,
-                playerCenterX,
-                cameraX: this.cameraX,
-                targetCameraX,
-                clampMaxX,
-                viewWidth: this.viewWidth,
-                levelWidth: this.level.width
-            });
+            if (typeof Config !== 'undefined' && Config.DEBUG) {
+                console.log('CameraX trace', {
+                    frame: this._camDiagCount,
+                    playerX: this.player.x,
+                    playerCenterX,
+                    cameraX: this.cameraX,
+                    targetCameraX,
+                    clampMaxX,
+                    viewWidth: this.viewWidth,
+                    levelWidth: this.level.width
+                });
+            }
             this._camDiagCount++;
             if (this._camDiagCount === 20 && clampMaxX === 0) {
-                console.warn('No horizontal room to pan: level.width <= viewWidth', { levelWidth: this.level.width, viewWidth: this.viewWidth });
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('No horizontal room to pan: level.width <= viewWidth', { levelWidth: this.level.width, viewWidth: this.viewWidth });
             }
         }
         // Vertical camera follow to keep player visible on short viewports.
@@ -884,7 +895,7 @@ class Game {
         // Log first computed cameraY for diagnostics
         if (!this._loggedCameraY && this.state === 'PLAYING') {
             this._loggedCameraY = true;
-            console.log('CameraY diagnostic', { cameraY: this.cameraY, targetCameraY, viewHeight: this.viewHeight, levelHeight: this.level.height });
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('CameraY diagnostic', { cameraY: this.cameraY, targetCameraY, viewHeight: this.viewHeight, levelHeight: this.level.height });
         }
 
     }
@@ -1105,4 +1116,4 @@ class Game {
     }
 }
 
-console.log('Game class defined');
+try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game class defined'); } catch (e) {}
