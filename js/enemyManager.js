@@ -11,6 +11,7 @@ class EnemyManager {
         this.maxEnemies = 5;
         this.waveNumber = 1;
         this.enemiesDefeated = 0;
+        this.bossInstance = null;
     }
 
     reset() {
@@ -18,6 +19,28 @@ class EnemyManager {
         this.spawnTimer = 0;
         this.waveNumber = 1;
         this.enemiesDefeated = 0;
+        this.bossInstance = null;
+    }
+
+    spawnBoss(bossConfig) {
+        if (!bossConfig) return;
+        
+        // Clear existing enemies for the duel (optional, but cleaner)
+        // this.enemies = []; 
+        
+        const enemy = new Enemy(bossConfig.spawnX, bossConfig.spawnY, 'BOSS', this.audioManager);
+        
+        // Apply modifiers
+        if (bossConfig.healthMultiplier) {
+            enemy.health = Math.floor(enemy.health * bossConfig.healthMultiplier);
+            enemy.maxHealth = enemy.health;
+        }
+        if (bossConfig.speedMultiplier) enemy.speed *= bossConfig.speedMultiplier;
+        if (bossConfig.attackDamageMultiplier) enemy.attackDamage = Math.floor(enemy.attackDamage * bossConfig.attackDamageMultiplier);
+        
+        this.enemies.push(enemy);
+        this.bossInstance = enemy;
+        console.log('Boss Spawned!', bossConfig);
     }
 
     spawnEnemy(level) {

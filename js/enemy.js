@@ -84,7 +84,11 @@ class Enemy {
 
         const idle_sprite = spriteLoader.getSprite(`${prefix}_idle`);
         const walk_sprite = spriteLoader.getSprite(`${prefix}_walk`);
-        const attack_sprite = spriteLoader.getSprite(`${prefix}_attack`);
+        
+        // Handle naming variance for boss
+        const attackName = (prefix === 'boss') ? 'boss_attack1' : `${prefix}_attack`;
+        const attack_sprite = spriteLoader.getSprite(attackName);
+        
         const hurt_sprite = spriteLoader.getSprite(`${prefix}_hurt`);
 
         this.animations = {

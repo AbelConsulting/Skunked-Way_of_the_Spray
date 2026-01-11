@@ -47,6 +47,11 @@ class Level {
         }));
         // Optional enemy spawn points (array of { x: number|'left'|'right', y: number })
         this.spawnPoints = Array.isArray(levelData.spawnPoints) ? levelData.spawnPoints.slice() : null;
+        
+        // Store boss and completion config for Game logic
+        this.bossConfig = levelData.boss || null;
+        this.completionConfig = levelData.completion || null;
+
         // Mark static layer dirty so it will be re-rendered on next draw
         this._staticNeedsUpdate = true;
         // Hazards removed: clear all hazards on load to prevent spawning

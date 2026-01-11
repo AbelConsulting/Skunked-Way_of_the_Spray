@@ -6,6 +6,7 @@ class UI {
     constructor(width, height) {
         this.width = width;
         this.height = height;
+        this.bossWarningTime = 0;
     }
 
     drawMenu(ctx, savedLevelIndex = 0) {
@@ -178,6 +179,33 @@ class UI {
             ctx.restore();
         } catch (e) {}
 
+        // Boss Warning Overlay
+        if (this.bossWarningTime > Date.now()) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'; // Dim bg slightly
+            ctx.fillRect(0, this.height/2 - 100, this.width, 200);
+
+            // Flashing effect
+            if (Math.floor(Date.now() / 200) % 2 === 0) {
+                ctx.fillStyle = '#FF0000';
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+            }
+            
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = 10;
+            ctx.fillText('WARNING', this.width / 2, this.height / 2 - 20);
+            
+            ctx.fillStyle = '#FFDD00';
+            ctx.font = 'bold 40px Arial';
+            ctx.shadowBlur = 0;
+            ctx.fillText('BOSS APPROACHING', this.width / 2, this.height / 2 + 50);
+            ctx.restore();
+        }
+
         // Score (neon number with pulse animation)
         try {
             const s = typeof score === 'number' ? String(score) : String(score || 0);
@@ -263,5 +291,9 @@ class UI {
             ctx.fillText(text, this.width / 2, this.height / 2);
             ctx.restore();
         }
+    }
+
+    showBossWarning() {
+        this.bossWarningTime = Date.now() + 3000;
     }
 }

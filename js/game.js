@@ -355,6 +355,10 @@ class Game {
             this.score = 0;
             this.lives = 3;
             
+            // Boss state
+            this.bossEncountered = false;
+            this.bossDefeated = false;
+            
             // Reset game statistics
             this.gameStats = {
                 startTime: Date.now() / 1000, // Convert to seconds
@@ -515,15 +519,12 @@ class Game {
 
             // Wait then transition
             setTimeout(() => {
-                if (typeof LEVEL_CONFIGS !== 'undefined' && nextIndex < LEVEL_CONFIGS.length) {
-                    this.loadLevel(nextIndex);
-                    this.state = 'PLAYING';
-                    // Reset spawn timer
-                    if (this.enemyManager) this.enemyManager.spawnTimer = 0;
-                } else {
-                    this.victory();
-                }
-            }, 3000);
+                // Trigger Fade Out transition
+               this.transitionState = 'FADE_OUT';
+               this.transitionTimer = 0;
+               this.transitionAlpha = 0;
+               this.transitionDuration = 1.0;
+            }, 2000);
         }
 
         victory() {
@@ -573,10 +574,52 @@ class Game {
                 return;
             }
 
-            // Check Level Completion (Player reached right edge)
-            if (this.player.x > this.level.width - 100) {
-                this.completeLevel();
-                return;
+            // Boss Trigger Logic
+            if (!this.bossEncountered && this.level.bossConfig && this.level.completionConfig) {
+                const triggerX = this.level.completionConfig.bossTriggerX;
+                if (this.player.x > triggerX) {
+                    this.bossEncountered = true;
+                    // Stop spawning regular enemies to focus on boss
+                    if (this.enemyManager) this.enemyManager.spawnInterval = 999999; 
+                    
+                    this.enemyManager.spawnBoss(this.level.bossConfig);
+                    
+                    // Visual/Audio cue
+                    try {
+                        if (this.ui.showBossWarning) this.ui.showBossWarning();
+                        // this.audioManager.playSound('boss_spawn'); 
+                    } catch(e) {}
+                }
+            }
+
+            // Boss Defeat Logic
+            if (this.bossEncountered && !this.bossDefeated) {
+                // Check if boss instance is dead
+                if (this.enemyManager.bossInstance && (this.enemyManager.bossInstance.health <= 0 || this.enemyManager.enemies.indexOf(this.enemyManager.bossInstance) === -1)) {
+                     this.bossDefeated = true;
+                     console.log('Boss Defeated! Exit Unlocked.');
+                }
+                
+                // Arena Constraint: Prevent leaving until boss is defeated
+                if (!this.bossDefeated && this.level.completionConfig) {
+                    if (this.player.x > this.level.completionConfig.exitX) {
+                        this.player.x = this.level.completionConfig.exitX;
+                    }
+                }
+            }
+
+            // Check Level Completion
+            let exitX = this.level.width - 100;
+            if (this.level.completionConfig) exitX = this.level.completionConfig.exitX;
+
+            if (this.player.x > exitX) {
+                // Double check boss (redundant with clamp, but safe)
+                if (this.level.bossConfig && !this.bossDefeated) {
+                    // Blocked
+                } else {
+                    this.completeLevel();
+                    return;
+                }
             }
 
             // Update game statistics
@@ -946,6 +989,11 @@ class Game {
             }
         } else if (this.state === "GAME_OVER") {
             this.ui.drawGameOver(this.ctx, this.score, this.enemyManager.enemiesDefeated);
+        }
+
+        // Draw Transition Overlay (always on top)
+        if ((this.transitionState || this.transitionAlpha > 0) && this.ui && typeof this.ui.drawTransition === 'function') {
+            this.ui.drawTransition(this.ctx, this.transitionAlpha);
         }
 
         // Debug overlay (render in screen coordinates)
