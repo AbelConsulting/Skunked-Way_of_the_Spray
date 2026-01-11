@@ -814,7 +814,9 @@ class Game {
                             try {
                                 const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
                                 if (target) {
-                                    const board = Highscores.renderScoreboard(target, true);
+                                    // renderScoreboard mutates the passed target; if we then append the
+                                    // returned node (which is the target), DOM throws HierarchyRequestError.
+                                    const board = Highscores.renderScoreboard(null, true);
                                     target.innerHTML = '';
                                     target.appendChild(board);
                                 } else {
