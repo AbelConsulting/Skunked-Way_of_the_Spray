@@ -242,6 +242,7 @@ class SpriteLoader {
 
             // Items / pickups
             ['health_regen_item', 'assets/sprites/items/health_regen_item.svg'],
+            ['extra_life', 'assets/sprites/items/extra_life.svg'],
             // Background panoramas are large; load them lazily per-level to
             // avoid decoding and memory spikes on startup. Leave them out of
             // the global preload list so Level can request only what it needs.

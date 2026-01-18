@@ -34,6 +34,30 @@ class ItemManager {
     }
 
     /**
+     * Spawn an extra life pickup at the specified location
+     */
+    spawnExtraLife(x, y) {
+        const item = {
+            id: this.nextItemId++,
+            type: 'EXTRA_LIFE',
+            x: x,
+            y: y,
+            width: Config.EXTRA_LIFE_ITEM_SIZE || 32,
+            height: Config.EXTRA_LIFE_ITEM_SIZE || 32,
+            collected: false,
+            // Gentle float animation
+            baseY: y,
+            bounceOffset: 0,
+            bounceSpeed: 1.5,
+            // Pulse effect
+            scale: 1.0,
+            pulseSpeed: 3.0
+        };
+        this.items.push(item);
+        return item;
+    }
+
+    /**
      * Update all items (animations, lifetime, etc.)
      */
     update(dt) {
@@ -55,6 +79,13 @@ class ItemManager {
                 // Rotation
                 item.rotation += item.rotationSpeed * dt;
                 if (item.rotation > Math.PI * 2) item.rotation -= Math.PI * 2;
+            } else if (item.type === 'EXTRA_LIFE') {
+                // Gentle float animation
+                item.bounceOffset = Math.sin(item.bounceSpeed * Date.now() / 1000) * 8;
+                item.y = item.baseY + item.bounceOffset;
+                
+                // Pulse scale
+                item.scale = 1.0 + Math.sin(item.pulseSpeed * Date.now() / 1000) * 0.1;
             }
         }
     }
@@ -84,8 +115,12 @@ class ItemManager {
                 collected.push(item);
                 
                 // Play pickup sound
-                if (this.audioManager && item.type === 'HEALTH_REGEN') {
-                    this.audioManager.playSound('powerup', 0.6);
+                if (this.audioManager) {
+                    if (item.type === 'HEALTH_REGEN') {
+                        this.audioManager.playSound('powerup', 0.6);
+                    } else if (item.type === 'EXTRA_LIFE') {
+                        this.audioManager.playSound('powerup', 0.8);
+                    }
                 }
             }
         }
@@ -95,9 +130,10 @@ class ItemManager {
 
     /**
      * Apply collected item effects to the player
+     * Returns { type, success, message } for game to handle UI feedback
      */
     applyItemEffect(player, item) {
-        if (!player || !item) return;
+        if (!player || !item) return { type: null, success: false };
 
         if (item.type === 'HEALTH_REGEN') {
             // Start regen effect on player
@@ -111,7 +147,11 @@ class ItemManager {
                 // Refresh duration if already active
                 player.healthRegen.timer = 0;
             }
+            return { type: 'HEALTH_REGEN', success: true };
+        } else if (item.type === 'EXTRA_LIFE') {
+            return { type: 'EXTRA_LIFE', success: true, lives: 1 };
         }
+        return { type: item.type, success: false };
     }
 
     /**
@@ -126,15 +166,20 @@ class ItemManager {
 
             ctx.save();
             
-            // Apply rotation from center
+            // Apply rotation/scale from center
             ctx.translate(screenX, screenY);
             if (item.rotation) {
                 ctx.rotate(item.rotation);
+            }
+            if (item.scale && item.scale !== 1.0) {
+                ctx.scale(item.scale, item.scale);
             }
 
             if (item.type === 'HEALTH_REGEN') {
                 // Use the utility helper to draw the sprite or placeholder
                 Utils.drawHealthRegenItem(ctx, -item.width / 2, -item.height / 2, item.width);
+            } else if (item.type === 'EXTRA_LIFE') {
+                Utils.drawExtraLifeItem(ctx, -item.width / 2, -item.height / 2, item.width);
             }
 
             ctx.restore();

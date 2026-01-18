@@ -170,6 +170,17 @@ class Game {
                         console.log('Spawned health regen at', px, py);
                     } catch (e) { console.warn('spawnHealthRegen failed', e); }
                 };
+
+                // Debug: spawn extra life at player location
+                window.spawnExtraLife = (x, y) => {
+                    try {
+                        if (!this.itemManager) return console.warn('itemManager not initialized');
+                        const px = (typeof x === 'number') ? x : (this.player ? this.player.x : 100);
+                        const py = (typeof y === 'number') ? y : (this.player ? this.player.y : 300);
+                        this.itemManager.spawnExtraLife(px, py);
+                        console.log('Spawned extra life at', px, py);
+                    } catch (e) { console.warn('spawnExtraLife failed', e); }
+                };
             } catch (e) {}
         }
     }
@@ -746,7 +757,11 @@ class Game {
             // Check item collection
             const collected = this.itemManager.checkPlayerCollision(this.player);
             for (const item of collected) {
-                this.itemManager.applyItemEffect(this.player, item);
+                const result = this.itemManager.applyItemEffect(this.player, item);
+                // Grant extra life if applicable
+                if (result && result.type === 'EXTRA_LIFE' && result.success) {
+                    this.lives = Math.min(this.lives + (result.lives || 1), 9);
+                }
             }
         }
 
