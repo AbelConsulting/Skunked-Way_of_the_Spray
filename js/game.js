@@ -231,7 +231,7 @@ class Game {
                     if (key === 'escape') {
                         this.togglePause();
                     } else if (key === 'enter') {
-                    if (this.state === 'MENU' || this.state === 'GAME_OVER') {
+                    if (this.state === 'MENU' || this.state === 'GAME_OVER' || this.state === 'VICTORY') {
                         this.audioManager.playSound && this.audioManager.playSound('menu_select');
                         this.startGame(0); // Restart from level 1
                         this.dispatchGameStateChange();
@@ -593,6 +593,60 @@ class Game {
         victory() {
             this.state = 'VICTORY'; // Handle this in draw
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('GAME VICTORY!');
+
+            // Stop gameplay music and play victory jingle if available
+            try {
+                if (this.audioManager) {
+                    this.audioManager.stopMusic && this.audioManager.stopMusic();
+                    if (this.audioManager.playSound) {
+                        // Prefer a dedicated victory sound if present; falls back silently otherwise
+                        try { this.audioManager.playSound('victory', 1.0); } catch (e) {}
+                    }
+                }
+            } catch (e) {}
+
+            // Notify any external UI
+            try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) {}
+
+            // Finalize end-of-run statistics (mirrors GAME_OVER handling)
+            try {
+                this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
+                this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
+                this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
+                this.gameStats.score = this.score;
+            } catch (e) {}
+
+            // Achievement checks on successful clear
+            try {
+                if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
+                    const newAchievements = Highscores.checkAchievements(this.gameStats);
+                    if (newAchievements && newAchievements.length > 0) {
+                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked (victory):', newAchievements);
+                    }
+                }
+            } catch (e) { console.warn('Achievement check (victory) failed', e); }
+
+            // High score flow at campaign completion
+            try {
+                if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
+                    try {
+                        Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
+                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                            // If a DOM target exists, show the scoreboard there
+                            try {
+                                const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
+                                if (target) {
+                                    const board = Highscores.renderScoreboard(null, true);
+                                    target.innerHTML = '';
+                                    target.appendChild(board);
+                                } else {
+                                    if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated (victory)', updated);
+                                }
+                            } catch (e) { console.warn('Failed to render scoreboard (victory)', e); }
+                        });
+                    } catch (e) { console.warn('Highscores prompt (victory) failed', e); }
+                }
+            } catch (e) { /* ignore highscores errors */ }
         }
 
         update(dt) {
