@@ -1137,11 +1137,16 @@ class Game {
         // Restore scale transform
         this.ctx.restore();
         // Render UI (always on top, no camera offset)
-        // Ensure UI knows the current logical view size (important for mobile centering)
+        // Draw UI in logical coordinates by reusing the same scale transform used for the world.
+        // This prevents misalignment/cutoff on mobile/high-DPR canvases where the backing
+        // store size differs from the logical view size.
         try {
-                this.ui.width = this.viewWidth || this.width;
-                this.ui.height = this.viewHeight || this.height;
+            this.ui.width = this.viewWidth || this.width;
+            this.ui.height = this.viewHeight || this.height;
         } catch (e) {}
+
+        this.ctx.save();
+        this.ctx.scale(scaleX, scaleY);
 
         if (this.state === "PLAYING") {
             // Pass current level info + clear condition descriptor to HUD
@@ -1211,6 +1216,8 @@ class Game {
         } else if (this.state === "GAME_OVER") {
             this.ui.drawGameOver(this.ctx, this.score, this.enemyManager.enemiesDefeated);
         }
+
+        this.ctx.restore();
 
         // Draw Transition Overlay (always on top)
         if ((this.transitionState || this.transitionAlpha > 0) && this.ui && typeof this.ui.drawTransition === 'function') {
