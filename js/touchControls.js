@@ -27,10 +27,10 @@
             container.style.zIndex = '2000';
 
             // Left/Right/JUMP area
-            const leftBtn = this._createButton('◀', 'left-btn');
-            const rightBtn = this._createButton('▶', 'right-btn');
-            const jumpBtn = this._createButton('▲', 'jump-btn');
-            const attackBtn = this._createButton('A', 'attack-btn');
+            const leftBtn = this._createButton('⟸', 'left-btn touch-btn--move', 'Move left');
+            const rightBtn = this._createButton('⟹', 'right-btn touch-btn--move', 'Move right');
+            const jumpBtn = this._createButton('⤒', 'jump-btn touch-btn--jump', 'Jump');
+            const attackBtn = this._createButton('🗡', 'attack-btn touch-btn--attack', 'Attack');
 
             const leftGroup = document.createElement('div');
             leftGroup.style.position = 'absolute';
@@ -271,21 +271,14 @@
             });
         }
 
-        _createButton(text, cls){
+        _createButton(text, cls, ariaLabel){
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'touch-btn ' + cls;
             btn.textContent = text;
-            btn.style.width = '84px';
-            btn.style.height = '84px';
-            btn.style.margin = '6px';
-            btn.style.borderRadius = '12px';
-            btn.style.border = '2px solid rgba(255,255,255,0.2)';
-            btn.style.background = 'rgba(0,0,0,0.35)';
-            btn.style.color = '#ffffff';
-            btn.style.fontSize = '28px';
-            btn.style.backdropFilter = 'blur(4px)';
             btn.style.outline = 'none';
             btn.style.touchAction = 'none';
+            if (ariaLabel) btn.setAttribute('aria-label', String(ariaLabel));
             return btn;
         }
 

@@ -83,13 +83,14 @@
         #game-over-controls { bottom: 100px; left: 50%; transform: translateX(-50%); }
 
         .touch-btn {
-            width: 70px;
-            height: 70px;
+            width: clamp(56px, 9vw, 84px);
+            height: clamp(56px, 9vw, 84px);
             background: radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,0.22), rgba(0,0,0,0.45));
             border: 2px solid rgba(255,255,255,0.22);
-            border-radius: 50%;
+            border-radius: 16px;
             color: white;
-            font-size: 24px;
+            font-size: clamp(20px, 3.2vw, 28px);
+            font-weight: 900;
             display: inline-flex;
             justify-content: center;
             align-items: center;
@@ -104,6 +105,36 @@
                 0 12px 22px rgba(0,0,0,0.35),
                 0 0 0 1px rgba(0,0,0,0.25) inset;
             transition: transform 90ms ease, filter 160ms ease, box-shadow 160ms ease;
+        }
+
+        /* Per-action accents (subtle, readable) */
+        .touch-btn--move {
+            border-color: rgba(80,255,244,0.26);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 18px rgba(80,255,244,0.10);
+        }
+
+        .touch-btn--attack {
+            border-color: rgba(255,80,80,0.30);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 20px rgba(255,80,80,0.10);
+        }
+
+        .touch-btn--special {
+            border-color: rgba(180,90,255,0.30);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 20px rgba(180,90,255,0.10);
+        }
+
+        .touch-btn--jump {
+            border-color: rgba(120,220,255,0.28);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 20px rgba(120,220,255,0.10);
+        }
+
+        .touch-btn--pause {
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        .touch-btn--restart {
+            border-color: rgba(255,160,80,0.28);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 20px rgba(255,160,80,0.10);
         }
 
         .touch-btn:active {
@@ -1040,17 +1071,17 @@ function ensureTouchControlsExists() {
         const html = `
         <div id="touch-controls" style="position:fixed; bottom:calc(20px + var(--safe-bottom)); left:0; right:0; transform:none; display:none; justify-content:space-between; align-items:flex-end; pointer-events:none; z-index:2000; padding:0 calc(20px + var(--safe-right));">
             <div id="d-pad" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
-                <button class="touch-btn" id="btn-left">&#8592;</button>
-                <button class="touch-btn" id="btn-right">&#8594;</button>
+                <button class="touch-btn touch-btn--move" id="btn-left" aria-label="Move left">⟸</button>
+                <button class="touch-btn touch-btn--move" id="btn-right" aria-label="Move right">⟹</button>
             </div>
             <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
-                <button class="touch-btn" id="btn-restart" style="display:none;">Restart</button>
+                <button class="touch-btn touch-btn--restart" id="btn-restart" style="display:none;" aria-label="Restart">⟲</button>
             </div>
             <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
-                <button class="touch-btn" id="btn-attack" style="background: rgba(255, 50, 50, 0.3);">Attack</button>
-                <button class="touch-btn" id="btn-special" style="background: rgba(255, 100, 255, 0.3);">Special</button>
-                <button class="touch-btn" id="btn-jump">&#8593;</button>
-                <button class="touch-btn" id="btn-pause">Pause</button>
+                <button class="touch-btn touch-btn--attack" id="btn-attack" aria-label="Attack">🗡</button>
+                <button class="touch-btn touch-btn--special" id="btn-special" aria-label="Special">💥</button>
+                <button class="touch-btn touch-btn--jump" id="btn-jump" aria-label="Jump">⤒</button>
+                <button class="touch-btn touch-btn--pause" id="btn-pause" aria-label="Pause">⏸</button>
             </div>
         </div>
         `;
