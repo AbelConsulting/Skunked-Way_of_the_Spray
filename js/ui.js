@@ -227,12 +227,67 @@ class UI {
         // Top-center progress bar (distance to boss/exit, or boss HP)
         try {
             if (objectiveInfo && (typeof objectiveInfo.progress === 'number' || typeof objectiveInfo.bossHpPct === 'number')) {
-                const barW = Math.min(Math.floor(this.width * 0.46), 520);
-                const barH = 6;
-                const barX = Math.floor((this.width - barW) / 2);
-                const barY = padding + 4;
+                const mode = String(objectiveInfo.mode || '');
+                const iconSize = 14;
+                const iconGap = 10;
 
-                // Background
+                const barW = Math.min(Math.floor(this.width * 0.44), 520);
+                const barH = 6;
+                const totalW = barW + (iconSize * 2) + (iconGap * 2);
+                const startX = Math.floor((this.width - totalW) / 2);
+                const iconY = padding + 1;
+                const barX = startX + iconSize + iconGap;
+                const barY = padding + 6;
+
+                const drawIcon = (x, y, kind) => {
+                    const s = iconSize;
+                    ctx.save();
+                    ctx.translate(x + s / 2, y + s / 2);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+
+                    if (kind === 'start') {
+                        // Tiny flag
+                        ctx.beginPath();
+                        ctx.moveTo(-s * 0.25, -s * 0.35);
+                        ctx.lineTo(-s * 0.25, s * 0.35);
+                        ctx.stroke();
+
+                        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                        ctx.beginPath();
+                        ctx.moveTo(-s * 0.22, -s * 0.35);
+                        ctx.lineTo(s * 0.35, -s * 0.2);
+                        ctx.lineTo(-s * 0.22, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else if (kind === 'boss') {
+                        // Simple skull
+                        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                        ctx.beginPath();
+                        ctx.arc(0, -s * 0.05, s * 0.35, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillRect(-s * 0.18, s * 0.1, s * 0.36, s * 0.26);
+
+                        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+                        ctx.beginPath();
+                        ctx.arc(-s * 0.14, -s * 0.08, s * 0.08, 0, Math.PI * 2);
+                        ctx.arc(s * 0.14, -s * 0.08, s * 0.08, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (kind === 'exit') {
+                        // Simple door
+                        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                        ctx.fillRect(-s * 0.28, -s * 0.35, s * 0.56, s * 0.7);
+                        ctx.strokeRect(-s * 0.28, -s * 0.35, s * 0.56, s * 0.7);
+                        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                        ctx.beginPath();
+                        ctx.arc(s * 0.12, 0, s * 0.05, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+                };
+
+                // Background + fill
                 ctx.save();
                 ctx.fillStyle = 'rgba(0,0,0,0.45)';
                 ctx.fillRect(barX, barY, barW, barH);
@@ -240,11 +295,9 @@ class UI {
                 ctx.lineWidth = 1;
                 ctx.strokeRect(barX, barY, barW, barH);
 
-                // Fill
                 let p = null;
                 let fill = '#39FF14';
                 if (typeof objectiveInfo.bossHpPct === 'number') {
-                    // Boss HP bar
                     p = Math.max(0, Math.min(1, objectiveInfo.bossHpPct));
                     fill = '#ff4444';
                 } else {
@@ -254,16 +307,32 @@ class UI {
                 ctx.fillStyle = fill;
                 ctx.fillRect(barX, barY, Math.max(0, Math.floor(barW * p)), barH);
 
-                // Marker (little "skunk" dot)
+                // Icons: start (left), boss or exit (right)
+                drawIcon(startX, iconY, 'start');
+                if (mode === 'boss') drawIcon(startX + iconSize + iconGap + barW + iconGap, iconY, 'boss');
+                else if (mode === 'toBoss') drawIcon(startX + iconSize + iconGap + barW + iconGap, iconY, 'boss');
+                else drawIcon(startX + iconSize + iconGap + barW + iconGap, iconY, 'exit');
+
+                // Skunk-head marker
                 const mx = barX + Math.floor(barW * p);
                 const my = barY + Math.floor(barH / 2);
                 ctx.beginPath();
-                ctx.fillStyle = 'rgba(0,0,0,0.85)';
-                ctx.arc(mx, my, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.9)';
+                ctx.arc(mx, my, 7, 0, Math.PI * 2);
                 ctx.fill();
+
+                // White stripe
+                ctx.save();
+                ctx.translate(mx, my);
+                ctx.rotate(-0.55);
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.fillRect(-1.5, -7, 3, 14);
+                ctx.restore();
+
+                // Little nose highlight
                 ctx.beginPath();
                 ctx.fillStyle = 'rgba(255,255,255,0.9)';
-                ctx.arc(mx - 1, my - 1, 2.2, 0, Math.PI * 2);
+                ctx.arc(mx + 2, my - 2, 2.2, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.restore();
