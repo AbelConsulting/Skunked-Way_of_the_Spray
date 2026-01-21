@@ -772,31 +772,14 @@ function initTouchControls() {
 
         const downHandler = (e) => {
             try { e && e.preventDefault(); } catch (_) {}
-            // Special handling for pause button - call togglePause directly instead of triggering key events
-            if (id === 'btn-pause') {
-                try {
-                    if (window.game && typeof window.game.togglePause === 'function') {
-                        window.game.togglePause();
-                    } else if (typeof window.toggleGamePause === 'function') {
-                        window.toggleGamePause();
-                    } else {
-                        // Fallback: synthesize Escape key
-                        triggerKeyEvent(key, 'keydown');
-                    }
-                } catch (err) { console.warn('pause button handler failed', err); }
-            } else {
-                triggerKeyEvent(key, 'keydown');
-                if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown');
-            }
+            triggerKeyEvent(key, 'keydown');
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keydown');
             logTouchControlEvent('touch_down', { button: id, key });
         };
         const upHandler = (e) => {
             try { e && e.preventDefault(); } catch (_) {}
-            // Don't send keyup for pause button since it's a toggle
-            if (id !== 'btn-pause') {
-                triggerKeyEvent(key, 'keyup');
-                if(key === ' ') triggerKeyEvent('ArrowUp', 'keyup');
-            }
+            triggerKeyEvent(key, 'keyup');
+            if(key === ' ') triggerKeyEvent('ArrowUp', 'keyup');
             logTouchControlEvent('touch_up', { button: id, key });
         };
 
@@ -811,7 +794,6 @@ function initTouchControls() {
     setupBtn('btn-jump', ' ');
     setupBtn('btn-attack', 'x');
     setupBtn('btn-special', 'z');
-    setupBtn('btn-pause', 'Escape');
 
     // Restart button handler
     const restartBtn = document.getElementById('btn-restart');
@@ -1055,10 +1037,9 @@ function ensureTouchControlsExists() {
                 <button class="touch-btn touch-btn--restart" id="btn-restart" style="display:none;" aria-label="Restart">⟲</button>
             </div>
             <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+                <button class="touch-btn touch-btn--jump" id="btn-jump" aria-label="Jump">⤒</button>
                 <button class="touch-btn touch-btn--attack" id="btn-attack" aria-label="Attack">🗡</button>
                 <button class="touch-btn touch-btn--special" id="btn-special" aria-label="Special">💥</button>
-                <button class="touch-btn touch-btn--jump" id="btn-jump" aria-label="Jump">⤒</button>
-                <button class="touch-btn touch-btn--pause" id="btn-pause" aria-label="Pause">⏸</button>
             </div>
         </div>
         `;
