@@ -51,7 +51,7 @@ class Game {
         // Game state
         this.state = "MENU"; // MENU, PLAYING, PAUSED, GAME_OVER
         this.score = 0;
-        this.lives = 3;
+        this.lives = 1;
 
         // Game statistics for high scores
         this.gameStats = {
@@ -908,54 +908,83 @@ class Game {
         // Check enemy attacks hitting player
         const playerHit = this.enemyManager.checkEnemyAttacks(this.player);
         if (playerHit) {
-            // Player died
-            this.state = "GAME_OVER";
-            this.audioManager.stopMusic();
-            this.audioManager.playSound('game_over', 1.0);
-            // Notify UI layers (mobile touch controls) about state change
-            try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch(e) {}
-
-            // Finalize game statistics
-            this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
-            this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
-            this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
-            this.gameStats.score = this.score; // Add score to stats for achievements
-
-            // Check for new achievements
-            let newAchievements = [];
-            try {
-                if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
-                    newAchievements = Highscores.checkAchievements(this.gameStats);
-                    if (newAchievements.length > 0) {
-                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked:', newAchievements);
-                        // Could show achievement notification here
+            // Player died - check for remaining lives
+            this.lives--;
+            
+            if (this.lives > 0) {
+                // Respawn player with invulnerability
+                this.player.health = this.player.maxHealth;
+                this.player.invulnerableTimer = 2.0; // 2 seconds of invulnerability
+                this.player.hitStunTimer = 0;
+                
+                // Find a safe spawn position (early platform or ground)
+                if (this.level.platforms && this.level.platforms.length > 0) {
+                    const nonGroundPlatforms = this.level.platforms.filter(p => !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
+                    if (nonGroundPlatforms.length > 0) {
+                        const earlyLimit = Math.max(800, Math.floor(this.level.width * 0.2));
+                        const earlyPlatforms = nonGroundPlatforms.filter(p => typeof p.x === 'number' && p.x >= 0 && p.x <= earlyLimit);
+                        const pool = (earlyPlatforms.length > 0) ? earlyPlatforms : nonGroundPlatforms;
+                        const spawnPlatform = pool.reduce((a, b) => (b.x < a.x ? b : a), pool[0]);
+                        this.player.x = Math.floor(spawnPlatform.x + (spawnPlatform.width - this.player.width) / 2);
+                        this.player.y = spawnPlatform.y - this.player.height - 8;
+                    } else {
+                        this.player.x = 100;
+                        this.player.y = 300;
                     }
                 }
-            } catch (e) { console.warn('Achievement check failed', e); }
+                
+                // Play respawn sound
+                this.audioManager.playSound('powerup', 0.5);
+            } else {
+                // Game Over
+                this.state = "GAME_OVER";
+                this.audioManager.stopMusic();
+                this.audioManager.playSound('game_over', 1.0);
+                // Notify UI layers (mobile touch controls) about state change
+                try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch(e) {}
 
-            // High score flow: prompt for initials if this score qualifies
-            try {
-                if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
-                    try {
-                        Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
-                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
-                            // If a DOM target exists, show the scoreboard there
-                            try {
-                                const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
-                                if (target) {
-                                    // renderScoreboard mutates the passed target; if we then append the
-                                    // returned node (which is the target), DOM throws HierarchyRequestError.
-                                    const board = Highscores.renderScoreboard(null, true);
-                                    target.innerHTML = '';
-                                    target.appendChild(board);
-                                } else {
-                                    if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated', updated);
-                                }
-                            } catch (e) { console.warn('Failed to render scoreboard', e); }
-                        });
-                    } catch (e) { console.warn('Highscores prompt failed', e); }
-                }
-            } catch (e) { /* ignore highscores errors */ }
+                // Finalize game statistics
+                this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
+                this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
+                this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
+                this.gameStats.score = this.score; // Add score to stats for achievements
+
+                // Check for new achievements
+                let newAchievements = [];
+                try {
+                    if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
+                        newAchievements = Highscores.checkAchievements(this.gameStats);
+                        if (newAchievements.length > 0) {
+                            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked:', newAchievements);
+                            // Could show achievement notification here
+                        }
+                    }
+                } catch (e) { console.warn('Achievement check failed', e); }
+
+                // High score flow: prompt for initials if this score qualifies
+                try {
+                    if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
+                        try {
+                            Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
+                                try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                                // If a DOM target exists, show the scoreboard there
+                                try {
+                                    const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
+                                    if (target) {
+                                        // renderScoreboard mutates the passed target; if we then append the
+                                        // returned node (which is the target), DOM throws HierarchyRequestError.
+                                        const board = Highscores.renderScoreboard(null, true);
+                                        target.innerHTML = '';
+                                        target.appendChild(board);
+                                    } else {
+                                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated', updated);
+                                    }
+                                } catch (e) { console.warn('Failed to render scoreboard', e); }
+                            });
+                        } catch (e) { console.warn('Highscores prompt failed', e); }
+                    }
+                } catch (e) { /* ignore highscores errors */ }
+            }
         }
 
         // Update camera to follow player
