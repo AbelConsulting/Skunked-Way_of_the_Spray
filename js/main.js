@@ -59,7 +59,15 @@ class GameApp {
     }
 
     adjustCanvasForMobile() {
-        const isMobileDevice = this.isMobile || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isMobileDevice = (() => {
+            if (this.isMobile) return true;
+            const ua = navigator.userAgent;
+            if (/Android|iPhone|iPad|iPod/i.test(ua)) return true;
+            // Modern iPad detection
+            if (/Macintosh/i.test(ua) && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) return true;
+            if (navigator.maxTouchPoints > 1 && window.screen.width < 1366) return true;
+            return false;
+        })();
         const dpr = window.devicePixelRatio || 1;
         // Cap devicePixelRatio on mobile to avoid excessive rendering cost
         const maxDPR = isMobileDevice ? 1 : 1.5;
@@ -289,7 +297,17 @@ class GameApp {
             this.loadingScreen.classList.add('hidden');
 
             // Detect mobile early and apply mobile-friendly settings
-            const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            // Enhanced detection for modern iPads (iPadOS 13+ reports as Macintosh)
+            const isMobileDevice = (() => {
+                const ua = navigator.userAgent;
+                // Standard mobile detection
+                if (/Android|iPhone|iPad|iPod/i.test(ua)) return true;
+                // Modern iPad detection: Macintosh + touch support
+                if (/Macintosh/i.test(ua) && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) return true;
+                // Additional check: touch-enabled device with small/medium screen
+                if (navigator.maxTouchPoints > 1 && window.screen.width < 1366) return true;
+                return false;
+            })();
             this.isMobile = isMobileDevice;
 
             // Hazards are globally disabled in the game; URL-based hazard toggles have been removed.
