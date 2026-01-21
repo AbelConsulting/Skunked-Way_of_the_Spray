@@ -1,6 +1,6 @@
 # Skunk Fu - 2D Beat 'em Up Platformer
 
-A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves of enemies with lightning-fast combat and the deadly Shadow Strike ability!
+A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves of enemies with lightning-fast combat, the deadly Shadow Strike ability, and collect power-ups to survive!
 
 ## Features
 
@@ -9,18 +9,32 @@ A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves 
 - **Fast-Paced Beat 'em Up Action**: Quick attacks, dash abilities, and intense ninja combat
 - **Platforming Elements**: High jumps across platforms, agile movement
 - **Shadow Strike Special**: Dash through enemies with extended attack range
-- **Enemy Waves**: Face different enemy types with unique AI behaviors
-- **Score System**: Defeat enemies and rack up points
+- **Multiple Enemy Types**: Face different enemy types including powerful bosses with unique AI behaviors
+- **Item & Power-Up System**: Collect health regen and extra lives dropped by defeated enemies
+- **Lives System**: Start with 1 life and earn more by defeating enemies and collecting power-ups
+- **Multi-Level Campaign**: Progress through 3 challenging stages with increasing difficulty
+- **Score & Combo System**: Chain attacks for higher scores and combo multipliers
+- **Mobile Support**: Full touch controls optimized for mobile devices
+
+### 💎 Items & Power-Ups
+
+- **Health Regen (Green +)**: Restores 8 HP per second for 6 seconds
+  - 15% drop rate from regular enemies
+  - 50% drop rate from bosses
+- **Extra Life (Red Heart)**: Grants an additional life (max 9)
+  - 5% drop rate from regular enemies
+  - 30% drop rate from bosses
 
 ### 🦨 Ninja Skunk
 
 **The Shadow Striker** - Lightning-fast ninja warrior
 
-- **Health**: 80 (Glass cannon - high risk, high reward)
+- **Health**: 80 HP
 - **Speed**: 400 (Fastest movement)
 - **Jump Force**: 700 (Highest jumps)
 - **Attack Damage**: 15
-- **Special Ability**: **Shadow Strike** - Forward dash attack with extended hitbox
+- **Special Ability**: **Shadow Strike** - Forward dash attack with extended hitbox and invulnerability frames
+- **Lives**: Start with 1, respawn with full health and temporary invulnerability when lives remain
 
 ## Installation
 
@@ -118,130 +132,41 @@ CMD ["node", "tools/csp_server.js"]
 
 ## Controls
 
+### Desktop / Keyboard
+
 | Action | Keys |
 |--------|------|
 | Move Left/Right | Arrow Keys or A/D |
 | Jump | Spacebar |
 | Attack | X |
-| Special Ability | Z |
+| Special Ability (Shadow Strike) | Z |
 | Pause | ESC |
 | Start Game | Enter |
 
+### Mobile / Touch Controls
+
+Touch controls appear automatically on mobile devices:
+
+- **Left Side**: Movement arrows (← →)
+- **Right Side**: 
+  - Attack button (🗡) - Basic attack
+  - Jump button (⤒) - Jump
+  - Special button (💥) - Shadow Strike
+
+### Debug Commands (Console)
+
+- `spawnHealthRegen()` - Spawn health regen at player location
+- `spawnExtraLife()` - Spawn extra life at player location
+- `toggleHitboxes()` - Show/hide collision hitboxes
+
 ## Project Structure
 
-Total: 128×32 pixels (4 frames @ 32x32 each, scaled to 64x64 in-game)
-SkunkFU/
-├── index.html              # HTML5 game entry point (NEW!)
-├── styles.css              # HTML5 game styles (NEW!)
-├── js/                     # HTML5 JavaScript game code (NEW!)
-│   ├── main.js             # Game initialization and loop
-│   ├── game.js             # Main game controller
-│   ├── config.js           # Game configuration and constants
-│   ├── utils.js            # Utility functions
-│   ├── player.js           # Player character class
-│   ├── enemy.js            # Enemy character class
-│   ├── enemyManager.js     # Enemy spawning and management
-│   ├── level.js            # Level and platform handling
-│   ├── ui.js               # User interface and HUD
-│   ├── spriteLoader.js     # Sprite loading and animation
-│   ├── audioManager.js     # Audio system
-│   └── visualEffects.js    # Visual effects (damage numbers, etc.)
-├── python/                 # Python/Pygame version (tucked away)
-│   ├── main.py             # Game entry point
-│   ├── game.py             # Main game controller
-│   ├── config.py           # Game configuration and constants
-│   ├── player.py           # Player character class
-│   ├── enemy.py            # Enemy character class
-│   ├── enemy_manager.py    # Enemy spawning and management
-│   ├── level.py            # Level and platform handling
-│   └── ui.py               # User interface and HUD
-├── assets/
-│   ├── sprites/
-│   │   ├── characters/     # Player character sprites
-│   │   ├── enemies/        # Enemy sprites
-│   │   └── backgrounds/    # Background and tile sprites
-│   └── audio/
-│       ├── music/          # Background music
-│       └── sfx/            # Sound effects
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
-
-SkunkFU/ --python version
-├── index.html              # HTML5 game entry point (NEW!)
-├── styles.css              # HTML5 game styles (NEW!)
-├── js/                     # HTML5 JavaScript game code (NEW!)
-│   ├── main.js             # Game initialization and loop
-│   ├── game.js             # Main game controller
-│   ├── config.js           # Game configuration and constants
-│   ├── utils.js            # Utility functions
-│   ├── player.js           # Player character class
-│   ├── enemy.js            # Enemy character class
-│   ├── enemyManager.js     # Enemy spawning and management
-│   ├── level.js            # Level and platform handling
-│   ├── ui.js               # User interface and HUD
-│   ├── spriteLoader.js     # Sprite loading and animation
-│   ├── audioManager.js     # Audio system
-│   └── visualEffects.js    # Visual effects (damage numbers, etc.)
-├── src/                    # Python/Pygame version
-│   ├── main.py             # Game entry point
-│   ├── game.py             # Main game controller
-│   ├── config.py           # Game configuration and constants
-│   ├── player.py           # Player character class
-│   ├── enemy.py            # Enemy character class
-│   ├── enemy_manager.py    # Enemy spawning and management
-│   ├── level.py            # Level and platform handling
-│   └── ui.py               # User interface and HUD
-├── assets/
-│   ├── sprites/
-│   │   ├── characters/     # Player character sprites
-│   │   ├── enemies/        # Enemy sprites
-│   │   └── backgrounds/    # Background and tile sprites
-│   └── audio/
-│       ├── music/          # Background music
-│       └── sfx/            # Sound effects
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
-
-SkunkFU/ Html5 version
-├── index.html              # HTML5 game entry point (NEW!)
-├── styles.css              # HTML5 game styles (NEW!)
-├── js/                     # HTML5 JavaScript game code (NEW!)
-│   ├── main.js             # Game initialization and loop
-│   ├── game.js             # Main game controller
-│   ├── config.js           # Game configuration and constants
-│   ├── utils.js            # Utility functions
-│   ├── player.js           # Player character class
-│   ├── enemy.js            # Enemy character class
-│   ├── enemyManager.js     # Enemy spawning and management
-│   ├── level.js            # Level and platform handling
-│   ├── ui.js               # User interface and HUD
-│   ├── spriteLoader.js     # Sprite loading and animation
-│   ├── audioManager.js     # Audio system
-│   └── visualEffects.js    # Visual effects (damage numbers, etc.)
-├── src/                    # Python/Pygame version
-│   ├── main.py             # Game entry point
-│   ├── game.py             # Main game controller
-│   ├── config.py           # Game configuration and constants
-│   ├── player.py           # Player character class
-│   ├── enemy.py            # Enemy character class
-│   ├── enemy_manager.py    # Enemy spawning and management
-│   ├── level.py            # Level and platform handling
-│   └── ui.py               # User interface and HUD
-├── assets/
-│   ├── sprites/
-│   │   ├── characters/     # Player character sprites
-│   │   ├── enemies/        # Enemy sprites
-│   │   └── backgrounds/    # Background and tile sprites
-│   └── audio/
-│       ├── music/          # Background music
-│       └── sfx/            # Sound effects
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
 ```
-SkunkFU/ Html5 version
-├── index.html              # HTML5 game entry point (NEW!)
-├── styles.css              # HTML5 game styles (NEW!)
-├── js/                     # HTML5 JavaScript game code (NEW!)
+SkunkFU/
+├── index.html              # HTML5 game entry point
+├── index.js                # Root shim / entrypoint
+├── styles.css              # Game styles
+├── js/                     # JavaScript game code
 │   ├── main.js             # Game initialization and loop
 │   ├── game.js             # Main game controller
 │   ├── config.js           # Game configuration and constants
@@ -249,29 +174,30 @@ SkunkFU/ Html5 version
 │   ├── player.js           # Player character class
 │   ├── enemy.js            # Enemy character class
 │   ├── enemyManager.js     # Enemy spawning and management
+│   ├── itemManager.js      # Item/power-up system
 │   ├── level.js            # Level and platform handling
+│   ├── levelData.js        # Level configurations
 │   ├── ui.js               # User interface and HUD
 │   ├── spriteLoader.js     # Sprite loading and animation
 │   ├── audioManager.js     # Audio system
-│   └── visualEffects.js    # Visual effects (damage numbers, etc.)
-├── src/                    # Python/Pygame version
-│   ├── main.py             # Game entry point
-│   ├── game.py             # Main game controller
-│   ├── config.py           # Game configuration and constants
-│   ├── player.py           # Player character class
-│   ├── enemy.py            # Enemy character class
-│   ├── enemy_manager.py    # Enemy spawning and management
-│   ├── level.py            # Level and platform handling
-│   └── ui.py               # User interface and HUD
+│   ├── highscores.js       # High score and achievements
+│   ├── touchControls.js    # Mobile touch controls
+│   └── visualEffects.js    # Visual effects (damage numbers, particles)
 ├── assets/
 │   ├── sprites/
 │   │   ├── characters/     # Player character sprites
 │   │   ├── enemies/        # Enemy sprites
+│   │   ├── items/          # Item/power-up sprites
 │   │   └── backgrounds/    # Background and tile sprites
 │   └── audio/
 │       ├── music/          # Background music
 │       └── sfx/            # Sound effects
+├── python/                 # Python/Pygame version (legacy)
+│   └── ...
+├── tools/                  # Development tools
+│   └── csp_server.js       # Local dev server
 ├── requirements.txt        # Python dependencies
+├── package.json            # Node.js dependencies
 └── README.md              # This file
 ```
 
@@ -302,27 +228,32 @@ Each character has unique attributes:
 
 - [x] Basic game loop and structure
 - [x] Player movement and jumping
-- [x] Basic combat system
+- [x] Combat system with combos
 - [x] Enemy AI (patrol, chase, attack)
 - [x] Collision detection
 - [x] Camera system
+- [x] Mobile touch controls
 
-### Phase 2: Polish (In Progress)
+### Phase 2: Polish ✅
 
 - [x] Add Ninja Skunk sprite animations
 - [x] Implement Shadow Strike special ability
 - [x] Add sound effects and music
-- [ ] Create multiple levels
-- [ ] Add power-ups and collectibles
-- [ ] Boss battles
+- [x] Create multiple levels (3 stages)
+- [x] Add power-ups and collectibles (health regen, extra lives)
+- [x] Boss battles
+- [x] Lives and respawn system
+- [x] Visual effects (damage numbers, hit sparks, screen shake)
+- [x] High score and achievement system
 
 ### Phase 3: Content Expansion
 
-- [ ] More enemy types and variants
+- [x] Multiple enemy types and variants (basic, fast, second, flying, boss)
 - [ ] Additional ninja abilities and combos
 - [ ] Co-op multiplayer support
-- [ ] Achievement system
-- [ ] High score leaderboard
+- [ ] More levels and environments
+- [ ] Additional power-up types
+- [ ] Expanded achievement system
 
 ## Contributing
 
@@ -440,15 +371,13 @@ This project is open source. See LICENSE file for details.
 
 ## Credits
 
-**Development**:
-
-- Python/Pygame version: Built with Python and Pygame
-- HTML5 version: Pure JavaScript with HTML5 Canvas
-**Characters**: Based on Skunk Squad
-**Development**: Built with Python and Pygame by MontanaDad
-
-**Characters**: Based on Skunk Squad by MontanaDad  
+- **Game Design & Development**: Built with HTML5 Canvas and JavaScript
+- **Original Concept**: Based on Skunk Squad
+- **Audio System**: Procedural sound generation with fallback to custom assets
+- **Mobile Optimization**: Touch controls and responsive design
 
 ---
 
-Have fun playing Skunk Fu! 🦨💥
+**Have fun playing Skunk Fu! 🦨💥**
+
+Fight through enemies, collect power-ups, and master the Shadow Strike to become the ultimate ninja warrior!
