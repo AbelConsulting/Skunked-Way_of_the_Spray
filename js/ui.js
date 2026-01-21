@@ -447,20 +447,6 @@ class UI {
             ctx.restore();
         } catch (e) {}
 
-        // Combo counter
-        if (combo > 1) {
-            ctx.font = 'bold 48px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#FFD700';
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 3;
-            const comboX = this.width / 2;
-            const comboY = 100;
-            
-            ctx.strokeText(`${combo}x COMBO!`, comboX, comboY);
-            ctx.fillText(`${combo}x COMBO!`, comboX, comboY);
-        }
-
         // Special ability cooldown indicator
         if (player.attackCooldownTimer > 0) {
             const cooldownBarWidth = 200;
