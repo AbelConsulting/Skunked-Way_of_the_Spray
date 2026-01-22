@@ -702,6 +702,9 @@ class Game {
             }
 
             if (this.state !== "PLAYING") {
+                if (this.state === "GAME_OVER" && this.player && typeof this.player.updateDeath === 'function') {
+                    this.player.updateDeath(dt);
+                }
                 return;
             }
 
@@ -967,6 +970,11 @@ class Game {
                 this.audioManager.playSound('powerup', 0.5);
             } else {
                 // Game Over
+                try {
+                    if (this.player && typeof this.player.startDeath === 'function') {
+                        this.player.startDeath();
+                    }
+                } catch (e) {}
                 this.state = "GAME_OVER";
                 this.audioManager.stopMusic();
                 this.audioManager.playSound('game_over', 1.0);

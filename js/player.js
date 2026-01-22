@@ -78,6 +78,11 @@ class Player {
         this.invulnerableTimer = 0;
         this.invulnerableDuration = 0.5;
 
+        // Death animation state
+        this.isDying = false;
+        this.deathTimer = 0;
+        this.deathDuration = 0.8;
+
         // Footstep sounds
         this.footstepTimer = 0;
         this.footstepInterval = 0.25; // Footstep every 0.25 seconds when walking
@@ -104,6 +109,7 @@ class Player {
                 const ninja_attack = spriteLoader.getSprite('ninja_attack');
         const ninja_shadow_strike = spriteLoader.getSprite('ninja_shadow_strike');
         const ninja_hurt = spriteLoader.getSprite('ninja_hurt');
+        const ninja_death = spriteLoader.getSprite('ninja_death');
 
         // Use spriteLoader.createAnimation when available so frameStride can be
         // inferred from sheet dimensions (handles padding between frames).
@@ -119,7 +125,8 @@ class Player {
                 // Note: the current sheet is 256x64 (4x 64px frames) so we let
                 // SpriteLoader infer correct slicing.
                 shadow_strike: spriteLoader.createAnimation('ninja_shadow_strike', 4, 0.06),
-                hurt: spriteLoader.createAnimation('ninja_hurt', 2, 0.1)
+                hurt: spriteLoader.createAnimation('ninja_hurt', 2, 0.1),
+                death: spriteLoader.createAnimation('ninja_death', 4, 0.12)
             };
         } else {
             this.animations = {
@@ -128,7 +135,8 @@ class Player {
                 jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                         attack: new Animation(ninja_attack, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                     shadow_strike: new Animation(ninja_shadow_strike, 4, 0.06, { frameWidth: 64, frameHeight: 64, frameStride: 64, frameOffset: 0 }),
-                hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
+                hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                death: new Animation(ninja_death, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
             };
         }
 
@@ -276,6 +284,9 @@ class Player {
         this.comboCount = 0;
         this.hitStunTimer = 0;
         this.invulnerableTimer = 0;
+
+        this.isDying = false;
+        this.deathTimer = 0;
 
         // Reset attack state and clear any stuck input (e.g., missed keyup
         // during transitions) so the player doesn't auto-run on respawn.
@@ -466,7 +477,9 @@ class Player {
     updateAnimation(dt) {
         let newState = "idle";
 
-        if (this.hitStunTimer > 0) {
+        if (this.isDying) {
+            newState = "death";
+        } else if (this.hitStunTimer > 0) {
             newState = "hurt";
         } else if (this.isShadowStriking) {
             newState = "shadow_strike";
@@ -488,6 +501,32 @@ class Player {
 
         if (this.currentAnimation) {
             this.currentAnimation.update(dt);
+        }
+    }
+
+    startDeath() {
+        if (this.isDying) return;
+        this.isDying = true;
+        this.deathTimer = this.deathDuration;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.isAttacking = false;
+        this.isShadowStriking = false;
+        this.hitStunTimer = 0;
+        if (this.animations && this.animations.death) {
+            this.animations.death.reset();
+        }
+        this.updateAnimation(0);
+    }
+
+    updateDeath(dt) {
+        if (!this.isDying) return;
+        if (this.deathTimer > 0) {
+            this.deathTimer -= dt;
+            this.updateAnimation(dt);
+        } else if (this.currentAnimation) {
+            // Hold on the last frame once the animation completes
+            this.currentAnimation.currentFrame = Math.max(0, this.currentAnimation.frameCount - 1);
         }
     }
 

@@ -26,6 +26,7 @@ class SpriteLoader {
             'ninja_attack': 4,
             'ninja_shadow_strike': 4,
             'ninja_hurt': 2,
+            'ninja_death': 4,
             'basic_idle': 4,
             'basic_walk': 4,
             'basic_attack': 4,
@@ -227,6 +228,7 @@ class SpriteLoader {
             ['ninja_attack', 'assets/sprites/characters/ninja_attack.png'],
             ['ninja_shadow_strike', 'assets/sprites/characters/ninja_shadow_strike.png'],
             ['ninja_hurt', 'assets/sprites/characters/ninja_hurt.png'],
+            ['ninja_death', 'assets/sprites/characters/ninja_death.png'],
             
             // Enemy sprites
             ['basic_idle', 'assets/sprites/enemies/basic_idle.png'],
