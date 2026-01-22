@@ -186,6 +186,10 @@ class Player {
             }
             this.comboTimer = this.comboWindow;
 
+            if (this.audioManager && this.comboCount >= 2) {
+                this.audioManager.playSound('combo_level_up', 0.55);
+            }
+
             // Play attack sound
             if (this.audioManager) {
                 const sounds = ['attack1', 'attack2', 'attack3'];

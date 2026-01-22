@@ -232,7 +232,7 @@ class Game {
                         this.togglePause();
                     } else if (key === 'enter') {
                     if (this.state === 'MENU' || this.state === 'GAME_OVER' || this.state === 'VICTORY') {
-                        this.audioManager.playSound && this.audioManager.playSound('menu_select');
+                        this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0); // Restart from level 1
                         this.dispatchGameStateChange();
                             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
@@ -459,16 +459,7 @@ class Game {
                 this.player.y = this.height - this.player.height - 8;
             }
         
-                // Ensure gameplay music is loaded (deferred for mobile performance)
-                if (this.audioManager && !this.audioManager.musicElements['gameplay']) {
-                    try {
-                        await this.audioManager.loadMusic('gameplay', 'assets/audio/music/gameplay.wav');
-                    } catch (e) {
-                        console.warn('Failed to load gameplay music:', e);
-                    }
-                }
-        
-                if (this.audioManager) this.audioManager.playMusic && this.audioManager.playMusic('gameplay', true);
+                await this.ensureLevelMusic();
             this.dispatchGameStateChange();
             // Ensure camera centers on player immediately after starting
             try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) {}
@@ -511,12 +502,33 @@ class Game {
                 this.dispatchGameStateChange();
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
+                this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
                 // Hide pause overlay
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) overlay.style.display = 'none';
                 this.dispatchGameStateChange();
             }
+        }
+
+        async ensureLevelMusic() {
+            if (!this.audioManager) return;
+            const levelId = this.level && this.level.id;
+            const useAmbient = (levelId === 'level_4');
+            const musicName = useAmbient ? 'ambient_cave_loop' : 'gameplay';
+            const musicPath = useAmbient
+                ? 'assets/audio/music/ambient_cave_loop.wav'
+                : 'assets/audio/music/gameplay.wav';
+
+            if (!this.audioManager.musicElements[musicName]) {
+                try {
+                    await this.audioManager.loadMusic(musicName, musicPath);
+                } catch (e) {
+                    console.warn('Failed to load music:', musicName, e);
+                }
+            }
+
+            this.audioManager.playMusic && this.audioManager.playMusic(musicName, true);
         }
 
         /**
@@ -543,6 +555,8 @@ class Game {
             if (this.audioManager && this.audioManager.resetMusicPlaybackRate) {
                 this.audioManager.resetMusicPlaybackRate();
             }
+            // Swap music based on level when transitioning.
+            try { this.ensureLevelMusic(); } catch (e) {}
 
             // Update Enemy settings
             if (this.enemyManager && config.enemyConfig) {
@@ -708,7 +722,11 @@ class Game {
                         if (this.ui.showBossWarning) this.ui.showBossWarning();
                         // Boss spawn sound
                         if (this.audioManager && this.audioManager.playSound) {
-                            this.audioManager.playSound('boss_spawn', 0.8);
+                            const bossType = (this.enemyManager && this.enemyManager.bossInstance && this.enemyManager.bossInstance.enemyType)
+                                || (this.level && this.level.bossConfig && this.level.bossConfig.type)
+                                || 'BOSS';
+                            const spawnSound = (bossType === 'BOSS2') ? 'boss2_spawn' : 'boss_spawn';
+                            this.audioManager.playSound(spawnSound, 0.8);
                         }
                         // Double music BPM for boss encounter
                         if (this.audioManager && this.audioManager.setMusicPlaybackRate) {
@@ -726,7 +744,11 @@ class Game {
                          if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Boss Defeated! Exit Unlocked.');
                      // Boss defeat sound
                      if (this.audioManager && this.audioManager.playSound) {
-                         this.audioManager.playSound('boss_defeat', 0.9);
+                         const bossType = (this.enemyManager && this.enemyManager.bossInstance && this.enemyManager.bossInstance.enemyType)
+                             || (this.level && this.level.bossConfig && this.level.bossConfig.type)
+                             || 'BOSS';
+                         const defeatSound = (bossType === 'BOSS2') ? 'boss2_defeat' : 'boss_defeat';
+                         this.audioManager.playSound(defeatSound, 0.9);
                      }
                             if (this.enemyManager) {
                                 this.enemyManager.spawningEnabled = true;

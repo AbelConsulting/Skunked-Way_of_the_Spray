@@ -619,6 +619,8 @@ class GameApp {
             ['enemy_death', 'assets/audio/sfx/enemy_death.wav'],
             ['menu_select', 'assets/audio/sfx/menu_select.wav'],
             ['menu_move', 'assets/audio/sfx/menu_move.wav'],
+            ['ui_confirm', 'assets/audio/sfx/ui_confirm.wav'],
+            ['ui_back', 'assets/audio/sfx/ui_back.wav'],
             ['pause', 'assets/audio/sfx/pause.wav'],
             ['game_over', 'assets/audio/sfx/game_over.wav'],
             ['combo', 'assets/audio/sfx/combo.wav']
@@ -633,8 +635,15 @@ class GameApp {
             ['boss_defeat', 'assets/audio/sfx/enemy_death.wav'],
             ['boss_attack', 'assets/audio/sfx/attack3.wav'],
             ['boss_hurt', 'assets/audio/sfx/enemy_hit.wav'],
+            ['boss2_spawn', 'assets/audio/sfx/boss2_spawn.wav'],
+            ['boss2_defeat', 'assets/audio/sfx/boss2_defeat.wav'],
+            ['boss2_attack', 'assets/audio/sfx/boss2_attack.wav'],
+            ['boss2_hurt', 'assets/audio/sfx/boss2_hurt.wav'],
             ['level_complete', 'assets/audio/sfx/combo.wav'],
             ['powerup', 'assets/audio/sfx/shadow_strike.wav'],
+            ['item_pickup', 'assets/audio/sfx/item_pickup.wav'],
+            ['combo_level_up', 'assets/audio/sfx/combo_level_up.wav'],
+            ['parry_success', 'assets/audio/sfx/parry_success.wav'],
             ['coin_collect', 'assets/audio/sfx/menu_move.wav'],
             ['footstep', 'assets/audio/sfx/land.wav']
         ];

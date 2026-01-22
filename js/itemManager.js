@@ -117,9 +117,9 @@ class ItemManager {
                 // Play pickup sound
                 if (this.audioManager) {
                     if (item.type === 'HEALTH_REGEN') {
-                        this.audioManager.playSound('powerup', 0.6);
+                        this.audioManager.playSound('item_pickup', 0.6);
                     } else if (item.type === 'EXTRA_LIFE') {
-                        this.audioManager.playSound('powerup', 0.8);
+                        this.audioManager.playSound('item_pickup', 0.8);
                     }
                 }
             }

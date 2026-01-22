@@ -149,8 +149,10 @@ class Enemy {
                 }
             } else {
                 // Boss-specific hurt sound
-                if (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2') {
+                if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_hurt', 0.6);
+                } else if (this.enemyType === 'BOSS2') {
+                    this.audioManager.playSound('boss2_hurt', 0.6);
                 } else {
                     this.audioManager.playSound('enemy_hit', 0.5);
                 }
@@ -380,8 +382,10 @@ class Enemy {
 
             // Play attack sound
             if (this.audioManager) {
-                if (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2') {
+                if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_attack', 0.7);
+                } else if (this.enemyType === 'BOSS2') {
+                    this.audioManager.playSound('boss2_attack', 0.7);
                 }
             }
 

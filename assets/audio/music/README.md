@@ -8,6 +8,8 @@
 - boss_theme.ogg (Boss battle)
 - victory_theme.ogg (Level complete)
 - game_over.ogg (Game over screen)
+- gameplay.wav (Default gameplay loop)
+- ambient_cave_loop.wav (Level 4 ambience loop)
 
 ## Format
 - OGG or MP3
