@@ -452,6 +452,37 @@ class Enemy {
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
 
+        // Attack range FX (subtle overlay, not a hitbox)
+        if (this.isAttacking && this.attackHitbox && !(typeof Config !== 'undefined' && Config.SHOW_HITBOXES)) {
+            try {
+                const hb = this.attackHitbox;
+                const fxX = hb.x;
+                const fxY = hb.y;
+                const fxW = hb.width;
+                const fxH = hb.height;
+                const grad = ctx.createLinearGradient(fxX, fxY, fxX + fxW, fxY + fxH);
+                grad.addColorStop(0, 'rgba(120, 255, 140, 0.12)');
+                grad.addColorStop(1, 'rgba(60, 220, 120, 0.22)');
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.fillStyle = grad;
+                const r = Math.max(4, Math.min(10, Math.floor(fxH * 0.2)));
+                ctx.beginPath();
+                ctx.moveTo(fxX + r, fxY);
+                ctx.lineTo(fxX + fxW - r, fxY);
+                ctx.quadraticCurveTo(fxX + fxW, fxY, fxX + fxW, fxY + r);
+                ctx.lineTo(fxX + fxW, fxY + fxH - r);
+                ctx.quadraticCurveTo(fxX + fxW, fxY + fxH, fxX + fxW - r, fxY + fxH);
+                ctx.lineTo(fxX + r, fxY + fxH);
+                ctx.quadraticCurveTo(fxX, fxY + fxH, fxX, fxY + fxH - r);
+                ctx.lineTo(fxX, fxY + r);
+                ctx.quadraticCurveTo(fxX, fxY, fxX + r, fxY);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            } catch (e) {}
+        }
+
         // Draw health bar
         const barWidth = this.width;
         const barHeight = 4;
