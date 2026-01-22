@@ -938,21 +938,29 @@ class Game {
                 this.player.health = this.player.maxHealth;
                 this.player.invulnerableTimer = 2.0; // 2 seconds of invulnerability
                 this.player.hitStunTimer = 0;
-                
-                // Find a safe spawn position (early platform or ground)
+
+                // Respawn slightly behind death position
+                const deathX = this.player.x;
+                const backtrack = Math.max(220, Math.floor((this.level && this.level.width ? this.level.width : 10000) * 0.03));
+                const targetX = Math.max(80, Math.floor(deathX - backtrack));
+
                 if (this.level.platforms && this.level.platforms.length > 0) {
-                    const nonGroundPlatforms = this.level.platforms.filter(p => !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
-                    if (nonGroundPlatforms.length > 0) {
-                        const earlyLimit = Math.max(800, Math.floor(this.level.width * 0.2));
-                        const earlyPlatforms = nonGroundPlatforms.filter(p => typeof p.x === 'number' && p.x >= 0 && p.x <= earlyLimit);
-                        const pool = (earlyPlatforms.length > 0) ? earlyPlatforms : nonGroundPlatforms;
-                        const spawnPlatform = pool.reduce((a, b) => (b.x < a.x ? b : a), pool[0]);
-                        this.player.x = Math.floor(spawnPlatform.x + (spawnPlatform.width - this.player.width) / 2);
-                        this.player.y = spawnPlatform.y - this.player.height - 8;
-                    } else {
-                        this.player.x = 100;
-                        this.player.y = 300;
-                    }
+                    const platforms = this.level.platforms;
+                    const nonGroundPlatforms = platforms.filter(p => !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
+                    const candidatePool = nonGroundPlatforms.length > 0 ? nonGroundPlatforms : platforms;
+
+                    // Choose the closest platform whose left edge is at or before targetX
+                    const leftPlatforms = candidatePool.filter(p => typeof p.x === 'number' && p.x <= targetX);
+                    const spawnPlatform = (leftPlatforms.length > 0)
+                        ? leftPlatforms.reduce((a, b) => (b.x > a.x ? b : a), leftPlatforms[0])
+                        : candidatePool[0];
+
+                    const maxX = spawnPlatform.x + spawnPlatform.width - this.player.width;
+                    this.player.x = Utils.clamp(targetX, spawnPlatform.x, maxX);
+                    this.player.y = spawnPlatform.y - this.player.height - 8;
+                } else {
+                    this.player.x = targetX;
+                    this.player.y = 300;
                 }
                 
                 // Play respawn sound
