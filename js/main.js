@@ -614,6 +614,7 @@ class GameApp {
             ['attack3', 'assets/audio/sfx/attack3.wav'],
             ['shadow_strike', 'assets/audio/sfx/shadow_strike.wav'],
             ['player_hit', 'assets/audio/sfx/player_hit.wav'],
+            ['player_death', 'assets/audio/sfx/player_death.wav'],
             ['land', 'assets/audio/sfx/land.wav'],
             ['enemy_hit', 'assets/audio/sfx/enemy_hit.wav'],
             ['enemy_death', 'assets/audio/sfx/enemy_death.wav'],

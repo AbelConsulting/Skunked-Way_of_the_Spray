@@ -514,6 +514,11 @@ class Player {
         this.isShadowStriking = false;
         this.hitStunTimer = 0;
         this.invulnerableTimer = 0;
+        try {
+            if (this.audioManager && this.audioManager.playSound) {
+                this.audioManager.playSound('player_death', 0.9);
+            }
+        } catch (e) {}
         if (this.animations && this.animations.death) {
             this.animations.death.reset();
         }
