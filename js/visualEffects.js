@@ -135,6 +135,143 @@ class ScreenShake {
 }
 
 /**
+ * MovementFX: lightweight environmental particles tied to player movement.
+ * Emits dust puffs, leaves, or sparks depending on level theme.
+ */
+class MovementFX {
+    constructor(opts = {}) {
+        this.particles = [];
+        this.stepTimer = 0;
+        this.stepInterval = (typeof opts.stepInterval === 'number') ? opts.stepInterval : 0.12;
+        this.maxParticles = (typeof opts.maxParticles === 'number') ? opts.maxParticles : 180;
+    }
+
+    _themeForLevel(level) {
+        const bg = (level && level.backgroundName) ? String(level.backgroundName) : '';
+        if (bg.includes('forest')) return { mode: 'leaf', color: '#7fd26b', alt: '#5fb956' };
+        if (bg.includes('city')) return { mode: 'spark', color: '#ffd65c', alt: '#ff9a2b' };
+        if (bg.includes('mountain')) return { mode: 'dust', color: '#c9c9c9', alt: '#9a9a9a' };
+        if (bg.includes('cave')) return { mode: 'dust', color: '#b09adf', alt: '#7e6ab7' };
+        return { mode: 'dust', color: '#cfcfcf', alt: '#a8a8a8' };
+    }
+
+    _emitParticle(x, y, opts) {
+        if (this.particles.length >= this.maxParticles) this.particles.shift();
+        this.particles.push({
+            x,
+            y,
+            vx: opts.vx || 0,
+            vy: opts.vy || 0,
+            size: opts.size || 3,
+            life: opts.life || 0.4,
+            age: 0,
+            color: opts.color || '#cfcfcf',
+            alpha: 1,
+            gravity: (typeof opts.gravity === 'number') ? opts.gravity : 120,
+            mode: opts.mode || 'dust'
+        });
+    }
+
+    emitRun(x, y, dir, level, intensity = 1) {
+        const theme = this._themeForLevel(level);
+        const count = Math.max(2, Math.floor(4 * intensity));
+        for (let i = 0; i < count; i++) {
+            const spread = Utils.randomFloat(-20, 20);
+            const speed = Utils.randomFloat(30, 90) * (dir || 1);
+            this._emitParticle(x + spread, y + Utils.randomFloat(-4, 2), {
+                vx: speed * 0.35,
+                vy: Utils.randomFloat(-40, -10),
+                size: Utils.randomFloat(2, 4),
+                life: Utils.randomFloat(0.25, 0.5),
+                color: Math.random() > 0.5 ? theme.color : theme.alt,
+                gravity: 180,
+                mode: theme.mode
+            });
+        }
+    }
+
+    emitLand(x, y, level, force = 1) {
+        const theme = this._themeForLevel(level);
+        const count = Math.max(4, Math.floor(8 * force));
+        for (let i = 0; i < count; i++) {
+            const angle = Utils.randomFloat(Math.PI, Math.PI * 2);
+            const speed = Utils.randomFloat(60, 200) * force;
+            this._emitParticle(x, y, {
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed * 0.6,
+                size: Utils.randomFloat(2, 5),
+                life: Utils.randomFloat(0.35, 0.6),
+                color: Math.random() > 0.5 ? theme.color : theme.alt,
+                gravity: 260,
+                mode: theme.mode
+            });
+        }
+    }
+
+    emitFromPlayer(player, level, dt, meta = {}) {
+        if (!player) return;
+        const speed = Math.abs(player.velocityX || 0);
+        const grounded = !!player.onGround;
+        const dir = player.facingRight ? 1 : -1;
+        const baseY = player.y + (player.height || 64) - 4;
+        const baseX = player.x + (player.width || 64) * 0.5;
+
+        if (grounded && speed > 80) {
+            this.stepTimer -= dt;
+            if (this.stepTimer <= 0) {
+                const intensity = Utils.clamp(speed / 300, 0.6, 1.6);
+                this.emitRun(baseX - dir * 12, baseY, dir, level, intensity);
+                this.stepTimer = this.stepInterval;
+            }
+        }
+
+        // Landing burst
+        if (meta && meta.prevOnGround === false && grounded) {
+            const fallSpeed = Math.abs(meta.prevVY || 0);
+            if (fallSpeed > 220) {
+                const force = Utils.clamp(fallSpeed / 700, 0.6, 1.8);
+                this.emitLand(baseX, baseY, level, force);
+            }
+        }
+    }
+
+    update(dt) {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.age += dt;
+            p.vy += (p.gravity || 0) * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vx *= 0.96;
+            p.vy *= 0.96;
+            p.alpha = Math.max(0, 1 - (p.age / p.life));
+            if (p.age >= p.life) this.particles.splice(i, 1);
+        }
+    }
+
+    draw(ctx) {
+        for (const p of this.particles) {
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            if (p.mode === 'spark') {
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = Math.max(1, p.size * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - p.vx * 0.03, p.y - p.vy * 0.03);
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+    }
+}
+
+/**
  * Game over animation: overlay fade, centered "GAME OVER" text, shake and falling particles.
  * Usage: const go = new GameOverAnimation(canvas.width, canvas.height); go.start();
  * Call go.update(dt) and go.draw(ctx) each frame while go.isActive() is true.

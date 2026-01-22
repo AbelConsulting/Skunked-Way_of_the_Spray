@@ -77,6 +77,7 @@ class Game {
         this.damageNumbers = [];
         this.hitSparks = [];
         this._scorePulse = 0;
+        this.movementFX = new MovementFX();
 
         // Initialize game components
         this.player = new Player(100, 500, this.audioManager);
@@ -845,9 +846,21 @@ class Game {
         for (const hs of this.hitSparks) {
             hs.update(dt);
         }
+        if (this.movementFX && typeof this.movementFX.update === 'function') {
+            this.movementFX.update(dt);
+        }
 
         // Update player
+        const prevOnGround = !!this.player.onGround;
+        const prevVY = this.player.velocityY;
         this.player.update(dt, this.level);
+
+        // Movement-based environmental effects
+        try {
+            if (this.movementFX && typeof this.movementFX.emitFromPlayer === 'function') {
+                this.movementFX.emitFromPlayer(this.player, this.level, dt, { prevOnGround, prevVY });
+            }
+        } catch (e) {}
 
         // Hazard collision checks disabled: hazards and related damage are removed.
         try {
@@ -1198,6 +1211,9 @@ class Game {
         // Render visual effects
         this.ctx.save();
         this.ctx.translate(-this.cameraX, -this.cameraY);
+        if (this.movementFX && typeof this.movementFX.draw === 'function') {
+            this.movementFX.draw(this.ctx);
+        }
         for (const dn of this.damageNumbers) {
             dn.draw(this.ctx);
         }
