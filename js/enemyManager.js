@@ -26,7 +26,7 @@ class EnemyManager {
     }
 
     isBossType(enemyType) {
-        return enemyType === 'BOSS' || enemyType === 'BOSS2';
+        return enemyType === 'BOSS' || enemyType === 'BOSS2' || enemyType === 'BOSS3';
     }
 
     getBoss() {
@@ -241,7 +241,7 @@ class EnemyManager {
         const dropY = enemy.y + (enemy.height || 48) / 2;
 
         // Boss enemies have higher drop rates
-        const isBoss = enemy.enemyType === 'BOSS';
+        const isBoss = this.isBossType(enemy.enemyType);
         const healthRegenRate = isBoss ? 0.5 : (Config.HEALTH_REGEN_DROP_RATE || 0.15);
         const extraLifeRate = isBoss ? 0.3 : (Config.EXTRA_LIFE_DROP_RATE || 0.05);
 
