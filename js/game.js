@@ -53,6 +53,11 @@ class Game {
         this.score = 0;
         this.lives = 1;
 
+        // Respawn/death flow
+        this.isRespawning = false;
+        this.respawnTimer = 0;
+        this._pendingRespawn = null;
+
         // Game statistics for high scores
         this.gameStats = {
             startTime: 0,
@@ -417,6 +422,9 @@ class Game {
             // Boss state
             this.bossEncountered = false;
             this.bossDefeated = false;
+            this.isRespawning = false;
+            this.respawnTimer = 0;
+            this._pendingRespawn = null;
             
             // Reset game statistics
             this.gameStats = {
@@ -551,6 +559,9 @@ class Game {
             this.bossEncountered = false;
             this.bossDefeated = false;
             if (this.enemyManager) this.enemyManager.bossInstance = null;
+            this.isRespawning = false;
+            this.respawnTimer = 0;
+            this._pendingRespawn = null;
             // Reset music playback rate when loading new level
             if (this.audioManager && this.audioManager.resetMusicPlaybackRate) {
                 this.audioManager.resetMusicPlaybackRate();
@@ -797,6 +808,23 @@ class Game {
                 }
             }
 
+        // If player is in death animation waiting to respawn, update only death
+        // animation and delay the rest of the frame.
+        if (this.isRespawning) {
+            try {
+                if (this.player && typeof this.player.updateDeath === 'function') {
+                    this.player.updateDeath(dt);
+                }
+            } catch (e) {}
+
+            this.respawnTimer -= dt;
+            if (this.respawnTimer <= 0) {
+                this._performRespawn();
+            } else {
+                return;
+            }
+        }
+
         // Update hit pause
         // Shadow Strike should not freeze the whole game loop on hits; it makes
         // the special feel sluggish and can tank perceived performance.
@@ -937,37 +965,16 @@ class Game {
             this.lives--;
             
             if (this.lives > 0) {
-                // Respawn player with invulnerability
-                this.player.health = this.player.maxHealth;
-                this.player.invulnerableTimer = 2.0; // 2 seconds of invulnerability
-                this.player.hitStunTimer = 0;
+                // Trigger death animation first, then respawn after delay
+                try {
+                    if (this.player && typeof this.player.startDeath === 'function') {
+                        this.player.startDeath();
+                    }
+                } catch (e) {}
 
-                // Respawn slightly behind death position
-                const deathX = this.player.x;
-                const backtrack = Math.max(220, Math.floor((this.level && this.level.width ? this.level.width : 10000) * 0.03));
-                const targetX = Math.max(80, Math.floor(deathX - backtrack));
-
-                if (this.level.platforms && this.level.platforms.length > 0) {
-                    const platforms = this.level.platforms;
-                    const nonGroundPlatforms = platforms.filter(p => !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
-                    const candidatePool = nonGroundPlatforms.length > 0 ? nonGroundPlatforms : platforms;
-
-                    // Choose the closest platform whose left edge is at or before targetX
-                    const leftPlatforms = candidatePool.filter(p => typeof p.x === 'number' && p.x <= targetX);
-                    const spawnPlatform = (leftPlatforms.length > 0)
-                        ? leftPlatforms.reduce((a, b) => (b.x > a.x ? b : a), leftPlatforms[0])
-                        : candidatePool[0];
-
-                    const maxX = spawnPlatform.x + spawnPlatform.width - this.player.width;
-                    this.player.x = Utils.clamp(targetX, spawnPlatform.x, maxX);
-                    this.player.y = spawnPlatform.y - this.player.height - 8;
-                } else {
-                    this.player.x = targetX;
-                    this.player.y = 300;
-                }
-                
-                // Play respawn sound
-                this.audioManager.playSound('powerup', 0.5);
+                this.isRespawning = true;
+                this.respawnTimer = (this.player && typeof this.player.deathDuration === 'number') ? this.player.deathDuration : 0.8;
+                this._pendingRespawn = { deathX: this.player ? this.player.x : 100 };
             } else {
                 // Game Over
                 try {
@@ -1029,6 +1036,61 @@ class Game {
         this.updateCamera();
         // decay score pulse over time
         try { this._scorePulse = Math.max(0, (this._scorePulse || 0) - dt * 2.5); } catch (e) {}
+    }
+
+    _performRespawn() {
+        if (!this._pendingRespawn || !this.player) {
+            this.isRespawning = false;
+            this.respawnTimer = 0;
+            this._pendingRespawn = null;
+            return;
+        }
+
+        // Restore player state
+        this.player.health = this.player.maxHealth;
+        this.player.invulnerableTimer = 2.0; // 2 seconds of invulnerability
+        this.player.hitStunTimer = 0;
+        this.player.velocityX = 0;
+        this.player.velocityY = 0;
+        this.player.targetVelocityX = 0;
+        this.player.isDying = false;
+        this.player.deathTimer = 0;
+        this.player.isAttacking = false;
+        this.player.isShadowStriking = false;
+        try { this.player.clearInputState && this.player.clearInputState(); } catch (e) {}
+
+        // Respawn slightly behind death position
+        const deathX = this._pendingRespawn.deathX;
+        const backtrack = Math.max(220, Math.floor((this.level && this.level.width ? this.level.width : 10000) * 0.03));
+        const targetX = Math.max(80, Math.floor(deathX - backtrack));
+
+        if (this.level && this.level.platforms && this.level.platforms.length > 0) {
+            const platforms = this.level.platforms;
+            const nonGroundPlatforms = platforms.filter(p => !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
+            const candidatePool = nonGroundPlatforms.length > 0 ? nonGroundPlatforms : platforms;
+
+            // Choose the closest platform whose left edge is at or before targetX
+            const leftPlatforms = candidatePool.filter(p => typeof p.x === 'number' && p.x <= targetX);
+            const spawnPlatform = (leftPlatforms.length > 0)
+                ? leftPlatforms.reduce((a, b) => (b.x > a.x ? b : a), leftPlatforms[0])
+                : candidatePool[0];
+
+            const maxX = spawnPlatform.x + spawnPlatform.width - this.player.width;
+            this.player.x = Utils.clamp(targetX, spawnPlatform.x, maxX);
+            this.player.y = spawnPlatform.y - this.player.height - 8;
+        } else {
+            this.player.x = targetX;
+            this.player.y = 300;
+        }
+
+        try { this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) {}
+
+        // Play respawn sound
+        try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.5); } catch (e) {}
+
+        this.isRespawning = false;
+        this.respawnTimer = 0;
+        this._pendingRespawn = null;
     }
 
     centerCameraOnPlayer() {
