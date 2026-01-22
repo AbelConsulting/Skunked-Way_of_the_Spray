@@ -25,8 +25,12 @@ class EnemyManager {
         this.bossInstance = null;
     }
 
+    isBossType(enemyType) {
+        return enemyType === 'BOSS' || enemyType === 'BOSS2';
+    }
+
     getBoss() {
-        return this.enemies.find(e => e && e.enemyType === 'BOSS') || null;
+        return this.enemies.find(e => e && this.isBossType(e.enemyType)) || null;
     }
 
     hasBossAlive() {
@@ -35,7 +39,7 @@ class EnemyManager {
     }
 
     clearNonBossEnemies() {
-        this.enemies = this.enemies.filter(e => e && e.enemyType === 'BOSS');
+        this.enemies = this.enemies.filter(e => e && this.isBossType(e.enemyType));
     }
 
     spawnBoss(bossConfig, level = null) {
@@ -52,7 +56,8 @@ class EnemyManager {
         const x = (typeof bossConfig.spawnX === 'number') ? bossConfig.spawnX : fallbackX;
         const y = (typeof bossConfig.spawnY === 'number') ? bossConfig.spawnY : 520;
 
-        const boss = new Enemy(x, y, 'BOSS', this.audioManager);
+        const bossType = (bossConfig && typeof bossConfig.type === 'string') ? bossConfig.type : 'BOSS';
+        const boss = new Enemy(x, y, bossType, this.audioManager);
 
         // Apply multipliers if provided
         const hm = (typeof bossConfig.healthMultiplier === 'number') ? bossConfig.healthMultiplier : 5.0;

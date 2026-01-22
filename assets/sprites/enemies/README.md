@@ -20,6 +20,12 @@
 - boss_attack2.png
 - boss_special.png
 
+### Boss Enemy 2
+- boss2_idle.png
+- boss2_walk.png
+- boss2_attack1.png
+- boss2_hurt.png
+
 ## Sprite Specifications
 - Basic enemies: 48x48 pixels
 - Flying enemies: 40x40 pixels
