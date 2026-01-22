@@ -23,7 +23,7 @@
 ### Boss Enemy 2
 - boss2_idle.png
 - boss2_walk.png
-- boss2_attack1.png
+- boss2_attack.png
 - boss2_hurt.png
 
 ## Sprite Specifications

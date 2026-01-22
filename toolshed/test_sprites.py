@@ -11,13 +11,20 @@ import pygame
 # Use headless video driver so this can run in CI/without a display
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-# Add repo `src` directory to path (works when running from toolshed or repo root)
+# Add repo `python` (preferred) or legacy `src` directory to path
 repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+python_path = os.path.join(repo_root, 'python')
 src_path = os.path.join(repo_root, 'src')
-if not os.path.isdir(src_path):
+
+if os.path.isdir(python_path):
+    sys.path.insert(0, python_path)
+elif os.path.isdir(src_path):
+    sys.path.insert(0, src_path)
+else:
     # fallback to parent of repo_root in case this file moved
-    src_path = os.path.join(os.path.dirname(repo_root), 'src')
-sys.path.insert(0, src_path)
+    fallback_src = os.path.join(os.path.dirname(repo_root), 'src')
+    if os.path.isdir(fallback_src):
+        sys.path.insert(0, fallback_src)
 
 from sprite_loader import sprite_loader  # noqa: E402
 
@@ -40,6 +47,10 @@ def main():
         ("enemies/basic_hurt.png", (48, 48), 2),
         ("enemies/fly_idle.png", (40, 40), 4),
         ("enemies/boss_idle.png", (128, 128), 4),
+        ("enemies/boss2_idle.png", (128, 128), 4),
+        ("enemies/boss2_walk.png", (128, 128), 4),
+        ("enemies/boss2_attack.png", (128, 128), 4),
+        ("enemies/boss2_hurt.png", (128, 128), 2),
     ]
 
     player_sheets = [

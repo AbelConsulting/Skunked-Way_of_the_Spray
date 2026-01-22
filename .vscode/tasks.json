@@ -28,7 +28,7 @@
 		{
 			"label": "Sprite Smoke Test",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe",
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
 			"args": [
 				"toolshed/test_sprites.py"
 			],
@@ -40,37 +40,43 @@
 		{
 			"label": "Convert Quadrants to Horizontal",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe convert_quadrants_to_horizontal.py"
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": ["convert_quadrants_to_horizontal.py"]
 		},
 		{
 			"label": "Remove Sprite Backgrounds",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe remove_sprite_backgrounds.py"
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": ["remove_sprite_backgrounds.py"]
 		},
 		{
 			"label": "Cleanup Sprites",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe cleanup_sprites.py"
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": ["cleanup_sprites.py"]
 		},
 		{
 			"label": "Generate Metal Sound",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe generate_metal_sound.py"
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": ["generate_metal_sound.py"]
 		},
 		{
 			"label": "Generate Metal Guitar",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe generate_metal_sound.py"
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": ["generate_metal_sound.py"]
 		},
 		{
 			"label": "Analyze Music Mix",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe analyze_music_mix.py"
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": ["analyze_music_mix.py"]
 		},
 		{
 			"label": "Generate Background Music",
 			"type": "shell",
-			"command": "C:/Users/Jewel/Documents/GitHub/SkunkFU/.venv/Scripts/python.exe",
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
 			"args": ["generate_music.py"]
 		}
 	]
