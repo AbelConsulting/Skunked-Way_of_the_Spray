@@ -249,7 +249,10 @@ class UI {
                 const barW = Math.min(Math.floor(this.width * 0.44), 520);
                 const barH = 6;
                 const totalW = barW + (iconSize * 2) + (iconGap * 2);
-                const startX = Math.floor((this.width - totalW) / 2);
+                const centerStartX = Math.floor((this.width - totalW) / 2);
+                const minStartX = healthBarX + healthBarWidth + padding;
+                const maxStartX = this.width - totalW - padding;
+                const startX = Math.max(Math.min(centerStartX, maxStartX), minStartX);
                 const iconY = padding + 1;
                 const barX = startX + iconSize + iconGap;
                 const barY = padding + 6;
