@@ -548,7 +548,11 @@ class Player {
     }
 
     _updateAttackHitboxPosition() {
-        const offsetX = this.facingRight ? this.width : -this.attackHitbox.width;
+        // Allow a small overlap with the player body so point-blank hits register.
+        const overlap = Math.min(12, Math.floor(this.attackHitbox.width * 0.25));
+        const offsetX = this.facingRight
+            ? (this.width - overlap)
+            : (-this.attackHitbox.width + overlap);
         this.attackHitbox.x = this.x + offsetX;
         this.attackHitbox.y = this.y + (this.height - this.attackHitbox.height) / 2;
     }
