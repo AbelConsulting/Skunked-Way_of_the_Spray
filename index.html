@@ -107,6 +107,12 @@
             transition: transform 90ms ease, filter 160ms ease, box-shadow 160ms ease;
         }
 
+        /* Make left/right movement buttons slightly wider for easier tapping */
+        #btn-left,
+        #btn-right {
+            width: clamp(64px, 11vw, 96px);
+        }
+
         /* Per-action accents (subtle, readable) */
         .touch-btn--move {
             border-color: rgba(80,255,244,0.26);
