@@ -646,13 +646,14 @@ class GameApp {
             ['boss2_defeat', 'assets/audio/sfx/boss2_defeat.wav'],
             ['boss2_attack', 'assets/audio/sfx/boss2_attack.wav'],
             ['boss2_hurt', 'assets/audio/sfx/boss2_hurt.wav'],
-            ['level_complete', 'assets/audio/sfx/combo.wav'],
-            ['powerup', 'assets/audio/sfx/shadow_strike.wav'],
+            ['level_complete', 'assets/audio/sfx/level_complete.wav'],
+            ['powerup', 'assets/audio/sfx/powerup.wav'],
             ['item_pickup', 'assets/audio/sfx/item_pickup.wav'],
             ['combo_level_up', 'assets/audio/sfx/combo_level_up.wav'],
             ['parry_success', 'assets/audio/sfx/parry_success.wav'],
-            ['coin_collect', 'assets/audio/sfx/menu_move.wav'],
-            ['footstep', 'assets/audio/sfx/land.wav']
+            ['coin_collect', 'assets/audio/sfx/coin_collect.wav'],
+            ['footstep', 'assets/audio/sfx/footstep.wav'],
+            ['enemy_attack', 'assets/audio/sfx/enemy_attack_gen.wav']
         ];
         // Defer music loading until game start to reduce initial bandwidth and decoding on mobile
         const musicList = [];
