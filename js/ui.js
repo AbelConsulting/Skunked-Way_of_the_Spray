@@ -228,24 +228,17 @@ class UI {
             ctx.restore();
         }
 
-        // Golden idol counter (3 icons) below life hearts
+        // Golden idol counter (3 icons) below life hearts (same size/spacing)
         try {
             const idolIcons = Array.isArray(idolStatus) && idolStatus.length > 0 ? idolStatus : [false, false, false];
-            const idolSize = 18;
-            const idolGap = 6;
-            const totalW = (idolSize * 3) + (idolGap * 2);
+            const idolSize = lifeIconSize;
+            const idolGap = lifeIconGap;
             const idolX = healthBarX;
             const idolY = lifeIconsY + lifeIconSize + 6;
 
-            ctx.save();
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.fillRect(idolX - 6, idolY - 4, totalW + 12, idolSize + 8);
-            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(idolX - 6, idolY - 4, totalW + 12, idolSize + 8);
-
             for (let i = 0; i < 3; i++) {
                 const collected = !!idolIcons[i];
+                ctx.save();
                 ctx.globalAlpha = collected ? 1.0 : 0.35;
                 const ix = idolX + i * (idolSize + idolGap);
                 const iy = idolY;
@@ -257,8 +250,12 @@ class UI {
                         ctx.drawImage(idolSprite, ix, iy, idolSize, idolSize);
                     }
                 }
+                // Match heart outline styling for consistency
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(ix, iy, idolSize, idolSize);
+                ctx.restore();
             }
-            ctx.restore();
         } catch (e) {}
 
         // Optional numeric HP (only when low, small + subtle)
