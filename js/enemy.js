@@ -16,7 +16,7 @@ class Enemy {
         } else if (enemyType === "FLYING") {
             this.width = 40;
             this.height = 40;
-        } else if (enemyType === "BOSS" || enemyType === "BOSS2" || enemyType === "BOSS3") {
+        } else if (enemyType === "BOSS" || enemyType === "BOSS2" || enemyType === "BOSS3" || enemyType === "BOSS4") {
             this.width = 128;
             this.height = 128;
         } else {
@@ -67,7 +67,7 @@ class Enemy {
         this.attackHitbox = { x: 0, y: 0, width: 60, height: 40 };
 
         // Type-specific combat tuning (kept conservative)
-        const isBossType = (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3');
+        const isBossType = (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4');
         if (isBossType) {
             this.attackRange = 120;
             this.attackDuration = 0.65;
@@ -90,11 +90,12 @@ class Enemy {
     }
 
     loadSprites() {
-        const prefix = (this.enemyType === "BASIC" || this.enemyType === "FAST_BASIC") ? "basic" : 
+          const prefix = (this.enemyType === "BASIC" || this.enemyType === "FAST_BASIC") ? "basic" : 
               this.enemyType === "SECOND_BASIC" ? "second" :
               this.enemyType === "FLYING" ? "fly" :
               this.enemyType === "BOSS2" ? "boss2" :
-              this.enemyType === "BOSS3" ? "boss3" : "boss";
+              this.enemyType === "BOSS3" ? "boss3" :
+              this.enemyType === "BOSS4" ? "boss4" : "boss";
 
         const idle_sprite = spriteLoader.getSprite(`${prefix}_idle`);
         const walk_sprite = spriteLoader.getSprite(`${prefix}_walk`);
@@ -103,6 +104,7 @@ class Enemy {
         const attackName = (prefix === 'boss') ? 'boss_attack1'
             : (prefix === 'boss2') ? 'boss2_attack'
             : (prefix === 'boss3') ? 'boss3_attack'
+            : (prefix === 'boss4') ? 'boss4_attack'
             : `${prefix}_attack`;
         const attack_sprite = spriteLoader.getSprite(attackName);
         
@@ -146,14 +148,14 @@ class Enemy {
         if (this.audioManager) {
             if (this.health <= 0) {
                 // For bosses, let the Game logic play the big defeat sting.
-                if (this.enemyType !== 'BOSS' && this.enemyType !== 'BOSS2' && this.enemyType !== 'BOSS3') {
+                if (this.enemyType !== 'BOSS' && this.enemyType !== 'BOSS2' && this.enemyType !== 'BOSS3' && this.enemyType !== 'BOSS4') {
                     this.audioManager.playSound('enemy_death', 0.7);
                 }
             } else {
                 // Boss-specific hurt sound
                 if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_hurt', 0.6);
-                } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3') {
+                } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4') {
                     this.audioManager.playSound('boss2_hurt', 0.6);
                 } else {
                     this.audioManager.playSound('enemy_hit', 0.5);

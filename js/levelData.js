@@ -272,7 +272,7 @@ const LEVEL_CONFIGS = [
             speedMultiplier: 1.1,
             attackDamageMultiplier: 2.5
         },
-        background: 'bg_cave',
+        background: 'bg_cave_crystal',
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -365,7 +365,7 @@ const LEVEL_CONFIGS = [
             speedMultiplier: 1.25,
             attackDamageMultiplier: 2.9
         },
-        background: 'bg_cave',
+        background: 'bg_cave_depths',
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -432,14 +432,14 @@ const LEVEL_CONFIGS = [
             exitX: 12000 - 100
         },
         boss: {
-            type: "BOSS3",
+            type: "BOSS4",
             spawnX: 12000 - 520,
             spawnY: 520,
             healthMultiplier: 7.8,
             speedMultiplier: 1.2,
             attackDamageMultiplier: 2.6
         },
-        background: 'bg_city',
+        background: 'bg_neon',
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 1000, y: 300 },
