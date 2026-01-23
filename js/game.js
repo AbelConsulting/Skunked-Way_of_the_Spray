@@ -620,6 +620,16 @@ class Game {
             this.state = 'VICTORY'; // Handle this in draw
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('GAME VICTORY!');
 
+            // Mark completion for achievements
+            try { this.gameStats.gameCompleted = true; } catch (e) {}
+
+            // Check for completion achievement
+            try {
+                if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
+                    Highscores.checkAchievements(this.gameStats);
+                }
+            } catch (e) {}
+
             // Stop gameplay music and play victory jingle if available
             try {
                 if (this.audioManager) {
