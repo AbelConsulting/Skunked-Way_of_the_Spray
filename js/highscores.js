@@ -100,10 +100,15 @@
     const checks = [
       { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', check: () => gameStats.enemiesDefeated >= 1 },
       { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 10 enemies', check: () => gameStats.enemiesDefeated >= 10 },
+      { id: 'enemy_slayer_50', name: 'Relentless', desc: 'Defeat 50 enemies', check: () => gameStats.enemiesDefeated >= 50 },
       { id: 'combo_master', name: 'Combo Master', desc: 'Achieve a 3-hit combo', check: () => gameStats.maxCombo >= 3 },
       { id: 'speed_demon', name: 'Speed Demon', desc: 'Survive for 2 minutes', check: () => gameStats.timeSurvived >= 120 },
+      { id: 'survivor_5m', name: 'Survivor', desc: 'Survive for 5 minutes', check: () => gameStats.timeSurvived >= 300 },
       { id: 'marksman', name: 'Marksman', desc: 'Achieve 80% accuracy', check: () => gameStats.accuracy >= 0.8 },
-      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 10,000 points', check: () => gameStats.score >= 10000 }
+      { id: 'precision_95', name: 'Deadeye', desc: 'Achieve 95% accuracy', check: () => gameStats.accuracy >= 0.95 },
+      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 10,000 points', check: () => gameStats.score >= 10000 },
+      { id: 'score_50k', name: 'Elite Scorer', desc: 'Score over 50,000 points', check: () => gameStats.score >= 50000 },
+      { id: 'beat_game', name: 'Victory', desc: 'Beat the game', check: () => !!gameStats.gameCompleted }
     ];
 
     for (const achievement of checks) {
@@ -144,10 +149,15 @@
     const achievementList = [
       { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', icon: '🩸' },
       { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 10 enemies', icon: '⚔️' },
+      { id: 'enemy_slayer_50', name: 'Relentless', desc: 'Defeat 50 enemies', icon: '🗡️' },
       { id: 'combo_master', name: 'Combo Master', desc: 'Achieve a 3-hit combo', icon: '🔥' },
       { id: 'speed_demon', name: 'Speed Demon', desc: 'Survive for 2 minutes', icon: '💨' },
+      { id: 'survivor_5m', name: 'Survivor', desc: 'Survive for 5 minutes', icon: '🛡️' },
       { id: 'marksman', name: 'Marksman', desc: 'Achieve 80% accuracy', icon: '🎯' },
-      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 10,000 points', icon: '💎' }
+      { id: 'precision_95', name: 'Deadeye', desc: 'Achieve 95% accuracy', icon: '👁️' },
+      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 10,000 points', icon: '💎' },
+      { id: 'score_50k', name: 'Elite Scorer', desc: 'Score over 50,000 points', icon: '🏆' },
+      { id: 'beat_game', name: 'Victory', desc: 'Beat the game', icon: '👑' }
     ];
 
     for (const ach of achievementList) {
