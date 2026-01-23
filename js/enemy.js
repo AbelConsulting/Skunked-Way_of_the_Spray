@@ -112,8 +112,10 @@ class Enemy {
 
         // Some enemy sets (boss) don't have a dedicated hurt sheet.
         // Fall back to the idle sheet to avoid missing animations.
+        const isBossType = (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4');
+        const hurtFrames = isBossType ? 4 : 2;
         const hurtAnim = hurt_sprite
-            ? new Animation(hurt_sprite, 2, 0.1)
+            ? new Animation(hurt_sprite, hurtFrames, 0.1)
             : new Animation(idle_sprite, 4, 0.12);
 
         this.animations = {

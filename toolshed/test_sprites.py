@@ -50,7 +50,7 @@ def main():
         ("enemies/boss2_idle.png", (128, 128), 4),
         ("enemies/boss2_walk.png", (128, 128), 4),
         ("enemies/boss2_attack.png", (128, 128), 4),
-        ("enemies/boss2_hurt.png", (128, 128), 2),
+        ("enemies/boss2_hurt.png", (128, 128), 4),
     ]
 
     player_sheets = [

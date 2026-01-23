@@ -41,15 +41,15 @@ class SpriteLoader {
             'boss2_idle': 4,
             'boss2_walk': 4,
             'boss2_attack': 4,
-            'boss2_hurt': 2,
+            'boss2_hurt': 4,
             'boss3_idle': 4,
             'boss3_walk': 4,
             'boss3_attack': 4,
-            'boss3_hurt': 2,
+            'boss3_hurt': 4,
             'boss4_idle': 4,
             'boss4_walk': 4,
             'boss4_attack': 4,
-            'boss4_hurt': 2
+            'boss4_hurt': 4
         };
     }
 
