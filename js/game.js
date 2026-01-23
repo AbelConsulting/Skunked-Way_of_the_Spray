@@ -51,7 +51,7 @@ class Game {
         // Game state
         this.state = "MENU"; // MENU, PLAYING, PAUSED, GAME_OVER
         this.score = 0;
-        this.lives = 1;
+        this.lives = 2;
 
         // Respawn/death flow
         this.isRespawning = false;
@@ -441,7 +441,7 @@ class Game {
             
             this.state = 'PLAYING';
             this.score = 0;
-            this.lives = 1;
+            this.lives = 2;
             
             // Boss state
             this.bossEncountered = false;
