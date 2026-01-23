@@ -934,10 +934,17 @@ function requestFullscreen() {
     const docEl = document.documentElement;
     const requestMethod = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
     if (requestMethod) {
-        requestMethod.call(docEl).catch(err => {
-            // Silently fail if user denies or browser blocks
-            console.log("Fullscreen request denied:", err);
-        });
+        try {
+            const result = requestMethod.call(docEl);
+            if (result && typeof result.catch === 'function') {
+                result.catch(err => {
+                    // Silently fail if user denies or browser blocks
+                    console.log("Fullscreen request denied:", err);
+                });
+            }
+        } catch (err) {
+            console.log("Fullscreen request failed:", err);
+        }
     }
 }
 
