@@ -454,24 +454,7 @@ class UI {
             ctx.restore();
         } catch (e) {}
 
-        // Special ability cooldown indicator
-        if (player.attackCooldownTimer > 0) {
-            const cooldownBarWidth = 200;
-            const cooldownBarHeight = 10;
-            const cooldownBarX = padding;
-            const cooldownBarY = healthBarY + healthBarHeight + 10;
-            
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillRect(cooldownBarX, cooldownBarY, cooldownBarWidth, cooldownBarHeight);
-            
-            const cooldownPercent = 1 - (player.attackCooldownTimer / player.attackCooldown);
-            ctx.fillStyle = '#00CCFF';
-            ctx.fillRect(cooldownBarX, cooldownBarY, cooldownBarWidth * cooldownPercent, cooldownBarHeight);
-            
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(cooldownBarX, cooldownBarY, cooldownBarWidth, cooldownBarHeight);
-        }
+        // (Removed) Attack cooldown debug bar
     }
 
     drawTransition(ctx, alpha, text = "") {
