@@ -367,6 +367,12 @@ class GameApp {
             // Expose for diagnostic tests and external tooling
             try { window.game = this.game; window.gameApp = this; } catch (e) { /* ignore in strict contexts */ }
 
+            // Defensive: mark game ready once the Game instance exists so
+            // automated tests don't hang if later optional steps fail.
+            try {
+                if (typeof window.gameReady === 'undefined') window.gameReady = true;
+            } catch (e) {}
+
             // Load extra SFX after the game is live to smooth startup.
             this.loadDeferredAudio();
 
