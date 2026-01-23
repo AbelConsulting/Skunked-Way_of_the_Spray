@@ -263,6 +263,39 @@ class UI {
             ctx.restore();
         }
 
+        // Golden idol counter (3 icons) below life hearts
+        try {
+            const idolIcons = Array.isArray(idolStatus) && idolStatus.length > 0 ? idolStatus : [false, false, false];
+            const idolSize = 18;
+            const idolGap = 6;
+            const totalW = (idolSize * 3) + (idolGap * 2);
+            const idolX = healthBarX;
+            const idolY = lifeIconsY + lifeIconSize + 6;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(idolX - 6, idolY - 4, totalW + 12, idolSize + 8);
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(idolX - 6, idolY - 4, totalW + 12, idolSize + 8);
+
+            for (let i = 0; i < 3; i++) {
+                const collected = !!idolIcons[i];
+                ctx.globalAlpha = collected ? 1.0 : 0.35;
+                const ix = idolX + i * (idolSize + idolGap);
+                const iy = idolY;
+                if (typeof Utils !== 'undefined' && Utils.drawGoldenIdol) {
+                    Utils.drawGoldenIdol(ctx, ix, iy, idolSize);
+                } else if (typeof spriteLoader !== 'undefined' && spriteLoader.getSprite) {
+                    const idolSprite = spriteLoader.getSprite('golden_idol');
+                    if (idolSprite && idolSprite.width) {
+                        ctx.drawImage(idolSprite, ix, iy, idolSize, idolSize);
+                    }
+                }
+            }
+            ctx.restore();
+        } catch (e) {}
+
         // Optional numeric HP (only when low, small + subtle)
         try {
             if ((player.health / player.maxHealth) <= 0.3) {
@@ -275,42 +308,7 @@ class UI {
         } catch (e) {}
 
         // Top-center progress bar (distance to boss/exit, or boss HP)
-        try {
-            if (objectiveInfo && (typeof objectiveInfo.progress === 'number' || typeof objectiveInfo.bossHpPct === 'number')) {
-                const mode = String(objectiveInfo.mode || '');
-                const iconSize = 14;
-                const iconGap = 10;
-
-                const barW = Math.min(Math.floor(this.width * 0.44), 520);
-                const barH = 6;
-                const totalW = barW + (iconSize * 2) + (iconGap * 2);
-                const centerStartX = Math.floor((this.width - totalW) / 2);
-                const minStartX = healthBarX + healthBarWidth + padding;
-                const maxStartX = this.width - totalW - padding;
-                const startX = Math.max(Math.min(centerStartX, maxStartX), minStartX);
-                const iconY = padding + 1;
-                const barX = startX + iconSize + iconGap;
-                const barY = padding + 6;
-
-                const drawIcon = (x, y, kind) => {
-                    const s = iconSize;
-                    ctx.save();
-                    ctx.translate(x + s / 2, y + s / 2);
-                    ctx.lineWidth = 1;
-                    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-
-                    if (kind === 'start') {
-                        // Tiny flag
-                        ctx.beginPath();
-                        ctx.moveTo(-s * 0.25, -s * 0.35);
-                        ctx.lineTo(-s * 0.25, s * 0.35);
-                        ctx.stroke();
-
-                        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-                        ctx.beginPath();
-                        ctx.moveTo(-s * 0.22, -s * 0.35);
-                        ctx.lineTo(s * 0.35, -s * 0.2);
-                        ctx.lineTo(-s * 0.22, 0);
+            ctx.restore();
                         ctx.closePath();
                         ctx.fill();
                     } else if (kind === 'boss') {
