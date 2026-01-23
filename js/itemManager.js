@@ -58,6 +58,33 @@ class ItemManager {
     }
 
     /**
+     * Spawn a golden idol collectible at the specified location
+     */
+    spawnGoldenIdol(x, y, idolIndex = 0, levelId = null) {
+        const item = {
+            id: this.nextItemId++,
+            type: 'GOLDEN_IDOL',
+            x: x,
+            y: y,
+            width: Config.IDOL_ITEM_SIZE || 30,
+            height: Config.IDOL_ITEM_SIZE || 30,
+            collected: false,
+            idolIndex: idolIndex,
+            levelId: levelId,
+            // Float + gentle rotation
+            baseY: y,
+            bounceOffset: 0,
+            bounceSpeed: 1.9,
+            rotation: 0,
+            rotationSpeed: 1.2,
+            scale: 1.0,
+            pulseSpeed: 2.5
+        };
+        this.items.push(item);
+        return item;
+    }
+
+    /**
      * Update all items (animations, lifetime, etc.)
      */
     update(dt) {
@@ -86,6 +113,12 @@ class ItemManager {
                 
                 // Pulse scale
                 item.scale = 1.0 + Math.sin(item.pulseSpeed * Date.now() / 1000) * 0.1;
+            } else if (item.type === 'GOLDEN_IDOL') {
+                item.bounceOffset = Math.sin(item.bounceSpeed * Date.now() / 1000) * 5;
+                item.y = item.baseY + item.bounceOffset;
+                item.rotation += item.rotationSpeed * dt;
+                if (item.rotation > Math.PI * 2) item.rotation -= Math.PI * 2;
+                item.scale = 1.0 + Math.sin(item.pulseSpeed * Date.now() / 1000) * 0.06;
             }
         }
     }
@@ -120,6 +153,8 @@ class ItemManager {
                         this.audioManager.playSound('item_pickup', 0.6);
                     } else if (item.type === 'EXTRA_LIFE') {
                         this.audioManager.playSound('item_pickup', 0.8);
+                    } else if (item.type === 'GOLDEN_IDOL') {
+                        this.audioManager.playSound('item_pickup', 0.7);
                     }
                 }
             }
@@ -150,6 +185,8 @@ class ItemManager {
             return { type: 'HEALTH_REGEN', success: true };
         } else if (item.type === 'EXTRA_LIFE') {
             return { type: 'EXTRA_LIFE', success: true, lives: 1 };
+        } else if (item.type === 'GOLDEN_IDOL') {
+            return { type: 'GOLDEN_IDOL', success: true, idolIndex: item.idolIndex, levelId: item.levelId };
         }
         return { type: item.type, success: false };
     }
@@ -180,6 +217,8 @@ class ItemManager {
                 Utils.drawHealthRegenItem(ctx, -item.width / 2, -item.height / 2, item.width);
             } else if (item.type === 'EXTRA_LIFE') {
                 Utils.drawExtraLifeItem(ctx, -item.width / 2, -item.height / 2, item.width);
+            } else if (item.type === 'GOLDEN_IDOL') {
+                Utils.drawGoldenIdol(ctx, -item.width / 2, -item.height / 2, item.width);
             }
 
             ctx.restore();

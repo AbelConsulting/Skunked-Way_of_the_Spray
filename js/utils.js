@@ -175,4 +175,53 @@ class Utils {
 
         try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
     }
+
+    /**
+     * Draw the golden idol collectible.
+     * Uses the loaded sprite `golden_idol` when available; otherwise draws
+     * a simple gold plaque with a mask symbol.
+     */
+    static drawGoldenIdol(ctx, x, y, size = 32, opts = {}) {
+        if (!ctx) return;
+
+        const loader = opts.spriteLoader || ((typeof spriteLoader !== 'undefined') ? spriteLoader : null);
+        const key = opts.spriteKey || 'golden_idol';
+        const sprite = (loader && typeof loader.getSprite === 'function') ? loader.getSprite(key) : null;
+
+        const pixelSnap = (typeof Config !== 'undefined' && Config.PIXEL_SNAP) ? true : false;
+        const dx = pixelSnap ? Math.round(x) : x;
+        const dy = pixelSnap ? Math.round(y) : y;
+        const ds = pixelSnap ? Math.round(size) : size;
+
+        // Draw sprite when available
+        try {
+            if (sprite && sprite.width && sprite.height) {
+                ctx.drawImage(sprite, dx, dy, ds, ds);
+                return;
+            }
+        } catch (e) {
+            // fall through to placeholder
+        }
+
+        const prevSmooth = ctx.imageSmoothingEnabled;
+        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+
+        // Gold plaque
+        ctx.fillStyle = '#6b4a00';
+        ctx.fillRect(dx, dy, ds, ds);
+        ctx.fillStyle = '#f5c542';
+        ctx.fillRect(dx + 1, dy + 1, Math.max(0, ds - 2), Math.max(0, ds - 2));
+
+        // Simple mask glyph
+        const unit = Math.max(1, Math.floor(ds / 16));
+        const cx = dx + Math.floor(ds / 2);
+        const cy = dy + Math.floor(ds / 2);
+        ctx.fillStyle = '#3a2400';
+        ctx.fillRect(cx - 3 * unit, cy - 4 * unit, 6 * unit, 7 * unit);
+        ctx.fillStyle = '#f5c542';
+        ctx.fillRect(cx - 2 * unit, cy - 2 * unit, 4 * unit, unit);
+        ctx.fillRect(cx - 1 * unit, cy + 1 * unit, 2 * unit, unit);
+
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+    }
 }
