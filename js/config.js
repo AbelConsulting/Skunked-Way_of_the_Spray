@@ -45,6 +45,9 @@ const Config = {
     HEALTH_REGEN_ITEM_DURATION: 6.0, // seconds
     HEALTH_REGEN_HP_PER_SECOND: 8.0,
     EXTRA_LIFE_ITEM_SIZE: 32,
+    IDOL_ITEM_SIZE: 30,
+    IDOL_SCORE: 250,
+    IDOL_SET_BONUS: 1000,
 
     // Item drop rates (0.0 - 1.0, where 1.0 = 100% chance)
     HEALTH_REGEN_DROP_RATE: 0.15, // 15% chance per enemy
