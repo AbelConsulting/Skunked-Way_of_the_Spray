@@ -45,7 +45,7 @@ class Player {
         this.attackDuration = 0.3;
         this.attackCooldown = 0.3;
         this.attackCooldownTimer = 0;
-        this.defaultAttackWidth = 60;
+        this.defaultAttackWidth = 120;
         this.defaultAttackHeight = 40;
         this.attackHitbox = { x: 0, y: 0, width: this.defaultAttackWidth, height: this.defaultAttackHeight };
         this.hitEnemies = new Set();
