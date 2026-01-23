@@ -59,6 +59,27 @@ class EnemyManager {
         const bossType = (bossConfig && typeof bossConfig.type === 'string') ? bossConfig.type : 'BOSS';
         const boss = new Enemy(x, y, bossType, this.audioManager);
 
+        // Snap boss onto the nearest supporting platform to avoid falling through gaps
+        try {
+            if (level && Array.isArray(level.platforms) && level.platforms.length > 0) {
+                const bx = boss.x;
+                const bw = boss.width || 128;
+                const candidates = level.platforms.filter(p => {
+                    if (!p || typeof p.x !== 'number' || typeof p.width !== 'number' || typeof p.y !== 'number') return false;
+                    const overlap = (bx + bw) > p.x && bx < (p.x + p.width);
+                    return overlap;
+                });
+                if (candidates.length > 0) {
+                    // Prefer the highest platform below current spawn
+                    const target = candidates.reduce((best, p) => {
+                        if (!best) return p;
+                        return (p.y > best.y) ? p : best;
+                    }, null);
+                    if (target) boss.y = target.y - (boss.height || 128);
+                }
+            }
+        } catch (e) {}
+
         // Apply multipliers if provided
         const hm = (typeof bossConfig.healthMultiplier === 'number') ? bossConfig.healthMultiplier : 5.0;
         const sm = (typeof bossConfig.speedMultiplier === 'number') ? bossConfig.speedMultiplier : 1.0;
