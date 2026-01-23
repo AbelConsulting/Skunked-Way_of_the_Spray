@@ -408,8 +408,10 @@ class Enemy {
             if (this.audioManager) {
                 if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_attack', 0.7);
-                } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3') {
+                } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4') {
                     this.audioManager.playSound('boss2_attack', 0.7);
+                } else {
+                     this.audioManager.playSound('enemy_attack', 0.5);
                 }
             }
 
