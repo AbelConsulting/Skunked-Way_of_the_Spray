@@ -133,6 +133,47 @@ def gen_enemy_attack(duration=0.3, sample_rate=44100):
     audio = noise * envelope
     return audio * 0.4
 
+def gen_boss_defeat(duration=2.0, sample_rate=44100):
+    t = np.linspace(0, duration, int(duration * sample_rate))
+    # Low rumbling explosion
+    noise = np.random.normal(0, 1, len(t))
+    noise = np.convolve(noise, np.ones(50)/50, mode='same') # Low pass
+    
+    # Amplitude modulation for texture
+    mod = np.sin(2 * np.pi * 15 * t) * 0.5 + 0.5
+    
+    envelope = np.exp(-t * 2)
+    
+    audio = noise * mod * envelope
+    
+    # Add a down-pitching tone
+    sweep = np.sin(2 * np.pi * 100 * (1 - t/duration) * t) * np.exp(-t)
+    audio += sweep * 0.5
+    
+    return audio * 0.6
+
+def gen_boss_spawn(duration=1.5, sample_rate=44100):
+    t = np.linspace(0, duration, int(duration * sample_rate))
+    # Rising tension
+    freq = np.linspace(50, 200, len(t))
+    
+    # Sawtooth-ish wave
+    wave = 0.5 * np.sin(2 * np.pi * freq * t)
+    wave += 0.25 * np.sin(2 * np.pi * freq * 2 * t)
+    wave += 0.125 * np.sin(2 * np.pi * freq * 3 * t)
+    
+    # Tremolo
+    tremolo = np.sin(2 * np.pi * 15 * t) * 0.3 + 0.7
+    
+    audio = wave * tremolo
+    
+    # Envelope
+    env = np.ones_like(t)
+    env[:int(len(t)*0.1)] = np.linspace(0, 1, int(len(t)*0.1))
+    env[-int(len(t)*0.1):] = np.linspace(1, 0, int(len(t)*0.1))
+    
+    return audio * 0.5
+
 if __name__ == "__main__":
     out_dir = "assets/audio/sfx"
     os.makedirs(out_dir, exist_ok=True)
@@ -142,3 +183,5 @@ if __name__ == "__main__":
     save_wav(os.path.join(out_dir, "powerup.wav"), gen_powerup())
     save_wav(os.path.join(out_dir, "level_complete.wav"), gen_level_complete())
     save_wav(os.path.join(out_dir, "enemy_attack_gen.wav"), gen_enemy_attack())
+    save_wav(os.path.join(out_dir, "boss_defeat_gen.wav"), gen_boss_defeat())
+    save_wav(os.path.join(out_dir, "boss_spawn_gen.wav"), gen_boss_spawn())

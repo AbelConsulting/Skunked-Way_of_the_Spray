@@ -638,8 +638,8 @@ class GameApp {
             ['metal_pad', 'assets/audio/sfx/metal_pad.wav'],
             // Some optional cues don't have dedicated files in assets/audio/sfx.
             // Map them to existing sounds to avoid 404 noise.
-            ['boss_spawn', 'assets/audio/sfx/combo.wav'],
-            ['boss_defeat', 'assets/audio/sfx/enemy_death.wav'],
+            ['boss_spawn', 'assets/audio/sfx/boss_spawn_gen.wav'],
+            ['boss_defeat', 'assets/audio/sfx/boss_defeat_gen.wav'],
             ['boss_attack', 'assets/audio/sfx/attack3.wav'],
             ['boss_hurt', 'assets/audio/sfx/enemy_hit.wav'],
             ['boss2_spawn', 'assets/audio/sfx/boss2_spawn.wav'],
