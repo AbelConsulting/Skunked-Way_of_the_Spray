@@ -102,7 +102,7 @@ class UI {
 
         // Instructions
         ctx.font = '24px Arial';
-        ctx.fillText('Press ENTER to Restart', this.width / 2, this.height / 2 + 120);
+        ctx.fillText('Press ENTER or Tap to Restart', this.width / 2, this.height / 2 + 120);
     }
 
     drawLevelComplete(ctx, levelNum) {
