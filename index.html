@@ -15,6 +15,7 @@
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="achievements.css">
 
     <style>
         /* expose safe-area insets as CSS variables so JS can read them */
@@ -409,17 +410,9 @@
     <script src="js/spriteLoader.js"></script>
     <script src="js/audioManager.js"></script>
     <script src="js/visualEffects.js"></script>
-    <script src="js/level.js?v=11"></script>
-    <script src="js/levelData.js?v=12"></script>
-    <script src="js/player.js?v=11"></script>
-    <script src="js/enemy.js?v=11"></script>
-    <script src="js/enemyManager.js?v=11"></script>
-    <script src="js/itemManager.js"></script>
-    <script src="js/touchControls.js"></script>
-    <script src="js/ui.js?v=11"></script>
-    <script src="js/game.js?v=12"></script>
-    <script src="js/main.js?v=11"></script>
-
+    <script src="js/achievements.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js" type="module"></script>
     <script nonce="%CSP_NONCE%">
 // --- UTILITIES ---
     // Touch-control visibility debug helper

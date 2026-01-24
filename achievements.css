@@ -1,0 +1,28 @@
+/* achievements.css */
+.achievement-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s, transform 0.5s;
+}
+
+.achievement-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.achievement-notification h3 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.achievement-notification p {
+    margin: 5px 0 0;
+}

@@ -47,6 +47,8 @@ class Game {
 
         // Initialize audio (use provided AudioManager if available)
         this.audioManager = audioManager || new AudioManager();
+        this.achievements = new Achievements();
+
 
         // Game state
         this.state = "MENU"; // MENU, PLAYING, PAUSED, GAME_OVER
