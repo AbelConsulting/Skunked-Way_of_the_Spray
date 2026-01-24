@@ -1093,7 +1093,7 @@ class Game {
         // Player died - check for remaining lives
         this.lives--;
 
-        if (this.lives > 0) {
+        if (this.lives >= 0) {
             // Trigger death animation first, then respawn after delay
             try {
                 if (this.player && typeof this.player.startDeath === 'function') {
