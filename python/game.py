@@ -63,6 +63,11 @@ class Game:
                     self.audio_manager.play_sound('menu_select')
                     self.start_game()  # Restart game
         
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if self.state == "MENU" or self.state == "GAME_OVER":
+                self.audio_manager.play_sound('menu_select')
+                self.start_game()
+
         if self.state == "PLAYING":
             self.player.handle_event(event)
     
