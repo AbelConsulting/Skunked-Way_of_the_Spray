@@ -38,6 +38,7 @@ class Player {
         this.coyoteTimer = 0;
         this.jumpBufferTime = 0.1;
         this.jumpBufferTimer = 0;
+        this.jumpBufferCount = 0;
         this.maxJumps = 2;
         this.jumpsRemaining = this.maxJumps;
 
@@ -148,11 +149,13 @@ class Player {
     handleInput(key, isDown) {
         // Normalize key (accept both event.code and event.key forms)
         const k = (key || '').toString().toLowerCase();
+        const wasDown = !!this.keys[k];
         this.keys[k] = isDown;
 
-        if (isDown) {
+        if (isDown && !wasDown) {
             if (k === 'space' || k === 'spacebar' || k === ' ') {
                 this.jumpBufferTimer = this.jumpBufferTime;
+                this.jumpBufferCount = Math.min(this.jumpBufferCount + 1, this.maxJumps);
             } else if (k === 'keyx' || k === 'x') {
                 this.attack();
             } else if (k === 'keyz' || k === 'z') {
@@ -309,6 +312,8 @@ class Player {
         this.attackCooldownTimer = 0;
         try { this.hitEnemies && this.hitEnemies.clear && this.hitEnemies.clear(); } catch (e) {}
         this._prevAttackHitbox = null;
+        this.jumpBufferTimer = 0;
+        this.jumpBufferCount = 0;
         this.clearInputState();
     }
 
@@ -333,7 +338,13 @@ class Player {
 
         // Update timers
         if (this.coyoteTimer > 0) this.coyoteTimer -= dt;
-        if (this.jumpBufferTimer > 0) this.jumpBufferTimer -= dt;
+        if (this.jumpBufferTimer > 0) {
+            this.jumpBufferTimer -= dt;
+            if (this.jumpBufferTimer <= 0) {
+                this.jumpBufferTimer = 0;
+                this.jumpBufferCount = 0;
+            }
+        }
         if (this.comboTimer > 0) {
             this.comboTimer -= dt;
         } else {
@@ -452,9 +463,10 @@ class Player {
         }
 
         // Handle jump buffering
-        if (this.jumpBufferTimer > 0 && (this.onGround || this.coyoteTimer > 0 || this.jumpsRemaining > 0)) {
+        if (this.jumpBufferCount > 0 && (this.onGround || this.coyoteTimer > 0 || this.jumpsRemaining > 0)) {
             this.jump();
-            this.jumpBufferTimer = 0;
+            this.jumpBufferCount = Math.max(0, this.jumpBufferCount - 1);
+            if (this.jumpBufferCount === 0) this.jumpBufferTimer = 0;
         }
 
         // Update attack
