@@ -393,37 +393,30 @@ class Level {
             }
         }
 
-            // Fallback: Cyberpunk neon shadow/glow (reduced on mobile for perf)
-            ctx.save();
-            ctx.shadowColor = this.theme.glow;
-            const glowBlur = this.useMobileOptimizations ? 6 : 20;
-            ctx.shadowBlur = glowBlur;
-            ctx.fillStyle = this.useMobileOptimizations ? 'rgba(0,255,247,0.08)' : 'rgba(0,255,247,0.15)';
-            ctx.fillRect(p.x - 8, p.y - 8, p.width + 16, p.height + 16);
-            ctx.restore();
+            // Fallback: dark blue tile style
+            const fallbackTop = '#0b1f3b';
+            const fallbackBot = '#07162d';
+            const fallbackBorder = '#123464';
+            const fallbackHighlight = 'rgba(255,255,255,0.08)';
 
-           // Neon gradient fill
+           // Dark blue gradient fill
            const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
-           grad.addColorStop(0, this.theme.platTop);
-           grad.addColorStop(1, this.theme.platBot);
+           grad.addColorStop(0, fallbackTop);
+           grad.addColorStop(1, fallbackBot);
            ctx.fillStyle = grad;
            ctx.fillRect(p.x, p.y, p.width, p.height);
 
-           // Neon border
+           // Subtle border
            ctx.save();
-           ctx.shadowColor = this.theme.border;
-           const borderBlur = this.useMobileOptimizations ? 3 : 10;
-           ctx.shadowBlur = borderBlur;
-           ctx.strokeStyle = this.theme.border;
-           ctx.lineWidth = 3;
+           ctx.strokeStyle = fallbackBorder;
+           ctx.lineWidth = 2;
            ctx.strokeRect(p.x, p.y, p.width, p.height);
            ctx.restore();
 
-           // Neon highlight
+           // Soft highlight strip
            ctx.save();
-           ctx.globalAlpha = 0.25;
-           ctx.fillStyle = '#fff';
-           ctx.fillRect(p.x, p.y, p.width, 6);
+           ctx.fillStyle = fallbackHighlight;
+           ctx.fillRect(p.x, p.y, p.width, 4);
            ctx.restore();
     }
 
@@ -473,13 +466,16 @@ class Level {
                     }
                 }
 
-                // Fallback neon style
+                // Fallback dark blue tile style
                 c.save();
                 const grad = c.createLinearGradient(sx, sy, sx, sy + sh);
-                grad.addColorStop(0, this.theme.platTop);
-                grad.addColorStop(1, this.theme.platBot);
+                grad.addColorStop(0, '#0b1f3b');
+                grad.addColorStop(1, '#07162d');
                 c.fillStyle = grad;
                 c.fillRect(sx, sy, sw, sh);
+                c.strokeStyle = '#123464';
+                c.lineWidth = 2;
+                c.strokeRect(sx, sy, sw, sh);
                 c.restore();
             }
 
