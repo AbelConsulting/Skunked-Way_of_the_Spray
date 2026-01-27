@@ -68,6 +68,9 @@ class AudioManager {
         this._activeSfx = [];
         this._gainPool = [];
 
+        // Scheduled SFX (setTimeout-based) for multi-stage cues
+        this._scheduledSfx = {};
+
         // Music ducking
         this.duckTarget = 0.4;
         this.duckAttack = 0.02;
@@ -154,6 +157,48 @@ class AudioManager {
                 this.musicGainNode.gain.linearRampToValueAtTime(this.musicGain, t + this.duckRelease);
             } catch (e) {}
         }, Math.max(50, Math.floor(this.duckRelease * 1000)));
+    }
+
+    _cancelScheduledSfx(key) {
+        if (!key) return;
+        const id = this._scheduledSfx[key];
+        if (id) {
+            try { clearTimeout(id); } catch (e) {}
+        }
+        delete this._scheduledSfx[key];
+    }
+
+    cancelDeathSequence() {
+        this._cancelScheduledSfx('death_followup');
+    }
+
+    /**
+     * Play a two-stage “death” cue: immediate impact + delayed stinger.
+     * Defaults use existing assets: player_death.wav then game_over.wav.
+     */
+    playDeathSequence(opts = {}) {
+        try {
+            this.cancelDeathSequence();
+            const oof = (opts && typeof opts.oof === 'string') ? opts.oof : 'player_death';
+            const follow = (opts && typeof opts.follow === 'string') ? opts.follow : 'game_over';
+            const oofVolume = (opts && typeof opts.oofVolume === 'number') ? opts.oofVolume : 0.9;
+            const followVolume = (opts && typeof opts.followVolume === 'number') ? opts.followVolume : 0.95;
+            const delayMs = (opts && typeof opts.delayMs === 'number') ? opts.delayMs : 1000;
+
+            // Immediate “oof”
+            if (this.playSound) this.playSound(oof, oofVolume);
+
+            // Delayed stinger (“sad trombone” / game-over style)
+            this._scheduledSfx.death_followup = setTimeout(() => {
+                try {
+                    if (this.playSound) this.playSound(follow, followVolume);
+                } catch (e) {}
+                delete this._scheduledSfx.death_followup;
+            }, Math.max(0, Math.floor(delayMs)));
+        } catch (e) {
+            // Fallback: at least play the initial sound
+            try { this.playSound && this.playSound('player_death', 0.9); } catch (err) {}
+        }
     }
 
     /**

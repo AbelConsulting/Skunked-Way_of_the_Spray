@@ -547,7 +547,16 @@ class Player {
         this.hitStunTimer = 0;
         this.invulnerableTimer = 0;
         try {
-            if (this.audioManager && this.audioManager.playSound) {
+            if (this.audioManager && typeof this.audioManager.playDeathSequence === 'function') {
+                this.audioManager.playDeathSequence({
+                    oof: 'player_death',
+                    follow: 'game_over',
+                    delayMs: 1000,
+                    oofVolume: 0.9,
+                    followVolume: 0.95
+                });
+            } else if (this.audioManager && this.audioManager.playSound) {
+                // Fallback for older AudioManager
                 this.audioManager.playSound('player_death', 0.9);
             }
         } catch (e) {}

@@ -447,6 +447,9 @@ class Game {
         // Start or restart the game (New Game)
         async startGame(levelIndex = 0) {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game.startGame() called, level:', levelIndex);
+
+            // Prevent delayed death stingers from a previous run bleeding into a new start.
+            try { this.audioManager && this.audioManager.cancelDeathSequence && this.audioManager.cancelDeathSequence(); } catch (e) {}
             
             // Start with a fade in
             this.transitionState = 'FADE_IN';
@@ -1124,7 +1127,7 @@ class Game {
             } catch (e) {}
             this.state = "GAME_OVER";
             this.audioManager.stopMusic();
-            this.audioManager.playSound('game_over', 1.0);
+            // NOTE: game_over stinger is played by the death sequence (delayed).
             // Notify UI layers (mobile touch controls) about state change
             try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch(e) {}
 
