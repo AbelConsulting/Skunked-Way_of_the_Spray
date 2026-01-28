@@ -320,7 +320,7 @@ class UI {
             const timerBoxW = 140;
             const timerBoxH = 32;
             const timerBoxX = padding;
-            const timerBoxY = padding + 190; // Lower on the left side
+            const timerBoxY = this.height - padding - timerBoxH; // Bottom-left corner
 
             ctx.save();
             
