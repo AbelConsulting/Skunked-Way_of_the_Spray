@@ -27,7 +27,89 @@ class GameApp {
             right: { a: false, b: false, trigger: false }
         };
 
+        // VR controller enable/prime hooks
+        this._vrHooksReady = false;
+        this._gamepadPrimeTimer = null;
+        this._primeGamepadDeadline = 0;
+        this._wireVrControllerHooks();
+
         this.init();
+    }
+
+    _wireVrControllerHooks() {
+        if (this._vrHooksReady) return;
+        this._vrHooksReady = true;
+
+        const prime = (reason) => {
+            try {
+                if (typeof window !== 'undefined' && window._vrControllersEnabled === true) {
+                    this._primeGamepadInput(reason);
+                }
+            } catch (e) {}
+        };
+
+        try {
+            window.setVrControllersEnabled = (enabled) => {
+                const isOn = !!enabled;
+                try { window._vrControllersEnabled = isOn; } catch (e) {}
+                try { localStorage.setItem('vrControllers', isOn ? '1' : '0'); } catch (e) {}
+                if (isOn) prime('enable');
+                else this._clearGamepadKeys();
+                try {
+                    window.dispatchEvent(new CustomEvent('vrControllersToggle', { detail: { enabled: isOn } }));
+                } catch (e) {}
+                return isOn;
+            };
+            window.primeVrControllers = () => prime('manual');
+        } catch (e) {}
+
+        try {
+            window.addEventListener('gamepadconnected', () => prime('gamepadconnected'));
+            window.addEventListener('gamepaddisconnected', () => {
+                // Release any stuck keys when a controller disconnects
+                this._clearGamepadKeys();
+            });
+        } catch (e) {}
+    }
+
+    _primeGamepadInput(reason) {
+        if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
+        try {
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            this._primeGamepadDeadline = now + 3000;
+            if (this._gamepadPrimeTimer) {
+                clearInterval(this._gamepadPrimeTimer);
+                this._gamepadPrimeTimer = null;
+            }
+
+            const tick = () => {
+                const t = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
+                const anyPad = pads.some(p => !!p);
+                if (anyPad) {
+                    try { window._vrControllersDetected = true; } catch (e) {}
+                    if (this._gamepadPrimeTimer) {
+                        clearInterval(this._gamepadPrimeTimer);
+                        this._gamepadPrimeTimer = null;
+                    }
+                    return;
+                }
+                if (t > this._primeGamepadDeadline) {
+                    if (this._gamepadPrimeTimer) {
+                        clearInterval(this._gamepadPrimeTimer);
+                        this._gamepadPrimeTimer = null;
+                    }
+                }
+            };
+
+            tick();
+            this._gamepadPrimeTimer = setInterval(tick, 250);
+        } catch (e) {
+            if (this._gamepadPrimeTimer) {
+                clearInterval(this._gamepadPrimeTimer);
+                this._gamepadPrimeTimer = null;
+            }
+        }
     }
 
     // Load extra SFX in small chunks after the game starts.
@@ -282,6 +364,18 @@ class GameApp {
         if (prev === isDown) return;
         this._gamepadKeys[k] = isDown;
         this._sendKeyEvent(k, isDown ? 'keydown' : 'keyup');
+    }
+
+    _clearGamepadKeys() {
+        try {
+            const keys = Object.keys(this._gamepadKeys || {});
+            for (const k of keys) {
+                if (this._gamepadKeys[k]) {
+                    this._gamepadKeys[k] = false;
+                    this._sendKeyEvent(k, 'keyup');
+                }
+            }
+        } catch (e) {}
     }
 
     _getButtonPressed(gamepad, index) {

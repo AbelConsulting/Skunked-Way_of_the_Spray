@@ -930,13 +930,23 @@ try {
         // Initialize from localStorage if available
         try {
             const stored = localStorage.getItem('vrControllers');
-            if (stored === '1') window._vrControllersEnabled = true;
+            if (stored === '1') {
+                window._vrControllersEnabled = true;
+                if (typeof window.setVrControllersEnabled === 'function') {
+                    try { window.setVrControllersEnabled(true); } catch (e) {}
+                }
+            }
         } catch (e) {}
         updateVrLabel();
         vrBtn.addEventListener('click', (e) => {
             try { e && e.preventDefault(); } catch (_) {}
-            window._vrControllersEnabled = !window._vrControllersEnabled;
-            try { localStorage.setItem('vrControllers', window._vrControllersEnabled ? '1' : '0'); } catch (e) {}
+            const nextEnabled = !window._vrControllersEnabled;
+            window._vrControllersEnabled = nextEnabled;
+            if (typeof window.setVrControllersEnabled === 'function') {
+                try { window.setVrControllersEnabled(nextEnabled); } catch (e) {}
+            } else {
+                try { localStorage.setItem('vrControllers', window._vrControllersEnabled ? '1' : '0'); } catch (e) {}
+            }
             updateVrLabel();
         });
     }
