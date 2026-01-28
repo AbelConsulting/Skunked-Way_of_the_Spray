@@ -384,6 +384,15 @@ class GameApp {
         return !!(btn && (btn.pressed || btn.value > 0.5));
     }
 
+    _getAxisX(gamepad) {
+        if (!gamepad || !gamepad.axes || gamepad.axes.length === 0) return 0;
+        const a0 = typeof gamepad.axes[0] === 'number' ? gamepad.axes[0] : 0;
+        const a2 = typeof gamepad.axes[2] === 'number' ? gamepad.axes[2] : 0;
+        // Prefer axis[2] when it has stronger signal (common for XR standard mapping)
+        if (Math.abs(a2) > Math.abs(a0) + 0.05) return a2;
+        return a0;
+    }
+
     _pickGamepads() {
         const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
         let leftPad = null;
@@ -426,21 +435,34 @@ class GameApp {
         const { leftPad, rightPad } = this._pickGamepads();
         if (!leftPad && !rightPad) return;
 
+        const movePad = leftPad || rightPad;
+        const actionPad = rightPad || leftPad;
+        const leftIsXr = !!(leftPad && leftPad.mapping === 'xr-standard');
+        const rightIsXr = !!(actionPad && actionPad.mapping === 'xr-standard');
+
         // Left controller thumbstick: move left/right
-        const axisX = leftPad && leftPad.axes && typeof leftPad.axes[0] === 'number' ? leftPad.axes[0] : 0;
+        const axisX = this._getAxisX(movePad);
         const leftDown = axisX < -0.25;
         const rightDown = axisX > 0.25;
         this._setKeyState('ArrowLeft', leftDown);
         this._setKeyState('ArrowRight', rightDown);
 
         // Left trigger: special attack (KeyZ)
-        const leftTrigger = this._getButtonPressed(leftPad, 6) || this._getButtonPressed(leftPad, 4);
+        const leftTrigger = leftIsXr
+            ? (this._getButtonPressed(leftPad, 0) || this._getButtonPressed(leftPad, 1))
+            : (this._getButtonPressed(leftPad, 6) || this._getButtonPressed(leftPad, 4));
         this._setKeyState('z', leftTrigger);
 
         // Right controller buttons
-        const aPressed = this._getButtonPressed(rightPad, 0);
-        const bPressed = this._getButtonPressed(rightPad, 1);
-        const rightTrigger = this._getButtonPressed(rightPad, 7) || this._getButtonPressed(rightPad, 5);
+        const aPressed = rightIsXr
+            ? this._getButtonPressed(actionPad, 3)
+            : this._getButtonPressed(actionPad, 0);
+        const bPressed = rightIsXr
+            ? this._getButtonPressed(actionPad, 2)
+            : this._getButtonPressed(actionPad, 1);
+        const rightTrigger = rightIsXr
+            ? this._getButtonPressed(actionPad, 0)
+            : (this._getButtonPressed(actionPad, 7) || this._getButtonPressed(actionPad, 5));
 
         // A: jump (Space)
         this._setKeyState(' ', aPressed);
