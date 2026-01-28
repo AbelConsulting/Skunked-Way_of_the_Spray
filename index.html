@@ -1491,12 +1491,22 @@ window.addEventListener('gameStateChange', function(e) {
     }
 
     if (e && e.detail && e.detail.state === 'PLAYING') {
-        // Ensure controls are ready to show
-        tcNow.style.display = 'flex'; tcNow.style.pointerEvents = 'auto'; void tcNow.offsetWidth; tcNow.classList.add('visible');
+        // Ensure controls are ready to show with proper display and pointer events
+        tcNow.style.display = 'flex'; 
+        tcNow.style.pointerEvents = 'auto'; 
+        void tcNow.offsetWidth; 
+        tcNow.classList.add('visible');
+        tcNow.style.opacity = '1';
 
         // show with animation
         try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_showing', { state: e.detail.state }); } catch (e) {}
-        showTouchControls(800);
+        
+        // Use forced visibility request if controls should always be on
+        if (window._forceTouchControls) {
+            showTouchControlsImmediate({ force: true, durationMs: 3600000, persistent: true });
+        } else {
+            showTouchControls(800);
+        }
 
         // Re-assert visibility for a short duration to mitigate racing hides triggered by
         // resize/orientation/fullscreen handlers on some devices (e.g., Galaxy S20).
@@ -1508,8 +1518,16 @@ window.addEventListener('gameStateChange', function(e) {
                 const cur = document.getElementById('touch-controls');
                 if (!cur) { clearInterval(tid); return; }
                 try {
-                    cur.style.display = 'flex'; cur.style.pointerEvents = 'auto'; void cur.offsetWidth; cur.classList.add('visible');
-                    showTouchControls(window._forceTouchControls ? 3600000 : 800);
+                    cur.style.display = 'flex'; 
+                    cur.style.pointerEvents = 'auto'; 
+                    void cur.offsetWidth; 
+                    cur.classList.add('visible');
+                    cur.style.opacity = '1';
+                    if (window._forceTouchControls) {
+                        showTouchControlsImmediate({ force: true, durationMs: 3600000, persistent: true });
+                    } else {
+                        showTouchControls(800);
+                    }
                 } catch (e) {}
                 if (Date.now() >= end) clearInterval(tid);
             }, 120);
