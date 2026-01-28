@@ -1497,6 +1497,7 @@ window.addEventListener('gameStateChange', function(e) {
 
     if (e && e.detail && e.detail.state === 'PLAYING') {
         // Ensure controls are ready to show with proper display and pointer events
+        // Force display and pointer events when entering PLAYING state
         tcNow.style.display = 'flex'; 
         tcNow.style.pointerEvents = 'auto'; 
         void tcNow.offsetWidth; 
@@ -1504,7 +1505,7 @@ window.addEventListener('gameStateChange', function(e) {
         tcNow.style.opacity = '1';
 
         // show with animation
-        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_showing', { state: e.detail.state }); } catch (e) {}
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_showing', { state: e.detail.state }); } catch (err) {}
         
         // Use forced visibility request if controls should always be on
         if (window._forceTouchControls) {
@@ -1533,13 +1534,16 @@ window.addEventListener('gameStateChange', function(e) {
                     } else {
                         showTouchControls(800);
                     }
-                } catch (e) {}
+                } catch (err) {}
                 if (Date.now() >= end) clearInterval(tid);
             }, 120);
         })(800);
     } else {
-        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hiding', { state: e && e.detail && e.detail.state }); } catch (e) {}
-        hideTouchControls();
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hiding', { state: e && e.detail && e.detail.state }); } catch (err) {}
+        // Don't hide if controls are forced to always show
+        if (!window._forceTouchControls) {
+            hideTouchControls();
+        }
     }
 });
 
