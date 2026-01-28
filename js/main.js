@@ -320,6 +320,15 @@ class GameApp {
 
     _handleGamepadInput() {
         if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
+        try {
+            const enabled = (typeof window !== 'undefined') && (
+                window._vrControllersEnabled === true ||
+                (typeof localStorage !== 'undefined' && localStorage.getItem('vrControllers') === '1')
+            );
+            if (!enabled) return;
+        } catch (e) {
+            return;
+        }
         const { leftPad, rightPad } = this._pickGamepads();
         if (!leftPad && !rightPad) return;
 

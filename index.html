@@ -380,6 +380,7 @@
                 <h1 class="pause-title">PAUSED</h1>
                 <div class="pause-actions">
                     <button id="resume-btn" class="menu-btn menu-btn--primary">Resume</button>
+                    <button id="vr-controllers-btn" title="Enable VR controllers" class="menu-btn">🎮 Enable VR Controllers</button>
                     <button id="view-highscores-btn" title="View High Scores" class="menu-btn">🏆 High Scores</button>
                     <button id="view-achievements-btn" title="View Achievements" class="menu-btn">🎖️ Achievements</button>
                 </div>
@@ -912,6 +913,29 @@ try {
             const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
             if (resumeBtn._lastResumePress && (now - resumeBtn._lastResumePress) < 350) return;
             onResumePress(e);
+        });
+    }
+} catch (e) {}
+
+// Wire VR controllers toggle in pause overlay
+try {
+    const vrBtn = document.getElementById('vr-controllers-btn');
+    const updateVrLabel = () => {
+        const enabled = !!(window._vrControllersEnabled === true);
+        if (vrBtn) vrBtn.textContent = enabled ? '🎮 VR Controllers: On' : '🎮 Enable VR Controllers';
+    };
+    if (vrBtn) {
+        // Initialize from localStorage if available
+        try {
+            const stored = localStorage.getItem('vrControllers');
+            if (stored === '1') window._vrControllersEnabled = true;
+        } catch (e) {}
+        updateVrLabel();
+        vrBtn.addEventListener('click', (e) => {
+            try { e && e.preventDefault(); } catch (_) {}
+            window._vrControllersEnabled = !window._vrControllersEnabled;
+            try { localStorage.setItem('vrControllers', window._vrControllersEnabled ? '1' : '0'); } catch (e) {}
+            updateVrLabel();
         });
     }
 } catch (e) {}
