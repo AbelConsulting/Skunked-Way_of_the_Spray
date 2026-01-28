@@ -1030,7 +1030,7 @@ class Game {
                         particle.color = Math.random() > 0.5 ? '#FFD700' : '#FFF700';
                         particle.size = Utils.randomFloat(3, 6);
                     }
-                    this.effects.push(burst);
+                    this.hitSparks.push(burst);
                 }
                 
                 // Add visual effect for golden idol collection
@@ -1053,7 +1053,7 @@ class Game {
                         }
                         particle.size = Utils.randomFloat(3, 7);
                     }
-                    this.effects.push(burst);
+                    this.hitSparks.push(burst);
                 }
                 
                 // Add visual effect for damage boost collection
@@ -1076,7 +1076,7 @@ class Game {
                         }
                         particle.size = Utils.randomFloat(4, 8);
                     }
-                    this.effects.push(burst);
+                    this.hitSparks.push(burst);
                 }
                 
                 // Grant extra life if applicable
