@@ -833,13 +833,12 @@ function initTouchControls() {
     });
 }
 
-// Wire pause button: show on non-loading UI, call game's togglePause when clicked
+// Wire pause button: show on non-loading UI, call game's togglePause when pressed
 try {
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) {
         pauseBtn.style.display = 'flex';
-        pauseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+        const invokePause = () => {
             try {
                 // If resuming from pause, attempt fullscreen on the same gesture
                 const wasPaused = !!(window.game && window.game.state === 'PAUSED');
@@ -856,6 +855,20 @@ try {
                     triggerKeyEvent('Escape', 'keydown');
                 }
             } catch (err) { console.warn('pause button handler failed', err); }
+        };
+
+        const onPausePress = (e) => {
+            try { e && e.preventDefault(); e && e.stopPropagation(); } catch (_) {}
+            pauseBtn._lastPausePress = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            invokePause();
+        };
+
+        pauseBtn.addEventListener('touchstart', onPausePress, { passive: false });
+        pauseBtn.addEventListener('pointerdown', onPausePress);
+        pauseBtn.addEventListener('click', (e) => {
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            if (pauseBtn._lastPausePress && (now - pauseBtn._lastPausePress) < 350) return;
+            onPausePress(e);
         });
     }
 } catch (e) {}
@@ -864,8 +877,7 @@ try {
 try {
     const resumeBtn = document.getElementById('resume-btn');
     if (resumeBtn) {
-        resumeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+        const invokeResume = () => {
             try {
                 // Attempt fullscreen on resume (same user gesture as resume click)
                 if (typeof requestFullscreen === 'function') {
@@ -881,6 +893,20 @@ try {
                     triggerKeyEvent('Escape', 'keydown');
                 }
             } catch (err) { console.warn('resume button handler failed', err); }
+        };
+
+        const onResumePress = (e) => {
+            try { e && e.preventDefault(); e && e.stopPropagation(); } catch (_) {}
+            resumeBtn._lastResumePress = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            invokeResume();
+        };
+
+        resumeBtn.addEventListener('touchstart', onResumePress, { passive: false });
+        resumeBtn.addEventListener('pointerdown', onResumePress);
+        resumeBtn.addEventListener('click', (e) => {
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            if (resumeBtn._lastResumePress && (now - resumeBtn._lastResumePress) < 350) return;
+            onResumePress(e);
         });
     }
 } catch (e) {}
