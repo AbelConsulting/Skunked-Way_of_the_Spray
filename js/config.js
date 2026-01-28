@@ -53,7 +53,12 @@ const Config = {
     EXTRA_LIFE_ITEM_SIZE: 32,
     IDOL_ITEM_SIZE: 30,
     IDOL_SCORE: 250,
-    IDOL_SET_BONUS: 1000,
+    IDOL_SET_BONUS: 2000, // Increased from 1000 for better incentive
+    // Idol collection bonuses
+    IDOL_HEALTH_RESTORE: 30, // Instant health on pickup
+    IDOL_INVULNERABLE_DURATION: 2.0, // Seconds of invulnerability
+    IDOL_SPEED_BOOST_PER_IDOL: 0.15, // 15% speed boost per idol (stacks)
+    IDOL_DAMAGE_BOOST_PER_IDOL: 0.25, // 25% damage boost per idol (stacks)
     SPEED_BOOST_ITEM_SIZE: 32,
     SPEED_BOOST_DURATION: 8.0, // seconds
     SPEED_BOOST_MULTIPLIER: 1.5, // 150% speed

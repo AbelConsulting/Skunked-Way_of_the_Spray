@@ -99,6 +99,10 @@ class Player {
         // Damage boost effect (applied by damage boost pickups)
         this.damageBoost = null;
         
+        // Idol collection bonuses (progressive, per-level)
+        // { speed: 0.15, damage: 0.25, count: 1 } - stacks with each idol
+        this.idolBonuses = null;
+        
         // Visual effects
         this.speedTrailEffect = new SpeedTrailEffect();
         this.healthRegenEffect = new HealthRegenEffect();
@@ -316,6 +320,13 @@ class Player {
         this.isDying = false;
         this.deathTimer = 0;
 
+        // Reset power-up effects on respawn
+        this.speedBoost = null;
+        this.damageBoost = null;
+        this.healthRegen = null;
+        // Note: idolBonuses persist across respawns within the same level
+        // They only reset when starting a new level
+
         // Reset attack state and clear any stuck input (e.g., missed keyup
         // during transitions) so the player doesn't auto-run on respawn.
         this.isAttacking = false;
@@ -456,6 +467,11 @@ class Player {
         // Apply speed boost multiplier if active
         if (this.speedBoost && this.speedBoost.multiplier) {
             this.targetVelocityX *= this.speedBoost.multiplier;
+        }
+        
+        // Apply idol bonuses (stacking speed increase)
+        if (this.idolBonuses && this.idolBonuses.speed > 0) {
+            this.targetVelocityX *= (1 + this.idolBonuses.speed);
         }
 
         // Smooth acceleration/deceleration
@@ -712,6 +728,17 @@ class Player {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
                 ctx.restore();
             }
+            // Add idol collection bonus glow effect (golden aura)
+            if (this.idolBonuses && this.idolBonuses.count > 0) {
+                ctx.save();
+                // Golden glow that intensifies with more idols collected
+                const intensity = 10 + (this.idolBonuses.count * 5);
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = intensity + Math.sin(Date.now() / 150) * (intensity * 0.3); // Pulsing golden glow
+                ctx.globalCompositeOperation = 'lighter';
+                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                ctx.restore();
+            }
             this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
         } else {
             ctx.fillStyle = this.color;
@@ -821,8 +848,13 @@ class Player {
      */
     getCurrentDamage() {
         let damage = this.attackDamage;
+        // Apply damage boost power-up
         if (this.damageBoost && this.damageBoost.multiplier) {
             damage *= this.damageBoost.multiplier;
+        }
+        // Apply idol bonuses (stacking damage increase)
+        if (this.idolBonuses && this.idolBonuses.damage > 0) {
+            damage *= (1 + this.idolBonuses.damage);
         }
         return Math.floor(damage);
     }

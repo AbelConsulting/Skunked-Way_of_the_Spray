@@ -693,6 +693,10 @@ class Game {
                 this.player.velocityX = 0;
                 this.player.velocityY = 0;
                 this._clearAllInput();
+                
+                // Reset idol bonuses when starting a new level
+                // (They are level-specific and should start fresh each level)
+                this.player.idolBonuses = null;
             }
 
             // Show level toast if UI available
@@ -1075,15 +1079,76 @@ class Game {
                         try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
                         try { this._scorePulse = 1.0; } catch (e) {}
 
+                        // INSTANT REWARDS on idol pickup:
+                        // 1. Restore health
+                        const healthRestore = Config.IDOL_HEALTH_RESTORE || 30;
+                        this.player.health = Math.min(this.player.health + healthRestore, this.player.maxHealth);
+                        
+                        // 2. Grant temporary invulnerability
+                        const invulnDuration = Config.IDOL_INVULNERABLE_DURATION || 2.0;
+                        this.player.invulnerableTimer = Math.max(this.player.invulnerableTimer, invulnDuration);
+                        
+                        // 3. Add floating text showing rewards
+                        const idolNum = idx + 1;
+                        const collectedCount = this.idolProgress[levelId].filter(Boolean).length;
+                        this.damageNumbers.push({
+                            x: item.x,
+                            y: item.y - 30,
+                            value: `+${healthRestore} HP`,
+                            color: '#FFD700',
+                            timer: 1.2,
+                            velocityY: -80
+                        });
+                        this.damageNumbers.push({
+                            x: item.x,
+                            y: item.y - 50,
+                            value: `IDOL ${idolNum}/3`,
+                            color: '#FFFFFF',
+                            timer: 1.5,
+                            velocityY: -60
+                        });
+
+                        // PROGRESSIVE BONUSES: Each idol grants stacking speed/damage buffs
+                        // These persist for the entire level
+                        if (!this.player.idolBonuses) {
+                            this.player.idolBonuses = { speed: 0, damage: 0, count: 0 };
+                        }
+                        this.player.idolBonuses.speed += (Config.IDOL_SPEED_BOOST_PER_IDOL || 0.15);
+                        this.player.idolBonuses.damage += (Config.IDOL_DAMAGE_BOOST_PER_IDOL || 0.25);
+                        this.player.idolBonuses.count = collectedCount;
+
+                        // Show progressive bonus text
+                        const speedPercent = Math.round(this.player.idolBonuses.speed * 100);
+                        const damagePercent = Math.round(this.player.idolBonuses.damage * 100);
+                        this.damageNumbers.push({
+                            x: item.x,
+                            y: item.y - 70,
+                            value: `+${speedPercent}% SPD +${damagePercent}% DMG`,
+                            color: '#00FFFF',
+                            timer: 1.8,
+                            velocityY: -40
+                        });
+
                         // If all idols in the level are collected, grant a set bonus
                         const allCollected = this.idolProgress[levelId].every(Boolean);
                         if (allCollected && !this.idolProgress[levelId]._bonusGranted) {
                             this.idolProgress[levelId]._bonusGranted = true;
                             this.gameStats.idolSetsCompleted = (this.gameStats.idolSetsCompleted || 0) + 1;
-                            this.score += (Config.IDOL_SET_BONUS || 1000);
+                            this.score += (Config.IDOL_SET_BONUS || 2000);
                             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
                             try { this._scorePulse = 1.0; } catch (e) {}
                             try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.7); } catch (e) {}
+                            
+                            // Full set bonus: Extra life!
+                            this.lives = Math.min(this.lives + 1, 9);
+                            this.damageNumbers.push({
+                                x: item.x,
+                                y: item.y - 90,
+                                value: 'FULL SET! +1 LIFE!',
+                                color: '#FF00FF',
+                                timer: 2.5,
+                                velocityY: -100
+                            });
                         }
 
                         // Check achievements mid-run
