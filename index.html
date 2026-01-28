@@ -869,6 +869,7 @@ try {
             const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
             if (pauseBtn._lastPausePress && (now - pauseBtn._lastPausePress) < 350) return;
             pauseBtn._lastPausePress = now;
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('pauseBtn_press', { type: e && e.type }); } catch (e) {}
             invokePause();
         };
 
@@ -904,6 +905,7 @@ try {
         const onResumePress = (e) => {
             try { e && e.preventDefault(); e && e.stopPropagation(); } catch (_) {}
             resumeBtn._lastResumePress = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('resumeBtn_press', { type: e && e.type }); } catch (e) {}
             invokeResume();
         };
 

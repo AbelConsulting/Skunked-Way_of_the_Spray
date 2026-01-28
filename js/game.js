@@ -576,6 +576,7 @@ class Game {
         togglePause() {
             if (this.state === 'PLAYING') {
                 this.state = 'PAUSED';
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) {}
                 this.audioManager.playSound && this.audioManager.playSound('pause');
                 this.audioManager.pauseMusic && this.audioManager.pauseMusic();
                 // Show pause overlay when available (keeps gameplay UI clean; hosts pause actions)
@@ -584,6 +585,7 @@ class Game {
                 this.dispatchGameStateChange();
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) {}
                 this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
                 // Hide pause overlay
