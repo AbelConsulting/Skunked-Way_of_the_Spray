@@ -42,6 +42,54 @@ class DamageNumber {
     }
 }
 
+class FloatingText {
+    constructor(x, y, text, opts = null) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = '#FFFFFF';
+        this.lifetime = 1.2;
+        this.age = 0;
+        this.velocityY = -60;
+        this.alpha = 1.0;
+        this.font = 'bold 20px Arial';
+
+        if (opts && typeof opts === 'object') {
+            if (typeof opts.color === 'string') this.color = opts.color;
+            if (typeof opts.lifetime === 'number') this.lifetime = opts.lifetime;
+            if (typeof opts.velocityY === 'number') this.velocityY = opts.velocityY;
+            if (typeof opts.font === 'string') this.font = opts.font;
+        }
+    }
+
+    update(dt) {
+        this.age += dt;
+        this.y += this.velocityY * dt;
+        this.alpha = 1.0 - (this.age / this.lifetime);
+    }
+
+    isAlive() {
+        return this.age < this.lifetime;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.font = this.font;
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.lineWidth = 3;
+
+        const text = this.text.toString();
+        const metrics = ctx.measureText(text);
+        const textX = this.x - metrics.width / 2;
+
+        ctx.strokeText(text, textX, this.y);
+        ctx.fillText(text, textX, this.y);
+        ctx.restore();
+    }
+}
+
 class HitSpark {
     constructor(x, y, opts = null) {
         this.x = x;

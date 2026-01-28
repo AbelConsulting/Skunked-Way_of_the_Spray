@@ -1106,22 +1106,18 @@ class Game {
                         // 3. Add floating text showing rewards
                         const idolNum = idx + 1;
                         const collectedCount = this.idolProgress[levelId].filter(Boolean).length;
-                        this.damageNumbers.push({
-                            x: item.x,
-                            y: item.y - 30,
-                            value: `+${healthRestore} HP`,
-                            color: '#FFD700',
-                            timer: 1.2,
-                            velocityY: -80
-                        });
-                        this.damageNumbers.push({
-                            x: item.x,
-                            y: item.y - 50,
-                            value: `IDOL ${idolNum}/3`,
-                            color: '#FFFFFF',
-                            timer: 1.5,
-                            velocityY: -60
-                        });
+                        this.damageNumbers.push(new FloatingText(
+                            item.x,
+                            item.y - 30,
+                            `+${healthRestore} HP`,
+                            { color: '#FFD700', lifetime: 1.2, velocityY: -80, font: 'bold 20px Arial' }
+                        ));
+                        this.damageNumbers.push(new FloatingText(
+                            item.x,
+                            item.y - 50,
+                            `IDOL ${idolNum}/3`,
+                            { color: '#FFFFFF', lifetime: 1.5, velocityY: -60, font: 'bold 20px Arial' }
+                        ));
 
                         // PROGRESSIVE BONUSES: Each idol grants stacking speed/damage buffs
                         // These persist for the entire level
@@ -1135,14 +1131,12 @@ class Game {
                         // Show progressive bonus text
                         const speedPercent = Math.round(this.player.idolBonuses.speed * 100);
                         const damagePercent = Math.round(this.player.idolBonuses.damage * 100);
-                        this.damageNumbers.push({
-                            x: item.x,
-                            y: item.y - 70,
-                            value: `+${speedPercent}% SPD +${damagePercent}% DMG`,
-                            color: '#00FFFF',
-                            timer: 1.8,
-                            velocityY: -40
-                        });
+                        this.damageNumbers.push(new FloatingText(
+                            item.x,
+                            item.y - 70,
+                            `+${speedPercent}% SPD +${damagePercent}% DMG`,
+                            { color: '#00FFFF', lifetime: 1.8, velocityY: -40, font: 'bold 18px Arial' }
+                        ));
 
                         // If all idols in the level are collected, grant a set bonus
                         const allCollected = this.idolProgress[levelId].every(Boolean);
@@ -1156,14 +1150,12 @@ class Game {
                             
                             // Full set bonus: Extra life!
                             this.lives = Math.min(this.lives + 1, 9);
-                            this.damageNumbers.push({
-                                x: item.x,
-                                y: item.y - 90,
-                                value: 'FULL SET! +1 LIFE!',
-                                color: '#FF00FF',
-                                timer: 2.5,
-                                velocityY: -100
-                            });
+                            this.damageNumbers.push(new FloatingText(
+                                item.x,
+                                item.y - 90,
+                                'FULL SET! +1 LIFE!',
+                                { color: '#FF00FF', lifetime: 2.5, velocityY: -100, font: 'bold 22px Arial' }
+                            ));
                         }
 
                         // Check achievements mid-run
