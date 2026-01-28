@@ -80,7 +80,11 @@ class ItemManager {
             rotation: 0,
             rotationSpeed: 1.2,
             scale: 1.0,
-            pulseSpeed: 2.5
+            pulseSpeed: 2.5,
+            // Light rays for divine appearance
+            rayRotation: 0,
+            // Shimmer particles
+            shimmerParticles: []
         };
         this.items.push(item);
         return item;
@@ -173,6 +177,42 @@ class ItemManager {
                 item.rotation += item.rotationSpeed * dt;
                 if (item.rotation > Math.PI * 2) item.rotation -= Math.PI * 2;
                 item.scale = 1.0 + Math.sin(item.pulseSpeed * Date.now() / 1000) * 0.06;
+                
+                // Rotate light rays slowly
+                if (!item.rayRotation) item.rayRotation = 0;
+                item.rayRotation += dt * 0.5;
+                if (item.rayRotation > Math.PI * 2) item.rayRotation -= Math.PI * 2;
+                
+                // Update and generate shimmer particles
+                if (!item.shimmerParticles) item.shimmerParticles = [];
+                
+                // Add new shimmer particles occasionally
+                if (Math.random() < 0.12) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 15 + Math.random() * 20;
+                    item.shimmerParticles.push({
+                        x: Math.cos(angle) * distance,
+                        y: Math.sin(angle) * distance,
+                        vx: Math.cos(angle) * 10,
+                        vy: Math.sin(angle) * 10 - 20, // Slight upward drift
+                        life: 0.8 + Math.random() * 0.6,
+                        age: 0,
+                        size: 2 + Math.random() * 2.5
+                    });
+                }
+                
+                // Update existing shimmer particles
+                for (let j = item.shimmerParticles.length - 1; j >= 0; j--) {
+                    const shimmer = item.shimmerParticles[j];
+                    shimmer.age += dt;
+                    shimmer.x += shimmer.vx * dt;
+                    shimmer.y += shimmer.vy * dt;
+                    shimmer.vx *= 0.96;
+                    shimmer.vy *= 0.96;
+                    if (shimmer.age >= shimmer.life) {
+                        item.shimmerParticles.splice(j, 1);
+                    }
+                }
             } else if (item.type === 'SPEED_BOOST') {
                 // Fast energetic bounce
                 item.bounceOffset = Math.sin(item.bounceSpeed * Date.now() / 1000) * 10;
@@ -340,6 +380,81 @@ class ItemManager {
                 
                 Utils.drawExtraLifeItem(ctx, -item.width / 2, -item.height / 2, item.width);
             } else if (item.type === 'GOLDEN_IDOL') {
+                // Draw divine glow behind idol
+                ctx.save();
+                const glowSize = item.width * 1.2;
+                const glowPulse = 0.4 + Math.sin(Date.now() / 180) * 0.2;
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                gradient.addColorStop(0, `rgba(255, 215, 0, ${glowPulse})`);
+                gradient.addColorStop(0.3, `rgba(255, 185, 0, ${glowPulse * 0.6})`);
+                gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Draw rotating light rays
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.3;
+                ctx.rotate(item.rayRotation || 0);
+                const rayCount = 8;
+                const rayLength = item.width * 1.5;
+                for (let i = 0; i < rayCount; i++) {
+                    const angle = (Math.PI * 2 * i) / rayCount;
+                    ctx.save();
+                    ctx.rotate(angle);
+                    const rayGrad = ctx.createLinearGradient(0, 0, rayLength, 0);
+                    rayGrad.addColorStop(0, 'rgba(255, 223, 100, 0.6)');
+                    rayGrad.addColorStop(0.5, 'rgba(255, 215, 0, 0.3)');
+                    rayGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                    ctx.fillStyle = rayGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -2);
+                    ctx.lineTo(rayLength, -0.5);
+                    ctx.lineTo(rayLength, 0.5);
+                    ctx.lineTo(0, 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.restore();
+                
+                // Draw shimmer particles around idol
+                if (item.shimmerParticles && item.shimmerParticles.length > 0) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    for (const shimmer of item.shimmerParticles) {
+                        const alpha = 1 - (shimmer.age / shimmer.life);
+                        ctx.globalAlpha = alpha * 0.9;
+                        
+                        // Draw shimmer as a golden sparkle
+                        const shimmerGrad = ctx.createRadialGradient(
+                            shimmer.x, shimmer.y, 0,
+                            shimmer.x, shimmer.y, shimmer.size
+                        );
+                        shimmerGrad.addColorStop(0, '#FFFFFF');
+                        shimmerGrad.addColorStop(0.5, '#FFD700');
+                        shimmerGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                        ctx.fillStyle = shimmerGrad;
+                        ctx.beginPath();
+                        ctx.arc(shimmer.x, shimmer.y, shimmer.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Add small cross sparkle
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(shimmer.x - shimmer.size * 0.8, shimmer.y);
+                        ctx.lineTo(shimmer.x + shimmer.size * 0.8, shimmer.y);
+                        ctx.moveTo(shimmer.x, shimmer.y - shimmer.size * 0.8);
+                        ctx.lineTo(shimmer.x, shimmer.y + shimmer.size * 0.8);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+                
                 Utils.drawGoldenIdol(ctx, -item.width / 2, -item.height / 2, item.width);
             }
 

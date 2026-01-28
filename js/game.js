@@ -982,6 +982,29 @@ class Game {
                     this.effects.push(burst);
                 }
                 
+                // Add visual effect for golden idol collection
+                if (result && result.type === 'GOLDEN_IDOL' && result.success) {
+                    // Create divine light burst with more particles
+                    const burst = new HitSpark(item.x, item.y, {
+                        particleCount: 20,
+                        speedMin: 100,
+                        speedMax: 300
+                    });
+                    // Override particle colors for divine golden effect
+                    for (const particle of burst.particles) {
+                        const colorChoice = Math.random();
+                        if (colorChoice > 0.7) {
+                            particle.color = '#FFFFFF'; // Bright white
+                        } else if (colorChoice > 0.4) {
+                            particle.color = '#FFD700'; // Gold
+                        } else {
+                            particle.color = '#FFB700'; // Amber gold
+                        }
+                        particle.size = Utils.randomFloat(3, 7);
+                    }
+                    this.effects.push(burst);
+                }
+                
                 // Grant extra life if applicable
                 if (result && result.type === 'EXTRA_LIFE' && result.success) {
                     this.lives = Math.min(this.lives + (result.lives || 1), 9);
