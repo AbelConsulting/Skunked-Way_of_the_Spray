@@ -57,8 +57,15 @@ const Config = {
     // Idol collection bonuses
     IDOL_HEALTH_RESTORE: 30, // Instant health on pickup
     IDOL_INVULNERABLE_DURATION: 2.0, // Seconds of invulnerability
-    IDOL_SPEED_BOOST_PER_IDOL: 0.15, // 15% speed boost per idol (stacks)
-    IDOL_DAMAGE_BOOST_PER_IDOL: 0.25, // 25% damage boost per idol (stacks)
+    // Progressive tiers by collected count (per level)
+    // 1 idol: +5% speed / +5% damage
+    // 2 idols: +10% speed / +10% damage
+    // 3 idols (full set): +25% speed / +30% damage
+    IDOL_BONUS_TIERS: [
+        { count: 1, speed: 0.05, damage: 0.05 },
+        { count: 2, speed: 0.10, damage: 0.10 },
+        { count: 3, speed: 0.25, damage: 0.30 }
+    ],
     SPEED_BOOST_ITEM_SIZE: 32,
     SPEED_BOOST_DURATION: 8.0, // seconds
     SPEED_BOOST_MULTIPLIER: 1.5, // 150% speed

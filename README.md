@@ -24,6 +24,10 @@ A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves 
 - **Extra Life (Red Heart)**: Grants an additional life (max 9)
   - 5% drop rate from regular enemies
   - 30% drop rate from bosses
+- **Golden Idols (🏺)**: Collect 3 per level for stacked bonuses
+  - 1st idol: +5% speed / +5% damage
+  - 2nd idol: +10% speed / +10% damage
+  - Full set: +25% speed / +30% damage + extra life
 
 ### 🦨 Ninja Skunk
 

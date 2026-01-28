@@ -1121,13 +1121,22 @@ class Game {
                             { color: '#FFFFFF', lifetime: 1.5, velocityY: -60, font: 'bold 20px Arial' }
                         ));
 
-                        // PROGRESSIVE BONUSES: Each idol grants stacking speed/damage buffs
+                        // PROGRESSIVE BONUSES: tiered speed/damage buffs by collected count
                         // These persist for the entire level
                         if (!this.player.idolBonuses) {
                             this.player.idolBonuses = { speed: 0, damage: 0, count: 0 };
                         }
-                        this.player.idolBonuses.speed += (Config.IDOL_SPEED_BOOST_PER_IDOL || 0.15);
-                        this.player.idolBonuses.damage += (Config.IDOL_DAMAGE_BOOST_PER_IDOL || 0.25);
+                        const tiers = (typeof Config !== 'undefined' && Array.isArray(Config.IDOL_BONUS_TIERS) && Config.IDOL_BONUS_TIERS.length)
+                            ? Config.IDOL_BONUS_TIERS
+                            : [
+                                { count: 1, speed: 0.05, damage: 0.05 },
+                                { count: 2, speed: 0.10, damage: 0.10 },
+                                { count: 3, speed: 0.25, damage: 0.30 }
+                            ];
+                        let tier = tiers.find((t) => t && t.count === collectedCount);
+                        if (!tier) tier = tiers[tiers.length - 1] || { speed: 0, damage: 0 };
+                        this.player.idolBonuses.speed = tier.speed || 0;
+                        this.player.idolBonuses.damage = tier.damage || 0;
                         this.player.idolBonuses.count = collectedCount;
 
                         // Show progressive bonus text

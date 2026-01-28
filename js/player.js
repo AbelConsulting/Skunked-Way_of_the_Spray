@@ -99,8 +99,8 @@ class Player {
         // Damage boost effect (applied by damage boost pickups)
         this.damageBoost = null;
         
-        // Idol collection bonuses (progressive, per-level)
-        // { speed: 0.15, damage: 0.25, count: 1 } - stacks with each idol
+        // Idol collection bonuses (tiered, per-level)
+        // { speed: 0.05, damage: 0.05, count: 1 } - tiers by collected count
         this.idolBonuses = null;
         
         // Visual effects
