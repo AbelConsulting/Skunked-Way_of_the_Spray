@@ -462,7 +462,89 @@ class UI {
                 ctx.restore();
             }
             
-            // Bonus values are shown in the box below the score instead
+            // Buff indicators (below idol icons)
+            try {
+                const speedBonus = player && player.idolBonuses && typeof player.idolBonuses.speed === 'number'
+                    ? player.idolBonuses.speed
+                    : 0;
+                const damageBonus = player && player.idolBonuses && typeof player.idolBonuses.damage === 'number'
+                    ? player.idolBonuses.damage
+                    : 0;
+                const speedBoostMultiplier = player && player.speedBoost && typeof player.speedBoost.multiplier === 'number'
+                    ? player.speedBoost.multiplier
+                    : 1;
+                const damageBoostMultiplier = player && player.damageBoost && typeof player.damageBoost.multiplier === 'number'
+                    ? player.damageBoost.multiplier
+                    : 1;
+                const totalSpeedMultiplier = Math.max(0, speedBoostMultiplier) * (1 + Math.max(0, speedBonus));
+                const totalDamageMultiplier = Math.max(0, damageBoostMultiplier) * (1 + Math.max(0, damageBonus));
+                const speedPercent = Math.max(0, Math.round((totalSpeedMultiplier - 1) * 100));
+                const damagePercent = Math.max(0, Math.round((totalDamageMultiplier - 1) * 100));
+                const hasBuffs = speedPercent > 0 || damagePercent > 0;
+
+                if (player && hasBuffs) {
+                    const indicatorY = idolY + idolSize + 6;
+                    const pillH = 18;
+                    const pillPadX = 8;
+                    const pillGap = 6;
+                    const speedLabel = `⚡ +${speedPercent}%`;
+                    const dmgLabel = `💥 +${damagePercent}%`;
+
+                    const drawPill = (x, y, w, h, r) => {
+                        const radius = Math.max(0, Math.min(r, h / 2, w / 2));
+                        if (typeof ctx.roundRect === 'function') {
+                            ctx.beginPath();
+                            ctx.roundRect(x, y, w, h, radius);
+                            return;
+                        }
+                        ctx.beginPath();
+                        ctx.moveTo(x + radius, y);
+                        ctx.lineTo(x + w - radius, y);
+                        ctx.arcTo(x + w, y, x + w, y + radius, radius);
+                        ctx.lineTo(x + w, y + h - radius);
+                        ctx.arcTo(x + w, y + h, x + w - radius, y + h, radius);
+                        ctx.lineTo(x + radius, y + h);
+                        ctx.arcTo(x, y + h, x, y + h - radius, radius);
+                        ctx.lineTo(x, y + radius);
+                        ctx.arcTo(x, y, x + radius, y, radius);
+                    };
+
+                    ctx.save();
+                    ctx.font = 'bold 11px Arial';
+                    ctx.textBaseline = 'middle';
+
+                    const speedW = Math.ceil(ctx.measureText(speedLabel).width) + (pillPadX * 2);
+                    const dmgW = Math.ceil(ctx.measureText(dmgLabel).width) + (pillPadX * 2);
+                    let curX = idolX;
+
+                    // Speed pill
+                    if (speedPercent > 0) {
+                        ctx.fillStyle = 'rgba(0, 200, 255, 0.22)';
+                        ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+                        ctx.lineWidth = 1;
+                        drawPill(curX, indicatorY, speedW, pillH, 8);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(speedLabel, curX + pillPadX, indicatorY + pillH / 2 + 1);
+                        curX += speedW + pillGap;
+                    }
+
+                    // Damage pill
+                    if (damagePercent > 0) {
+                        ctx.fillStyle = 'rgba(255, 90, 90, 0.22)';
+                        ctx.strokeStyle = 'rgba(255, 120, 120, 0.7)';
+                        ctx.lineWidth = 1;
+                        drawPill(curX, indicatorY, dmgW, pillH, 8);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(dmgLabel, curX + pillPadX, indicatorY + pillH / 2 + 1);
+                    }
+
+                    ctx.restore();
+                }
+            } catch (e) {}
         } catch (e) {}
 
         // Optional numeric HP (only when low, small + subtle)
@@ -711,67 +793,6 @@ class UI {
                 ctx.shadowColor = 'black';
                 ctx.shadowBlur = 3;
                 ctx.fillText(`COMBO x${combo}`, comboBoxX + comboBoxW / 2, comboBoxY + comboBoxH / 2);
-                
-                ctx.restore();
-            }
-        } catch (e) {}
-
-        // Active buffs indicator (below score)
-        try {
-            const speedBonus = player && player.idolBonuses && typeof player.idolBonuses.speed === 'number'
-                ? player.idolBonuses.speed
-                : 0;
-            const damageBonus = player && player.idolBonuses && typeof player.idolBonuses.damage === 'number'
-                ? player.idolBonuses.damage
-                : 0;
-            const speedBoostMultiplier = player && player.speedBoost && typeof player.speedBoost.multiplier === 'number'
-                ? player.speedBoost.multiplier
-                : 1;
-            const damageBoostMultiplier = player && player.damageBoost && typeof player.damageBoost.multiplier === 'number'
-                ? player.damageBoost.multiplier
-                : 1;
-            const totalSpeedMultiplier = Math.max(0, speedBoostMultiplier) * (1 + Math.max(0, speedBonus));
-            const totalDamageMultiplier = Math.max(0, damageBoostMultiplier) * (1 + Math.max(0, damageBonus));
-            const speedPercent = Math.max(0, Math.round((totalSpeedMultiplier - 1) * 100));
-            const damagePercent = Math.max(0, Math.round((totalDamageMultiplier - 1) * 100));
-            const hasBuffs = speedPercent > 0 || damagePercent > 0;
-            const buffIntensity = Math.min(1, (Math.max(speedPercent, damagePercent)) / 60);
-            if (player && hasBuffs) {
-                const bonusBoxW = 140;
-                const bonusBoxH = 44;
-                const bonusBoxX = this.width - padding - bonusBoxW;
-                const bonusBoxY = combo > 1 ? (padding + 74) : (padding + 40);
-
-                ctx.save();
-                
-                // Background + glow (stronger when any buffs are active)
-                const pulse = hasBuffs ? (Math.sin(Date.now() / 220) * 0.18 + 0.82) : 0.85;
-                const glowAlpha = 0.25 + (0.45 * buffIntensity);
-                ctx.fillStyle = `rgba(0, 180, 255, ${glowAlpha + 0.2 * pulse})`;
-                ctx.fillRect(bonusBoxX, bonusBoxY, bonusBoxW, bonusBoxH);
-
-                ctx.strokeStyle = `rgba(0, 217, 255, ${0.4 + 0.4 * buffIntensity})`;
-                ctx.shadowColor = `rgba(0, 217, 255, ${0.6 + 0.4 * buffIntensity})`;
-                ctx.shadowBlur = 8 + Math.floor(8 * buffIntensity);
-                ctx.lineWidth = 2;
-                ctx.strokeRect(bonusBoxX, bonusBoxY, bonusBoxW, bonusBoxH);
-
-                // Title
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 11px Arial';
-                ctx.shadowColor = 'black';
-                ctx.shadowBlur = 2;
-                const label = 'TOTAL BUFFS';
-                ctx.fillText(label, bonusBoxX + bonusBoxW / 2, bonusBoxY + 4);
-                
-                // Bonuses
-                ctx.font = 'bold 12px Arial';
-                ctx.fillStyle = `rgba(0, 240, 255, ${0.65 + 0.35 * buffIntensity})`;
-                ctx.fillText(`⚡ +${speedPercent}%`, bonusBoxX + 24, bonusBoxY + 24);
-                ctx.fillStyle = `rgba(255, 102, 102, ${0.65 + 0.35 * buffIntensity})`;
-                ctx.fillText(`💥 +${damagePercent}%`, bonusBoxX + 84, bonusBoxY + 24);
                 
                 ctx.restore();
             }
