@@ -1005,6 +1005,29 @@ class Game {
                     this.effects.push(burst);
                 }
                 
+                // Add visual effect for damage boost collection
+                if (result && result.type === 'DAMAGE_BOOST' && result.success) {
+                    // Create aggressive red/orange burst
+                    const burst = new HitSpark(item.x, item.y, {
+                        particleCount: 18,
+                        speedMin: 140,
+                        speedMax: 280
+                    });
+                    // Override particle colors for damage boost effect
+                    for (const particle of burst.particles) {
+                        const colorChoice = Math.random();
+                        if (colorChoice > 0.6) {
+                            particle.color = '#FF2222'; // Bright red
+                        } else if (colorChoice > 0.3) {
+                            particle.color = '#FF4444'; // Red
+                        } else {
+                            particle.color = '#FF6600'; // Orange-red
+                        }
+                        particle.size = Utils.randomFloat(4, 8);
+                    }
+                    this.effects.push(burst);
+                }
+                
                 // Grant extra life if applicable
                 if (result && result.type === 'EXTRA_LIFE' && result.success) {
                     this.lives = Math.min(this.lives + (result.lives || 1), 9);

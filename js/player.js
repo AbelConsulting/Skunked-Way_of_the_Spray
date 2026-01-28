@@ -96,9 +96,13 @@ class Player {
         // Speed boost effect (applied by speed boost pickups)
         this.speedBoost = null;
         
+        // Damage boost effect (applied by damage boost pickups)
+        this.damageBoost = null;
+        
         // Visual effects
         this.speedTrailEffect = new SpeedTrailEffect();
         this.healthRegenEffect = new HealthRegenEffect();
+        this.damageBoostEffect = new DamageBoostEffect();
 
         // Animation state
         this.animationState = "IDLE";
@@ -406,6 +410,29 @@ class Player {
         if (this.speedTrailEffect) {
             this.speedTrailEffect.update(dt);
         }
+        
+        // Update damage boost effect
+        if (this.damageBoost) {
+            this.damageBoost.timer += dt;
+            
+            // Update damage boost visual effect
+            if (this.damageBoostEffect) {
+                this.damageBoostEffect.emitFromPlayer(this, dt);
+            }
+            
+            // Remove effect when duration expires
+            if (this.damageBoost.timer >= this.damageBoost.duration) {
+                this.damageBoost = null;
+                if (this.damageBoostEffect) {
+                    this.damageBoostEffect.clear();
+                }
+            }
+        }
+        
+        // Always update damage boost effect particles (for fade out)
+        if (this.damageBoostEffect) {
+            this.damageBoostEffect.update(dt);
+        }
 
         if (this.hitStunTimer > 0) this.hitStunTimer -= dt;
         if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
@@ -638,6 +665,11 @@ class Player {
         if (this.healthRegenEffect && this.healthRegen) {
             this.healthRegenEffect.draw(ctx);
         }
+        
+        // Draw damage boost effect (behind player)
+        if (this.damageBoostEffect && this.damageBoost) {
+            this.damageBoostEffect.draw(ctx);
+        }
 
         // Draw shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -667,6 +699,15 @@ class Player {
                 ctx.save();
                 ctx.shadowColor = '#00FF88';
                 ctx.shadowBlur = 12 + Math.sin(Date.now() / 120) * 4; // Pulsing green glow
+                ctx.globalCompositeOperation = 'lighter';
+                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                ctx.restore();
+            }
+            // Add damage boost glow effect
+            if (this.damageBoost) {
+                ctx.save();
+                ctx.shadowColor = '#FF4444';
+                ctx.shadowBlur = 18 + Math.sin(Date.now() / 90) * 6; // Pulsing red glow
                 ctx.globalCompositeOperation = 'lighter';
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
                 ctx.restore();
@@ -773,6 +814,17 @@ class Player {
         const elapsed = dur - (this.attackTimer || 0);
         const t = Utils.clamp(elapsed / dur, 0, 1);
         return t >= 0.15 && t <= 0.85;
+    }
+    
+    /**
+     * Get current attack damage with damage boost multiplier applied
+     */
+    getCurrentDamage() {
+        let damage = this.attackDamage;
+        if (this.damageBoost && this.damageBoost.multiplier) {
+            damage *= this.damageBoost.multiplier;
+        }
+        return Math.floor(damage);
     }
 
     getAttackHitboxForCollision() {

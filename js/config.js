@@ -57,11 +57,15 @@ const Config = {
     SPEED_BOOST_ITEM_SIZE: 32,
     SPEED_BOOST_DURATION: 8.0, // seconds
     SPEED_BOOST_MULTIPLIER: 1.5, // 150% speed
+    DAMAGE_BOOST_ITEM_SIZE: 32,
+    DAMAGE_BOOST_DURATION: 10.0, // seconds
+    DAMAGE_BOOST_MULTIPLIER: 3.0, // 300% damage (3x)
 
     // Item drop rates (0.0 - 1.0, where 1.0 = 100% chance)
     HEALTH_REGEN_DROP_RATE: 0.15, // 15% chance per enemy
     EXTRA_LIFE_DROP_RATE: 0.03,   // 3% chance per enemy
     SPEED_BOOST_DROP_RATE: 0.12,  // 12% chance per enemy
+    DAMAGE_BOOST_DROP_RATE: 0.10, // 10% chance per enemy
 
     // Colors
     WHITE: '#FFFFFF',

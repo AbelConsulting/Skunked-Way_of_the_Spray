@@ -174,6 +174,70 @@ class Utils {
     }
 
     /**
+     * Draw the damage boost pickup icon.
+     * Uses the loaded sprite `damage_boost_item` when available; otherwise draws
+     * a red/orange tile with a sword/power icon.
+     */
+    static drawDamageBoostItem(ctx, x, y, size = 32, opts = {}) {
+        if (!ctx) return;
+
+        const loader = opts.spriteLoader || ((typeof spriteLoader !== 'undefined') ? spriteLoader : null);
+        const key = opts.spriteKey || 'damage_boost_item';
+        const sprite = (loader && typeof loader.getSprite === 'function') ? loader.getSprite(key) : null;
+
+        const pixelSnap = (typeof Config !== 'undefined' && Config.PIXEL_SNAP) ? true : false;
+        const dx = pixelSnap ? Math.round(x) : x;
+        const dy = pixelSnap ? Math.round(y) : y;
+        const ds = pixelSnap ? Math.round(size) : size;
+
+        // Draw sprite when available
+        try {
+            if (sprite && sprite.width && sprite.height) {
+                ctx.drawImage(sprite, dx, dy, ds, ds);
+                return;
+            }
+        } catch (e) {
+            // fall through to placeholder
+        }
+
+        // Placeholder: red/orange tile + crossed swords
+        const prevSmooth = ctx.imageSmoothingEnabled;
+        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+
+        ctx.fillStyle = '#b91c1c';
+        ctx.fillRect(dx, dy, ds, ds);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(dx + 1, dy + 1, Math.max(0, ds - 2), Math.max(0, ds - 2));
+
+        // Crossed swords icon (simplified)
+        const unit = Math.max(1, Math.floor(ds / 16));
+        const cx = dx + Math.floor(ds / 2);
+        const cy = dy + Math.floor(ds / 2);
+
+        ctx.fillStyle = '#fbbf24'; // Gold blade
+        // Left sword (diagonal)
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillRect(-unit, -6 * unit, 2 * unit, 10 * unit);
+        ctx.restore();
+
+        // Right sword (diagonal)
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-unit, -6 * unit, 2 * unit, 10 * unit);
+        ctx.restore();
+
+        // Hilts
+        ctx.fillStyle = '#78350f'; // Brown handles
+        ctx.fillRect(cx - 5 * unit, cy - 2 * unit, 3 * unit, 4 * unit);
+        ctx.fillRect(cx + 2 * unit, cy - 2 * unit, 3 * unit, 4 * unit);
+
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+    }
+
+    /**
      * Draw the extra life pickup icon.
      * Uses the loaded sprite `extra_life` when available; otherwise draws
      * a simple red tile with a heart icon.

@@ -118,6 +118,35 @@ class ItemManager {
     }
 
     /**
+     * Spawn a damage boost pickup at the specified location
+     */
+    spawnDamageBoost(x, y) {
+        const item = {
+            id: this.nextItemId++,
+            type: 'DAMAGE_BOOST',
+            x: x,
+            y: y,
+            width: Config.DAMAGE_BOOST_ITEM_SIZE || 32,
+            height: Config.DAMAGE_BOOST_ITEM_SIZE || 32,
+            collected: false,
+            // Aggressive bounce for power feel
+            baseY: y,
+            bounceOffset: 0,
+            bounceSpeed: 3.0,
+            // Fast rotation
+            rotation: 0,
+            rotationSpeed: 3.5,
+            // Strong pulse
+            scale: 1.0,
+            pulseSpeed: 4.5,
+            // Energy particles
+            energyParticles: []
+        };
+        this.items.push(item);
+        return item;
+    }
+
+    /**
      * Update all items (animations, lifetime, etc.)
      */
     update(dt) {
@@ -213,6 +242,46 @@ class ItemManager {
                         item.shimmerParticles.splice(j, 1);
                     }
                 }
+            } else if (item.type === 'DAMAGE_BOOST') {
+                // Aggressive bounce
+                item.bounceOffset = Math.sin(item.bounceSpeed * Date.now() / 1000) * 12;
+                item.y = item.baseY + item.bounceOffset;
+                // Fast rotation for aggressive feel
+                item.rotation += item.rotationSpeed * dt;
+                if (item.rotation > Math.PI * 2) item.rotation -= Math.PI * 2;
+                // Strong pulse
+                item.scale = 1.0 + Math.sin(item.pulseSpeed * Date.now() / 1000) * 0.18;
+                
+                // Update and generate energy particles
+                if (!item.energyParticles) item.energyParticles = [];
+                
+                // Add new energy particles frequently
+                if (Math.random() < 0.25) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 10 + Math.random() * 25;
+                    item.energyParticles.push({
+                        x: Math.cos(angle) * distance,
+                        y: Math.sin(angle) * distance,
+                        vx: Math.cos(angle) * 30,
+                        vy: Math.sin(angle) * 30,
+                        life: 0.6 + Math.random() * 0.4,
+                        age: 0,
+                        size: 2 + Math.random() * 3
+                    });
+                }
+                
+                // Update existing energy particles
+                for (let j = item.energyParticles.length - 1; j >= 0; j--) {
+                    const energy = item.energyParticles[j];
+                    energy.age += dt;
+                    energy.x += energy.vx * dt;
+                    energy.y += energy.vy * dt;
+                    energy.vx *= 0.93;
+                    energy.vy *= 0.93;
+                    if (energy.age >= energy.life) {
+                        item.energyParticles.splice(j, 1);
+                    }
+                }
             } else if (item.type === 'SPEED_BOOST') {
                 // Fast energetic bounce
                 item.bounceOffset = Math.sin(item.bounceSpeed * Date.now() / 1000) * 10;
@@ -264,6 +333,9 @@ class ItemManager {
                     } else if (item.type === 'SPEED_BOOST') {
                         const rate = 1.05 + Math.random() * 0.10; // 1.05..1.15 (higher pitch)
                         this.audioManager.playSound('item_pickup', { volume: 0.7, rate });
+                    } else if (item.type === 'DAMAGE_BOOST') {
+                        const rate = 0.85 + Math.random() * 0.10; // 0.85..0.95 (lower, aggressive pitch)
+                        this.audioManager.playSound('item_pickup', { volume: 0.75, rate });
                     }
                 }
             }
@@ -305,6 +377,19 @@ class ItemManager {
                 player.speedBoost.timer = 0;
             }
             return { type: 'SPEED_BOOST', success: true };
+        } else if (item.type === 'DAMAGE_BOOST') {
+            // Start damage boost effect on player
+            if (!player.damageBoost) {
+                player.damageBoost = {
+                    duration: Config.DAMAGE_BOOST_DURATION || 10.0,
+                    multiplier: Config.DAMAGE_BOOST_MULTIPLIER || 3.0,
+                    timer: 0
+                };
+            } else {
+                // Refresh duration if already active
+                player.damageBoost.timer = 0;
+            }
+            return { type: 'DAMAGE_BOOST', success: true };
         } else if (item.type === 'EXTRA_LIFE') {
             return { type: 'EXTRA_LIFE', success: true, lives: 1 };
         } else if (item.type === 'GOLDEN_IDOL') {
@@ -456,6 +541,47 @@ class ItemManager {
                 }
                 
                 Utils.drawGoldenIdol(ctx, -item.width / 2, -item.height / 2, item.width);
+            } else if (item.type === 'DAMAGE_BOOST') {
+                // Draw aggressive red glow behind damage boost
+                ctx.save();
+                const glowSize = item.width * 1.0;
+                const glowPulse = 0.5 + Math.sin(Date.now() / 150) * 0.3;
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                gradient.addColorStop(0, `rgba(255, 50, 50, ${glowPulse})`);
+                gradient.addColorStop(0.3, `rgba(255, 80, 0, ${glowPulse * 0.6})`);
+                gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Draw energy particles around damage boost
+                if (item.energyParticles && item.energyParticles.length > 0) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    for (const energy of item.energyParticles) {
+                        const alpha = 1 - (energy.age / energy.life);
+                        ctx.globalAlpha = alpha * 0.85;
+                        
+                        // Draw energy particle with red/orange gradient
+                        const energyGrad = ctx.createRadialGradient(
+                            energy.x, energy.y, 0,
+                            energy.x, energy.y, energy.size
+                        );
+                        energyGrad.addColorStop(0, '#FFFFFF');
+                        energyGrad.addColorStop(0.4, '#FF4444');
+                        energyGrad.addColorStop(0.7, '#FF8800');
+                        energyGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                        ctx.fillStyle = energyGrad;
+                        ctx.beginPath();
+                        ctx.arc(energy.x, energy.y, energy.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+                
+                Utils.drawDamageBoostItem(ctx, -item.width / 2, -item.height / 2, item.width);
             }
 
             ctx.restore();

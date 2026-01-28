@@ -639,3 +639,99 @@ class HealthRegenEffect {
         this.particles = [];
     }
 }
+
+/**
+ * DamageBoostEffect: Creates a visual effect when the player has damage boost active.
+ * Emits red/orange energy particles and adds impact to attacks.
+ */
+class DamageBoostEffect {
+    constructor(opts = {}) {
+        this.particles = [];
+        this.maxParticles = opts.maxParticles || 100;
+        this.emitTimer = 0;
+        this.emitInterval = opts.emitInterval || 0.06;
+    }
+
+    emitDamageParticle(x, y) {
+        if (this.particles.length >= this.maxParticles) {
+            this.particles.shift();
+        }
+
+        // Create aggressive red/orange energy particles
+        const colors = ['#FF2222', '#FF4444', '#FF6600', '#FF8800', '#FFAA00'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Utils.randomFloat(40, 100);
+        
+        this.particles.push({
+            x: x + Utils.randomFloat(-15, 15),
+            y: y + Utils.randomFloat(-15, 15),
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 20,
+            size: Utils.randomFloat(3, 7),
+            life: Utils.randomFloat(0.4, 0.8),
+            age: 0,
+            color: randomColor,
+            alpha: 1
+        });
+    }
+
+    emitFromPlayer(player, dt) {
+        if (!player || !player.damageBoost) return;
+
+        this.emitTimer -= dt;
+        if (this.emitTimer <= 0) {
+            const baseY = player.y + (player.height || 64) * 0.3;
+            const baseX = player.x + (player.width || 64) * 0.5;
+            
+            // Emit 2-3 particles per interval
+            const emitCount = Math.floor(Utils.randomFloat(2, 4));
+            for (let i = 0; i < emitCount; i++) {
+                this.emitDamageParticle(baseX, baseY);
+            }
+            
+            this.emitTimer = this.emitInterval;
+        }
+    }
+
+    update(dt) {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.age += dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vx *= 0.94;
+            p.vy *= 0.94;
+            p.alpha = Math.max(0, 1 - (p.age / p.life));
+            
+            if (p.age >= p.life) {
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+
+    draw(ctx) {
+        for (const p of this.particles) {
+            ctx.save();
+            ctx.globalAlpha = p.alpha * 0.9;
+            ctx.globalCompositeOperation = 'lighter';
+            
+            // Draw energy particle with glow
+            const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+            gradient.addColorStop(0, '#FFFFFF');
+            gradient.addColorStop(0.4, p.color);
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+    }
+
+    clear() {
+        this.particles = [];
+    }
+}
