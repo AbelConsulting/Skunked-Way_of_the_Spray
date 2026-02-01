@@ -922,6 +922,34 @@ try {
 // Wire VR controllers toggle in pause overlay
 try {
     const vrBtn = document.getElementById('vr-controllers-btn');
+    const setVrTouchControlsDisabled = (disabled) => {
+        try { window._vrTouchControlsDisabled = !!disabled; } catch (e) {}
+        const tc = document.getElementById('touch-controls');
+        if (!tc) return;
+        if (disabled) {
+            try { window._forceTouchControls = false; } catch (e) {}
+            try { window._touchControlsLockUntil = 0; } catch (e) {}
+            try { window._touchControlsVisibilityCount = 0; } catch (e) {}
+            try {
+                if (window._touchControlsReqTimers) {
+                    Object.keys(window._touchControlsReqTimers).forEach((k) => {
+                        try {
+                            const meta = window._touchControlsReqTimers[k];
+                            if (meta && meta.timeoutId) clearTimeout(meta.timeoutId);
+                        } catch (e) {}
+                        delete window._touchControlsReqTimers[k];
+                    });
+                }
+            } catch (e) {}
+            tc.classList.remove('visible');
+            tc.style.pointerEvents = 'none';
+            tc.style.display = 'none';
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_disabled_vr', {}); } catch (e) {}
+        } else {
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_enabled_vr', {}); } catch (e) {}
+            try { if (typeof isMobile === 'function' && isMobile()) showTouchControls(800); } catch (e) {}
+        }
+    };
     const updateVrLabel = () => {
         const enabled = !!(window._vrControllersEnabled === true);
         if (vrBtn) vrBtn.textContent = enabled ? '🎮 VR Controllers: On' : '🎮 Enable VR Controllers';
@@ -941,12 +969,17 @@ try {
         vrBtn.addEventListener('click', (e) => {
             try { e && e.preventDefault(); } catch (_) {}
             const nextEnabled = !window._vrControllersEnabled;
+            if (nextEnabled) {
+                const ok = confirm('Enable VR Controllers? Touch controls will be disabled while VR controller mode is active.');
+                if (!ok) return;
+            }
             window._vrControllersEnabled = nextEnabled;
             if (typeof window.setVrControllersEnabled === 'function') {
                 try { window.setVrControllersEnabled(nextEnabled); } catch (e) {}
             } else {
                 try { localStorage.setItem('vrControllers', window._vrControllersEnabled ? '1' : '0'); } catch (e) {}
             }
+            setVrTouchControlsDisabled(nextEnabled);
             updateVrLabel();
         });
     }
