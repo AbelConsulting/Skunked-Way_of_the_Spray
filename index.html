@@ -323,7 +323,8 @@
         }
 
         /* --- ORIENTATION CHECK / forced landscape --- */
-        #rotate-message { display: none; }
+        #rotate-message { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 16px; }
+        #rotate-message .rotate-image { max-width: min(92vw, 820px); max-height: 72vh; width: auto; height: auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
         #rotate-message .rotate-actions { margin-top: 12px; }
         #rotate-message #rotate-play-btn { padding: 12px 20px; font-size:16px; border-radius:8px; border:none; background:#ff6b6b; color:#fff; cursor:pointer; }
         
@@ -342,6 +343,7 @@
 <body>
 
     <div id="rotate-message">
+        <img class="rotate-image" src="assets/rotate-landscape.png" alt="Rotate device to landscape" />
         <h1>Please Rotate Your Device</h1>
         <p>Landscape mode required</p>
         <div class="rotate-actions">
