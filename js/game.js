@@ -1217,17 +1217,6 @@ class Game {
             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
             // trigger score pulse animation
             try { this._scorePulse = 1.0; } catch (e) {}
-        }
-
-        // Sync stats from other systems
-        this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
-        this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
-        this.gameStats.currentCombo = this.player.comboCount || 0;
-        
-        // Calculate accuracy
-        if (this.gameStats.attacksAttempted > 0) {
-            this.gameStats.accuracy = this.gameStats.attacksHit / this.gameStats.attacksAttempted;
-        }
             
             // Create visual feedback (limit on mobile)
             if (attackResult.enemiesHit > 0) {
@@ -1276,6 +1265,16 @@ class Game {
                 this.screenShake = new ScreenShake(0.08, 5);
                 this.audioManager.playSound('combo', 0.8);
             }
+        }
+
+        // Sync stats from other systems
+        this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
+        this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
+        this.gameStats.currentCombo = this.player.comboCount || 0;
+        
+        // Calculate accuracy
+        if (this.gameStats.attacksAttempted > 0) {
+            this.gameStats.accuracy = this.gameStats.attacksHit / this.gameStats.attacksAttempted;
         }
 
         // Check enemy attacks hitting player
