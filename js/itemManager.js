@@ -698,6 +698,7 @@ class ItemManager {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('🦨', 0, 0);
+            }
 
             ctx.restore();
 
