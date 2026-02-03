@@ -138,6 +138,19 @@
             box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 20px rgba(120,220,255,0.10);
         }
 
+        .touch-btn--skunk {
+            border-color: rgba(80,255,80,0.30);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 20px rgba(80,255,80,0.12);
+            transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .touch-btn--skunk.disabled {
+            opacity: 0.35;
+            filter: grayscale(0.7) brightness(0.5);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.35), 0 0 8px rgba(80,255,80,0.03);
+            pointer-events: none;
+        }
+
         .touch-btn--pause {
             border-color: rgba(255,255,255,0.18);
         }
@@ -821,6 +834,7 @@ function initTouchControls() {
     setupBtn('btn-jump', ' ');
     setupBtn('btn-attack', 'x');
     setupBtn('btn-special', 'z');
+    setupBtn('btn-skunk', 'c');
 
     // Restart button handler
     const restartBtn = document.getElementById('btn-restart');
@@ -840,6 +854,28 @@ function initTouchControls() {
             restartBtn.style.display = 'none';
         }
     });
+    
+    // Update skunk button availability based on ammo
+    const updateSkunkButton = () => {
+        try {
+            const skunkBtn = document.getElementById('btn-skunk');
+            if (!skunkBtn) return;
+            
+            const hasAmmo = window.game && window.game.player && window.game.player.skunkAmmo > 0;
+            
+            if (hasAmmo) {
+                skunkBtn.classList.remove('disabled');
+            } else {
+                skunkBtn.classList.add('disabled');
+            }
+        } catch (e) {}
+    };
+    
+    // Check every frame when game is active
+    setInterval(updateSkunkButton, 100);
+    
+    // Initial check
+    setTimeout(updateSkunkButton, 500);
 }
 
 // Wire pause button: show on non-loading UI, call game's togglePause when pressed
@@ -1192,6 +1228,7 @@ function ensureTouchControlsExists() {
                 <button class="touch-btn touch-btn--attack" id="btn-attack" aria-label="Attack">🗡</button>
                 <button class="touch-btn touch-btn--jump" id="btn-jump" aria-label="Jump">⤒</button>
                 <button class="touch-btn touch-btn--special" id="btn-special" aria-label="Special">💥</button>
+                <button class="touch-btn touch-btn--skunk" id="btn-skunk" aria-label="Skunk Shot">🦨</button>
             </div>
         </div>
         `;
