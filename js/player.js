@@ -310,6 +310,59 @@ class Player {
         }
     }
 
+    updateProjectiles(dt, level) {
+        for (let i = this.skunkProjectiles.length - 1; i >= 0; i--) {
+            const proj = this.skunkProjectiles[i];
+            
+            // Update position
+            proj.x += proj.velocityX * dt;
+            proj.y += proj.velocityY * dt;
+            
+            // Apply slight gravity to projectile for arc trajectory
+            proj.velocityY += Config.GRAVITY * 0.3 * dt;
+            
+            // Update lifetime
+            proj.age += dt;
+            
+            // Remove if lifetime expired
+            if (proj.age >= proj.lifetime) {
+                this.skunkProjectiles.splice(i, 1);
+                continue;
+            }
+            
+            // Remove if out of bounds
+            if (level) {
+                if (proj.x < -100 || proj.x > level.width + 100 || proj.y > level.height + 100) {
+                    this.skunkProjectiles.splice(i, 1);
+                    continue;
+                }
+            }
+            
+            // Check platform collision (projectiles hit walls/platforms)
+            if (level && level.checkPlatformCollision) {
+                const projRect = {
+                    x: proj.x - proj.width / 2,
+                    y: proj.y - proj.height / 2,
+                    width: proj.width,
+                    height: proj.height
+                };
+                const prevRect = {
+                    x: projRect.x - proj.velocityX * dt,
+                    y: projRect.y - proj.velocityY * dt,
+                    width: proj.width,
+                    height: proj.height
+                };
+                const collision = level.checkPlatformCollision(projRect, prevRect, proj.velocityY);
+                
+                // If projectile hits a solid platform, remove it
+                if (collision && collision.platform && collision.platform.type === 'static') {
+                    this.skunkProjectiles.splice(i, 1);
+                    continue;
+                }
+            }
+        }
+    }
+
     takeDamage(damage, source = null) {
         // Shadow Strike grants brief i-frames without the normal invuln flashing
         if (this.isShadowStriking) {
@@ -480,6 +533,9 @@ class Player {
         if (this.damageBoostEffect) {
             this.damageBoostEffect.update(dt);
         }
+
+        // Update skunk projectiles
+        this.updateProjectiles(dt, level);
 
         if (this.hitStunTimer > 0) this.hitStunTimer -= dt;
         if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
@@ -858,6 +914,24 @@ class Player {
             
             ctx.save();
             ctx.translate(screenX, screenY);
+            
+            // Draw motion trail
+            const trailLength = 3;
+            const velocityMag = Math.sqrt(proj.velocityX * proj.velocityX + proj.velocityY * proj.velocityY);
+            const normalizedVelX = proj.velocityX / velocityMag;
+            const normalizedVelY = proj.velocityY / velocityMag;
+            
+            for (let j = 1; j <= trailLength; j++) {
+                const trailAlpha = (trailLength - j) / trailLength * 0.3;
+                const trailX = -normalizedVelX * j * 8;
+                const trailY = -normalizedVelY * j * 8;
+                const trailSize = proj.width * (1 - j / trailLength * 0.5);
+                
+                ctx.fillStyle = `rgba(50, 255, 50, ${trailAlpha})`;
+                ctx.beginPath();
+                ctx.arc(trailX, trailY, trailSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
             
             // Draw green glow
             const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, proj.width * 1.2);

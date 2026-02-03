@@ -570,6 +570,66 @@ class UI {
                     ctx.restore();
                 }
             } catch (e) {}
+            
+            // Skunk ammo counter (below buff indicators)
+            try {
+                if (player && player.skunkAmmo > 0) {
+                    const ammoY = idolY + idolSize + (player.idolBonuses && (player.idolBonuses.speed > 0 || player.idolBonuses.damage > 0) ? 30 : 6);
+                    const ammoIconSize = 18;
+                    const ammoGap = 4;
+                    const ammoX = idolX;
+                    
+                    ctx.save();
+                    
+                    // Draw background pill
+                    const ammoPillW = Math.min(player.skunkAmmo, 9) * (ammoIconSize + ammoGap) + 8;
+                    const ammoPillH = ammoIconSize + 6;
+                    
+                    ctx.fillStyle = 'rgba(40, 200, 40, 0.25)';
+                    ctx.strokeStyle = 'rgba(80, 255, 80, 0.6)';
+                    ctx.lineWidth = 2;
+                    
+                    // Rounded rectangle
+                    const radius = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(ammoX + radius, ammoY);
+                    ctx.lineTo(ammoX + ammoPillW - radius, ammoY);
+                    ctx.arcTo(ammoX + ammoPillW, ammoY, ammoX + ammoPillW, ammoY + radius, radius);
+                    ctx.lineTo(ammoX + ammoPillW, ammoY + ammoPillH - radius);
+                    ctx.arcTo(ammoX + ammoPillW, ammoY + ammoPillH, ammoX + ammoPillW - radius, ammoY + ammoPillH, radius);
+                    ctx.lineTo(ammoX + radius, ammoY + ammoPillH);
+                    ctx.arcTo(ammoX, ammoY + ammoPillH, ammoX, ammoY + ammoPillH - radius, radius);
+                    ctx.lineTo(ammoX, ammoY + radius);
+                    ctx.arcTo(ammoX, ammoY, ammoX + radius, ammoY, radius);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Draw ammo icons
+                    const maxDisplay = 9;
+                    const displayCount = Math.min(player.skunkAmmo, maxDisplay);
+                    
+                    for (let i = 0; i < displayCount; i++) {
+                        const ix = ammoX + 4 + i * (ammoIconSize + ammoGap);
+                        const iy = ammoY + 3;
+                        
+                        // Draw skunk emoji
+                        ctx.font = `${ammoIconSize}px Arial`;
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText('🦨', ix, iy);
+                    }
+                    
+                    // If more than 9, show "+X" text
+                    if (player.skunkAmmo > maxDisplay) {
+                        ctx.font = 'bold 14px Arial';
+                        ctx.fillStyle = '#40FF40';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`+${player.skunkAmmo - maxDisplay}`, ammoX + ammoPillW + 6, ammoY + ammoPillH / 2 - 7);
+                    }
+                    
+                    ctx.restore();
+                }
+            } catch (e) {}
         } catch (e) {}
 
         // Optional numeric HP (only when low, small + subtle)
