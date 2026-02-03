@@ -676,6 +676,10 @@ class Player {
         if (this.attackCooldownTimer > 0) {
             this.attackCooldownTimer -= dt;
         }
+        
+        if (this.skunkCooldownTimer > 0) {
+            this.skunkCooldownTimer -= dt;
+        }
 
         // Update attack hitbox position
         if (this.isAttacking) {
