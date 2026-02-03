@@ -55,6 +55,8 @@ class GameApp {
                 try { localStorage.setItem('vrControllers', isOn ? '1' : '0'); } catch (e) {}
                 if (isOn) prime('enable');
                 else this._clearGamepadKeys();
+                // Reset debug flag so we can see the state change in console
+                try { this._vrDebugOnce = null; } catch (e) {}
                 try {
                     window.dispatchEvent(new CustomEvent('vrControllersToggle', { detail: { enabled: isOn } }));
                 } catch (e) {}
@@ -429,15 +431,52 @@ class GameApp {
             const id = gp.id.toLowerCase();
             return id.includes('xbox') || id.includes('xinput');
         });
+        
+        // Check if VR controllers are explicitly enabled or disabled
+        let vrEnabled = false;
+        let vrExplicitlySet = false;
         try {
-            const enabled = (typeof window !== 'undefined') && (
-                window._vrControllersEnabled === true ||
-                (typeof localStorage !== 'undefined' && localStorage.getItem('vrControllers') === '1')
-            );
-            if (!enabled && !hasXboxPad) return;
-        } catch (e) {
-            if (!hasXboxPad) return;
+            if (typeof window !== 'undefined') {
+                // Check if VR was explicitly enabled via button
+                if (window._vrControllersEnabled === true) {
+                    vrEnabled = true;
+                    vrExplicitlySet = true;
+                } else if (window._vrControllersEnabled === false) {
+                    // Explicitly disabled - do not use auto-detection
+                    vrEnabled = false;
+                    vrExplicitlySet = true;
+                } else if (typeof localStorage !== 'undefined') {
+                    // Check localStorage
+                    const stored = localStorage.getItem('vrControllers');
+                    if (stored === '1') {
+                        vrEnabled = true;
+                        vrExplicitlySet = true;
+                    } else if (stored === '0') {
+                        vrEnabled = false;
+                        vrExplicitlySet = true;
+                    }
+                }
+            }
+        } catch (e) {}
+        
+        // If VR was explicitly disabled, don't process gamepad input at all
+        if (vrExplicitlySet && !vrEnabled) {
+            try { if (this._vrDebugOnce !== 'disabled') { console.log('[VR] Controllers explicitly disabled - ignoring gamepad input'); this._vrDebugOnce = 'disabled'; } } catch (e) {}
+            return;
         }
+        
+        // If VR wasn't explicitly set, only allow Xbox auto-detection
+        if (!vrExplicitlySet && !hasXboxPad) {
+            return;
+        }
+        
+        // If VR is enabled or Xbox controller is present (and not explicitly disabled), proceed
+        try { 
+            if (this._vrDebugOnce !== 'enabled') { 
+                console.log('[VR] Processing gamepad input - vrEnabled:', vrEnabled, 'vrExplicitlySet:', vrExplicitlySet, 'hasXboxPad:', hasXboxPad); 
+                this._vrDebugOnce = 'enabled'; 
+            } 
+        } catch (e) {}
         const { leftPad, rightPad } = this._pickGamepads();
         if (!leftPad && !rightPad) return;
 

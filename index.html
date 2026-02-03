@@ -965,6 +965,11 @@ try {
                 if (typeof window.setVrControllersEnabled === 'function') {
                     try { window.setVrControllersEnabled(true); } catch (e) {}
                 }
+            } else if (stored === '0') {
+                window._vrControllersEnabled = false;
+                if (typeof window.setVrControllersEnabled === 'function') {
+                    try { window.setVrControllersEnabled(false); } catch (e) {}
+                }
             }
         } catch (e) {}
         updateVrLabel();
@@ -983,6 +988,7 @@ try {
             }
             setVrTouchControlsDisabled(nextEnabled);
             updateVrLabel();
+            try { console.log('[VR] Button clicked - VR controllers now:', nextEnabled ? 'ENABLED' : 'DISABLED'); } catch (e) {}
         });
     }
 } catch (e) {}
