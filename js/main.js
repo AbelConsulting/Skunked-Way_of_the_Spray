@@ -465,20 +465,40 @@ class GameApp {
             return;
         }
         
-        // If VR wasn't explicitly set, only allow Xbox auto-detection
-        if (!vrExplicitlySet && !hasXboxPad) {
+        // Check if we have any gamepads connected
+        const { leftPad, rightPad } = this._pickGamepads();
+        if (!leftPad && !rightPad) {
+            // No gamepads detected - don't process input
             return;
         }
         
-        // If VR is enabled or Xbox controller is present (and not explicitly disabled), proceed
+        // If VR wasn't explicitly set, auto-enable if we detect VR controllers or Xbox gamepad
+        if (!vrExplicitlySet) {
+            const hasVrController = !!(leftPad && (leftPad.mapping === 'xr-standard' || leftPad.hand)) ||
+                                   !!(rightPad && (rightPad.mapping === 'xr-standard' || rightPad.hand));
+            if (hasVrController || hasXboxPad) {
+                // Auto-enable VR controller support when VR/Xbox controller is detected
+                try {
+                    vrEnabled = true;
+                    window._vrControllersEnabled = true;
+                    if (this._vrDebugOnce !== 'auto-enabled') {
+                        console.log('[VR] Auto-enabled controller support - VR:', hasVrController, 'Xbox:', hasXboxPad);
+                        this._vrDebugOnce = 'auto-enabled';
+                    }
+                } catch (e) {}
+            } else {
+                // No recognized controller type - don't process
+                return;
+            }
+        }
+        
+        // Proceed with processing gamepad input
         try { 
-            if (this._vrDebugOnce !== 'enabled') { 
+            if (this._vrDebugOnce !== 'enabled' && this._vrDebugOnce !== 'auto-enabled') { 
                 console.log('[VR] Processing gamepad input - vrEnabled:', vrEnabled, 'vrExplicitlySet:', vrExplicitlySet, 'hasXboxPad:', hasXboxPad); 
                 this._vrDebugOnce = 'enabled'; 
             } 
         } catch (e) {}
-        const { leftPad, rightPad } = this._pickGamepads();
-        if (!leftPad && !rightPad) return;
 
         const movePad = leftPad || rightPad;
         const actionPad = rightPad || leftPad;
