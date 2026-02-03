@@ -1276,6 +1276,7 @@ class Game {
                 this.screenShake = new ScreenShake(0.08, 5);
                 this.audioManager.playSound('combo', 0.8);
             }
+        }
 
         // Check enemy attacks hitting player
         const playerHit = this.enemyManager.checkEnemyAttacks(this.player);
