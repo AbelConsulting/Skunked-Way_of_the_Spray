@@ -1,4 +1,4 @@
-# Skunk Fu - 2D Beat 'em Up Platformer
+# Skunked: Way of the Spray - 2D Beat 'em Up Platformer
 
 A 2D beat 'em up platformer game featuring the Ninja Skunk! Fight through waves of enemies with lightning-fast combat, the deadly Shadow Strike ability, and collect power-ups to survive!
 
@@ -382,6 +382,6 @@ This project is open source. See LICENSE file for details.
 
 ---
 
-**Have fun playing Skunk Fu! 🦨💥**
+**Have fun playing Skunked: Way of the Spray! 🦨💥**
 
 Fight through enemies, collect power-ups, and master the Shadow Strike to become the ultimate ninja warrior!

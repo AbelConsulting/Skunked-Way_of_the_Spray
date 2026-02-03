@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>Skunk Fu - 2D Beat 'em Up</title>
+    <title>Skunked: Way of the Spray - 2D Beat 'em Up</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
         <!-- Content Security Policy: configured via HTTP header for stronger enforcement. -->
         <!-- Server should set a header similar to:
@@ -358,7 +358,7 @@
         
         <div id="loading-screen">
             <div class="loading-content">
-                <h1>Skunk Fu</h1>
+                <h1>Skunked: Way of the Spray</h1>
                 <div class="loading-bar">
                     <div id="loading-progress" class="loading-progress"></div>
                 </div>
@@ -1519,23 +1519,23 @@ updateMobileUI();
                 window._forcedLandscapeMode = true;
                 updateMobileUI();
                 try { window.dispatchEvent(new Event('resize')); } catch (e) {}
-                safePost({ source: 'SkunkFU', type: 'FORCED_LANDSCAPE_SET', value: true });
+                safePost({ source: 'Skunked', type: 'FORCED_LANDSCAPE_SET', value: true });
             } else if (msg.type === 'CLEAR_FORCED_LANDSCAPE') {
                 document.body.classList.remove('force-landscape');
                 window._forcedLandscapeMode = false;
                 updateMobileUI();
                 try { window.dispatchEvent(new Event('resize')); } catch (e) {}
-                safePost({ source: 'SkunkFU', type: 'FORCED_LANDSCAPE_CLEARED', value: true });
+                safePost({ source: 'Skunked', type: 'FORCED_LANDSCAPE_CLEARED', value: true });
             } else if (msg.type === 'REQUEST_STATUS') {
                 const status = { forced: !!window._forcedLandscapeMode, ready: !!window.gameReady, state: window.game && window.game.state };
-                safePost({ source: 'SkunkFU', type: 'STATUS', status });
+                safePost({ source: 'Skunked', type: 'STATUS', status });
             }
         } catch (e) {}
     });
 
     // Notify parent when important events happen
-    window.addEventListener('gameReady', () => { safePost({ source: 'SkunkFU', type: 'GAME_READY' }); });
-    window.addEventListener('gameStateChange', (e) => { safePost({ source: 'SkunkFU', type: 'GAME_STATE', state: e && e.detail && e.detail.state }); });
+    window.addEventListener('gameReady', () => { safePost({ source: 'Skunked', type: 'GAME_READY' }); });
+    window.addEventListener('gameStateChange', (e) => { safePost({ source: 'Skunked', type: 'GAME_STATE', state: e && e.detail && e.detail.state }); });
 })();
 
 // If gameReady fires while a pending start exists, and device is landscape + in MENU,

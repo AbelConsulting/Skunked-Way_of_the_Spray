@@ -1,6 +1,6 @@
 # Sprite Sheet Creation Guide
 
-This guide explains how to create animated sprite sheets for Skunk Fu.
+This guide explains how to create animated sprite sheets for Skunked: Way of the Spray.
 
 ## Sprite Sheet Format
 

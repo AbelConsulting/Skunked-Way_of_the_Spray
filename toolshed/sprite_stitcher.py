@@ -174,7 +174,7 @@ def batch_create_enemy_sheets(frames_folder, output_folder, enemy_type="basic"):
 if __name__ == "__main__":
     import sys
     
-    print("🎨 Skunk Fu Sprite Sheet Stitcher\n")
+    print("🎨 Skunked: Way of the Spray Sprite Sheet Stitcher\n")
     
     # Example usage
     if len(sys.argv) > 1:

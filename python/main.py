@@ -1,5 +1,5 @@
 """
-Skunk Fu - 2D Beat 'em Up Platformer
+Skunked: Way of the Spray - 2D Beat 'em Up Platformer
 Main game entry point
 """
 import pygame
@@ -17,7 +17,7 @@ def main():
     
     # Create game window
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Skunk Fu - Ninja Skunk")
+    pygame.display.set_caption("Skunked: Way of the Spray - Ninja Skunk")
     
     # Initialize game
     game = Game(screen, SCREEN_WIDTH, SCREEN_HEIGHT)

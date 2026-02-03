@@ -21,7 +21,7 @@ class UI:
     def render_menu(self, screen):
         """Render main menu"""
         # Title
-        title = self.title_font.render("SKUNK FU", True, WHITE)
+        title = self.title_font.render("SKUNKED: WAY OF THE SPRAY", True, WHITE)
         title_rect = title.get_rect(center=(self.width // 2, 150))
         screen.blit(title, title_rect)
         

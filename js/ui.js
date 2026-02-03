@@ -35,7 +35,7 @@ class UI {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        ctx.fillText('SKUNK FU', this.width / 2, this.height / 2 - 100);
+        ctx.fillText('SKUNKED: WAY OF THE SPRAY', this.width / 2, this.height / 2 - 100);
 
         // Subtitle
         ctx.font = '32px Arial';
