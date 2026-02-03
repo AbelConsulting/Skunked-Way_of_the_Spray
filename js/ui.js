@@ -616,6 +616,7 @@ class UI {
                         ctx.font = `${ammoIconSize}px Arial`;
                         ctx.textAlign = 'left';
                         ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#000000'; // Reset to full black for emojis
                         ctx.fillText('🦨', ix, iy);
                     }
                     
