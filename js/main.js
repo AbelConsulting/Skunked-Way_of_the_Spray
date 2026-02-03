@@ -513,11 +513,20 @@ class GameApp {
         // Xbox (standard mapping) extra buttons
         const xPressed = isStandard ? this._getButtonPressed(actionPad, 2) : false;
         const yPressed = isStandard ? this._getButtonPressed(actionPad, 3) : false;
+        
+        // Right grip/shoulder button: skunk shot (KeyC)
+        // For VR: grip button (button 1 on right controller)
+        // For Xbox: right bumper (button 5)
+        const rightGrip = rightIsXr
+            ? this._getButtonPressed(actionPad, 1)
+            : this._getButtonPressed(actionPad, 5);
 
         // A: jump (Space)
         this._setKeyState(' ', aPressed);
         // Right trigger: attack (KeyX)
         this._setKeyState('x', rightTrigger);
+        // Right grip/bumper: skunk shot (KeyC)
+        this._setKeyState('c', rightGrip);
         // X: alternate attack (KeyX) when using standard mapping
         if (isStandard) this._setKeyState('x', rightTrigger || xPressed);
         // Y: special (KeyZ) on standard mapping

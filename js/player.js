@@ -99,6 +99,12 @@ class Player {
         // Damage boost effect (applied by damage boost pickups)
         this.damageBoost = null;
         
+        // Skunk projectile system
+        this.skunkAmmo = 0; // Number of skunk shots available
+        this.skunkProjectiles = []; // Active skunk projectiles
+        this.skunkCooldown = 0.5; // Cooldown between skunk shots
+        this.skunkCooldownTimer = 0;
+        
         // Idol collection bonuses (tiered, per-level)
         // { speed: 0.05, damage: 0.05, count: 1 } - tiers by collected count
         this.idolBonuses = null;
@@ -175,6 +181,8 @@ class Player {
                 this.attack();
             } else if (k === 'keyz' || k === 'z') {
                 this.specialAttack();
+            } else if (k === 'keyc' || k === 'c') {
+                this.shootSkunkProjectile();
             }
         }
     }
@@ -239,6 +247,34 @@ class Player {
             // Reset attack animation
             if (this.animations.attack) {
                 this.animations.attack.reset();
+            }
+        }
+    }
+
+    shootSkunkProjectile() {
+        // Check if player has skunk ammo and cooldown is ready
+        if (this.skunkAmmo > 0 && this.skunkCooldownTimer <= 0 && this.hitStunTimer <= 0) {
+            this.skunkAmmo--;
+            this.skunkCooldownTimer = this.skunkCooldown;
+            
+            // Create projectile
+            const projectile = {
+                x: this.x + (this.facingRight ? this.width : 0),
+                y: this.y + this.height / 2,
+                width: 24,
+                height: 24,
+                velocityX: (this.facingRight ? 450 : -450),
+                velocityY: 0,
+                facingRight: this.facingRight,
+                lifetime: 2.0, // 2 seconds before despawn
+                age: 0
+            };
+            
+            this.skunkProjectiles.push(projectile);
+            
+            // Play skunk shot sound
+            if (this.audioManager) {
+                this.audioManager.playSound('shadow_strike', { volume: 0.65, rate: 1.2 });
             }
         }
     }
@@ -810,6 +846,47 @@ class Player {
         }
 
         ctx.restore();
+    }
+    
+    /**
+     * Draw skunk projectiles
+     */
+    drawProjectiles(ctx, cameraX, cameraY) {
+        for (const proj of this.skunkProjectiles) {
+            const screenX = proj.x - cameraX;
+            const screenY = proj.y - cameraY;
+            
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            
+            // Draw green glow
+            const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, proj.width * 1.2);
+            glowGrad.addColorStop(0, 'rgba(80, 255, 80, 0.6)');
+            glowGrad.addColorStop(0.5, 'rgba(50, 255, 50, 0.3)');
+            glowGrad.addColorStop(1, 'rgba(50, 255, 50, 0)');
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, proj.width * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw projectile body (green circle)
+            ctx.fillStyle = '#40FF40';
+            ctx.strokeStyle = '#20DD20';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, proj.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw skunk icon/symbol
+            ctx.fillStyle = '#000000';
+            ctx.font = `${proj.width * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🦨', 0, 0);
+            
+            ctx.restore();
+        }
     }
 
     getRect() {

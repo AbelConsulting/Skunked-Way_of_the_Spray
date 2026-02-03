@@ -147,6 +147,35 @@ class ItemManager {
     }
 
     /**
+     * Spawn a skunk power-up pickup at the specified location
+     */
+    spawnSkunkPowerup(x, y) {
+        const item = {
+            id: this.nextItemId++,
+            type: 'SKUNK_POWERUP',
+            x: x,
+            y: y,
+            width: Config.SKUNK_POWERUP_ITEM_SIZE || 32,
+            height: Config.SKUNK_POWERUP_ITEM_SIZE || 32,
+            collected: false,
+            // Bouncy animation for cartoon feel
+            baseY: y,
+            bounceOffset: 0,
+            bounceSpeed: 3.0,
+            // Rotation
+            rotation: 0,
+            rotationSpeed: 2.5,
+            // Pulse
+            scale: 1.0,
+            pulseSpeed: 4.0,
+            // Green glow particles
+            glowParticles: []
+        };
+        this.items.push(item);
+        return item;
+    }
+
+    /**
      * Update all items (animations, lifetime, etc.)
      */
     update(dt) {
@@ -198,6 +227,40 @@ class ItemManager {
                     sparkle.age += dt;
                     if (sparkle.age >= sparkle.life) {
                         item.sparkles.splice(j, 1);
+                    }
+                }
+            } else if (item.type === 'SKUNK_POWERUP') {
+                // Bouncy animation
+                item.bounceOffset = Math.sin(item.bounceSpeed * Date.now() / 1000) * 10;
+                item.y = item.baseY + item.bounceOffset;
+                
+                // Rotation
+                item.rotation += item.rotationSpeed * dt;
+                if (item.rotation > Math.PI * 2) item.rotation -= Math.PI * 2;
+                
+                // Pulse scale
+                item.scale = 1.0 + Math.sin(item.pulseSpeed * Date.now() / 1000) * 0.15;
+                
+                // Generate green glow particles
+                if (!item.glowParticles) item.glowParticles = [];
+                if (Math.random() < 0.2) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 15 + Math.random() * 10;
+                    item.glowParticles.push({
+                        x: Math.cos(angle) * distance,
+                        y: Math.sin(angle) * distance,
+                        life: 0.8,
+                        age: 0,
+                        size: 2 + Math.random() * 3
+                    });
+                }
+                
+                // Update particles
+                for (let j = item.glowParticles.length - 1; j >= 0; j--) {
+                    const p = item.glowParticles[j];
+                    p.age += dt * 1.5;
+                    if (p.age >= p.life) {
+                        item.glowParticles.splice(j, 1);
                     }
                 }
             } else if (item.type === 'GOLDEN_IDOL') {
@@ -336,6 +399,9 @@ class ItemManager {
                     } else if (item.type === 'DAMAGE_BOOST') {
                         const rate = 0.85 + Math.random() * 0.10; // 0.85..0.95 (lower, aggressive pitch)
                         this.audioManager.playSound('item_pickup', { volume: 0.75, rate });
+                    } else if (item.type === 'SKUNK_POWERUP') {
+                        const rate = 0.90 + Math.random() * 0.10; // 0.90..1.00
+                        this.audioManager.playSound('item_pickup', { volume: 0.7, rate });
                     }
                 }
             }
@@ -390,6 +456,12 @@ class ItemManager {
                 player.damageBoost.timer = 0;
             }
             return { type: 'DAMAGE_BOOST', success: true };
+        } else if (item.type === 'SKUNK_POWERUP') {
+            // Give player 3 skunk shots
+            if (player.skunkAmmo !== undefined) {
+                player.skunkAmmo += 3;
+            }
+            return { type: 'SKUNK_POWERUP', success: true, ammo: 3 };
         } else if (item.type === 'EXTRA_LIFE') {
             return { type: 'EXTRA_LIFE', success: true, lives: 1 };
         } else if (item.type === 'GOLDEN_IDOL') {
@@ -582,7 +654,50 @@ class ItemManager {
                 }
                 
                 Utils.drawDamageBoostItem(ctx, -item.width / 2, -item.height / 2, item.width);
-            }
+            } else if (item.type === 'SKUNK_POWERUP') {
+                // Draw green glow behind skunk powerup
+                ctx.save();
+                const glowSize = item.width * 1.1;
+                const glowPulse = 0.4 + Math.sin(Date.now() / 160) * 0.25;
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                gradient.addColorStop(0, `rgba(50, 255, 50, ${glowPulse})`);
+                gradient.addColorStop(0.3, `rgba(80, 255, 120, ${glowPulse * 0.6})`);
+                gradient.addColorStop(1, 'rgba(50, 255, 50, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                // Draw glow particles
+                if (item.glowParticles && item.glowParticles.length > 0) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    for (const glow of item.glowParticles) {
+                        const alpha = 1 - (glow.age / glow.life);
+                        ctx.globalAlpha = alpha * 0.7;
+                        
+                        const glowGrad = ctx.createRadialGradient(
+                            glow.x, glow.y, 0,
+                            glow.x, glow.y, glow.size
+                        );
+                        glowGrad.addColorStop(0, '#80FF80');
+                        glowGrad.addColorStop(0.5, '#40FF40');
+                        glowGrad.addColorStop(1, 'rgba(80, 255, 80, 0)');
+                        ctx.fillStyle = glowGrad;
+                        ctx.beginPath();
+                        ctx.arc(glow.x, glow.y, glow.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+                
+                // Draw the skunk powerup icon (use a skunk emoji or symbol)
+                ctx.fillStyle = '#000000';
+                ctx.font = `${item.width * 0.7}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🦨', 0, 0);
 
             ctx.restore();
 

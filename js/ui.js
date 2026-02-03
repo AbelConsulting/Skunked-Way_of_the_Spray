@@ -67,7 +67,8 @@ class UI {
         ctx.fillText('Spacebar - Jump', ctrlX, ctrlY + lineHeight * 2);
         ctx.fillText('X - Attack', ctrlX, ctrlY + lineHeight * 3);
         ctx.fillText('Z - Shadow Strike', ctrlX, ctrlY + lineHeight * 4);
-        ctx.fillText('ESC - Pause', ctrlX, ctrlY + lineHeight * 5);
+        ctx.fillText('C - Skunk Shot (with powerup)', ctrlX, ctrlY + lineHeight * 5);
+        ctx.fillText('ESC - Pause', ctrlX, ctrlY + lineHeight * 6);
     }
 
     drawPauseMenu(ctx) {
@@ -547,6 +548,25 @@ class UI {
                         ctx.fillText(dmgLabel, curX + pillPadX, indicatorY + pillH / 2 + 1);
                     }
 
+                    ctx.restore();
+                }
+                
+                // Skunk ammo display
+                if (player && typeof player.skunkAmmo === 'number' && player.skunkAmmo > 0) {
+                    const ammoY = indicatorY + pillH + 8;
+                    ctx.save();
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textBaseline = 'top';
+                    ctx.textAlign = 'left';
+                    
+                    // Draw skunk icon and ammo count
+                    ctx.fillStyle = '#40FF40';
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 3;
+                    const ammoText = `🦨 x${player.skunkAmmo}`;
+                    ctx.strokeText(ammoText, idolX, ammoY);
+                    ctx.fillText(ammoText, idolX, ammoY);
+                    
                     ctx.restore();
                 }
             } catch (e) {}

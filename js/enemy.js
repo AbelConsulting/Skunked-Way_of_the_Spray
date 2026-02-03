@@ -87,6 +87,12 @@ class Enemy {
         // Animation
         this.currentAnimation = null;
         this.animationState = "idle";
+        
+        // Skunk effect state
+        this.isSkunked = false;
+        this.skunkTimer = 0;
+        this.skunkDuration = 5.0; // 5 seconds of being disabled
+        this.skunkParticles = [];
     }
 
     loadSprites() {
@@ -228,8 +234,40 @@ class Enemy {
             }
         }
 
-        // AI behavior (only if not stunned)
-        if (this.hitStunTimer <= 0) {
+        // Update skunk effect
+        if (this.isSkunked) {
+            this.skunkTimer -= dt;
+            if (this.skunkTimer <= 0) {
+                this.isSkunked = false;
+                this.skunkParticles = [];
+            } else {
+                // Generate green particles
+                if (Math.random() < 0.3) {
+                    this.skunkParticles.push({
+                        x: this.x + Math.random() * this.width,
+                        y: this.y + Math.random() * this.height,
+                        vx: (Math.random() - 0.5) * 30,
+                        vy: -20 - Math.random() * 30,
+                        life: 1.0,
+                        age: 0,
+                        size: 3 + Math.random() * 4
+                    });
+                }
+                // Update particles
+                for (let i = this.skunkParticles.length - 1; i >= 0; i--) {
+                    const p = this.skunkParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.age += dt;
+                    if (p.age >= p.life) {
+                        this.skunkParticles.splice(i, 1);
+                    }
+                }
+            }
+        }
+        
+        // AI behavior (only if not stunned or skunked)
+        if (this.hitStunTimer <= 0 && !this.isSkunked) {
             const playerRect = (player && typeof player.getRect === 'function')
                 ? player.getRect()
                 : { x: player.x, y: player.y, width: player.width || 0, height: player.height || 0 };
@@ -488,6 +526,50 @@ class Enemy {
         } else {
             ctx.fillStyle = '#FF4444';
             ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+        
+        // Draw green skunk effect overlay if skunked
+        if (this.isSkunked) {
+            // Green tint overlay
+            ctx.save();
+            ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 150) * 0.2;
+            ctx.fillStyle = '#40FF40';
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.restore();
+            
+            // Draw skunk particles
+            if (this.skunkParticles && this.skunkParticles.length > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                for (const p of this.skunkParticles) {
+                    const alpha = 1 - (p.age / p.life);
+                    ctx.globalAlpha = alpha * 0.8;
+                    
+                    const pGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                    pGrad.addColorStop(0, '#80FF80');
+                    pGrad.addColorStop(0.5, '#40FF40');
+                    pGrad.addColorStop(1, 'rgba(80, 255, 80, 0)');
+                    ctx.fillStyle = pGrad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+            
+            // Draw "stunned" indicator above enemy
+            ctx.save();
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillStyle = '#40FF40';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            const textX = this.x + this.width / 2;
+            const textY = this.y - 5;
+            ctx.strokeText('💫', textX, textY);
+            ctx.fillText('💫', textX, textY);
+            ctx.restore();
         }
 
         // Attack range FX (subtle overlay, not a hitbox)

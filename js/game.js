@@ -243,6 +243,17 @@ class Game {
                         console.log('Spawned extra life at', px, py);
                     } catch (e) { console.warn('spawnExtraLife failed', e); }
                 };
+                
+                // Debug: spawn skunk power-up at player location
+                window.spawnSkunkPowerup = (x, y) => {
+                    try {
+                        if (!this.itemManager) return console.warn('itemManager not initialized');
+                        const px = (typeof x === 'number') ? x : (this.player ? this.player.x : 100);
+                        const py = (typeof y === 'number') ? y : (this.player ? this.player.y : 300);
+                        this.itemManager.spawnSkunkPowerup(px, py);
+                        console.log('Spawned skunk power-up at', px, py);
+                    } catch (e) { console.warn('spawnSkunkPowerup failed', e); }
+                };
             } catch (e) {}
         }
     }
@@ -1268,6 +1279,64 @@ class Game {
 
         // Check enemy attacks hitting player
         const playerHit = this.enemyManager.checkEnemyAttacks(this.player);
+        
+        // Check skunk projectile collisions with enemies
+        if (this.player && this.player.skunkProjectiles) {
+            for (let i = this.player.skunkProjectiles.length - 1; i >= 0; i--) {
+                const proj = this.player.skunkProjectiles[i];
+                const projRect = {
+                    x: proj.x - proj.width / 2,
+                    y: proj.y - proj.height / 2,
+                    width: proj.width,
+                    height: proj.height
+                };
+                
+                // Check collision with each enemy
+                for (const enemy of this.enemyManager.getEnemies()) {
+                    const enemyRect = enemy.getRect();
+                    if (Utils.rectCollision(projRect, enemyRect)) {
+                        // Hit! Apply skunk effect
+                        enemy.isSkunked = true;
+                        enemy.skunkTimer = enemy.skunkDuration;
+                        enemy.skunkParticles = [];
+                        
+                        // Remove projectile
+                        this.player.skunkProjectiles.splice(i, 1);
+                        
+                        // Visual feedback - green burst
+                        try {
+                            const burst = new HitSpark(proj.x, proj.y, {
+                                particleCount: 12,
+                                speedMin: 100,
+                                speedMax: 220
+                            });
+                            // Override colors for green skunk effect
+                            for (const particle of burst.particles) {
+                                particle.color = Math.random() > 0.5 ? '#40FF40' : '#80FF80';
+                                particle.size = Utils.randomFloat(3, 6);
+                            }
+                            this.hitSparks.push(burst);
+                        } catch (e) {}
+                        
+                        // Play sound
+                        if (this.audioManager) {
+                            this.audioManager.playSound('enemy_hit', { volume: 0.7, rate: 0.9 });
+                        }
+                        
+                        // Show floating text
+                        this.damageNumbers.push(new FloatingText(
+                            enemy.x + enemy.width / 2,
+                            enemy.y - 10,
+                            'SKUNKED!',
+                            { color: '#40FF40', lifetime: 1.5, velocityY: -60, font: 'bold 18px Arial' }
+                        ));
+                        
+                        break; // Projectile can only hit one enemy
+                    }
+                }
+            }
+        }
+        
         // Falling out of level bounds should count as a death
         const fellOut = this.player && this.level && (this.player.y > (this.level.height + 120));
         if (playerHit || fellOut) {
@@ -1511,6 +1580,11 @@ class Game {
         }
 
         this.player.draw(this.ctx, this.cameraX, this.cameraY);
+        
+        // Draw skunk projectiles
+        if (this.player && typeof this.player.drawProjectiles === 'function') {
+            this.player.drawProjectiles(this.ctx, this.cameraX, this.cameraY);
+        }
 
         // Render visual effects
         this.ctx.save();
