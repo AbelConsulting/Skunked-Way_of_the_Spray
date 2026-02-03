@@ -31,16 +31,21 @@ class UI {
 
         // Title
         ctx.font = 'bold 72px Arial';
-        ctx.fillStyle = '#FF0000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        ctx.fillText('SKUNKED: WAY OF THE SPRAY', this.width / 2, this.height / 2 - 100);
+        // "SKUNKED:" in red
+        ctx.fillStyle = '#FF0000';
+        ctx.fillText('SKUNKED:', this.width / 2, this.height / 2 - 100);
+        
+        // "WAY OF THE SPRAY" in green
+        ctx.fillStyle = '#00FF00';
+        ctx.fillText('WAY OF THE SPRAY', this.width / 2, this.height / 2 - 40);
 
         // Subtitle
         ctx.font = '32px Arial';
         ctx.fillStyle = '#CCCCCC';
-        ctx.fillText('Ninja Skunk', this.width / 2, this.height / 2 - 40);
+        ctx.fillText('Ninja Skunk', this.width / 2, this.height / 2 + 20);
 
         // Instructions
         ctx.font = '24px Arial';
