@@ -86,6 +86,10 @@ const LEVEL_CONFIGS = [
         damageBoosts: [
             { x: 4500, y: 520 }   // Mid-level damage boost
         ],
+        skunkPowerups: [
+            { x: 2500, y: 470 },  // Mid-forest skunk ammo
+            { x: 6200, y: 490 }   // Deep woods skunk ammo
+        ],
         enemyConfig: {
             spawnInterval: 3.0,
             maxEnemies: 5,
@@ -184,6 +188,10 @@ const LEVEL_CONFIGS = [
         damageBoosts: [
             { x: 4800, y: 470 },   // Mid-city damage boost
             { x: 9700, y: 470 }    // Late damage boost before boss
+        ],
+        skunkPowerups: [
+            { x: 1800, y: 410 },   // Early city skunk ammo
+            { x: 7200, y: 260 }    // Rooftop skunk ammo
         ],
         enemyConfig: {
             spawnInterval: 2.2,
@@ -292,6 +300,10 @@ const LEVEL_CONFIGS = [
             { x: 1600, y: 370 },    // Early training hall
             { x: 12000, y: 330 },   // Upper ridge
             { x: 14400, y: 420 }    // Just before boss
+        ],
+        skunkPowerups: [
+            { x: 3200, y: 490 },   // Temple approach skunk ammo
+            { x: 8400, y: 330 }    // Mountain path skunk ammo
         ],
         enemyConfig: {
             spawnInterval: 1.8,
@@ -402,6 +414,10 @@ const LEVEL_CONFIGS = [
             { x: 5300, y: 420 },    // Crystal chamber
             { x: 13200, y: 450 }    // Before boss
         ],
+        skunkPowerups: [
+            { x: 2400, y: 480 },   // Cave entrance skunk ammo
+            { x: 6800, y: 390 }    // Underground skunk ammo
+        ],
         enemyConfig: {
             spawnInterval: 1.5,
             maxEnemies: 10,
@@ -494,6 +510,10 @@ const LEVEL_CONFIGS = [
             { x: 10700, y: 330 },   // Upper ledges
             { x: 14500, y: 470 }    // Pre-boss
         ],
+        skunkPowerups: [
+            { x: 2200, y: 490 },   // Bamboo grove skunk ammo
+            { x: 7100, y: 440 }    // Zen garden skunk ammo
+        ],
         enemyConfig: {
             spawnInterval: 1.2,
             maxEnemies: 12,
@@ -574,6 +594,10 @@ const LEVEL_CONFIGS = [
         damageBoosts: [
             { x: 3500, y: 470 },    // Mid crossroads
             { x: 10900, y: 430 }    // Before boss
+        ],
+        skunkPowerups: [
+            { x: 2600, y: 450 },   // Early metro skunk ammo
+            { x: 7400, y: 380 }    // Neon chase skunk ammo
         ],
         enemyConfig: {
             spawnInterval: 1.6,
@@ -665,6 +689,10 @@ const LEVEL_CONFIGS = [
             { x: 4500, y: 520 },    // Crystal area
             { x: 8600, y: 470 },    // Mushroom section
             { x: 15100, y: 420 }    // Just before boss
+        ],
+        skunkPowerups: [
+            { x: 2800, y: 470 },   // Temple gate skunk ammo
+            { x: 7800, y: 380 }    // Mountain shrine skunk ammo
         ],
         enemyConfig: {
             spawnInterval: 1.4,
@@ -759,6 +787,10 @@ const LEVEL_CONFIGS = [
             { x: 12200, y: 430 },   // Upper section
             { x: 15200, y: 420 }    // Pre-boss
         ],
+        skunkPowerups: [
+            { x: 2900, y: 480 },   // Lava cavern skunk ammo
+            { x: 7600, y: 410 }    // Volcanic vent skunk ammo
+        ],
         enemyConfig: {
             spawnInterval: 1.2,
             maxEnemies: 12,
@@ -841,6 +873,10 @@ const LEVEL_CONFIGS = [
             { x: 5600, y: 470 },    // Mid nexus
             { x: 9700, y: 470 },    // Late section
             { x: 11200, y: 430 }    // Just before boss
+        ],
+        skunkPowerups: [
+            { x: 2700, y: 490 },   // Storm ruins skunk ammo
+            { x: 7300, y: 430 }    // Thunder peak skunk ammo
         ],
         enemyConfig: {
             spawnInterval: 1.5,
@@ -926,6 +962,10 @@ const LEVEL_CONFIGS = [
             { x: 8500, y: 400 },    // Pre-final
             { x: 10900, y: 530 },   // Late boost
             { x: 11300, y: 430 }    // Just before final boss
+        ],
+        skunkPowerups: [
+            { x: 2500, y: 500 },   // Void entrance skunk ammo
+            { x: 7500, y: 440 }    // Shadow chamber skunk ammo
         ],
         enemyConfig: {
             spawnInterval: 1.3,

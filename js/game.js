@@ -172,6 +172,14 @@ class Game {
                             this.itemManager.spawnDamageBoost(spawn.x, spawn.y);
                         }
                     });
+                    
+                    // Spawn skunk power-ups
+                    const skunkPowerupSpawns = Array.isArray(config.skunkPowerups) ? config.skunkPowerups : [];
+                    skunkPowerupSpawns.forEach((spawn) => {
+                        if (spawn && typeof spawn.x === 'number' && typeof spawn.y === 'number') {
+                            this.itemManager.spawnSkunkPowerup(spawn.x, spawn.y);
+                        }
+                    });
                 }
             }
         } catch (e) {}
@@ -676,6 +684,14 @@ class Game {
                 damageBoostSpawns.forEach((spawn) => {
                     if (spawn && typeof spawn.x === 'number' && typeof spawn.y === 'number') {
                         this.itemManager.spawnDamageBoost(spawn.x, spawn.y);
+                    }
+                });
+                
+                // Spawn skunk power-ups
+                const skunkPowerupSpawns = Array.isArray(config.skunkPowerups) ? config.skunkPowerups : [];
+                skunkPowerupSpawns.forEach((spawn) => {
+                    if (spawn && typeof spawn.x === 'number' && typeof spawn.y === 'number') {
+                        this.itemManager.spawnSkunkPowerup(spawn.x, spawn.y);
                     }
                 });
             }
