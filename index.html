@@ -336,15 +336,31 @@
         }
 
         /* --- ORIENTATION CHECK / forced landscape --- */
-        #rotate-message { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 16px; }
+        #rotate-message { 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            gap: 10px; 
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            color: white;
+        }
         #rotate-message .rotate-icon { font-size: 80px; margin-bottom: 20px; animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         #rotate-message .rotate-actions { margin-top: 12px; }
         #rotate-message #rotate-play-btn { padding: 12px 20px; font-size:16px; border-radius:8px; border:none; background:#ff6b6b; color:#fff; cursor:pointer; }
         
         @media screen and (orientation: portrait) {
-            #rotate-message { display: flex; }
-            #game-container { display: none; }
+            #rotate-message { display: flex !important; }
+            #game-container { display: none !important; }
         }
 
         /* Allow a 'force portrait->landscape' mode: when body has .force-landscape, treat as landscape */
