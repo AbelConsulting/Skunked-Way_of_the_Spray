@@ -18,7 +18,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS",
             spawnX: 10000 - 520,
             spawnY: 520,
-            healthMultiplier: 5.0,
+            healthMultiplier: 8.0,
             speedMultiplier: 0.9,
             attackDamageMultiplier: 1.8
         },
@@ -112,7 +112,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS2",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 6.0,
+            healthMultiplier: 11.0,
             speedMultiplier: 1.0,
             attackDamageMultiplier: 2.0
         },
@@ -215,7 +215,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS3",
             spawnX: 15000 - 520,
             spawnY: 520,
-            healthMultiplier: 7.0,
+            healthMultiplier: 14.0,
             speedMultiplier: 1.05,
             attackDamageMultiplier: 2.2
         },
@@ -327,7 +327,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 8.5,
+            healthMultiplier: 17.0,
             speedMultiplier: 1.1,
             attackDamageMultiplier: 2.5
         },
@@ -440,7 +440,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS2",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 10.0,
+            healthMultiplier: 20.0,
             speedMultiplier: 1.25,
             attackDamageMultiplier: 2.9
         },
@@ -536,7 +536,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS4",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 7.8,
+            healthMultiplier: 22.0,
             speedMultiplier: 1.2,
             attackDamageMultiplier: 2.6
         },
@@ -620,7 +620,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 9.0,
+            healthMultiplier: 24.0,
             speedMultiplier: 1.1,
             attackDamageMultiplier: 2.6
         },
@@ -715,7 +715,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS2",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 11.0,
+            healthMultiplier: 26.0,
             speedMultiplier: 1.3,
             attackDamageMultiplier: 3.1
         },
@@ -812,7 +812,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS3",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 9.5,
+            healthMultiplier: 28.0,
             speedMultiplier: 1.25,
             attackDamageMultiplier: 2.9
         },
@@ -899,7 +899,7 @@ const LEVEL_CONFIGS = [
             type: "BOSS4",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 12.0,
+            healthMultiplier: 30.0,
             speedMultiplier: 1.35,
             attackDamageMultiplier: 3.3
         },
