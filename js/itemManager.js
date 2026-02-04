@@ -457,11 +457,11 @@ class ItemManager {
             }
             return { type: 'DAMAGE_BOOST', success: true };
         } else if (item.type === 'SKUNK_POWERUP') {
-            // Give player 3 skunk shots
+            // Give player 2 skunk shots
             if (player.skunkAmmo !== undefined) {
-                player.skunkAmmo += 3;
+                player.skunkAmmo += 2;
             }
-            return { type: 'SKUNK_POWERUP', success: true, ammo: 3 };
+            return { type: 'SKUNK_POWERUP', success: true, ammo: 2 };
         } else if (item.type === 'EXTRA_LIFE') {
             return { type: 'EXTRA_LIFE', success: true, lives: 1 };
         } else if (item.type === 'GOLDEN_IDOL') {

@@ -549,16 +549,9 @@ class Enemy {
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
         
-        // Draw green skunk effect overlay if skunked
+        // Draw skunk effect if skunked
         if (this.isSkunked) {
-            // Green tint overlay
-            ctx.save();
-            ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 150) * 0.2;
-            ctx.fillStyle = '#40FF40';
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.restore();
-            
-            // Draw skunk particles
+            // Draw skunk particles (bubbles)
             if (this.skunkParticles && this.skunkParticles.length > 0) {
                 ctx.save();
                 ctx.globalCompositeOperation = 'lighter';
