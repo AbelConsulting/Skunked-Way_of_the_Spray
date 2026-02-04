@@ -270,7 +270,7 @@ class EnemyManager {
         // Boss enemies have higher drop rates
         const isBoss = this.isBossType(enemy.enemyType);
         const healthRegenRate = isBoss ? 0.5 : (Config.HEALTH_REGEN_DROP_RATE || 0.15);
-        const extraLifeRate = isBoss ? 0.3 : (Config.EXTRA_LIFE_DROP_RATE || 0.05);
+        const extraLifeRate = isBoss ? 0.01 : 0; // 1% from bosses, 0% from regular enemies
         // Speed boost and damage boost are placed in levels, not dropped
 
         // Roll for extra life first (rarest)
