@@ -13,8 +13,9 @@
 
         _createUI(){
             if (!this.enabled) return;
-            // Only show on touch-capable devices
-            if (!('ontouchstart' in window)) return;
+            // Only show on touch-capable devices - check both touch API and actual touch points
+            const hasTouch = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0);
+            if (!hasTouch) return;
 
             const container = document.createElement('div');
             container.id = 'touch-controls';

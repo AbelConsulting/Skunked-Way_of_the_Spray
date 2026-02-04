@@ -94,7 +94,14 @@ class LevelEditor {
     }
 
     _onPointerMove(ev) {
-        if (this.container.style.display === 'none') return;
+        if (this.container.style.display === 'none') {
+            // Clear overlay when editor is hidden
+            if (this._hovered !== null) {
+                this._hovered = null;
+                this._setOverlay({ hoveredIndex: null });
+            }
+            return;
+        }
         const pos = this._getWorldPosFromEvent(ev);
         const platforms = this.level.platforms || [];
         let found = null;
@@ -131,6 +138,10 @@ class LevelEditor {
     hide() {
         this.container.style.display = 'none';
         this.toggleBtn.textContent = '🛠️ Editor';
+        // Clear any editor overlays when hiding
+        this._hovered = null;
+        this.selectedPlatformIndex = null;
+        this._setOverlay({ hoveredIndex: null, selectedIndex: null });
     }
 
     populatePalette() {

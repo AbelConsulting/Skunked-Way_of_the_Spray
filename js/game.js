@@ -1642,7 +1642,10 @@ class Game {
                 // Hazards removed: nothing to draw here.
 
                 // Editor overlays (selection / hover) — draw in world coordinates
-                if (this._editorOverlay) {
+                // Only draw if editor panel is actually visible
+                const editorPanel = document.getElementById('level-editor-panel');
+                const editorVisible = editorPanel && editorPanel.style.display !== 'none';
+                if (this._editorOverlay && editorVisible) {
                     try {
                         const overlay = this._editorOverlay;
                         const drawOverlay = (idx, style) => {
