@@ -1414,29 +1414,35 @@ class Game {
                 }
             } catch (e) { console.warn('Achievement check failed', e); }
 
-            // High score flow: prompt for initials if this score qualifies
-            try {
-                if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
-                    try {
-                        Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
-                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
-                            // If a DOM target exists, show the scoreboard there
-                            try {
-                                const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
-                                if (target) {
-                                    // renderScoreboard mutates the passed target; if we then append the
-                                    // returned node (which is the target), DOM throws HierarchyRequestError.
-                                    const board = Highscores.renderScoreboard(null, true);
-                                    target.innerHTML = '';
-                                    target.appendChild(board);
-                                } else {
-                                    if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated', updated);
-                                }
-                            } catch (e) { console.warn('Failed to render scoreboard', e); }
-                        });
-                    } catch (e) { console.warn('Highscores prompt failed', e); }
-                }
-            } catch (e) { /* ignore highscores errors */ }
+            // Delay high score prompt to allow player to see game over screen (4 seconds)
+            setTimeout(() => {
+                // Only show high score prompt if still in game over state
+                if (this.state !== 'GAME_OVER') return;
+                
+                // High score flow: prompt for initials if this score qualifies
+                try {
+                    if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
+                        try {
+                            Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
+                                try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                                // If a DOM target exists, show the scoreboard there
+                                try {
+                                    const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
+                                    if (target) {
+                                        // renderScoreboard mutates the passed target; if we then append the
+                                        // returned node (which is the target), DOM throws HierarchyRequestError.
+                                        const board = Highscores.renderScoreboard(null, true);
+                                        target.innerHTML = '';
+                                        target.appendChild(board);
+                                    } else {
+                                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated', updated);
+                                    }
+                                } catch (e) { console.warn('Failed to render scoreboard', e); }
+                            });
+                        } catch (e) { console.warn('Highscores prompt failed', e); }
+                    }
+                } catch (e) { /* ignore highscores errors */ }
+            }, 4000);
         }
     }
 
