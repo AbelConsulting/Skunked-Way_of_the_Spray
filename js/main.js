@@ -513,7 +513,7 @@ class GameApp {
         this._setKeyState('ArrowLeft', leftDown);
         this._setKeyState('ArrowRight', rightDown);
 
-        // Left trigger: special attack (KeyZ)
+        // Left trigger: skunk shot (KeyC)
         const leftTrigger = leftIsXr
             ? (this._getButtonPressed(leftPad, 0) || this._getButtonPressed(leftPad, 1))
             : (this._getButtonPressed(leftPad, 6) || this._getButtonPressed(leftPad, 4));
@@ -549,16 +549,13 @@ class GameApp {
 
         // A: jump (Space)
         this._setKeyState(' ', aPressed);
-        // Right trigger: attack (KeyX)
-        this._setKeyState('x', rightTrigger);
-        // Right grip/bumper: skunk shot (KeyC)
-        this._setKeyState('c', rightGrip);
-        // B: skunked attack (KeyZ)
-        this._setKeyState('z', bPressed || leftTrigger);
-        // X: alternate attack (KeyX) when using standard mapping
-        if (isStandard) this._setKeyState('x', rightTrigger || xPressed);
-        // Y: special (KeyZ) on standard mapping
-        if (isStandard) this._setKeyState('z', bPressed || leftTrigger || yPressed);
+        // Right trigger + X button: regular attack (KeyX)
+        this._setKeyState('x', rightTrigger || xPressed);
+        // Left trigger + right bumper: skunk shot (KeyC)
+        this._setKeyState('c', leftTrigger || rightGrip);
+        // B button + Y: special attack (KeyZ)
+        const specialPressed = bPressed || (isStandard && yPressed);
+        this._setKeyState('z', specialPressed);
         // Left bumper: pause (Escape)
         this._setKeyState('Escape', leftBumper);
     }
