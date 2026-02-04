@@ -517,7 +517,13 @@ class GameApp {
         const leftTrigger = leftIsXr
             ? (this._getButtonPressed(leftPad, 0) || this._getButtonPressed(leftPad, 1))
             : (this._getButtonPressed(leftPad, 6) || this._getButtonPressed(leftPad, 4));
-        this._setKeyState('z', leftTrigger);
+        
+        // Left bumper: pause (Escape)
+        // For VR: grip button on left controller
+        // For Xbox: left bumper (button 4)
+        const leftBumper = leftIsXr
+            ? this._getButtonPressed(leftPad, 1)
+            : this._getButtonPressed(leftPad, 4);
 
         // Right controller buttons
         const aPressed = rightIsXr
@@ -547,12 +553,14 @@ class GameApp {
         this._setKeyState('x', rightTrigger);
         // Right grip/bumper: skunk shot (KeyC)
         this._setKeyState('c', rightGrip);
+        // B: skunked attack (KeyZ)
+        this._setKeyState('z', bPressed || leftTrigger);
         // X: alternate attack (KeyX) when using standard mapping
         if (isStandard) this._setKeyState('x', rightTrigger || xPressed);
         // Y: special (KeyZ) on standard mapping
-        if (isStandard) this._setKeyState('z', leftTrigger || yPressed);
-        // B: pause (Escape)
-        this._setKeyState('Escape', bPressed);
+        if (isStandard) this._setKeyState('z', bPressed || leftTrigger || yPressed);
+        // Left bumper: pause (Escape)
+        this._setKeyState('Escape', leftBumper);
     }
 
     async init() {
