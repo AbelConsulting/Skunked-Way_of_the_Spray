@@ -1307,17 +1307,30 @@ class Game {
                     height: proj.height
                 };
                 
-                // Check collision with each enemy
+                const aoeRadius = 80; // Area of effect radius
+                let hitAnyEnemy = false;
+                
+                // Check collision with each enemy (area effect)
                 for (const enemy of this.enemyManager.getEnemies()) {
                     const enemyRect = enemy.getRect();
-                    if (Utils.rectCollision(projRect, enemyRect)) {
+                    
+                    // Calculate distance from projectile center to enemy center
+                    const enemyCenterX = enemyRect.x + enemyRect.width / 2;
+                    const enemyCenterY = enemyRect.y + enemyRect.height / 2;
+                    const dx = proj.x - enemyCenterX;
+                    const dy = proj.y - enemyCenterY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Hit if within AOE radius or direct collision
+                    if (distance <= aoeRadius || Utils.rectCollision(projRect, enemyRect)) {
+                        // Skip if already skunked
+                        if (enemy.isSkunked) continue;
+                        
                         // Hit! Apply skunk effect
                         enemy.isSkunked = true;
                         enemy.skunkTimer = enemy.skunkDuration;
                         enemy.skunkParticles = [];
-                        
-                        // Remove projectile
-                        this.player.skunkProjectiles.splice(i, 1);
+                        hitAnyEnemy = true;
                         
                         // Visual feedback - green burst
                         try {
@@ -1346,9 +1359,12 @@ class Game {
                             'SKUNKED!',
                             { color: '#40FF40', lifetime: 1.5, velocityY: -60, font: 'bold 18px Arial' }
                         ));
-                        
-                        break; // Projectile can only hit one enemy
                     }
+                }
+                
+                // Remove projectile if it hit any enemy
+                if (hitAnyEnemy) {
+                    this.player.skunkProjectiles.splice(i, 1);
                 }
             }
         }

@@ -263,8 +263,8 @@ class Player {
                 y: this.y + this.height / 2,
                 width: 24,
                 height: 24,
-                velocityX: (this.facingRight ? 450 : -450),
-                velocityY: 0,
+                velocityX: (this.facingRight ? 600 : -600),
+                velocityY: -50,
                 facingRight: this.facingRight,
                 lifetime: 2.0, // 2 seconds before despawn
                 age: 0
@@ -319,7 +319,7 @@ class Player {
             proj.y += proj.velocityY * dt;
             
             // Apply slight gravity to projectile for arc trajectory
-            proj.velocityY += Config.GRAVITY * 0.3 * dt;
+            proj.velocityY += Config.GRAVITY * 0.15 * dt;
             
             // Update lifetime
             proj.age += dt;
