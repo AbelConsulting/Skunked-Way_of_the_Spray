@@ -445,6 +445,27 @@ class Enemy {
             // Default: allow enemies to run/fall off ledges.
             this.x = nextX;
         }
+        
+        // Jump logic: Jump if player is significantly above us and we're on ground
+        const playerCenterY = (player.y || 0) + (player.height || 0) * 0.5;
+        const enemyCenterY = this.y + this.height * 0.5;
+        const verticalDiff = enemyCenterY - playerCenterY; // positive if player is above
+        const horizontalDist = Math.abs(playerCenterX - enemyCenterX);
+        
+        // Check if on ground (velocityY ~= 0 and collision below)
+        const isGrounded = Math.abs(this.velocityY) < 1;
+        
+        // Jump if: player is above us, we're reasonably close horizontally, and we're on ground
+        if (isGrounded && verticalDiff > 50 && horizontalDist < 250) {
+            // Jump with reduced force compared to player
+            const jumpForce = Config.CHARACTER.jump_force * 0.7; // 70% of player jump
+            this.velocityY = -jumpForce;
+            
+            // Play jump sound occasionally
+            if (this.audioManager && Math.random() < 0.3) {
+                this.audioManager.playSound('jump', { volume: 0.4, rate: 0.85 });
+            }
+        }
     }
 
     attack(dt) {
