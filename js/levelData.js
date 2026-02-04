@@ -886,9 +886,9 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 10: FINAL LEVEL ---
+    // --- LEVEL 10: FINAL SHOWDOWN ---
     {
-        name: "Final Level",
+        name: "Final Showdown",
         id: "level_10",
         width: 12000,
         completion: {
