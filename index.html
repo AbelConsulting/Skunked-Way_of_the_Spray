@@ -1565,9 +1565,6 @@ updateMobileUI();
             showMobileStartOverlay();
         }
     });
-            if (nextEnabled && typeof window.primeVrControllers === 'function') {
-                try { window.primeVrControllers(); } catch (e) {}
-            }
     // Clear forced mode if device becomes actual landscape
     window.addEventListener('orientationchange', () => {
         if (isLandscape() && window._forcedLandscapeMode) {
