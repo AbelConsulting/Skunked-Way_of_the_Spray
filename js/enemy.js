@@ -10,7 +10,7 @@ class Enemy {
         this.audioManager = audioManager;
 
         // Set size based on type
-        if (enemyType === "BASIC" || enemyType === "FAST_BASIC" || enemyType === "SECOND_BASIC") {
+        if (enemyType === "BASIC" || enemyType === "FAST_BASIC" || enemyType === "SECOND_BASIC" || enemyType === "THIRD_BASIC") {
             this.width = 48;
             this.height = 48;
         } else if (enemyType === "FLYING") {
@@ -40,6 +40,12 @@ class Enemy {
             this.speed = Config.ENEMY_SPEED * 0.7; // 30% slower
             this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
             this.points = Math.floor(Config.ENEMY_POINTS * 1.5); // 50% more points
+        } else if (this.enemyType === "THIRD_BASIC") {
+            this.health = Math.floor(Config.ENEMY_HEALTH * 1.3); // 130% health
+            this.maxHealth = this.health;
+            this.speed = Config.ENEMY_SPEED * 1.1; // 10% faster
+            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.points = Math.floor(Config.ENEMY_POINTS * 1.6); // 60% more points
         } else {
             this.health = Config.ENEMY_HEALTH;
             this.maxHealth = Config.ENEMY_HEALTH;
@@ -98,6 +104,7 @@ class Enemy {
     loadSprites() {
           const prefix = (this.enemyType === "BASIC" || this.enemyType === "FAST_BASIC") ? "basic" : 
               this.enemyType === "SECOND_BASIC" ? "second" :
+              this.enemyType === "THIRD_BASIC" ? "third" :
               this.enemyType === "FLYING" ? "fly" :
               this.enemyType === "BOSS2" ? "boss2" :
               this.enemyType === "BOSS3" ? "boss3" :
@@ -126,7 +133,12 @@ class Enemy {
             return new Animation(resolved ? resolved.sprite : null, frameCount, frameDuration);
         };
 
-        const fallbackPrefix = (prefix === 'boss4') ? 'boss3' : (prefix === 'boss3') ? 'boss2' : (prefix === 'boss2') ? 'boss' : null;
+        const fallbackPrefix = (prefix === 'third') ? 'second'
+            : (prefix === 'second') ? 'basic'
+            : (prefix === 'boss4') ? 'boss3'
+            : (prefix === 'boss3') ? 'boss2'
+            : (prefix === 'boss2') ? 'boss'
+            : null;
         const idle_sprite = getSpriteKeySafe(`${prefix}_idle`, fallbackPrefix ? `${fallbackPrefix}_idle` : null);
         const walk_sprite = getSpriteKeySafe(`${prefix}_walk`, fallbackPrefix ? `${fallbackPrefix}_walk` : null);
         
