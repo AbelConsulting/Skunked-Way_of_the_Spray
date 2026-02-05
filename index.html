@@ -1271,6 +1271,7 @@ window._touchControlsVisibilityReqId = window._touchControlsVisibilityReqId || 0
 window._touchControlsVisibilityCount = window._touchControlsVisibilityCount || 0;
 window._touchControlsReqTimers = window._touchControlsReqTimers || {};
 window.requestShowTouchControls = function(durationMs = 1000, options = {}) {
+    if (window._vrTouchControlsDisabled) return 0;
     const id = ++window._touchControlsVisibilityReqId;
     window._touchControlsVisibilityCount = (window._touchControlsVisibilityCount || 0) + 1;
     const tc = ensureTouchControlsExists();
@@ -1350,6 +1351,7 @@ window.releaseShowTouchControls = function(id) {
 
 // Backwards-compatible show/hide that use the request helpers
 window.showTouchControls = function(timeoutMs = 1000) {
+    if (window._vrTouchControlsDisabled) return 0;
     // use requestShowTouchControls to manage a visibility request
     const id = window.requestShowTouchControls(timeoutMs, { force: false });
     // legacy lock for short-term behavior
@@ -1361,6 +1363,7 @@ window.showTouchControls = function(timeoutMs = 1000) {
 // Immediate show that can optionally force visibility and bypass short-term locks.
 // options: { force: true|false, durationMs: number, persistent: boolean }
 window.showTouchControlsImmediate = function(options = {}) {
+    if (window._vrTouchControlsDisabled) return 0;
     const duration = typeof options.durationMs === 'number' ? options.durationMs : 1000;
     const force = !!options.force;
     const persistent = !!options.persistent;
@@ -1453,6 +1456,15 @@ window.hideTouchControls = function() {
 
 function updateMobileUI() {
     if (!isMobile()) return;
+
+    if (window._vrTouchControlsDisabled) {
+        const tc = document.getElementById('touch-controls');
+        if (tc) {
+            tc.style.display = 'none';
+            tc.style.pointerEvents = 'none';
+        }
+        return;
+    }
 
     try { window && window.logTouchControlEvent && window.logTouchControlEvent('updateMobileUI', { landscape: isLandscape(), width: window.innerWidth, height: window.innerHeight }); } catch (e) {}
 
@@ -1553,6 +1565,9 @@ updateMobileUI();
             showMobileStartOverlay();
         }
     });
+            if (nextEnabled && typeof window.primeVrControllers === 'function') {
+                try { window.primeVrControllers(); } catch (e) {}
+            }
     // Clear forced mode if device becomes actual landscape
     window.addEventListener('orientationchange', () => {
         if (isLandscape() && window._forcedLandscapeMode) {
