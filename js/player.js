@@ -65,6 +65,12 @@ class Player {
         // Tune dash distance (speed * duration). With 4 frames @ 0.08s => 0.32s total.
         this.shadowStrikeSpeed = 380;
 
+        // Skunk shot animation state (character-only, not projectile)
+        this.isSkunkShooting = false;
+        const skunkShotAnim = this.animations && this.animations.skunk_shot;
+        this.skunkShotDuration = skunkShotAnim ? (skunkShotAnim.frameCount * skunkShotAnim.frameDuration) : 0.32;
+        this.skunkShotTimer = 0;
+
         // Shadow strike tuning: active damage window and hitbox size
         // Default: active on all frames except the first/last (windup/recovery)
         this.shadowStrikeHitboxWidth = 120;
@@ -130,7 +136,8 @@ class Player {
         const ninja_idle = spriteLoader.getSprite('ninja_idle');
         const ninja_walk = spriteLoader.getSprite('ninja_walk');
         const ninja_jump = spriteLoader.getSprite('ninja_jump');
-                const ninja_attack = spriteLoader.getSprite('ninja_attack');
+        const ninja_attack = spriteLoader.getSprite('ninja_attack');
+        const ninja_skunk_shot = spriteLoader.getSprite('ninja_skunk_shot');
         const ninja_shadow_strike = spriteLoader.getSprite('ninja_shadow_strike');
         const ninja_hurt = spriteLoader.getSprite('ninja_hurt');
         const ninja_death = spriteLoader.getSprite('ninja_death');
@@ -142,9 +149,10 @@ class Player {
             // per-sheet padding) instead of forcing a hardcoded value.
             this.animations = {
                 idle: spriteLoader.createAnimation('ninja_idle', 4, 0.15),
-                        walk: spriteLoader.createAnimation('ninja_walk', 4, 0.1),
+                walk: spriteLoader.createAnimation('ninja_walk', 4, 0.1),
                 jump: spriteLoader.createAnimation('ninja_jump', 4, 0.12),
-                        attack: spriteLoader.createAnimation('ninja_attack', 4, 0.08),
+                attack: spriteLoader.createAnimation('ninja_attack', 4, 0.08),
+                skunk_shot: spriteLoader.createAnimation('ninja_skunk_shot', 4, 0.08),
                 // Shadow Strike: 4 frames, snappy timing.
                 // Note: the current sheet is 256x64 (4x 64px frames) so we let
                 // SpriteLoader infer correct slicing.
@@ -155,10 +163,11 @@ class Player {
         } else {
             this.animations = {
                 idle: new Animation(ninja_idle, 4, 0.15, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                        walk: new Animation(ninja_walk, 4, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                walk: new Animation(ninja_walk, 4, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 jump: new Animation(ninja_jump, 4, 0.12, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                        attack: new Animation(ninja_attack, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
-                    shadow_strike: new Animation(ninja_shadow_strike, 4, 0.06, { frameWidth: 64, frameHeight: 64, frameStride: 64, frameOffset: 0 }),
+                attack: new Animation(ninja_attack, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
+                skunk_shot: new Animation(ninja_skunk_shot, 4, 0.08, { frameWidth: 64, frameHeight: 64, frameStride: 64, frameOffset: 0 }),
+                shadow_strike: new Animation(ninja_shadow_strike, 4, 0.06, { frameWidth: 64, frameHeight: 64, frameStride: 64, frameOffset: 0 }),
                 hurt: new Animation(ninja_hurt, 2, 0.1, { frameWidth: 64, frameHeight: 64, frameStride: 65 }),
                 death: new Animation(ninja_death, 4, 0.37, { frameWidth: 64, frameHeight: 64, frameStride: 65 })
             };
@@ -256,6 +265,12 @@ class Player {
         if (this.skunkAmmo > 0 && this.skunkCooldownTimer <= 0 && this.hitStunTimer <= 0) {
             this.skunkAmmo--;
             this.skunkCooldownTimer = this.skunkCooldown;
+
+            this.isSkunkShooting = true;
+            this.skunkShotTimer = this.skunkShotDuration;
+            if (this.animations.skunk_shot) {
+                this.animations.skunk_shot.reset();
+            }
             
             // Create projectile
             const projectile = {
@@ -420,6 +435,8 @@ class Player {
         // during transitions) so the player doesn't auto-run on respawn.
         this.isAttacking = false;
         this.isShadowStriking = false;
+        this.isSkunkShooting = false;
+        this.skunkShotTimer = 0;
         this.attackTimer = 0;
         this.attackCooldownTimer = 0;
         try { this.hitEnemies && this.hitEnemies.clear && this.hitEnemies.clear(); } catch (e) {}
@@ -681,6 +698,14 @@ class Player {
             this.skunkCooldownTimer -= dt;
         }
 
+        if (this.skunkShotTimer > 0) {
+            this.skunkShotTimer -= dt;
+            if (this.skunkShotTimer <= 0) {
+                this.skunkShotTimer = 0;
+                this.isSkunkShooting = false;
+            }
+        }
+
         // Update attack hitbox position
         if (this.isAttacking) {
             this._updateAttackHitboxPosition();
@@ -700,6 +725,8 @@ class Player {
             newState = "death";
         } else if (this.hitStunTimer > 0) {
             newState = "hurt";
+        } else if (this.isSkunkShooting && this.skunkShotTimer > 0) {
+            newState = "skunk_shot";
         } else if (this.isShadowStriking) {
             newState = "shadow_strike";
         } else if (this.isAttacking) {
@@ -947,7 +974,7 @@ class Player {
             ctx.arc(0, 0, proj.width * 1.2, 0, Math.PI * 2);
             ctx.fill();
             
-            // Draw projectile body (green circle)
+            // Draw a simple green projectile
             ctx.fillStyle = '#40FF40';
             ctx.strokeStyle = '#20DD20';
             ctx.lineWidth = 2;
@@ -955,13 +982,6 @@ class Player {
             ctx.arc(0, 0, proj.width / 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
-            
-            // Draw skunk icon/symbol
-            ctx.fillStyle = '#000000';
-            ctx.font = `${proj.width * 0.6}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('🦨', 0, 0);
             
             ctx.restore();
         }
