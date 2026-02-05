@@ -1309,49 +1309,71 @@ class Game {
                     height: proj.height
                 };
                 
-                const aoeRadius = 80; // Area of effect radius
                 let hitAnyEnemy = false;
                 
-                // Check collision with each enemy (area effect)
+                // Check direct collision with enemies
                 for (const enemy of this.enemyManager.getEnemies()) {
                     const enemyRect = enemy.getRect();
                     
-                    // Calculate distance from projectile center to enemy center
+                    if (Utils.rectCollision(projRect, enemyRect)) {
+                        hitAnyEnemy = true;
+                        break; // Found a hit, no need to check more
+                    }
+                }
+                
+                // If projectile hit an enemy, create spray cloud and remove projectile
+                if (hitAnyEnemy) {
+                    this.player.createSprayCloud(proj.x, proj.y);
+                    this.player.skunkProjectiles.splice(i, 1);
+                }
+            }
+        }
+        
+        // Check spray cloud collisions with enemies
+        if (this.player && this.player.skunkSprays) {
+            for (const spray of this.player.skunkSprays) {
+                for (const enemy of this.enemyManager.getEnemies()) {
+                    // Skip if already hit by this spray
+                    if (spray.hitEnemies.has(enemy)) continue;
+                    
+                    // Skip if already skunked
+                    if (enemy.isSkunked) continue;
+                    
+                    const enemyRect = enemy.getRect();
                     const enemyCenterX = enemyRect.x + enemyRect.width / 2;
                     const enemyCenterY = enemyRect.y + enemyRect.height / 2;
-                    const dx = proj.x - enemyCenterX;
-                    const dy = proj.y - enemyCenterY;
+                    const dx = spray.x - enemyCenterX;
+                    const dy = spray.y - enemyCenterY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    // Hit if within AOE radius or direct collision
-                    if (distance <= aoeRadius || Utils.rectCollision(projRect, enemyRect)) {
-                        // Skip if already skunked
-                        if (enemy.isSkunked) continue;
+                    // Hit if within spray radius
+                    if (distance <= spray.radius) {
+                        // Mark enemy as hit by this spray
+                        spray.hitEnemies.add(enemy);
                         
-                        // Hit! Apply skunk effect
+                        // Apply skunk effect
                         enemy.isSkunked = true;
                         enemy.skunkTimer = enemy.skunkDuration;
                         enemy.skunkParticles = [];
-                        hitAnyEnemy = true;
                         
                         // Visual feedback - green burst
                         try {
-                            const burst = new HitSpark(proj.x, proj.y, {
-                                particleCount: 12,
-                                speedMin: 100,
-                                speedMax: 220
+                            const burst = new HitSpark(enemyCenterX, enemyCenterY, {
+                                particleCount: 8,
+                                speedMin: 80,
+                                speedMax: 160
                             });
                             // Override colors for green skunk effect
                             for (const particle of burst.particles) {
                                 particle.color = Math.random() > 0.5 ? '#40FF40' : '#80FF80';
-                                particle.size = Utils.randomFloat(3, 6);
+                                particle.size = Utils.randomFloat(2, 5);
                             }
                             this.hitSparks.push(burst);
                         } catch (e) {}
                         
-                        // Play sound
+                        // Play sound (quieter for spray effect)
                         if (this.audioManager) {
-                            this.audioManager.playSound('enemy_hit', { volume: 0.7, rate: 0.9 });
+                            this.audioManager.playSound('enemy_hit', { volume: 0.5, rate: 0.85 });
                         }
                         
                         // Show floating text
@@ -1362,11 +1384,6 @@ class Game {
                             { color: '#40FF40', lifetime: 1.5, velocityY: -60, font: 'bold 18px Arial' }
                         ));
                     }
-                }
-                
-                // Remove projectile if it hit any enemy
-                if (hitAnyEnemy) {
-                    this.player.skunkProjectiles.splice(i, 1);
                 }
             }
         }

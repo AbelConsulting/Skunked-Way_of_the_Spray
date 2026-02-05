@@ -108,6 +108,7 @@ class Player {
         // Skunk projectile system
         this.skunkAmmo = 0; // Number of skunk shots available
         this.skunkProjectiles = []; // Active skunk projectiles
+        this.skunkSprays = []; // Active spray clouds (AoE on impact)
         this.skunkCooldown = 0.5; // Cooldown between skunk shots
         this.skunkCooldownTimer = 0;
         
@@ -369,12 +370,78 @@ class Player {
                 };
                 const collision = level.checkPlatformCollision(projRect, prevRect, proj.velocityY);
                 
-                // If projectile hits a solid platform, remove it
+                // If projectile hits a solid platform, create spray and remove projectile
                 if (collision && collision.platform && collision.platform.type === 'static') {
+                    this.createSprayCloud(proj.x, proj.y);
                     this.skunkProjectiles.splice(i, 1);
                     continue;
                 }
             }
+        }
+        
+        // Update spray clouds
+        for (let i = this.skunkSprays.length - 1; i >= 0; i--) {
+            const spray = this.skunkSprays[i];
+            spray.age += dt;
+            
+            // Expand spray radius over time
+            spray.radius = spray.startRadius + (spray.maxRadius - spray.startRadius) * (spray.age / spray.duration);
+            
+            // Update particles
+            for (let j = spray.particles.length - 1; j >= 0; j--) {
+                const p = spray.particles[j];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vx *= 0.95; // Friction
+                p.vy *= 0.95;
+                p.age += dt;
+                if (p.age >= p.lifetime) {
+                    spray.particles.splice(j, 1);
+                }
+            }
+            
+            // Remove spray cloud when expired
+            if (spray.age >= spray.duration) {
+                this.skunkSprays.splice(i, 1);
+            }
+        }
+    }
+    
+    createSprayCloud(x, y) {
+        const spray = {
+            x: x,
+            y: y,
+            age: 0,
+            duration: 0.8, // Spray lasts 0.8 seconds
+            startRadius: 30,
+            maxRadius: 100, // AoE radius
+            radius: 30,
+            hitEnemies: new Set(), // Track which enemies have been hit
+            particles: []
+        };
+        
+        // Create spray particles
+        const particleCount = 25;
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;
+            const speed = 60 + Math.random() * 120;
+            spray.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                age: 0,
+                lifetime: 0.6 + Math.random() * 0.4,
+                size: 3 + Math.random() * 5,
+                color: Math.random() > 0.5 ? '#40FF40' : '#80FF80'
+            });
+        }
+        
+        this.skunkSprays.push(spray);
+        
+        // Play spray impact sound
+        if (this.audioManager) {
+            this.audioManager.playSound('enemy_hit', { volume: 0.6, rate: 0.85 });
         }
     }
 
@@ -936,9 +1003,51 @@ class Player {
     }
     
     /**
-     * Draw skunk projectiles
+     * Draw skunk projectiles and spray clouds
      */
     drawProjectiles(ctx, cameraX, cameraY) {
+        // Draw spray clouds first (behind projectiles)
+        for (const spray of this.skunkSprays) {
+            ctx.save();
+            
+            const screenX = spray.x - cameraX;
+            const screenY = spray.y - cameraY;
+            
+            // Draw expanding spray cloud area
+            const alpha = 1 - (spray.age / spray.duration);
+            const cloudGrad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, spray.radius);
+            cloudGrad.addColorStop(0, `rgba(80, 255, 80, ${alpha * 0.3})`);
+            cloudGrad.addColorStop(0.5, `rgba(50, 255, 50, ${alpha * 0.2})`);
+            cloudGrad.addColorStop(1, 'rgba(50, 255, 50, 0)');
+            ctx.fillStyle = cloudGrad;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, spray.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw spray particles
+            ctx.globalCompositeOperation = 'lighter';
+            for (const p of spray.particles) {
+                const pAlpha = 1 - (p.age / p.lifetime);
+                ctx.globalAlpha = pAlpha * 0.8;
+                
+                const pGrad = ctx.createRadialGradient(
+                    p.x - cameraX, p.y - cameraY, 0,
+                    p.x - cameraX, p.y - cameraY, p.size
+                );
+                pGrad.addColorStop(0, '#FFFFFF');
+                pGrad.addColorStop(0.4, p.color);
+                pGrad.addColorStop(1, 'rgba(50, 255, 50, 0)');
+                
+                ctx.fillStyle = pGrad;
+                ctx.beginPath();
+                ctx.arc(p.x - cameraX, p.y - cameraY, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        // Draw projectiles
         for (const proj of this.skunkProjectiles) {
             const screenX = proj.x - cameraX;
             const screenY = proj.y - cameraY;
