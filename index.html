@@ -1711,11 +1711,6 @@ window.addEventListener('gameStateChange', function(e) {
                     void cur.offsetWidth; 
                     cur.classList.add('visible');
                     cur.style.opacity = '1';
-                    if (window._forceTouchControls) {
-                        showTouchControlsImmediate({ force: true, durationMs: 3600000, persistent: true });
-                    } else {
-                        showTouchControls(800);
-                    }
                 } catch (err) {}
                 if (Date.now() >= end) clearInterval(tid);
             }, 120);

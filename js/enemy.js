@@ -355,38 +355,38 @@ class Enemy {
         // Update animations
         this.updateAnimation(dt);
 
+        // Update rush sparks for third basic during chase
+        if (this.enemyType === 'THIRD_BASIC') {
+            const shouldSpark = !this.isSkunked && this.hitStunTimer <= 0 && this.state === 'CHASE' && Math.abs(this.velocityX) > this.speed * 0.6;
+            if (shouldSpark && Math.random() < 0.35) {
+                const dir = this.facingRight ? -1 : 1;
+                this.rushSparks.push({
+                    x: this.x + this.width / 2 + dir * 10,
+                    y: this.y + this.height - 6 + (Math.random() - 0.5) * 6,
+                    vx: dir * (40 + Math.random() * 60),
+                    vy: -40 - Math.random() * 60,
+                    life: 0.35,
+                    age: 0,
+                    size: 2 + Math.random() * 2
+                });
+            }
+
+            for (let i = this.rushSparks.length - 1; i >= 0; i--) {
+                const p = this.rushSparks[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vx *= 0.9;
+                p.vy *= 0.9;
+                p.age += dt;
+                if (p.age >= p.life) {
+                    this.rushSparks.splice(i, 1);
+                }
+            }
+        }
+
         // Bounds checking
         this.x = Utils.clamp(this.x, 0, level.width - this.width);
     }
-
-            // Update rush sparks for third basic during chase
-            if (this.enemyType === 'THIRD_BASIC') {
-                const shouldSpark = !this.isSkunked && this.hitStunTimer <= 0 && this.state === 'CHASE' && Math.abs(this.velocityX) > this.speed * 0.6;
-                if (shouldSpark && Math.random() < 0.35) {
-                    const dir = this.facingRight ? -1 : 1;
-                    this.rushSparks.push({
-                        x: this.x + this.width / 2 + dir * 10,
-                        y: this.y + this.height - 6 + (Math.random() - 0.5) * 6,
-                        vx: dir * (40 + Math.random() * 60),
-                        vy: -40 - Math.random() * 60,
-                        life: 0.35,
-                        age: 0,
-                        size: 2 + Math.random() * 2
-                    });
-                }
-
-                for (let i = this.rushSparks.length - 1; i >= 0; i--) {
-                    const p = this.rushSparks[i];
-                    p.x += p.vx * dt;
-                    p.y += p.vy * dt;
-                    p.vx *= 0.9;
-                    p.vy *= 0.9;
-                    p.age += dt;
-                    if (p.age >= p.life) {
-                        this.rushSparks.splice(i, 1);
-                    }
-                }
-            }
     patrol(dt, level) {
         // Defensive: ensure level is provided (safeguard for older builds/clients)
         if (!level) {

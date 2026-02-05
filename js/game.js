@@ -502,6 +502,8 @@ class Game {
             this.state = 'PLAYING';
             this.score = 0;
             this.lives = 3;
+            // Notify UI immediately so touch controls can show without waiting on async music.
+            this.dispatchGameStateChange();
             
             // Boss state
             this.bossEncountered = false;
