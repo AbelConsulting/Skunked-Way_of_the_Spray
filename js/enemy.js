@@ -41,11 +41,11 @@ class Enemy {
             this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
             this.points = Math.floor(Config.ENEMY_POINTS * 1.5); // 50% more points
         } else if (this.enemyType === "THIRD_BASIC") {
-            this.health = Math.floor(Config.ENEMY_HEALTH * 1.3); // 130% health
+            this.health = Math.floor(Config.ENEMY_HEALTH * 0.6); // Low health
             this.maxHealth = this.health;
-            this.speed = Config.ENEMY_SPEED * 1.1; // 10% faster
+            this.speed = Config.ENEMY_SPEED * 2.5; // Very fast
             this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
-            this.points = Math.floor(Config.ENEMY_POINTS * 1.6); // 60% more points
+            this.points = Math.floor(Config.ENEMY_POINTS * 1.8); // Reward speed threat
         } else {
             this.health = Config.ENEMY_HEALTH;
             this.maxHealth = Config.ENEMY_HEALTH;
@@ -99,6 +99,8 @@ class Enemy {
         this.skunkTimer = 0;
         this.skunkDuration = 5.0; // 5 seconds of being disabled
         this.skunkParticles = [];
+        // Third basic rush sparks (visual only)
+        this.rushSparks = [];
     }
 
     loadSprites() {
@@ -357,6 +359,34 @@ class Enemy {
         this.x = Utils.clamp(this.x, 0, level.width - this.width);
     }
 
+            // Update rush sparks for third basic during chase
+            if (this.enemyType === 'THIRD_BASIC') {
+                const shouldSpark = !this.isSkunked && this.hitStunTimer <= 0 && this.state === 'CHASE' && Math.abs(this.velocityX) > this.speed * 0.6;
+                if (shouldSpark && Math.random() < 0.35) {
+                    const dir = this.facingRight ? -1 : 1;
+                    this.rushSparks.push({
+                        x: this.x + this.width / 2 + dir * 10,
+                        y: this.y + this.height - 6 + (Math.random() - 0.5) * 6,
+                        vx: dir * (40 + Math.random() * 60),
+                        vy: -40 - Math.random() * 60,
+                        life: 0.35,
+                        age: 0,
+                        size: 2 + Math.random() * 2
+                    });
+                }
+
+                for (let i = this.rushSparks.length - 1; i >= 0; i--) {
+                    const p = this.rushSparks[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vx *= 0.9;
+                    p.vy *= 0.9;
+                    p.age += dt;
+                    if (p.age >= p.life) {
+                        this.rushSparks.splice(i, 1);
+                    }
+                }
+            }
     patrol(dt, level) {
         // Defensive: ensure level is provided (safeguard for older builds/clients)
         if (!level) {
@@ -553,13 +583,32 @@ class Enemy {
         ctx.ellipse(this.x + this.width / 2, this.y + this.height, this.width / 2, 8, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw sprite or colored rectangle
-        if (this.currentAnimation) {
-            this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, this.facingRight);
-        } else {
-            ctx.fillStyle = '#FF4444';
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
+            // Draw rush sparks (behind body)
+            if (this.enemyType === 'THIRD_BASIC' && this.rushSparks && this.rushSparks.length > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                for (const p of this.rushSparks) {
+                    const alpha = 1 - (p.age / p.life);
+                    ctx.globalAlpha = alpha * 0.85;
+                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.2);
+                    grad.addColorStop(0, '#FFFFFF');
+                    grad.addColorStop(0.5, '#FF4444');
+                    grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // Draw sprite or colored rectangle
+            if (this.currentAnimation) {
+                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, this.facingRight);
+            } else {
+                ctx.fillStyle = '#FF4444';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
         
         // Draw skunk effect if skunked
         if (this.isSkunked) {
@@ -615,6 +664,25 @@ class Enemy {
                 const r = Math.max(4, Math.min(10, Math.floor(fxH * 0.2)));
                 ctx.beginPath();
                 ctx.moveTo(fxX + r, fxY);
+        // Draw rush sparks (behind body)
+        if (this.enemyType === 'THIRD_BASIC' && this.rushSparks && this.rushSparks.length > 0) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            for (const p of this.rushSparks) {
+                const alpha = 1 - (p.age / p.life);
+                ctx.globalAlpha = alpha * 0.85;
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.2);
+                grad.addColorStop(0, '#FFFFFF');
+                grad.addColorStop(0.5, '#FF4444');
+                grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
                 ctx.lineTo(fxX + fxW - r, fxY);
                 ctx.quadraticCurveTo(fxX + fxW, fxY, fxX + fxW, fxY + r);
                 ctx.lineTo(fxX + fxW, fxY + fxH - r);
