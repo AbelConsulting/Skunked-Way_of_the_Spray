@@ -8,6 +8,12 @@
 - basic_attack.png
 - basic_hurt.png
 
+### Third Basic Enemy
+- third_idle.png
+- third_walk.png
+- third_attack.png
+- third_hurt.png
+
 ### Flying Enemy
 - fly_idle.png
 - fly_move.png

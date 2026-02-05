@@ -7,7 +7,7 @@ const Config = {
     // If your host sets aggressive caching for /assets (e.g. Netlify immutable),
     // bump this string whenever sprite/audio assets change so clients fetch
     // updated files without manual cache clearing.
-    ASSET_VERSION: '2026-01-27',
+    ASSET_VERSION: '2026-02-05',
 
     // Debugging / diagnostics
     // When true, enables verbose console logs and cache-busting helpers.
