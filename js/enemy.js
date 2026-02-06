@@ -2,6 +2,20 @@
  * Enemy character class
  */
 
+// Enemy type configuration lookup table - centralizes all type-specific settings
+const ENEMY_TYPE_CONFIG = {
+    'BASIC': { prefix: 'basic', size: { width: 48, height: 48 }, fallback: null },
+    'FAST_BASIC': { prefix: 'basic', size: { width: 48, height: 48 }, fallback: null },
+    'SECOND_BASIC': { prefix: 'second', size: { width: 48, height: 48 }, fallback: 'basic' },
+    'THIRD_BASIC': { prefix: 'third', size: { width: 48, height: 48 }, fallback: 'second' },
+    'FOURTH_BASIC': { prefix: 'fourth', size: { width: 48, height: 48 }, fallback: 'third' },
+    'FLYING': { prefix: 'fly', size: { width: 40, height: 40 }, fallback: null },
+    'BOSS': { prefix: 'boss', size: { width: 128, height: 128 }, fallback: null, attackAnim: 'boss_attack1' },
+    'BOSS2': { prefix: 'boss2', size: { width: 128, height: 128 }, fallback: 'boss', attackAnim: 'boss2_attack' },
+    'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack' },
+    'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack' }
+};
+
 class Enemy {
     constructor(x, y, enemyType = "BASIC", audioManager = null) {
         this.x = x;
@@ -9,20 +23,10 @@ class Enemy {
         this.enemyType = enemyType;
         this.audioManager = audioManager;
 
-        // Set size based on type
-        if (enemyType === "BASIC" || enemyType === "FAST_BASIC" || enemyType === "SECOND_BASIC" || enemyType === "THIRD_BASIC" || enemyType === "FOURTH_BASIC") {
-            this.width = 48;
-            this.height = 48;
-        } else if (enemyType === "FLYING") {
-            this.width = 40;
-            this.height = 40;
-        } else if (enemyType === "BOSS" || enemyType === "BOSS2" || enemyType === "BOSS3" || enemyType === "BOSS4") {
-            this.width = 128;
-            this.height = 128;
-        } else {
-            this.width = 50;
-            this.height = 70;
-        }
+        // Get configuration for this enemy type
+        const config = ENEMY_TYPE_CONFIG[enemyType] || ENEMY_TYPE_CONFIG['BASIC'];
+        this.width = config.size.width;
+        this.height = config.size.height;
 
         // Load sprites
         this.loadSprites();
@@ -79,8 +83,7 @@ class Enemy {
         this.attackHitbox = { x: 0, y: 0, width: 60, height: 40 };
 
         // Type-specific combat tuning (kept conservative)
-        const isBossType = (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4');
-        if (isBossType) {
+        if (this.isBossType()) {
             this.attackRange = 120;
             this.attackDuration = 0.65;
             this.attackWindup = 0.26;
@@ -115,70 +118,76 @@ class Enemy {
         this.jumpCooldown = 0; // Cooldown between jump attempts
     }
 
+    /**
+     * Check if this enemy is a boss type
+     */
+    isBossType() {
+        return this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || 
+               this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4';
+    }
+
+    /**
+     * Check if this enemy is a basic type (including variants)
+     */
+    isBasicType() {
+        return this.enemyType === 'BASIC' || this.enemyType === 'FAST_BASIC' ||
+               this.enemyType === 'SECOND_BASIC' || this.enemyType === 'THIRD_BASIC' ||
+               this.enemyType === 'FOURTH_BASIC';
+    }
+
     loadSprites() {
-          const prefix = (this.enemyType === "BASIC" || this.enemyType === "FAST_BASIC") ? "basic" : 
-              this.enemyType === "SECOND_BASIC" ? "second" :
-              this.enemyType === "THIRD_BASIC" ? "third" :
-              this.enemyType === "FOURTH_BASIC" ? "fourth" :
-              this.enemyType === "FLYING" ? "fly" :
-              this.enemyType === "BOSS2" ? "boss2" :
-              this.enemyType === "BOSS3" ? "boss3" :
-              this.enemyType === "BOSS4" ? "boss4" : "boss";
+        // Validate spriteLoader is ready
+        if (!spriteLoader || !spriteLoader.sprites) {
+            if (Config.DEBUG) console.warn('Enemy.loadSprites: spriteLoader not ready for', this.enemyType);
+            return;
+        }
+
+        // Get sprite prefix from config
+        const config = ENEMY_TYPE_CONFIG[this.enemyType] || ENEMY_TYPE_CONFIG['BASIC'];
+        const prefix = config.prefix;
+        const fallbackPrefix = config.fallback ? ENEMY_TYPE_CONFIG[config.fallback]?.prefix : null;
 
         const getSpriteKeySafe = (key, fallbackKey = null) => {
-            try {
-                if (typeof spriteLoader !== 'undefined' && spriteLoader.getSprite) {
-                    let spr = spriteLoader.getSprite(key);
-                    if (spr) return { key, sprite: spr };
-                    if (fallbackKey) {
-                        spr = spriteLoader.getSprite(fallbackKey);
-                        if (spr) return { key: fallbackKey, sprite: spr };
+            const sprite = spriteLoader.getSprite(key);
+            if (sprite) return { key, sprite };
+            
+            if (fallbackKey) {
+                const fallback = spriteLoader.getSprite(fallbackKey);
+                if (fallback) {
+                    if (Config.DEBUG) {
+                        console.warn(`Enemy sprite ${key} missing for ${this.enemyType}, using fallback ${fallbackKey}`);
                     }
+                    return { key: fallbackKey, sprite: fallback };
                 }
-            } catch (e) {}
+            }
+            
+            if (Config.DEBUG) {
+                console.error(`Enemy sprite ${key} not found for ${this.enemyType}, no valid fallback`);
+            }
             return { key, sprite: null };
         };
 
         const makeAnim = (resolved, frameCount, frameDuration) => {
-            try {
-                if (resolved && resolved.key && typeof spriteLoader !== 'undefined' && spriteLoader.createAnimation) {
-                    return spriteLoader.createAnimation(resolved.key, frameCount, frameDuration);
-                }
-            } catch (e) {}
+            if (resolved && resolved.key && spriteLoader.createAnimation) {
+                return spriteLoader.createAnimation(resolved.key, frameCount, frameDuration);
+            }
             return new Animation(resolved ? resolved.sprite : null, frameCount, frameDuration);
         };
 
-        const fallbackPrefix = (prefix === 'fourth') ? 'third'
-            : (prefix === 'third') ? 'second'
-            : (prefix === 'second') ? 'basic'
-            : (prefix === 'boss4') ? 'boss3'
-            : (prefix === 'boss3') ? 'boss2'
-            : (prefix === 'boss2') ? 'boss'
-            : null;
         const idle_sprite = getSpriteKeySafe(`${prefix}_idle`, fallbackPrefix ? `${fallbackPrefix}_idle` : null);
         const walk_sprite = getSpriteKeySafe(`${prefix}_walk`, fallbackPrefix ? `${fallbackPrefix}_walk` : null);
         
-        // Handle naming variance for boss
-        const attackName = (prefix === 'boss') ? 'boss_attack1'
-            : (prefix === 'boss2') ? 'boss2_attack'
-            : (prefix === 'boss3') ? 'boss3_attack'
-            : (prefix === 'boss4') ? 'boss4_attack'
-            : `${prefix}_attack`;
-        const fallbackAttack = fallbackPrefix
-            ? (fallbackPrefix === 'boss') ? 'boss_attack1'
-            : (fallbackPrefix === 'boss2') ? 'boss2_attack'
-            : (fallbackPrefix === 'boss3') ? 'boss3_attack'
-            : null
-            : null;
-        const attack_sprite = getSpriteKeySafe(attackName, fallbackAttack);
+        // Get attack animation name (bosses have special naming)
+        const attackName = config.attackAnim || `${prefix}_attack`;
+        const fallbackAttackName = fallbackPrefix ? 
+            (ENEMY_TYPE_CONFIG[config.fallback]?.attackAnim || `${fallbackPrefix}_attack`) : null;
+        const attack_sprite = getSpriteKeySafe(attackName, fallbackAttackName);
         
         const hurt_sprite = getSpriteKeySafe(`${prefix}_hurt`, fallbackPrefix ? `${fallbackPrefix}_hurt` : null);
 
         // Some enemy sets (boss) don't have a dedicated hurt sheet.
         // Fall back to the idle sheet to avoid missing animations.
-        const isBossType = (this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4');
-        const isBasicType = (this.enemyType === 'BASIC' || this.enemyType === 'FAST_BASIC');
-        const hurtFrames = (isBossType || isBasicType) ? 4 : 2;
+        const hurtFrames = (this.isBossType() || this.isBasicType()) ? 4 : 2;
         const hurtAnim = (hurt_sprite && hurt_sprite.sprite)
             ? makeAnim(hurt_sprite, hurtFrames, 0.1)
             : makeAnim(idle_sprite, 4, 0.12);
@@ -215,14 +224,14 @@ class Enemy {
         if (this.audioManager) {
             if (this.health <= 0) {
                 // For bosses, let the Game logic play the big defeat sting.
-                if (this.enemyType !== 'BOSS' && this.enemyType !== 'BOSS2' && this.enemyType !== 'BOSS3' && this.enemyType !== 'BOSS4') {
+                if (!this.isBossType()) {
                     this.audioManager.playSound('enemy_death', 0.7);
                 }
             } else {
                 // Boss-specific hurt sound
                 if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_hurt', 0.6);
-                } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4') {
+                } else if (this.isBossType()) {
                     this.audioManager.playSound('boss2_hurt', 0.6);
                 } else {
                     const rate = 0.94 + Math.random() * 0.12; // 0.94..1.06
