@@ -189,8 +189,85 @@ def create_all_sounds():
     footstep = generate_tone(200, 0.04, volume=0.15)
     save_sound(footstep, 'footstep.wav')
     
+    print("\n🎮 Generating additional gameplay sounds...")
+    
+    # Skunk spray/shot - hissing spray sound
+    spray_noise = generate_noise(0.3, volume=0.18)
+    spray_sweep = generate_sweep(800, 400, 0.3, volume=0.12)
+    skunk_spray = spray_noise + spray_sweep
+    save_sound(skunk_spray, 'skunk_spray.wav')
+    
+    # Dash - quick whoosh
+    dash = generate_sweep(500, 250, 0.15, volume=0.22)
+    save_sound(dash, 'dash.wav')
+    
+    # Double jump - higher pitched jump
+    double_jump = generate_sweep(350, 600, 0.12, volume=0.23)
+    save_sound(double_jump, 'double_jump.wav')
+    
+    # Shield block - metallic clang
+    block_tone1 = generate_tone(1200, 0.05, volume=0.28)
+    block_tone2 = generate_tone(900, 0.05, volume=0.25)
+    shield_block = np.concatenate([block_tone1, block_tone2])
+    save_sound(shield_block, 'shield_block.wav')
+    
+    # Health restore - pleasant healing chime
+    heal_tone1 = generate_tone(523, 0.08, volume=0.25)  # C
+    heal_tone2 = generate_tone(659, 0.08, volume=0.25)  # E
+    heal_tone3 = generate_tone(784, 0.12, volume=0.25)  # G
+    health_restore = np.concatenate([heal_tone1, heal_tone2, heal_tone3])
+    save_sound(health_restore, 'health_restore.wav')
+    
+    # Achievement unlock - triumphant fanfare
+    achievement1 = generate_tone(440, 0.08, volume=0.28)  # A
+    achievement2 = generate_tone(554, 0.08, volume=0.28)  # C#
+    achievement3 = generate_tone(659, 0.08, volume=0.28)  # E
+    achievement4 = generate_tone(880, 0.15, volume=0.30)  # A (octave)
+    achievement = np.concatenate([achievement1, achievement2, achievement3, achievement4])
+    save_sound(achievement, 'achievement_unlock.wav')
+    
+    # Combo break - descending disappointed notes
+    combo_break1 = generate_tone(440, 0.08, volume=0.22)
+    combo_break2 = generate_tone(330, 0.12, volume=0.20)
+    combo_break = np.concatenate([combo_break1, combo_break2])
+    save_sound(combo_break, 'combo_break.wav')
+    
+    # Enemy spawn - aggressive growl
+    enemy_spawn = generate_sweep(150, 250, 0.2, volume=0.25)
+    save_sound(enemy_spawn, 'enemy_spawn.wav')
+    
+    # Teleport - sci-fi warble
+    teleport_up = generate_sweep(300, 800, 0.15, volume=0.20)
+    teleport_down = generate_sweep(800, 300, 0.15, volume=0.18)
+    teleport = np.concatenate([teleport_up, teleport_down])
+    save_sound(teleport, 'teleport.wav')
+    
+    # Speed boost pickup - energetic fast sweep
+    speed_boost = generate_sweep(400, 1200, 0.2, volume=0.25)
+    save_sound(speed_boost, 'speed_boost.wav')
+    
+    # Damage boost pickup - powerful lower tone
+    damage_boost = generate_sweep(200, 600, 0.25, volume=0.28)
+    save_sound(damage_boost, 'damage_boost.wav')
+    
+    # Warning alert - urgent beeping
+    warning_beep1 = generate_tone(880, 0.1, volume=0.25)
+    warning_beep2 = generate_tone(880, 0.1, volume=0.25)
+    warning_silence = np.zeros(int(0.05 * 22050), dtype=np.int16)
+    warning = np.concatenate([warning_beep1, warning_silence, warning_beep2])
+    save_sound(warning, 'warning_alert.wav')
+    
+    # Critical hit - powerful impact
+    critical_hit = generate_sweep(600, 200, 0.12, volume=0.35)
+    save_sound(critical_hit, 'critical_hit.wav')
+    
+    # Wall hit/bounce - thud
+    wall_bounce = generate_tone(120, 0.08, volume=0.22)
+    save_sound(wall_bounce, 'wall_bounce.wav')
+    
     print("\n✅ All sound effects generated successfully!")
     print(f"📁 Saved to: assets/audio/sfx/")
+    print(f"📊 Total: {34} sound effects created")
 
 if __name__ == "__main__":
     try:
