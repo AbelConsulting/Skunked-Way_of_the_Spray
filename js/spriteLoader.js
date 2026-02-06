@@ -40,6 +40,10 @@ class SpriteLoader {
             'third_walk': 4,
             'third_attack': 4,
             'third_hurt': 4,
+            'fourth_idle': 4,
+            'fourth_walk': 4,
+            'fourth_attack': 4,
+            'fourth_hurt': 4,
             'boss_idle': 4,
             'boss_walk': 4,
             'boss_attack1': 4,
@@ -261,6 +265,10 @@ class SpriteLoader {
             ['third_walk', 'assets/sprites/enemies/third_walk.png'],
             ['third_attack', 'assets/sprites/enemies/third_attack.png'],
             ['third_hurt', 'assets/sprites/enemies/third_hurt.png'],
+            ['fourth_idle', 'assets/sprites/enemies/fourth_idle.png'],
+            ['fourth_walk', 'assets/sprites/enemies/fourth_walk.png'],
+            ['fourth_attack', 'assets/sprites/enemies/fourth_jump.png'],
+            ['fourth_hurt', 'assets/sprites/enemies/fourth_hurt.png'],
 
             // Boss sprites
             ['boss_idle', 'assets/sprites/enemies/boss_idle.png'],
