@@ -99,6 +99,7 @@ class Enemy {
         // Animation
         this.currentAnimation = null;
         this.animationState = "idle";
+        this._spritesReloaded = false; // Track if we've attempted to reload sprites
         
         // Skunk effect state
         this.isSkunked = false;
@@ -710,7 +711,17 @@ class Enemy {
             }
 
             // Draw sprite or colored rectangle
-            if (this.currentAnimation) {
+            // If animation exists but has no sprite sheet, try reloading sprites (handles late-loading assets)
+            if (this.currentAnimation && !this.currentAnimation.spriteSheet && !this._spritesReloaded) {
+                this._spritesReloaded = true; // Only attempt reload once
+                this.loadSprites();
+                // Update current animation reference after reload
+                if (this.animations && this.animations[this.animationState]) {
+                    this.currentAnimation = this.animations[this.animationState];
+                }
+            }
+            
+            if (this.currentAnimation && this.currentAnimation.spriteSheet) {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, this.facingRight);
             } else {
                 ctx.fillStyle = '#FF4444';
