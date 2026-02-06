@@ -10,7 +10,7 @@ class Enemy {
         this.audioManager = audioManager;
 
         // Set size based on type
-        if (enemyType === "BASIC" || enemyType === "FAST_BASIC" || enemyType === "SECOND_BASIC" || enemyType === "THIRD_BASIC") {
+        if (enemyType === "BASIC" || enemyType === "FAST_BASIC" || enemyType === "SECOND_BASIC" || enemyType === "THIRD_BASIC" || enemyType === "FOURTH_BASIC") {
             this.width = 48;
             this.height = 48;
         } else if (enemyType === "FLYING") {
@@ -46,6 +46,12 @@ class Enemy {
             this.speed = Config.ENEMY_SPEED * 2.5; // Very fast
             this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
             this.points = Math.floor(Config.ENEMY_POINTS * 1.8); // Reward speed threat
+        } else if (this.enemyType === "FOURTH_BASIC") {
+            this.health = Math.floor(Config.ENEMY_HEALTH * 1.2); // Slightly more health
+            this.maxHealth = this.health;
+            this.speed = 0; // No horizontal movement
+            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.points = Math.floor(Config.ENEMY_POINTS * 2.0); // High reward for unique threat
         } else {
             this.health = Config.ENEMY_HEALTH;
             this.maxHealth = Config.ENEMY_HEALTH;
@@ -101,12 +107,18 @@ class Enemy {
         this.skunkParticles = [];
         // Third basic rush sparks (visual only)
         this.rushSparks = [];
+        // Fourth basic jump sparks (green)
+        this.jumpSparks = [];
+        this.jumpCount = 0; // Track double jump
+        this.maxJumps = 2; // Allow double jump
+        this.jumpCooldown = 0; // Cooldown between jump attempts
     }
 
     loadSprites() {
           const prefix = (this.enemyType === "BASIC" || this.enemyType === "FAST_BASIC") ? "basic" : 
               this.enemyType === "SECOND_BASIC" ? "second" :
               this.enemyType === "THIRD_BASIC" ? "third" :
+              this.enemyType === "FOURTH_BASIC" ? "fourth" :
               this.enemyType === "FLYING" ? "fly" :
               this.enemyType === "BOSS2" ? "boss2" :
               this.enemyType === "BOSS3" ? "boss3" :
@@ -135,7 +147,8 @@ class Enemy {
             return new Animation(resolved ? resolved.sprite : null, frameCount, frameDuration);
         };
 
-        const fallbackPrefix = (prefix === 'third') ? 'second'
+        const fallbackPrefix = (prefix === 'fourth') ? 'third'
+            : (prefix === 'third') ? 'second'
             : (prefix === 'second') ? 'basic'
             : (prefix === 'boss4') ? 'boss3'
             : (prefix === 'boss3') ? 'boss2'
@@ -384,10 +397,31 @@ class Enemy {
             }
         }
 
+        // Update jump sparks for fourth basic
+        if (this.enemyType === 'FOURTH_BASIC') {
+            for (let i = this.jumpSparks.length - 1; i >= 0; i--) {
+                const p = this.jumpSparks[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vx *= 0.92;
+                p.vy += Config.GRAVITY * dt * 0.3; // Slight gravity on sparks
+                p.age += dt;
+                if (p.age >= p.life) {
+                    this.jumpSparks.splice(i, 1);
+                }
+            }
+        }
+
         // Bounds checking
         this.x = Utils.clamp(this.x, 0, level.width - this.width);
     }
     patrol(dt, level) {
+        // FOURTH_BASIC stays in place during patrol (no side-to-side movement)
+        if (this.enemyType === 'FOURTH_BASIC') {
+            this.velocityX = 0;
+            return;
+        }
+        
         // Defensive: ensure level is provided (safeguard for older builds/clients)
         if (!level) {
             try {
@@ -462,6 +496,60 @@ class Enemy {
     }
 
     chase(dt, player, level) {
+        // FOURTH_BASIC has special behavior: no horizontal movement, only vertical double jumps
+        if (this.enemyType === 'FOURTH_BASIC') {
+            this.velocityX = 0; // No side-to-side movement
+            
+            // Update jump cooldown
+            if (this.jumpCooldown > 0) {
+                this.jumpCooldown -= dt;
+            }
+            
+            // Check if on ground (velocityY ~= 0 and collision below)
+            const isGrounded = Math.abs(this.velocityY) < 1;
+            
+            if (isGrounded) {
+                this.jumpCount = 0; // Reset jump count when grounded
+            }
+            
+            const playerCenterY = (player.y || 0) + (player.height || 0) * 0.5;
+            const enemyCenterY = this.y + this.height * 0.5;
+            const verticalDiff = enemyCenterY - playerCenterY; // positive if player is above
+            
+            // Jump if player is above us and we have jumps available and cooldown is ready
+            if (verticalDiff > 30 && this.jumpCount < this.maxJumps && this.jumpCooldown <= 0) {
+                const jumpForce = Config.CHARACTER.jump_force * 0.75; // 75% of player jump
+                this.velocityY = -jumpForce;
+                this.jumpCount++;
+                this.jumpCooldown = 0.3; // Small cooldown between jumps
+                
+                // Generate green sparks on jump
+                for (let i = 0; i < 8; i++) {
+                    this.jumpSparks.push({
+                        x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
+                        y: this.y + this.height - 4,
+                        vx: (Math.random() - 0.5) * 80,
+                        vy: -30 - Math.random() * 40,
+                        life: 0.5,
+                        age: 0,
+                        size: 2 + Math.random() * 3
+                    });
+                }
+                
+                // Play jump sound
+                if (this.audioManager && Math.random() < 0.5) {
+                    this.audioManager.playSound('jump', { volume: 0.35, rate: 0.9 });
+                }
+            }
+            
+            // Face the player
+            const playerCenterX = (player.x || 0) + (player.width || 0) * 0.5;
+            const enemyCenterX = this.x + this.width * 0.5;
+            this.facingRight = playerCenterX > enemyCenterX;
+            
+            return;
+        }
+        
         // Move towards player (prefer center-to-center direction)
         const playerCenterX = (player.x || 0) + (player.width || 0) * 0.5;
         const enemyCenterX = this.x + this.width * 0.5;
@@ -597,6 +685,25 @@ class Enemy {
                     ctx.fillStyle = grad;
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // Draw jump sparks (green for fourth basic)
+            if (this.enemyType === 'FOURTH_BASIC' && this.jumpSparks && this.jumpSparks.length > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                for (const p of this.jumpSparks) {
+                    const alpha = 1 - (p.age / p.life);
+                    ctx.globalAlpha = alpha * 0.9;
+                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5);
+                    grad.addColorStop(0, '#FFFFFF');
+                    grad.addColorStop(0.4, '#44FF44');
+                    grad.addColorStop(1, 'rgba(68, 255, 68, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 ctx.restore();
