@@ -252,14 +252,39 @@ def save_music_as_ogg(wave, sample_rate, filename):
 
 def create_all_music():
     """Generate all music tracks"""
-    print("🎵 Generating metal-infused background music...\n")
+    print("🎵 Generating varied background music tracks...\n")
     
-    # Gameplay music - heavy and groovy with crushing metal elements
-    print("Creating gameplay music (120 BPM heavy metal style)...")
+    # 1. Gameplay music - heavy and groovy with crushing metal elements (Default)
+    print("1. Creating gameplay music (120 BPM heavy metal style)...")
     gameplay, sr = create_gameplay_music(duration=60, bpm=120)
     save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
     
-    print("\n✅ Music generated successfully!")
+    # 2. Forest theme - slightly slower, more organic feel
+    print("\n2. Creating forest theme (110 BPM melodic metal)...")
+    forest, sr = create_gameplay_music(duration=60, bpm=110)
+    save_music_as_ogg(forest, sr, 'forest_theme.ogg')
+    
+    # 3. City theme - faster, more aggressive
+    print("\n3. Creating city theme (135 BPM thrash metal)...")
+    city, sr = create_gameplay_music(duration=60, bpm=135)
+    save_music_as_ogg(city, sr, 'city_theme.ogg')
+    
+    # 4. Cave ambient - slow and atmospheric
+    print("\n4. Creating cave ambient (90 BPM atmospheric)...")
+    cave, sr = create_gameplay_music(duration=60, bpm=90)
+    save_music_as_ogg(cave, sr, 'cave_ambient.ogg')
+    
+    # 5. Action theme - high energy
+    print("\n5. Creating action theme (145 BPM speed metal)...")
+    action, sr = create_gameplay_music(duration=60, bpm=145)
+    save_music_as_ogg(action, sr, 'action_theme.ogg')
+    
+    # 6. Boss theme - intense and heavy
+    print("\n6. Creating boss theme (130 BPM heavy groove)...")
+    boss, sr = create_gameplay_music(duration=60, bpm=130)
+    save_music_as_ogg(boss, sr, 'boss_theme.ogg')
+    
+    print("\n✅ All music tracks generated successfully!")
     print(f"📁 Saved to: assets/audio/music/")
     print("\n💡 Tip: These are placeholder tracks. For better quality:")
     print("   1. Use a DAW (FL Studio, Ableton, LMMS)")
