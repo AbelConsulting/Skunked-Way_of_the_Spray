@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Loading Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #0f0;
+        }
+        .status {
+            display: inline-block;
+            width: 80px;
+            font-weight: bold;
+        }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        .warn { color: #ff0; }
+        img {
+            max-width: 200px;
+            max-height: 112px;
+            margin: 5px;
+            border: 1px solid #0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Background Sprite Loading Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        // Backgrounds referenced in levelData.js
+        const referencedBackgrounds = [
+            'bg_forest',
+            'bg_city', 
+            'bg_mountains',
+            'bg_cave_crystal',
+            'bg_cave_depths',
+            'bg_neon'
+        ];
+        
+        // Actual files in the directory
+        const actualFiles = [
+            'forest_bg.png',
+            'city_bg.png',
+            'mountains_bg.png',
+            'cave_bg.png',
+            'cave_crystal_bg.png',
+            'cave_depths_bg.png',
+            'neon_bg.png'
+        ];
+        
+        // Mapping function (same as level.js)
+        function bgNameToPath(bgName) {
+            const base = bgName.replace(/^bg_/, '');
+            return `assets/sprites/backgrounds/${base}_bg.png`;
+        }
+        
+        // Test each referenced background
+        async function testBackgrounds() {
+            results.innerHTML += '<div class="test-section"><h2>📋 Referenced Backgrounds Test</h2>';
+            
+            for (const bgName of referencedBackgrounds) {
+                const path = bgNameToPath(bgName);
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = `<span class="status">⏳</span> Testing ${bgName} → ${path}`;
+                results.appendChild(testDiv);
+                
+                try {
+                    const img = new Image();
+                    await new Promise((resolve, reject) => {
+                        img.onload = () => {
+                            testDiv.innerHTML = `<span class="status pass">✓ PASS</span> ${bgName} (${img.width}x${img.height}px)`;
+                            testDiv.appendChild(img);
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            testDiv.innerHTML = `<span class="status fail">✗ FAIL</span> ${bgName} → ${path} NOT FOUND`;
+                            reject();
+                        };
+                        img.src = path;
+                    });
+                } catch (e) {
+                    // Already handled in onerror
+                }
+            }
+            
+            results.innerHTML += '</div>';
+            
+            // Check for orphaned files
+            results.innerHTML += '<div class="test-section"><h2>🗂️ Orphaned Files Check</h2>';
+            
+            const referencedPaths = referencedBackgrounds.map(bg => {
+                const base = bg.replace(/^bg_/, '');
+                return `${base}_bg.png`;
+            });
+            
+            const orphans = actualFiles.filter(file => !referencedPaths.includes(file));
+            
+            if (orphans.length > 0) {
+                results.innerHTML += `<div><span class="status warn">⚠ WARN</span> Found ${orphans.length} orphaned file(s):</div>`;
+                orphans.forEach(file => {
+                    results.innerHTML += `<div style="margin-left: 40px;">• ${file} (not referenced in levelData.js)</div>`;
+                });
+            } else {
+                results.innerHTML += `<div><span class="status pass">✓ PASS</span> No orphaned files</div>`;
+            }
+            
+            results.innerHTML += '</div>';
+            
+            // Summary
+            results.innerHTML += '<div class="test-section"><h2>📊 Summary</h2>';
+            results.innerHTML += `<div>Total referenced backgrounds: ${referencedBackgrounds.length}</div>`;
+            results.innerHTML += `<div>Total background files: ${actualFiles.length}</div>`;
+            results.innerHTML += `<div>Orphaned files: ${orphans.length}</div>`;
+            results.innerHTML += '</div>';
+        }
+        
+        testBackgrounds();
+    </script>
+</body>
+</html>
