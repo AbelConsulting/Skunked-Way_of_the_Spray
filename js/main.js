@@ -958,7 +958,22 @@ class GameApp {
             ['parry_success', 'assets/audio/sfx/parry_success.wav'],
             ['coin_collect', 'assets/audio/sfx/coin_collect.wav'],
             ['footstep', 'assets/audio/sfx/footstep.wav'],
-            ['enemy_attack', 'assets/audio/sfx/enemy_attack_gen.wav']
+            ['enemy_attack', 'assets/audio/sfx/enemy_attack_gen.wav'],
+            // New gameplay sound effects
+            ['skunk_spray', 'assets/audio/sfx/skunk_spray.wav'],
+            ['dash', 'assets/audio/sfx/dash.wav'],
+            ['double_jump', 'assets/audio/sfx/double_jump.wav'],
+            ['shield_block', 'assets/audio/sfx/shield_block.wav'],
+            ['health_restore', 'assets/audio/sfx/health_restore.wav'],
+            ['achievement_unlock', 'assets/audio/sfx/achievement_unlock.wav'],
+            ['combo_break', 'assets/audio/sfx/combo_break.wav'],
+            ['enemy_spawn', 'assets/audio/sfx/enemy_spawn.wav'],
+            ['teleport', 'assets/audio/sfx/teleport.wav'],
+            ['speed_boost', 'assets/audio/sfx/speed_boost.wav'],
+            ['damage_boost', 'assets/audio/sfx/damage_boost.wav'],
+            ['warning_alert', 'assets/audio/sfx/warning_alert.wav'],
+            ['critical_hit', 'assets/audio/sfx/critical_hit.wav'],
+            ['wall_bounce', 'assets/audio/sfx/wall_bounce.wav']
         ];
         // Defer music loading until game start to reduce initial bandwidth and decoding on mobile
         const musicList = [];

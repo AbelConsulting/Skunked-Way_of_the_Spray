@@ -267,7 +267,7 @@ class SpriteLoader {
             ['third_hurt', 'assets/sprites/enemies/third_hurt.png'],
             ['fourth_idle', 'assets/sprites/enemies/fourth_idle.png'],
             ['fourth_walk', 'assets/sprites/enemies/fourth_walk.png'],
-            ['fourth_attack', 'assets/sprites/enemies/fourth_jump.png'],
+            ['fourth_attack', 'assets/sprites/enemies/fourth_attack.png'],
             ['fourth_hurt', 'assets/sprites/enemies/fourth_hurt.png'],
 
             // Boss sprites

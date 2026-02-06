@@ -38,7 +38,21 @@ class AudioManager {
             menu_select: 2,
             ui_confirm: 2,
             ui_back: 2,
-            victory: 1
+            victory: 1,
+            skunk_spray: 2,
+            dash: 2,
+            double_jump: 2,
+            shield_block: 2,
+            health_restore: 1,
+            achievement_unlock: 1,
+            combo_break: 1,
+            enemy_spawn: 2,
+            teleport: 1,
+            speed_boost: 1,
+            damage_boost: 1,
+            warning_alert: 1,
+            critical_hit: 2,
+            wall_bounce: 2
         };
         this.soundCooldownsMs = {
             footstep: 120,
@@ -66,7 +80,21 @@ class AudioManager {
             menu_select: 120,
             ui_confirm: 120,
             ui_back: 120,
-            victory: 800
+            victory: 800,
+            skunk_spray: 150,
+            dash: 100,
+            double_jump: 150,
+            shield_block: 120,
+            health_restore: 300,
+            achievement_unlock: 500,
+            combo_break: 200,
+            enemy_spawn: 200,
+            teleport: 250,
+            speed_boost: 300,
+            damage_boost: 300,
+            warning_alert: 400,
+            critical_hit: 100,
+            wall_bounce: 80
         };
         this._lastPlayTimes = {};
         this._activeSfx = [];
