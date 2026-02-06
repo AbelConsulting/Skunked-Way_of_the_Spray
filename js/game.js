@@ -618,12 +618,16 @@ class Game {
 
         async ensureLevelMusic() {
             if (!this.audioManager) return;
-            const levelId = this.level && this.level.id;
-            const useAmbient = (levelId === 'level_4');
-            const musicName = useAmbient ? 'ambient_cave_loop' : 'gameplay';
-            const musicPath = useAmbient
-                ? 'assets/audio/music/ambient_cave_loop.wav'
-                : 'assets/audio/music/gameplay.wav';
+            
+            // Get music options from level config, default to gameplay
+            const config = LEVEL_CONFIGS[this.currentLevel];
+            const musicOptions = (config && Array.isArray(config.music) && config.music.length > 0)
+                ? config.music
+                : ['gameplay'];
+            
+            // Randomly select a track from available options
+            const musicName = musicOptions[Math.floor(Math.random() * musicOptions.length)];
+            const musicPath = `assets/audio/music/${musicName}.wav`;
 
             if (!this.audioManager.musicElements[musicName]) {
                 try {

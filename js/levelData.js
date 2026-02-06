@@ -23,6 +23,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 1.8
         },
         background: 'bg_forest',
+        music: ['gameplay'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 1200, y: 300 }, 
@@ -117,6 +118,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.0
         },
         background: 'bg_city',
+        music: ['gameplay'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 1000, y: 300 },
@@ -219,7 +221,7 @@ const LEVEL_CONFIGS = [
             speedMultiplier: 1.05,
             attackDamageMultiplier: 2.2
         },
-        background: 'bg_mountains', 
+        background: 'bg_mountains',\n        music: ['gameplay'], 
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -332,6 +334,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.5
         },
         background: 'bg_cave_crystal',
+        music: ['ambient_cave_loop', 'gameplay'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -445,6 +448,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.9
         },
         background: 'bg_cave_depths',
+        music: ['ambient_cave_loop', 'gameplay'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -541,6 +545,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.6
         },
         background: 'bg_neon',
+        music: ['gameplay'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 1000, y: 300 },
@@ -625,6 +630,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.6
         },
         background: 'bg_cave_crystal',
+        music: ['ambient_cave_loop', 'gameplay'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 'left', y: 300 },
@@ -720,6 +726,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 3.1
         },
         background: 'bg_cave_depths',
+        music: ['ambient_cave_loop', 'gameplay'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 'left', y: 300 },
@@ -817,6 +824,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.9
         },
         background: 'bg_neon',
+        music: ['gameplay'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 1000, y: 300 },
@@ -904,6 +912,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 3.3
         },
         background: 'bg_neon',
+        music: ['gameplay'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 1000, y: 300 },
