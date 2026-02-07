@@ -745,9 +745,13 @@ class Enemy {
                             this.currentAnimation = this.animations[this.animationState];
                         }
                         if (Config.DEBUG) {
-                            console.log(`Enemy ${this.enemyType} sprites loaded after ${this._spriteLoadAttempts} attempts`);
+                            console.log(`Enemy ${this.enemyType} at (${Math.round(this.x)},${Math.round(this.y)}) sprites loaded after ${this._spriteLoadAttempts} attempts`);
                         }
                     }
+                } else if (this._spriteLoadAttempts === this._maxSpriteLoadAttempts) {
+                    // Log warning once when max attempts reached
+                    this._spriteLoadAttempts++;
+                    console.warn(`Enemy ${this.enemyType} failed to load sprites after ${this._maxSpriteLoadAttempts} attempts. Sprites may be missing.`);
                 }
             }
             
@@ -757,6 +761,14 @@ class Enemy {
                 // Red box fallback when sprites aren't loaded yet
                 ctx.fillStyle = '#FF4444';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Draw debug info when sprites missing
+                if (Config.DEBUG && typeof ctx.fillText === 'function') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '8px monospace';
+                    ctx.fillText(this.enemyType, this.x + 2, this.y + 10);
+                    ctx.fillText(`Attempt ${this._spriteLoadAttempts}`, this.x + 2, this.y + 20);
+                }
             }
         
         // Draw skunk effect if skunked
