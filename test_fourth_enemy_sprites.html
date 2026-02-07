@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourth Enemy Sprite Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #0f0;
+            border-radius: 5px;
+        }
+        .sprite-test {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #2a2a2a;
+        }
+        .status {
+            display: inline-block;
+            width: 80px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        img {
+            max-width: 256px;
+            max-height: 64px;
+            margin-left: 15px;
+            border: 1px solid #0f0;
+            image-rendering: pixelated;
+        }
+        canvas {
+            border: 1px solid #0f0;
+            margin: 10px;
+            image-rendering: pixelated;
+        }
+        .info { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>🐱 Fourth Basic Enemy Sprite Test</h1>
+    <div id="results"></div>
+    <div id="animation-test"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        const animTest = document.getElementById('animation-test');
+        
+        const fourthSprites = [
+            'fourth_idle',
+            'fourth_walk',
+            'fourth_attack',
+            'fourth_hurt'
+        ];
+        
+        async function testSprites() {
+            results.innerHTML += '<div class="test-section"><h2>📦 Fourth Enemy Sprite Loading</h2>';
+            
+            const loadedSprites = {};
+            
+            for (const spriteName of fourthSprites) {
+                const path = `assets/sprites/enemies/${spriteName}.png`;
+                const testDiv = document.createElement('div');
+                testDiv.className = 'sprite-test';
+                testDiv.innerHTML = `<span class="status">⏳</span> ${spriteName}`;
+                results.appendChild(testDiv);
+                
+                try {
+                    const img = new Image();
+                    await new Promise((resolve, reject) => {
+                        img.onload = () => {
+ testDiv.innerHTML = `<span class="status pass">✓ PASS</span> ${spriteName} (${img.width}x${img.height}px)`;
+                            testDiv.appendChild(img);
+                            loadedSprites[spriteName] = img;
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            testDiv.innerHTML = `<span class="status fail">✗ FAIL</span> ${spriteName} - NOT FOUND`;
+                            reject();
+                        };
+                        img.src = path;
+                    });
+                } catch (e) {
+                    // Already handled in onerror
+                }
+            }
+            
+            results.innerHTML += '</div>';
+            
+            // Test animation frames
+            if (loadedSprites['fourth_idle']) {
+                results.innerHTML += '<div class="test-section"><h2>🎬 Animation Frame Test</h2>';
+                results.innerHTML += '<p class="info">Verifying 4 frames per sprite sheet (256px width = 4x64px frames)</p>';
+                
+                const frameWidth = 64;
+                const frameCount = 4;
+                
+                for (const [name, img] of Object.entries(loadedSprites)) {
+                    const expectedWidth = frameWidth * frameCount;
+                    const match = img.width === expectedWidth;
+                    const status = match ? 'pass' : 'fail';
+                    const symbol = match ? '✓' : '✗';
+                    
+                    results.innerHTML += `<div><span class="status ${status}">${symbol}</span> ${name}: ${img.width}px width ${match ? '(correct)' : `(expected ${expectedWidth}px)`}</div>`;
+                }
+                
+                results.innerHTML += '</div>';
+                
+                // Test animated rendering
+                animTest.innerHTML = '<div class="test-section"><h2>🎮 Live Animation Test</h2>';
+                animTest.innerHTML += '<p class="info">Rendering idle animation (should animate, not red box)</p>';
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = 192;  // 48px * 4 scale
+                canvas.height = 192;
+                animTest.appendChild(canvas);
+                
+                const ctx = canvas.getContext('2d');
+                let frame = 0;
+                let elapsed = 0;
+                const frameDuration = 0.2; // 200ms per frame
+                
+                function animate() {
+                    const now = performance.now() / 1000;
+                    elapsed += 0.016; // ~60fps
+                    
+                    if (elapsed >= frameDuration) {
+                        elapsed = 0;
+                        frame = (frame + 1) % frameCount;
+                    }
+                    
+                    // Clear canvas
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw current frame
+                    const sx = frame * frameWidth;
+                    const sy = 0;
+                    const sw = frameWidth;
+                    const sh = 64;
+                    
+                    try {
+                        ctx.drawImage(loadedSprites['fourth_idle'], sx, sy, sw, sh, 24, 24, 144, 144);
+                    } catch (e) {
+                        ctx.fillStyle = '#FF4444';
+                        ctx.fillRect(24, 24, 144, 144);
+                        ctx.fillStyle = '#FFF';
+                        ctx.font = '12px monospace';
+                        ctx.fillText('ERROR', 60, 90);
+                    }
+                    
+                    // Draw frame info
+                    ctx.fillStyle = '#0f0';
+                    ctx.font = '14px monospace';
+                    ctx.fillText(`Frame: ${frame + 1}/4`, 10, canvas.height - 10);
+                    
+                    requestAnimationFrame(animate);
+                }
+                
+                animate();
+                animTest.innerHTML += '</div>';
+            }
+            
+            // Summary
+            results.innerHTML += '<div class="test-section"><h2>📊 Summary</h2>';
+            const loaded = Object.keys(loadedSprites).length;
+            const total = fourthSprites.length;
+            const status = loaded === total ? 'pass' : 'fail';
+            const symbol = loaded === total ? '✓' : '✗'; 
+            
+            results.innerHTML += `<div><span class="status ${status}">${symbol}</span> Loaded ${loaded}/${total} sprites</div>`;
+            
+            if (loaded === total) {
+                results.innerHTML += '<div class="info">✅ All fourth enemy sprites loaded successfully!</div>';
+                results.innerHTML += '<div class="info">If red boxes still appear in-game, the issue is likely a timing/loading order problem.</div>';
+            } else {
+                results.innerHTML += '<div class="fail">❌ Some sprites failed to load - check file paths and names</div>';
+            }
+            
+            results.innerHTML += '</div>';
+        }
+        
+        testSprites();
+    </script>
+</body>
+</html>
