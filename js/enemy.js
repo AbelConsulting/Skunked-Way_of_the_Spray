@@ -28,7 +28,7 @@ class Enemy {
         this.width = config.size.width;
         this.height = config.size.height;
 
-        // Load sprites
+        // Load sprites (may not be ready yet, will retry during render if needed)
         this.loadSprites();
 
         // Stats
@@ -102,7 +102,8 @@ class Enemy {
         // Animation
         this.currentAnimation = null;
         this.animationState = "idle";
-        this._spritesReloaded = false; // Track if we've attempted to reload sprites
+        this._spriteLoadAttempts = 0; // Track sprite loading attempts (allow multiple tries)
+        this._maxSpriteLoadAttempts = 60; // Try for ~1 second at 60fps
         
         // Skunk effect state
         this.isSkunked = false;
@@ -200,6 +201,12 @@ class Enemy {
         };
 
         this.currentAnimation = this.animations.idle;
+        
+        // Check if sprites actually loaded successfully
+        if (this.currentAnimation && this.currentAnimation.spriteSheet) {
+            // Sprites loaded successfully, reset attempt counter to prevent unnecessary checks
+            this._spriteLoadAttempts = this._maxSpriteLoadAttempts;
+        }
     }
 
     takeDamage(damage, knockbackDirection = 1, opts = null) {
@@ -720,19 +727,34 @@ class Enemy {
             }
 
             // Draw sprite or colored rectangle
-            // If animation exists but has no sprite sheet, try reloading sprites (handles late-loading assets)
-            if (this.currentAnimation && !this.currentAnimation.spriteSheet && !this._spritesReloaded) {
-                this._spritesReloaded = true; // Only attempt reload once
-                this.loadSprites();
-                // Update current animation reference after reload
-                if (this.animations && this.animations[this.animationState]) {
-                    this.currentAnimation = this.animations[this.animationState];
+            // If animation exists but has no sprite sheet, keep trying to reload (handles late-loading assets)
+            if (this.currentAnimation && !this.currentAnimation.spriteSheet) {
+                if (this._spriteLoadAttempts < this._maxSpriteLoadAttempts) {
+                    this._spriteLoadAttempts++;
+                    
+                    // Check if sprites are actually available now
+                    const config = ENEMY_TYPE_CONFIG[this.enemyType] || ENEMY_TYPE_CONFIG['BASIC'];
+                    const prefix = config.prefix;
+                    const testKey = `${prefix}_idle`;
+                    
+                    // Only reload if the sprite is actually present in spriteLoader now
+                    if (spriteLoader && spriteLoader.getSprite(testKey)) {
+                        this.loadSprites();
+                        // Update current animation reference after reload
+                        if (this.animations && this.animations[this.animationState]) {
+                            this.currentAnimation = this.animations[this.animationState];
+                        }
+                        if (Config.DEBUG) {
+                            console.log(`Enemy ${this.enemyType} sprites loaded after ${this._spriteLoadAttempts} attempts`);
+                        }
+                    }
                 }
             }
             
             if (this.currentAnimation && this.currentAnimation.spriteSheet) {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, this.facingRight);
             } else {
+                // Red box fallback when sprites aren't loaded yet
                 ctx.fillStyle = '#FF4444';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
             }
