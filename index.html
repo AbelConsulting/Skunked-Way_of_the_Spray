@@ -857,15 +857,30 @@ function initTouchControls() {
     if (restartBtn) {
         restartBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            // Respect game-over lockout: the keydown will be blocked by game.js
+            // if the lockout hasn't expired, but also guard here for clarity
+            try {
+                if (window.game && typeof window.game._isGameOverLocked === 'function' && window.game._isGameOverLocked()) return;
+            } catch (ex) {}
             triggerKeyEvent('Enter', 'keydown');
             setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
         }, { passive: false });
     }
 
-    // Show/hide restart on game state
+    // Show/hide restart on game state — delay showing during lockout
     window.addEventListener('gameStateChange', (e) => {
         if (restartBtn && e.detail.state === 'GAME_OVER') {
-            restartBtn.style.display = 'block';
+            // Hide initially, show after lockout expires
+            restartBtn.style.display = 'none';
+            const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+            setTimeout(() => {
+                try {
+                    if (window.game && window.game.state === 'GAME_OVER') {
+                        restartBtn.style.display = 'block';
+                    }
+                } catch (ex) {}
+            }, lockoutMs);
         } else if (restartBtn) {
             restartBtn.style.display = 'none';
         }

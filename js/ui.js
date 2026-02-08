@@ -88,7 +88,7 @@ class UI {
         ctx.fillText('Press ESC to Resume', this.width / 2, this.height / 2 + 60);
     }
 
-    drawGameOver(ctx, score, gameStats = {}) {
+    drawGameOver(ctx, score, gameStats = {}, lockoutRemaining = 0) {
         // Background overlay with gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
         gradient.addColorStop(0, 'rgba(20, 0, 0, 0.85)');
@@ -166,16 +166,23 @@ class UI {
             ctx.font = '20px Arial';
         });
 
-        // Instructions
+        // Instructions area below stats box
         ctx.save();
         ctx.font = '24px Arial';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
         const instructY = boxY + boxH + 50;
-        
-        // Blinking effect
-        if (Math.floor(Date.now() / 500) % 2 === 0) {
-            ctx.fillText('Press ENTER or Tap to Restart', this.width / 2, instructY);
+
+        if (lockoutRemaining > 0) {
+            // Show countdown during lockout
+            const secs = Math.ceil(lockoutRemaining);
+            ctx.globalAlpha = 0.6;
+            ctx.fillText(`${secs}...`, this.width / 2, instructY);
+        } else {
+            // Blinking "Press ENTER" prompt after lockout expires
+            if (Math.floor(Date.now() / 500) % 2 === 0) {
+                ctx.fillText('Press ENTER or Tap to Restart', this.width / 2, instructY);
+            }
         }
         ctx.restore();
     }

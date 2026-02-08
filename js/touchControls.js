@@ -268,7 +268,17 @@
                     }
                 } catch (err) {}
                 if (st === 'GAME_OVER') {
-                    restartBtn.style.display = 'block';
+                    // Delay showing restart button until lockout expires
+                    restartBtn.style.display = 'none';
+                    const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                        ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+                    setTimeout(() => {
+                        try {
+                            if (window.game && window.game.state === 'GAME_OVER') {
+                                restartBtn.style.display = 'block';
+                            }
+                        } catch (ex) {}
+                    }, lockoutMs);
                 } else {
                     restartBtn.style.display = 'none';
                 }

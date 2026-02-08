@@ -63,6 +63,10 @@ class Game {
         this.score = 0;
         this.lives = 3;
 
+        // Game Over lockout: timestamp (ms) when GAME_OVER was entered.
+        // Input is blocked until GAME_OVER_LOCKOUT seconds have elapsed.
+        this._gameOverTime = 0;
+
         // Respawn/death flow
         this.isRespawning = false;
         this.respawnTimer = 0;
@@ -310,11 +314,18 @@ class Game {
                     if (key === 'escape') {
                         this.togglePause();
                     } else if (key === 'enter') {
-                    if (this.state === 'MENU' || this.state === 'GAME_OVER' || this.state === 'VICTORY') {
+                    if (this.state === 'MENU' || this.state === 'VICTORY') {
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
-                        this.startGame(0); // Restart from level 1
+                        this.startGame(0);
                         this.dispatchGameStateChange();
-                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                    } else if (this.state === 'GAME_OVER') {
+                        // Respect lockout period so player can see game over stats
+                        if (this._isGameOverLocked()) return;
+                        this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
+                        this.startGame(0);
+                        this.dispatchGameStateChange();
+                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
                     }
                 }
 
@@ -380,6 +391,8 @@ class Game {
                 }
                 else if (action === 'restart') {
                     if (down && this.state === 'GAME_OVER') {
+                        // Respect lockout period
+                        if (this._isGameOverLocked()) return;
                         // Restart the game
                         this.startGame();
                         // Hide any overlays if present
@@ -415,7 +428,14 @@ class Game {
                 ev.preventDefault();
                 
                 // Allow tapping to start/restart in non-playing states
-                if (this.state === 'MENU' || this.state === 'GAME_OVER' || this.state === 'VICTORY') {
+                if (this.state === 'MENU' || this.state === 'VICTORY') {
+                    this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
+                    this.startGame(0);
+                    return;
+                }
+                if (this.state === 'GAME_OVER') {
+                    // Respect lockout period
+                    if (this._isGameOverLocked()) return;
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                     this.startGame(0);
                     return;
@@ -502,6 +522,7 @@ class Game {
             this.state = 'PLAYING';
             this.score = 0;
             this.lives = 3;
+            this._gameOverTime = 0; // Clear lockout from previous game over
             // Notify UI immediately so touch controls can show without waiting on async music.
             this.dispatchGameStateChange();
             
@@ -1430,6 +1451,7 @@ class Game {
                 }
             } catch (e) {}
             this.state = "GAME_OVER";
+            this._gameOverTime = Date.now();
             this.audioManager.stopMusic();
             // NOTE: game_over stinger is played by the death sequence (delayed).
             // Notify UI layers (mobile touch controls) about state change
@@ -1453,7 +1475,9 @@ class Game {
                 }
             } catch (e) { console.warn('Achievement check failed', e); }
 
-            // Delay high score prompt to allow player to see game over screen (4 seconds)
+            // Delay high score prompt to allow player to see game over screen
+            const hsDelay = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_HIGHSCORE_DELAY === 'number')
+                ? Config.GAME_OVER_HIGHSCORE_DELAY * 1000 : 5000;
             setTimeout(() => {
                 // Only show high score prompt if still in game over state
                 if (this.state !== 'GAME_OVER') return;
@@ -1481,8 +1505,30 @@ class Game {
                         } catch (e) { console.warn('Highscores prompt failed', e); }
                     }
                 } catch (e) { /* ignore highscores errors */ }
-            }, 4000);
+            }, hsDelay);
         }
+    }
+
+    /**
+     * Returns true if GAME_OVER input lockout is still active.
+     * During lockout, restart / high-score input is blocked so the
+     * player can read the game-over screen.
+     */
+    _isGameOverLocked() {
+        if (this.state !== 'GAME_OVER') return false;
+        const lockout = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+            ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+        return (Date.now() - this._gameOverTime) < lockout;
+    }
+
+    /**
+     * Returns how many seconds remain in the game-over lockout (0 if expired).
+     */
+    _gameOverLockoutRemaining() {
+        if (this.state !== 'GAME_OVER') return 0;
+        const lockout = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+            ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+        return Math.max(0, (lockout - (Date.now() - this._gameOverTime)) / 1000);
     }
 
     _performRespawn() {
@@ -1791,7 +1837,7 @@ class Game {
                 this.ui.drawPauseMenu(this.ctx);
             }
         } else if (this.state === "GAME_OVER") {
-            this.ui.drawGameOver(this.ctx, this.score, this.gameStats);
+            this.ui.drawGameOver(this.ctx, this.score, this.gameStats, this._gameOverLockoutRemaining());
         }
 
         this.ctx.restore();

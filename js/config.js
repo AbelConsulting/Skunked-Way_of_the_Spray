@@ -132,5 +132,12 @@ const Config = {
     MOBILE_FPS_PROBE_LOW: 22,
     MOBILE_FPS_PROBE_MID: 36,
     // Enable tile-based platform graphics when assets are present
-    USE_TILE_GRAPHICS: true
+    USE_TILE_GRAPHICS: true,
+
+    // Game Over screen lockout: seconds before restart/high-score input is allowed.
+    // Gives the player time to see stats and the death animation without
+    // accidentally skipping the screen.
+    GAME_OVER_LOCKOUT: 3.0,
+    // How long (seconds) after game over before the high-score prompt appears
+    GAME_OVER_HIGHSCORE_DELAY: 5.0
 };
