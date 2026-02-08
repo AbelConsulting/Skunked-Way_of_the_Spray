@@ -28,9 +28,6 @@ class Enemy {
         this.width = config.size.width;
         this.height = config.size.height;
 
-        // Load sprites (may not be ready yet, will retry during render if needed)
-        this.loadSprites();
-
         // Stats
         if (this.enemyType === "FAST_BASIC") {
             this.health = Math.floor(Config.ENEMY_HEALTH * 0.8); // 80% health
@@ -117,6 +114,10 @@ class Enemy {
         this.jumpCount = 0; // Track double jump
         this.maxJumps = 2; // Allow double jump
         this.jumpCooldown = 0; // Cooldown between jump attempts
+
+        // Load sprites AFTER all fields are initialised so loadSprites()
+        // can safely set this.currentAnimation without it being overwritten.
+        this.loadSprites();
     }
 
     /**
