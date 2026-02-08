@@ -728,9 +728,11 @@
         }
     } catch (e) {}
 
-    // Toggle with `c` key to quickly force show/hide when testing
+    // Toggle with F7 key to quickly force show/hide when testing
+    // (previously used 'c' which conflicted with skunk shot)
     window.addEventListener('keydown', (e) => {
-        if (e.key && e.key.toLowerCase() === 'c') {
+        if (e.key === 'F7') {
+            e.preventDefault();
             const cur = localStorage.getItem('forceTouch') === '1';
             localStorage.setItem('forceTouch', cur ? '0' : '1');
             window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
