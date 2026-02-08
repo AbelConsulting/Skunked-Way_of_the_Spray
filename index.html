@@ -350,10 +350,15 @@
             gap: 10px; 
             padding: 16px;
             background: rgba(0, 0, 0, 0.95);
+            background-image: url('assets/sprites/backgrounds/rotate_bg.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             z-index: 9999;
             color: white;
         }
         #rotate-message .rotate-icon { font-size: 80px; margin-bottom: 20px; animation: pulse 2s ease-in-out infinite; }
+        #rotate-message .rotate-bg-img { max-width: 60vw; max-height: 35vh; object-fit: contain; margin-bottom: 12px; animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         #rotate-message .rotate-actions { margin-top: 12px; }
         #rotate-message #rotate-play-btn { padding: 12px 20px; font-size:16px; border-radius:8px; border:none; background:#ff6b6b; color:#fff; cursor:pointer; }
@@ -373,6 +378,7 @@
 <body>
 
     <div id="rotate-message">
+        <img class="rotate-bg-img" src="assets/sprites/backgrounds/rotate_bg.png" alt="Rotate device to landscape">
         <div class="rotate-icon">📱➡️💻</div>
         <h1>Please Rotate Your Device</h1>
         <p>Landscape mode required</p>
