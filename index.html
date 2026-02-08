@@ -1066,18 +1066,23 @@ function hideMobileRestartOverlay() {
 function requestFullscreen() {
     const docEl = document.documentElement;
     const requestMethod = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
-    if (requestMethod) {
-        try {
-            const result = requestMethod.call(docEl);
-            if (result && typeof result.catch === 'function') {
-                result.catch(err => {
-                    // Silently fail if user denies or browser blocks
-                    console.log("Fullscreen request denied:", err);
-                });
-            }
-        } catch (err) {
-            console.log("Fullscreen request failed:", err);
+    if (!requestMethod) return;
+    try {
+        // Guard: some browsers (Oculus, Edge) reject fullscreen requests
+        // unless called from an active user gesture. Wrap the entire call
+        // to prevent unhandled-rejection errors from surfacing as scary
+        // "Runtime Error" overlays.
+        const result = requestMethod.call(docEl);
+        if (result && typeof result.then === 'function') {
+            result.then(() => {}, (err) => {
+                // Expected failure when not in a user-gesture context.
+                // Swallow silently — the game works fine without fullscreen.
+                console.log('[Fullscreen] Request denied (expected on VR/Edge):', String(err).slice(0, 120));
+            });
         }
+    } catch (err) {
+        // Synchronous throw (older browsers)
+        console.log('[Fullscreen] Request failed:', String(err).slice(0, 120));
     }
 }
 
@@ -1687,6 +1692,11 @@ window.addEventListener('gameStateChange', function(e) {
 
     window.addEventListener('error', (e) => {
         const msg = `${e.message} at ${e.filename}:${e.lineno}:${e.colno}\n${e.error && e.error.stack ? e.error.stack : ''}`;
+        // Suppress non-fatal browser policy errors (fullscreen, autoplay, etc.)
+        if (/fullscreen|user.*activation|user.*gesture|interact.*document|not.*allowed|autoplay/i.test(msg)) {
+            console.warn('[Suppressed] Non-fatal browser policy error:', msg);
+            return;
+        }
         console.error('Captured error:', msg);
         showError(msg);
     });
@@ -1698,7 +1708,17 @@ window.addEventListener('gameStateChange', function(e) {
         // Suppress MetaMask browser extension errors (extension injects itself into all pages)
         if (reasonStr.includes('MetaMask') || reasonStr.includes('inpage.js')) {
             console.warn('[Suppressed] MetaMask extension error (not used by this game):', reasonStr);
-            ev.preventDefault(); // Prevent default error handling
+            ev.preventDefault();
+            return;
+        }
+        
+        // Suppress fullscreen / user-gesture / autoplay errors — these are
+        // expected on browsers like Oculus, Edge, and Safari when the page
+        // tries to enter fullscreen without a fresh user gesture. They are
+        // non-fatal and should not block the game.
+        if (/fullscreen|user.*activation|user.*gesture|interact.*document|not.*allowed|autoplay|play\(\)/i.test(reasonStr)) {
+            console.warn('[Suppressed] Non-fatal browser policy rejection:', reasonStr);
+            ev.preventDefault();
             return;
         }
         

@@ -1044,12 +1044,17 @@ class GameApp {
             computeAndSetProgress();
         } else {
             // Enable audio on first user interaction (required by browsers)
-            window.addEventListener('keydown', () => this.audioManager.initialize(), { once: true });
-            window.addEventListener('mousedown', () => this.audioManager.initialize(), { once: true });
+            const initAudio = () => { try { this.audioManager.initialize(); } catch (e) {} };
+            window.addEventListener('keydown', initAudio, { once: true });
+            window.addEventListener('mousedown', initAudio, { once: true });
             // Mobile / touch devices may never emit mousedown/keydown.
             // Use pointer/touch hooks so iOS Safari and Android unlock audio reliably.
-            window.addEventListener('pointerdown', () => this.audioManager.initialize(), { once: true });
-            window.addEventListener('touchstart', () => this.audioManager.initialize(), { once: true, passive: true });
+            window.addEventListener('pointerdown', initAudio, { once: true });
+            window.addEventListener('touchstart', initAudio, { once: true, passive: true });
+            // On Oculus Quest / VR headsets the first input is a controller button,
+            // which fires as a gamepad event, not a keyboard/pointer event. Hook
+            // the gamepadconnected event so audio unlocks when the controller wakes.
+            window.addEventListener('gamepadconnected', initAudio, { once: true });
 
             try {
                 await this.audioManager.loadAssets(soundList, musicList, (loaded, total) => {

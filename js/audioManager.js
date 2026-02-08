@@ -1,7 +1,11 @@
 class AudioManager {
     constructor() {
         // Web Audio Context for SFX (Low latency, high polyphony)
-        this.audioCtx = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
+        // DEFER context creation until first user gesture to satisfy browser
+        // autoplay policies (Oculus browser, Edge, Chrome, Safari all require
+        // a user interaction before an AudioContext may start).
+        this._AudioContextClass = window.AudioContext || window.webkitAudioContext || null;
+        this.audioCtx = null; // created lazily via _ensureContext()
         
         this.sfxBuffers = {}; // Stores decoded audio data
         this.musicElements = {}; // Stores HTML5 Audio elements
@@ -111,27 +115,10 @@ class AudioManager {
         
         // Gain Nodes for Volume Control (guard for environments without WebAudio)
         this.musicGain = 1.0; // fallback if WebAudio music routing not used
-        if (this.audioCtx) {
-            try {
-                this.masterGain = this.audioCtx.createGain();
-                this.sfxGain = this.audioCtx.createGain();
-                this.musicGainNode = this.audioCtx.createGain();
-                this.masterGain.connect(this.audioCtx.destination);
-                this.sfxGain.connect(this.masterGain);
-                this.musicGainNode.connect(this.masterGain);
-            } catch (e) {
-                // If WebAudio creation fails, fall back to nulls and continue
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: WebAudio initialization failed', e);
-                this.masterGain = null;
-                this.sfxGain = null;
-                this.musicGainNode = null;
-                this.audioCtx = null;
-            }
-        } else {
-            this.masterGain = null;
-            this.sfxGain = null;
-            this.musicGainNode = null;
-        }
+        // Gain nodes are created lazily in _ensureContext()
+        this.masterGain = null;
+        this.sfxGain = null;
+        this.musicGainNode = null;
         
         // Defaults
         this.setSoundVolume(0.7);
@@ -234,14 +221,48 @@ class AudioManager {
     }
 
     /**
+     * Lazily create the AudioContext and gain nodes.
+     * Safe to call multiple times — only creates once.
+     */
+    _ensureContext() {
+        if (this.audioCtx) return true;
+        if (!this._AudioContextClass) return false;
+        try {
+            this.audioCtx = new this._AudioContextClass();
+            this.masterGain = this.audioCtx.createGain();
+            this.sfxGain = this.audioCtx.createGain();
+            this.musicGainNode = this.audioCtx.createGain();
+            this.masterGain.connect(this.audioCtx.destination);
+            this.sfxGain.connect(this.masterGain);
+            this.musicGainNode.connect(this.masterGain);
+            // Re-apply volumes that were set before context existed
+            this.setSoundVolume(this._pendingSfxVol != null ? this._pendingSfxVol : 0.7);
+            this.setMusicVolume(this._pendingMusicVol != null ? this._pendingMusicVol : 0.5);
+            return true;
+        } catch (e) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: WebAudio initialization failed', e);
+            this.audioCtx = null;
+            this.masterGain = null;
+            this.sfxGain = null;
+            this.musicGainNode = null;
+            return false;
+        }
+    }
+
+    /**
      * Call this on the FIRST user interaction (click/keydown)
      * to unlock the browser's audio engine.
      */
     async initialize() {
         if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Initializing audio context...');
+        this._ensureContext();
         if (this.audioCtx) {
             if (this.audioCtx.state === 'suspended') {
-                await this.audioCtx.resume();
+                try {
+                    await this.audioCtx.resume();
+                } catch (e) {
+                    console.warn('AudioManager: resume() failed (will retry on next interaction)', e);
+                }
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context resumed.');
             } else {
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context already running.');
@@ -256,9 +277,12 @@ class AudioManager {
      */
     async loadSound(name, path) {
         try {
+            // Ensure the AudioContext exists before decoding (it may have been
+            // deferred until the first user gesture, but fetch + decode is OK
+            // to do eagerly — the context just needs to exist for decodeAudioData)
+            this._ensureContext();
             const response = await fetch(path);
             if (!response || !response.ok) {
-                // Provide a clearer message for failures (404, CORS, blocked requests)
                 const msg = `AudioManager: fetch failed for '${path}' (status: ${response ? response.status : 'no response'})`;
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(msg);
                 return null;
@@ -279,6 +303,7 @@ class AudioManager {
      */
     loadMusic(name, path) {
         return new Promise((resolve) => {
+            this._ensureContext();
             const audio = new Audio();
             audio.oncanplaythrough = () => {
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Music '${name}' loaded successfully`);
@@ -538,12 +563,14 @@ class AudioManager {
     setSoundVolume(val) {
         // Clamp between 0 and 1
         const volume = Math.max(0, Math.min(1, val));
+        this._pendingSfxVol = volume;
         if (this.audioCtx && this.sfxGain) this.sfxGain.gain.setValueAtTime(volume, this.audioCtx.currentTime);
     }
 
     setMusicVolume(val) {
         const volume = Math.max(0, Math.min(1, val));
         this.musicGain = volume;
+        this._pendingMusicVol = volume;
         if (this.audioCtx && this.musicGainNode) {
             this.musicGainNode.gain.setValueAtTime(volume, this.audioCtx.currentTime);
         } else if (this.currentMusic) {
