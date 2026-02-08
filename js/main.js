@@ -66,11 +66,66 @@ class GameApp {
         } catch (e) {}
 
         try {
-            window.addEventListener('gamepadconnected', () => prime('gamepadconnected'));
+            window.addEventListener('gamepadconnected', (e) => {
+                prime('gamepadconnected');
+                // Auto-enable when an Oculus/Quest controller connects
+                try {
+                    const gp = e.gamepad;
+                    if (gp && gp.id && this._isOculusGamepad(gp.id)) {
+                        if (!window._vrControllersEnabled) {
+                            console.log('[VR] Oculus/Quest controller connected – auto-enabling:', gp.id);
+                            window._vrControllersEnabled = true;
+                            try { localStorage.setItem('vrControllers', '1'); } catch (e) {}
+                            this._disableTouchControlsForVr();
+                        }
+                    }
+                } catch (ex) {}
+            });
             window.addEventListener('gamepaddisconnected', () => {
                 // Release any stuck keys when a controller disconnects
                 this._clearGamepadKeys();
             });
+        } catch (e) {}
+
+        // Auto-enable on Quest browser (user agent detection)
+        try {
+            if (this._isQuestBrowser()) {
+                console.log('[VR] Meta Quest browser detected – auto-enabling VR controller support');
+                window._vrControllersEnabled = true;
+                try { localStorage.setItem('vrControllers', '1'); } catch (e) {}
+                prime('quest-browser-autodetect');
+            }
+        } catch (e) {}
+    }
+
+    /** Detect Meta Quest / Oculus browser from user agent */
+    _isQuestBrowser() {
+        try {
+            const ua = navigator.userAgent || '';
+            return /OculusBrowser|Quest/i.test(ua);
+        } catch (e) { return false; }
+    }
+
+    /** Check if a gamepad ID string belongs to an Oculus/Meta controller */
+    _isOculusGamepad(id) {
+        if (!id) return false;
+        const lower = id.toLowerCase();
+        return lower.includes('oculus') || lower.includes('meta') || lower.includes('quest');
+    }
+
+    /** Disable touch controls when VR controllers are active */
+    _disableTouchControlsForVr() {
+        try { window._vrTouchControlsDisabled = true; } catch (e) {}
+        try {
+            const tc = document.getElementById('touch-controls');
+            if (tc) {
+                try { window._forceTouchControls = false; } catch (e) {}
+                try { window._touchControlsLockUntil = 0; } catch (e) {}
+                try { window._touchControlsVisibilityCount = 0; } catch (e) {}
+                tc.classList.remove('visible');
+                tc.style.pointerEvents = 'none';
+                tc.style.display = 'none';
+            }
         } catch (e) {}
     }
 
@@ -431,22 +486,22 @@ class GameApp {
             const id = gp.id.toLowerCase();
             return id.includes('xbox') || id.includes('xinput');
         });
+
+        // Check for Oculus/Meta Quest controllers by gamepad ID
+        const hasOculusPad = pads.some((gp) => gp && gp.id && this._isOculusGamepad(gp.id));
         
         // Check if VR controllers are explicitly enabled or disabled
         let vrEnabled = false;
         let vrExplicitlySet = false;
         try {
             if (typeof window !== 'undefined') {
-                // Check if VR was explicitly enabled via button
                 if (window._vrControllersEnabled === true) {
                     vrEnabled = true;
                     vrExplicitlySet = true;
                 } else if (window._vrControllersEnabled === false) {
-                    // Explicitly disabled - do not use auto-detection
                     vrEnabled = false;
                     vrExplicitlySet = true;
                 } else if (typeof localStorage !== 'undefined') {
-                    // Check localStorage
                     const stored = localStorage.getItem('vrControllers');
                     if (stored === '1') {
                         vrEnabled = true;
@@ -468,26 +523,26 @@ class GameApp {
         // Check if we have any gamepads connected
         const { leftPad, rightPad } = this._pickGamepads();
         if (!leftPad && !rightPad) {
-            // No gamepads detected - don't process input
             return;
         }
         
-        // If VR wasn't explicitly set, auto-enable if we detect VR controllers or Xbox gamepad
+        // Auto-enable if we detect any recognized controller type
         if (!vrExplicitlySet) {
             const hasVrController = !!(leftPad && (leftPad.mapping === 'xr-standard' || leftPad.hand)) ||
                                    !!(rightPad && (rightPad.mapping === 'xr-standard' || rightPad.hand));
-            if (hasVrController || hasXboxPad) {
-                // Auto-enable VR controller support when VR/Xbox controller is detected
+            const isQuestBrowser = this._isQuestBrowser();
+            if (hasVrController || hasXboxPad || hasOculusPad || isQuestBrowser) {
                 try {
                     vrEnabled = true;
                     window._vrControllersEnabled = true;
                     if (this._vrDebugOnce !== 'auto-enabled') {
-                        console.log('[VR] Auto-enabled controller support - VR:', hasVrController, 'Xbox:', hasXboxPad);
+                        console.log('[VR] Auto-enabled controller support - VR:', hasVrController, 'Xbox:', hasXboxPad, 'Oculus:', hasOculusPad, 'Quest browser:', isQuestBrowser);
                         this._vrDebugOnce = 'auto-enabled';
                     }
+                    // Auto-disable touch controls when VR controllers take over
+                    this._disableTouchControlsForVr();
                 } catch (e) {}
             } else {
-                // No recognized controller type - don't process
                 return;
             }
         }
@@ -495,7 +550,7 @@ class GameApp {
         // Proceed with processing gamepad input
         try { 
             if (this._vrDebugOnce !== 'enabled' && this._vrDebugOnce !== 'auto-enabled') { 
-                console.log('[VR] Processing gamepad input - vrEnabled:', vrEnabled, 'vrExplicitlySet:', vrExplicitlySet, 'hasXboxPad:', hasXboxPad); 
+                console.log('[VR] Processing gamepad input - vrEnabled:', vrEnabled, 'hasXboxPad:', hasXboxPad, 'hasOculusPad:', hasOculusPad); 
                 this._vrDebugOnce = 'enabled'; 
             } 
         } catch (e) {}
