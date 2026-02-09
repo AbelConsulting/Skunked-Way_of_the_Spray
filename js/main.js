@@ -22,6 +22,7 @@ class GameApp {
 
         // Gamepad state tracking (VR/Oculus controllers)
         this._gamepadKeys = {};
+        this._gamepadConfirmLast = false; // rising-edge tracker for start/confirm
         this._gamepadLast = {
             left: { left: false, right: false, trigger: false },
             right: { a: false, b: false, trigger: false }
@@ -613,6 +614,48 @@ class GameApp {
         this._setKeyState('z', specialPressed);
         // Left bumper: pause (Escape)
         this._setKeyState('Escape', leftBumper);
+
+        // ── Gamepad-driven game start / Enter ──────────────────────────
+        // Any face button or trigger can start the game from non-playing
+        // states.  We track an aggregate "confirm" flag and detect the
+        // rising edge so the action fires exactly once per press.
+        const confirmNow = aPressed || bPressed || rightTrigger || xPressed || yPressed;
+        const confirmPrev = !!this._gamepadConfirmLast;
+        this._gamepadConfirmLast = confirmNow;
+
+        if (confirmNow && !confirmPrev) {
+            // Send a synthetic Enter keydown so any UI listener that
+            // relies on Enter (high-score entry, overlays, etc.) works.
+            this._sendKeyEvent('Enter', 'keydown');
+
+            // Directly start / restart the game if we are in a startable
+            // state.  This avoids relying on the keyboard handler path
+            // which may not fire on the Oculus in-browser gamepad API.
+            try {
+                if (this.game) {
+                    const st = this.game.state;
+                    if (st === 'MENU' || st === 'VICTORY') {
+                        try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                        this.game.startGame(0);
+                        try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
+                        try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) {}
+                    } else if (st === 'GAME_OVER') {
+                        if (typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
+                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                            this.game.startGame(0);
+                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
+                            try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) {}
+                        }
+                    }
+                }
+            } catch (e) {
+                try { console.warn('[Gamepad] startGame from controller failed', e); } catch (ex) {}
+            }
+        }
+        // Release the synthetic Enter on falling edge
+        if (!confirmNow && confirmPrev) {
+            this._sendKeyEvent('Enter', 'keyup');
+        }
     }
 
     async init() {

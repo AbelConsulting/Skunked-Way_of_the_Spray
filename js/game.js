@@ -313,7 +313,10 @@ class Game {
                 // Global controls
                     if (key === 'escape') {
                         this.togglePause();
-                    } else if (key === 'enter') {
+                    } else if (key === 'enter' || key === 'space') {
+                    // Enter or Space can start/restart the game (Space
+                    // enables A-button on gamepads to initiate gameplay
+                    // without requiring a keyboard or touch input).
                     if (this.state === 'MENU' || this.state === 'VICTORY') {
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0);
