@@ -8,6 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>Skunked: Way of the Spray - 2D Beat 'em Up</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="Lightning-fast 2D beat 'em up platformer — be the Ninja Skunk, chain combos, and master the Shadow Strike!">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
         <!-- Content Security Policy: configured via HTTP header for stronger enforcement. -->
         <!-- Server should set a header similar to:
@@ -1819,6 +1823,21 @@ window.addEventListener('gameStateChange', function(e) {
     window.addEventListener('resize', deb);
     window.addEventListener('orientationchange', deb);
 })();
+</script>
+
+<!-- Service Worker registration for PWA / offline support -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((reg) => {
+                console.log('[PWA] Service Worker registered, scope:', reg.scope);
+            })
+            .catch((err) => {
+                console.warn('[PWA] Service Worker registration failed:', err);
+            });
+    });
+}
 </script>
 </body>
 </html>

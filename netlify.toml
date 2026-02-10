@@ -2,6 +2,12 @@
   publish = "."
   command = "echo 'No build step required'"
 
+# Serve .well-known files as-is (needed for Digital Asset Links / TWA)
+[[redirects]]
+  from = "/.well-known/*"
+  to = "/.well-known/:splat"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
