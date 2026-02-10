@@ -8,6 +8,17 @@
   to = "/.well-known/:splat"
   status = 200
 
+# Privacy policy page
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy.html"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
