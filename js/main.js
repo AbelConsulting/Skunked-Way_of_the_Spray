@@ -88,13 +88,21 @@ class GameApp {
             });
         } catch (e) {}
 
-        // Auto-enable on Quest browser (user agent detection)
+        // On Quest browser, DON'T auto-enable gamepad mode eagerly.
+        // In 2D browsing mode the controllers act as laser-pointers and
+        // are NOT exposed through navigator.getGamepads().  Enabling VR
+        // mode prematurely causes the touch-control UI to be hidden,
+        // leaving the player with no way to interact.
+        // Instead we flag the Quest browser so we can try the WebXR
+        // gamepad bridge on first user gesture.
         try {
             if (this._isQuestBrowser()) {
-                console.log('[VR] Meta Quest browser detected – auto-enabling VR controller support');
-                window._vrControllersEnabled = true;
-                try { localStorage.setItem('vrControllers', '1'); } catch (e) {}
-                prime('quest-browser-autodetect');
+                console.log('[VR] Meta Quest browser detected – deferring controller mode until gamepads confirmed');
+                window._questBrowserDetected = true;
+                // Don't set _vrControllersEnabled here
+                // Don't disable touch controls
+                // Attempt the WebXR gamepad bridge after a user gesture
+                this._tryWebXRGamepadBridge();
             }
         } catch (e) {}
     }
@@ -116,6 +124,19 @@ class GameApp {
 
     /** Disable touch controls when VR controllers are active */
     _disableTouchControlsForVr() {
+        // Safety: only disable touch controls if we have CONFIRMED gamepad
+        // input (i.e., at least one non-null gamepad in navigator.getGamepads).
+        // On Quest browser in 2D mode the Gamepad API returns nothing useful
+        // so we must keep the touch UI for the laser pointer.
+        try {
+            const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
+            const hasRealPad = pads.some(p => !!p);
+            if (!hasRealPad) {
+                console.log('[VR] Skipping touch-control disable – no gamepad in navigator.getGamepads()');
+                return;
+            }
+        } catch (e) {}
+
         try { window._vrTouchControlsDisabled = true; } catch (e) {}
         try {
             const tc = document.getElementById('touch-controls');
@@ -128,6 +149,136 @@ class GameApp {
                 tc.style.display = 'none';
             }
         } catch (e) {}
+    }
+
+    // ── WebXR Gamepad Bridge ──────────────────────────────────────
+    // On Quest browser in 2D mode the standard Gamepad API does NOT
+    // expose the VR controllers.  We can get button / axis access by
+    // requesting an 'inline' (or 'immersive-ar' dom-overlay) XR session.
+    // This bridge polls XRInputSource.gamepad each frame and converts
+    // it to the same synthetic key events the normal gamepad path uses.
+    _tryWebXRGamepadBridge() {
+        if (this._xrBridgeAttempted) return;
+        this._xrBridgeAttempted = true;
+
+        if (typeof navigator === 'undefined' || !navigator.xr) {
+            console.log('[VR-XR] WebXR not available');
+            return;
+        }
+
+        // We'll attempt to start an inline session once the user makes a
+        // gesture (click / pointerdown anywhere).  Inline sessions don't
+        // require user activation on all browsers, but it's safest.
+        const attemptSession = async () => {
+            try {
+                // Try 'inline' first (no rendering change required)
+                const supported = await navigator.xr.isSessionSupported('inline').catch(() => false);
+                if (!supported) {
+                    console.log('[VR-XR] inline session not supported');
+                    return;
+                }
+                const session = await navigator.xr.requestSession('inline');
+                console.log('[VR-XR] Inline XR session started – polling input sources');
+                this._xrSession = session;
+
+                session.addEventListener('end', () => {
+                    console.log('[VR-XR] XR session ended');
+                    this._xrSession = null;
+                });
+
+                // Poll input sources inside the existing game loop
+                // (see _handleGamepadInput which now also calls _pollXRInputSources)
+            } catch (e) {
+                console.log('[VR-XR] Failed to start inline session:', String(e).slice(0, 200));
+            }
+        };
+
+        // Fire on first user gesture
+        const onGesture = () => {
+            window.removeEventListener('click', onGesture, true);
+            window.removeEventListener('pointerdown', onGesture, true);
+            window.removeEventListener('touchstart', onGesture, true);
+            attemptSession();
+        };
+        window.addEventListener('click', onGesture, true);
+        window.addEventListener('pointerdown', onGesture, true);
+        window.addEventListener('touchstart', onGesture, true);
+    }
+
+    /** Poll XRInputSource gamepads when an inline XR session is active */
+    _pollXRInputSources() {
+        if (!this._xrSession) return false;
+        try {
+            const sources = this._xrSession.inputSources;
+            if (!sources || sources.length === 0) return false;
+
+            let anyButton = false;
+            for (const src of sources) {
+                if (!src.gamepad) continue;
+                const gp = src.gamepad;
+                const hand = (src.handedness || '').toLowerCase();
+
+                // We found a real gamepad through WebXR!
+                if (!window._vrControllersEnabled) {
+                    console.log('[VR-XR] Controller found via WebXR – enabling VR mode, hand:', hand);
+                    window._vrControllersEnabled = true;
+                    try { localStorage.setItem('vrControllers', '1'); } catch (e) {}
+                    this._disableTouchControlsForVr();
+                }
+
+                // Process the gamepad buttons/axes using the same logic
+                // as the standard gamepad path.
+                const isXr = (gp.mapping === 'xr-standard' || gp.mapping === '');
+
+                if (hand === 'left' || (!hand && sources.length === 1)) {
+                    const axisX = (gp.axes && gp.axes.length > 2) ? gp.axes[2] : (gp.axes ? gp.axes[0] : 0);
+                    this._setKeyState('ArrowLeft', axisX < -0.25);
+                    this._setKeyState('ArrowRight', axisX > 0.25);
+                    // Trigger = skunk shot
+                    const trigger = this._getButtonPressed(gp, 0);
+                    this._setKeyState('c', trigger);
+                }
+                if (hand === 'right' || (!hand && sources.length === 1)) {
+                    // A / primary button
+                    const aBtn = isXr ? this._getButtonPressed(gp, 4) || this._getButtonPressed(gp, 3) : this._getButtonPressed(gp, 0);
+                    // B / secondary
+                    const bBtn = isXr ? this._getButtonPressed(gp, 5) || this._getButtonPressed(gp, 2) : this._getButtonPressed(gp, 1);
+                    // Trigger
+                    const trig = this._getButtonPressed(gp, 0);
+                    this._setKeyState(' ', aBtn);
+                    this._setKeyState('x', trig);
+                    this._setKeyState('z', bBtn);
+                    if (aBtn || bBtn || trig) anyButton = true;
+                }
+            }
+
+            // Rising-edge confirm to start/restart game (same logic as
+            // standard gamepad path)
+            const xrConfirmPrev = !!this._xrConfirmLast;
+            this._xrConfirmLast = anyButton;
+            if (anyButton && !xrConfirmPrev) {
+                try {
+                    if (this.game) {
+                        const st = this.game.state;
+                        if (st === 'MENU' || st === 'VICTORY') {
+                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                            this.game.startGame(0);
+                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
+                        } else if (st === 'GAME_OVER') {
+                            if (typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
+                                try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                                this.game.startGame(0);
+                                try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            return anyButton;
+        } catch (e) {
+            return false;
+        }
     }
 
     _primeGamepadInput(reason) {
@@ -1152,6 +1303,8 @@ class GameApp {
 
         // Poll gamepads once per frame before update
         try { this._handleGamepadInput(); } catch (e) {}
+        // Also poll XR input sources if the WebXR bridge is active
+        try { this._pollXRInputSources(); } catch (e) {}
 
         // Throttle to target FPS to save CPU on mobile
         const step = 1 / Config.FPS;

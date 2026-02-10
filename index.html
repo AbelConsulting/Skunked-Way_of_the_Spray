@@ -751,6 +751,8 @@
 function isMobile() {
     const ua = navigator.userAgent || '';
     if (/Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(ua)) return true;
+    // Meta Quest / Oculus browser
+    if (/OculusBrowser|Quest/i.test(ua)) return true;
     // iPadOS 13+ reports as Macintosh; detect touch-capable Macs as iPad
     try {
         if (/Macintosh/i.test(ua) && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) return true;

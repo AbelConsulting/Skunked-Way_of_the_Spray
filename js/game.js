@@ -504,6 +504,53 @@ class Game {
             this.canvas.addEventListener('touchmove', onTouchMove, { passive: false });
             this.canvas.addEventListener('touchend', (e) => { e.preventDefault(); clearTouchKeys(); }, { passive: false });
             this.canvas.addEventListener('touchcancel', (e) => { e.preventDefault(); clearTouchKeys(); }, { passive: false });
+
+            // Also listen for click / pointerdown on the canvas.
+            // On Meta Quest / Oculus, the VR controllers act as laser
+            // pointers that generate pointer & click events (NOT touch
+            // events).  Without this handler the laser click on the canvas
+            // does nothing in MENU / GAME_OVER states.
+            const onCanvasClick = (ev) => {
+                if (!ev) return;
+                // Start / restart in non-playing states
+                if (this.state === 'MENU' || this.state === 'VICTORY') {
+                    this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
+                    this.startGame(0);
+                    this.dispatchGameStateChange();
+                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                    return;
+                }
+                if (this.state === 'GAME_OVER') {
+                    if (this._isGameOverLocked()) return;
+                    this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
+                    this.startGame(0);
+                    this.dispatchGameStateChange();
+                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                    return;
+                }
+            };
+            this.canvas.addEventListener('click', onCanvasClick);
+            this.canvas.addEventListener('pointerdown', (ev) => {
+                // Only handle primary button (trigger on VR laser)
+                if (ev.button !== 0) return;
+                // For playing state, map pointer position to left/right/jump
+                if (this.state === 'PLAYING') {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = ev.clientX - rect.left;
+                    const w = rect.width;
+                    if (x < w * 0.33) {
+                        setTouchKey('arrowleft', true);
+                    } else if (x > w * 0.66) {
+                        setTouchKey('arrowright', true);
+                    } else {
+                        setTouchKey('space', true);
+                    }
+                }
+            });
+            this.canvas.addEventListener('pointerup', () => {
+                // Release any keys set via pointer
+                clearTouchKeys();
+            });
             }
 
         // Start or restart the game (New Game)
