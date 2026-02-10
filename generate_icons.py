@@ -36,10 +36,22 @@ def svg_to_png(svg_path, png_path, size=512):
         return False
 
 
+def center_crop_square(img):
+    """Center-crop a rectangular image to a square using the shorter side."""
+    w, h = img.size
+    if w == h:
+        return img
+    side = min(w, h)
+    left = (w - side) // 2
+    top = (h - side) // 2
+    return img.crop((left, top, left + side, top + side))
+
+
 def resize_png(source_path, output_path, size):
-    """Resize a PNG to the given square size."""
+    """Resize a PNG to the given square size (auto-crops to square first)."""
     from PIL import Image
     img = Image.open(source_path).convert('RGBA')
+    img = center_crop_square(img)
     resized = img.resize((size, size), Image.LANCZOS)
     resized.save(output_path, 'PNG')
 
@@ -53,6 +65,7 @@ def create_maskable(source_path, output_path, size=512):
     bg_color = (26, 26, 46, 255)  # #1a1a2e
     canvas = Image.new('RGBA', (size, size), bg_color)
     img = Image.open(source_path).convert('RGBA')
+    img = center_crop_square(img)
 
     # Scale source to 80% of target size (safe zone)
     inner = int(size * 0.80)
@@ -88,6 +101,14 @@ def main():
             sys.exit(1)
 
     print(f'Source: {source_png_input}')
+    # Report dimensions and auto-crop
+    from PIL import Image as _Img
+    _src = _Img.open(source_png_input)
+    w, h = _src.size
+    print(f'Source size: {w}x{h}')
+    if w != h:
+        side = min(w, h)
+        print(f'Auto-cropping center {side}x{side} from {w}x{h}')
     print(f'Output: {ICON_DIR}')
     print()
 
