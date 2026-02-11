@@ -300,32 +300,68 @@
         }
 
         .pause-panel {
-            width: min(560px, 92vw);
-            padding: 18px 16px 16px;
-            border-radius: 16px;
+            width: min(420px, 90vw);
+            padding: 24px 24px 20px;
+            border-radius: 18px;
             border: 1px solid rgba(255,255,255,0.10);
-            background: linear-gradient(180deg, rgba(10,12,16,0.88), rgba(0,0,0,0.72));
+            background: linear-gradient(180deg, rgba(10,12,16,0.92), rgba(0,0,0,0.78));
             box-shadow: 0 18px 60px rgba(0,0,0,0.55);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
         }
 
         .pause-title {
-            margin: 0;
+            margin: 0 0 4px;
             color: #fff;
-            font-size: 44px;
+            font-size: 38px;
             letter-spacing: 0.06em;
             text-shadow: 0 10px 30px rgba(0,0,0,0.55);
         }
 
+        .pause-divider {
+            width: 80%;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+            margin: 0;
+            border: none;
+        }
+
         .pause-actions {
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            flex-wrap: wrap;
+            width: 100%;
+            align-items: center;
+        }
+
+        .pause-actions .menu-btn {
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            padding: 14px 18px;
+            font-size: 16px;
+        }
+
+        .pause-actions .menu-btn--primary {
+            padding: 16px 18px;
+            font-size: 18px;
+        }
+
+        .pause-secondary-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
             justify-content: center;
+        }
+
+        .pause-secondary-actions .menu-btn {
+            flex: 1;
+            padding: 12px 10px;
+            font-size: 14px;
         }
 
         .pause-volume-controls {
@@ -583,6 +619,7 @@
         <div id="pause-overlay" style="display:none;">
             <div class="pause-panel">
                 <h1 class="pause-title">PAUSED</h1>
+                <hr class="pause-divider">
                 <div class="pause-volume-controls">
                     <div class="volume-row">
                         <label for="sfx-volume">🔊 SFX</label>
@@ -595,10 +632,13 @@
                         <span class="volume-value" id="music-volume-value">50%</span>
                     </div>
                 </div>
+                <hr class="pause-divider">
                 <div class="pause-actions">
-                    <button id="resume-btn" class="menu-btn menu-btn--primary">Resume</button>
-                    <button id="view-highscores-btn" title="View High Scores" class="menu-btn">🏆 High Scores</button>
-                    <button id="view-achievements-btn" title="View Achievements" class="menu-btn">🎖️ Achievements</button>
+                    <button id="resume-btn" class="menu-btn menu-btn--primary">▶ Resume</button>
+                    <div class="pause-secondary-actions">
+                        <button id="view-highscores-btn" title="View High Scores" class="menu-btn">🏆 Scores</button>
+                        <button id="view-achievements-btn" title="View Achievements" class="menu-btn">🎖️ Achievements</button>
+                    </div>
                 </div>
             </div>
         </div>
