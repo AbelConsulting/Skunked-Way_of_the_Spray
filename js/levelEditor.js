@@ -127,8 +127,8 @@ class LevelEditor {
             if (!this.game) return;
             this.game._editorOverlay = this.game._editorOverlay || {};
             Object.assign(this.game._editorOverlay, obj);
-            try { this.game.render(); } catch (e) {}
-        } catch (e) {}
+            try { this.game.render(); } catch (e) { __err('editor', e); }
+        } catch (e) { __err('editor', e); }
     }
     show() {
         this.container.style.display = 'block';
@@ -236,7 +236,7 @@ class LevelEditor {
         const badge = document.getElementById(`platform-tile-${this.selectedPlatformIndex}`);
         if (badge) badge.textContent = tileName;
         // trigger a render (game.render may be throttled so call draw directly)
-        try { this.game.render(); } catch (e) {}
+        try { this.game.render(); } catch (e) { __err('editor', e); }
     }
 
     saveAssignments() {
