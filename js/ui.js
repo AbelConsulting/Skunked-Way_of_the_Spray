@@ -218,111 +218,208 @@ class UI {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, this.width, this.height);
 
-        // Animated golden particles effect
+        // Enhanced animated particles - more impressive for victory
         const time = Date.now() / 1000;
         ctx.save();
-        for (let i = 0; i < 20; i++) {
-            const x = (Math.sin(time + i * 0.5) * 0.3 + 0.5) * this.width;
-            const y = ((time * 50 + i * 100) % this.height);
-            const size = Math.sin(time * 2 + i) * 2 + 3;
-            ctx.fillStyle = `rgba(255, 215, 0, ${0.3 + Math.sin(time * 3 + i) * 0.2})`;
+        for (let i = 0; i < 50; i++) {
+            const x = (Math.sin(time * 0.5 + i * 0.3) * 0.4 + 0.5) * this.width;
+            const y = ((time * 30 + i * 50) % this.height);
+            const size = Math.sin(time * 2 + i) * 3 + 4;
+            const alpha = 0.2 + Math.sin(time * 2 + i) * 0.3;
+            ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
             ctx.beginPath();
             ctx.arc(x, y, size, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
 
+        // Special recognition banners
+        const achievements = [];
+        const completionTime = gameStats.completionTime || 0;
+        const damageTaken = gameStats.damageTaken || 0;
+        const perfectLevels = gameStats.perfectLevels || 0;
+        
+        if (damageTaken === 0) achievements.push({ text: '🥷 FLAWLESS VICTORY', color: '#00FFFF' });
+        if (completionTime > 0 && completionTime <= 600) achievements.push({ text: '⚡ SPEEDRUN MASTER', color: '#FFD700' });
+        else if (completionTime > 0 && completionTime <= 900) achievements.push({ text: '💨 SPEED DEMON', color: '#FF9500' });
+        if ((gameStats.idolSetsCompleted || 0) >= 10) achievements.push({ text: '👑 MASTER COLLECTOR', color: '#FFD700' });
+        if (perfectLevels >= 5) achievements.push({ text: '🛡️ UNTOUCHABLE', color: '#00FF00' });
+
         // Title with pulsing glow
         ctx.save();
-        ctx.font = 'bold 72px Arial';
+        ctx.font = 'bold 80px Arial';
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 20 + Math.sin(Date.now() / 200) * 10;
-        ctx.fillText('MISSION ACCOMPLISHED!', this.width / 2, this.height / 2 - 180);
+        ctx.shadowBlur = 25 + Math.sin(Date.now() / 200) * 15;
+        ctx.fillText('MISSION ACCOMPLISHED!', this.width / 2, 120);
         ctx.restore();
 
+        // Show achievement banners if any
+        if (achievements.length > 0) {
+            ctx.save();
+            achievements.forEach((ach, idx) => {
+                const y = 190 + idx * 35;
+                ctx.font = 'bold 24px Arial';
+                ctx.fillStyle = ach.color;
+                ctx.textAlign = 'center';
+                ctx.shadowColor = ach.color;
+                ctx.shadowBlur = 15;
+                ctx.fillText(ach.text, this.width / 2, y);
+            });
+            ctx.restore();
+        }
+
         // Final Score - Large and prominent
+        const scoreY = achievements.length > 0 ? 260 : 210;
         ctx.save();
-        ctx.font = 'bold 52px Arial';
+        ctx.font = 'bold 56px Arial';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 15;
-        ctx.fillText(`FINAL SCORE: ${score}`, this.width / 2, this.height / 2 - 100);
+        ctx.shadowBlur = 20;
+        ctx.fillText(`FINAL SCORE: ${score.toLocaleString()}`, this.width / 2, scoreY);
         ctx.restore();
 
-        // Stats box
-        const boxW = 600;
-        const boxH = 200;
-        const boxX = this.width / 2 - boxW / 2;
-        const boxY = this.height / 2 - 40;
+        // Completion time with rank
+        if (completionTime > 0) {
+            const minutes = Math.floor(completionTime / 60);
+            const seconds = Math.floor(completionTime % 60);
+            const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            let rank = 'D', rankColor = '#808080';
+            
+            if (completionTime <= 600) { rank = 'S'; rankColor = '#FFD700'; }
+            else if (completionTime <= 900) { rank = 'A'; rankColor = '#00FFFF'; }
+            else if (completionTime <= 1200) { rank = 'B'; rankColor = '#00FF00'; }
+            else if (completionTime <= 1800) { rank = 'C'; rankColor = '#FFFF00'; }
+            
+            ctx.save();
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Completion Time: ${timeText}`, this.width / 2 - 60, scoreY + 50);
+            
+            // Rank badge
+            ctx.font = 'bold 48px Arial';
+            ctx.fillStyle = rankColor;
+            ctx.shadowColor = rankColor;
+            ctx.shadowBlur = 20;
+            ctx.fillText(rank, this.width / 2 + 120, scoreY + 50);
+            ctx.restore();
+            
+            // Show "NEW RECORD!" if player beat their best
+            try {
+                const prevBest = parseFloat(localStorage.getItem('fastestCompletion')) || Infinity;
+                if (completionTime < prevBest || (prevBest === Infinity && completionTime > 0)) {
+                    ctx.save();
+                    ctx.font = 'bold 22px Arial';
+                    ctx.fillStyle = '#FFD700';
+                    ctx.textAlign = 'center';
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 15;
+                    const pulse = Math.sin(Date.now() / 150) * 0.2 + 1;
+                    ctx.save();
+                    ctx.translate(this.width / 2, scoreY + 85);
+                    ctx.scale(pulse, pulse);
+                    ctx.fillText('⭐ NEW BEST TIME! ⭐', 0, 0);
+                    ctx.restore();
+                    ctx.restore();
+                }
+            } catch (e) {}
+        }
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        // Stats box - larger for more info
+        const boxW = 700;
+        const boxH = 280;
+        const boxX = this.width / 2 - boxW / 2;
+        const boxY = scoreY + 110;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(boxX, boxY, boxW, boxH);
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
+        ctx.lineWidth = 4;
         ctx.strokeRect(boxX, boxY, boxW, boxH);
 
-        // Victory stats
-        ctx.font = 'bold 22px Arial';
+        // Victory stats header
+        ctx.font = 'bold 26px Arial';
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
-        ctx.fillText('FINAL STATISTICS', this.width / 2, boxY + 25);
+        ctx.fillText('FINAL STATISTICS', this.width / 2, boxY + 30);
 
-        const statsY = boxY + 60;
-        const col1X = boxX + 150;
-        const col2X = boxX + 450;
-        const lineH = 35;
+        const statsY = boxY + 70;
+        const col1X = boxX + 180;
+        const col2X = boxX + 520;
+        const lineH = 32;
         
-        ctx.font = '18px Arial';
+        ctx.font = '19px Arial';
         ctx.textAlign = 'left';
         
-        // Left column
+        // Left column - Combat stats
         const leftStats = [
-            { label: '⚔️  Total Kills', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
-            { label: '⏱️  Time', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
+            { label: '⚔️  Enemies Defeated', value: (gameStats.enemiesDefeated || 0).toLocaleString(), color: '#FF6B6B' },
+            { label: '💥 Damage Dealt', value: (gameStats.totalDamage || 0).toLocaleString(), color: '#FF4500' },
             { label: '🔥 Best Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
-            { label: '💥 Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' }
+            { label: '⚡ Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
+            { label: '💀 Damage Taken', value: damageTaken === 0 ? 'NONE! 🥷' : damageTaken, color: damageTaken === 0 ? '#00FFFF' : '#FF6B6B' },
+            { label: '🏁 Levels Completed', value: `${gameStats.levelsCompleted || 0}/10`, color: '#A8E6CF' }
         ];
         
         leftStats.forEach((stat, i) => {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillText(stat.label, col1X - 130, statsY + i * lineH);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillText(stat.label, col1X - 160, statsY + i * lineH);
             ctx.fillStyle = stat.color;
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText(String(stat.value), col1X + 20, statsY + i * lineH);
-            ctx.font = '18px Arial';
+            ctx.font = 'bold 19px Arial';
+            ctx.fillText(String(stat.value), col1X + 10, statsY + i * lineH);
+            ctx.font = '19px Arial';
         });
         
-        // Right column
+        // Right column - Precision stats
         const rightStats = [
-            { label: '🎯 Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
-            { label: '🏺 Idols', value: `${gameStats.idolsCollected || 0}/30`, color: '#F38181' },
-            { label: '💎 Sets', value: gameStats.idolSetsCompleted || 0, color: '#A8E6CF' }
+            { label: '🎯 Hit Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
+            { label: '🗿 Golden Idols', value: `${gameStats.idolsCollected || 0}/30`, color: '#F38181' },
+            { label: '💎 Complete Sets', value: `${gameStats.idolSetsCompleted || 0}/10`, color: '#A8E6CF' },
+            { label: '✨ Perfect Levels', value: perfectLevels, color: perfectLevels > 0 ? '#FFD700' : '#808080' },
+            { label: '🎲 Multi-Kills', value: gameStats.multiKills || 0, color: '#FF6B9D' }
         ];
         
         rightStats.forEach((stat, i) => {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillText(stat.label, col2X - 130, statsY + i * lineH);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillText(stat.label, col2X - 160, statsY + i * lineH);
             ctx.fillStyle = stat.color;
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText(String(stat.value), col2X + 20, statsY + i * lineH);
-            ctx.font = '18px Arial';
+            ctx.font = 'bold 19px Arial';
+            ctx.fillText(String(stat.value), col2X + 10, statsY + i * lineH);
+            ctx.font = '19px Arial';
         });
 
-        // Footer messages
+        // Footer messages with flavor text
         ctx.save();
-        ctx.font = '20px Arial';
-        ctx.fillStyle = '#AAAAAA';
-        ctx.textAlign = 'center';
-        ctx.fillText('The Skunk Squad is safe... for now.', this.width / 2, boxY + boxH + 40);
+        let flavorText = 'The Skunk Squad is safe... for now.';
+        if (damageTaken === 0 && completionTime <= 900) {
+            flavorText = 'A LEGENDARY performance! You are truly The One! 🐉';
+        } else if (damageTaken === 0) {
+            flavorText = 'FLAWLESS! A shadow master walks among us! 🥷';
+        } else if (completionTime <= 600) {
+            flavorText = 'INCREDIBLE SPEED! A true speedrunner! ⚡';
+        } else if ((gameStats.idolSetsCompleted || 0) >= 10) {
+            flavorText = 'Every relic recovered! A true collector! 👑';
+        }
         
-        ctx.font = '24px Arial';
+        ctx.font = '22px Arial';
+        ctx.fillStyle = '#FFD700';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 10;
+        ctx.fillText(flavorText, this.width / 2, boxY + boxH + 45);
+        ctx.restore();
+        
+        // Blinking continue prompt
+        ctx.save();
+        ctx.font = '26px Arial';
         ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
         if (Math.floor(Date.now() / 500) % 2 === 0) {
-            ctx.fillText('Press ENTER to Play Again', this.width / 2, boxY + boxH + 80);
+            ctx.fillText('Press ENTER to Continue', this.width / 2, boxY + boxH + 85);
         }
         ctx.restore();
     }
