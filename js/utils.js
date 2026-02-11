@@ -98,7 +98,7 @@ class Utils {
 
         // Placeholder: green tile + plus sign
         const prevSmooth = ctx.imageSmoothingEnabled;
-        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = false; } catch (e) { __err('render', e); }
 
         ctx.fillStyle = '#0b3d1e';
         ctx.fillRect(dx, dy, ds, ds);
@@ -118,7 +118,7 @@ class Utils {
         // horizontal
         ctx.fillRect(cx - half, cy - Math.floor(bar / 2), len, bar);
 
-        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) { __err('render', e); }
     }
 
     /**
@@ -150,7 +150,7 @@ class Utils {
 
         // Placeholder: cyan tile + lightning bolt
         const prevSmooth = ctx.imageSmoothingEnabled;
-        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = false; } catch (e) { __err('render', e); }
 
         ctx.fillStyle = '#0e7490';
         ctx.fillRect(dx, dy, ds, ds);
@@ -170,7 +170,7 @@ class Utils {
         // Bottom part
         ctx.fillRect(cx - 1 * unit, cy, 2 * unit, 6 * unit);
 
-        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) { __err('render', e); }
     }
 
     /**
@@ -202,7 +202,7 @@ class Utils {
 
         // Placeholder: red/orange tile + crossed swords
         const prevSmooth = ctx.imageSmoothingEnabled;
-        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = false; } catch (e) { __err('render', e); }
 
         ctx.fillStyle = '#b91c1c';
         ctx.fillRect(dx, dy, ds, ds);
@@ -234,7 +234,7 @@ class Utils {
         ctx.fillRect(cx - 5 * unit, cy - 2 * unit, 3 * unit, 4 * unit);
         ctx.fillRect(cx + 2 * unit, cy - 2 * unit, 3 * unit, 4 * unit);
 
-        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) { __err('render', e); }
     }
 
     /**
@@ -266,7 +266,7 @@ class Utils {
 
         // Placeholder: red tile + heart
         const prevSmooth = ctx.imageSmoothingEnabled;
-        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = false; } catch (e) { __err('render', e); }
 
         ctx.fillStyle = '#7c2d12';
         ctx.fillRect(dx, dy, ds, ds);
@@ -289,7 +289,7 @@ class Utils {
         ctx.fillRect(cx - 3 * unit, cy + 3 * unit, 6 * unit, unit);
         ctx.fillRect(cx - 2 * unit, cy + 4 * unit, 4 * unit, unit);
 
-        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) { __err('render', e); }
     }
 
     /**
@@ -320,7 +320,7 @@ class Utils {
         }
 
         const prevSmooth = ctx.imageSmoothingEnabled;
-        try { ctx.imageSmoothingEnabled = false; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = false; } catch (e) { __err('render', e); }
 
         // Gold plaque
         ctx.fillStyle = '#6b4a00';
@@ -338,6 +338,6 @@ class Utils {
         ctx.fillRect(cx - 2 * unit, cy - 2 * unit, 4 * unit, unit);
         ctx.fillRect(cx - 1 * unit, cy + 1 * unit, 2 * unit, unit);
 
-        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) {}
+        try { ctx.imageSmoothingEnabled = prevSmooth; } catch (e) { __err('render', e); }
     }
 }
