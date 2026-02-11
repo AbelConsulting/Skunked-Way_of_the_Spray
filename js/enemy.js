@@ -120,9 +120,11 @@ class Enemy {
         this.rushSparks = [];
         // Fourth basic jump sparks (green)
         this.jumpSparks = [];
-        this.jumpCount = 0; // Track double jump
-        this.maxJumps = 2; // Allow double jump
+        this.jumpCount = 0; // Track multi-jump
+        this.maxJumps = 5; // Allow up to 5 consecutive jumps
         this.jumpCooldown = 0; // Cooldown between jump attempts
+        this._jumpTrailTimer = 0; // Airborne trail particle timer
+        this._lastJumpY = 0; // Y position of last jump for ring effect
 
         // Load sprites AFTER all fields are initialised so loadSprites()
         // can safely set this.currentAnimation without it being overwritten.
@@ -491,10 +493,16 @@ class Enemy {
         if (this.enemyType === 'FOURTH_BASIC') {
             for (let i = this.jumpSparks.length - 1; i >= 0; i--) {
                 const p = this.jumpSparks[i];
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
-                p.vx *= 0.92;
-                p.vy += Config.GRAVITY * dt * 0.3; // Slight gravity on sparks
+                if (p.isRing) {
+                    // Expand ring radius over lifetime
+                    const progress = p.age / p.life;
+                    p.ringRadius = p.maxRingRadius * progress;
+                } else {
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vx *= 0.92;
+                    p.vy += Config.GRAVITY * dt * (p.isDust ? 0.15 : p.isTrail ? 0.1 : 0.3);
+                }
                 p.age += dt;
                 if (p.age >= p.life) {
                     this.jumpSparks.splice(i, 1);
@@ -617,7 +625,7 @@ class Enemy {
             return;
         }
 
-        // FOURTH_BASIC has special behavior: no horizontal movement, only vertical double jumps
+        // FOURTH_BASIC has special behavior: no horizontal movement, multi-jump vertically
         if (this.enemyType === 'FOURTH_BASIC') {
             this.velocityX = 0; // No side-to-side movement
             
@@ -639,27 +647,83 @@ class Enemy {
             
             // Jump if player is above us and we have jumps available and cooldown is ready
             if (verticalDiff > 30 && this.jumpCount < this.maxJumps && this.jumpCooldown <= 0) {
-                const jumpForce = Config.CHARACTER.jump_force * 0.75; // 75% of player jump
+                // Each successive jump gets slightly weaker but still useful
+                const jumpDecay = 1.0 - (this.jumpCount * 0.08); // 100%, 92%, 84%, 76%, 68%
+                const jumpForce = Config.CHARACTER.jump_force * 0.75 * jumpDecay;
                 this.velocityY = -jumpForce;
                 this.jumpCount++;
-                this.jumpCooldown = 0.3; // Small cooldown between jumps
+                this.jumpCooldown = 0.2; // Faster cooldown for rapid multi-jumps
+                this._lastJumpY = this.y + this.height;
                 
-                // Generate green sparks on jump
-                for (let i = 0; i < 8; i++) {
+                // Intensity scales with jump number for escalating drama
+                const intensity = Math.min(this.jumpCount / 3, 1.0);
+                const sparkCount = 10 + Math.floor(intensity * 10); // 10-20 sparks
+                
+                // Generate burst of green sparks on jump
+                for (let i = 0; i < sparkCount; i++) {
+                    const angle = (Math.PI * 2 * i) / sparkCount + (Math.random() - 0.5) * 0.5;
+                    const speed = 50 + Math.random() * 100 + intensity * 60;
                     this.jumpSparks.push({
                         x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
                         y: this.y + this.height - 4,
-                        vx: (Math.random() - 0.5) * 80,
-                        vy: -30 - Math.random() * 40,
-                        life: 0.5,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 20,
+                        life: 0.4 + Math.random() * 0.4 + intensity * 0.2,
                         age: 0,
-                        size: 2 + Math.random() * 3
+                        size: 2 + Math.random() * 3 + intensity * 2
                     });
                 }
                 
-                // Play jump sound
-                if (this.audioManager && Math.random() < 0.5) {
-                    this.audioManager.playSound('jump', { volume: 0.35, rate: 0.9 });
+                // Shockwave ring particle (expanding circle marker)
+                this.jumpSparks.push({
+                    x: this.x + this.width / 2,
+                    y: this.y + this.height,
+                    vx: 0, vy: 0,
+                    life: 0.4,
+                    age: 0,
+                    size: 4 + intensity * 6,
+                    isRing: true, // Special flag for ring rendering
+                    ringRadius: 0,
+                    maxRingRadius: 30 + intensity * 30
+                });
+                
+                // Ground dust puff (wider, lower particles)
+                for (let i = 0; i < 6; i++) {
+                    const dir = (i < 3) ? -1 : 1;
+                    this.jumpSparks.push({
+                        x: this.x + this.width / 2 + dir * (10 + Math.random() * 15),
+                        y: this.y + this.height - 2,
+                        vx: dir * (40 + Math.random() * 60),
+                        vy: -5 - Math.random() * 15,
+                        life: 0.35 + Math.random() * 0.2,
+                        age: 0,
+                        size: 3 + Math.random() * 4,
+                        isDust: true // Flag for dust rendering (different color)
+                    });
+                }
+                
+                // Play jump sound — pitch increases with each successive jump
+                if (this.audioManager) {
+                    const rate = 0.85 + this.jumpCount * 0.1; // 0.95, 1.05, 1.15, 1.25, 1.35
+                    this.audioManager.playSound('jump', { volume: 0.35 + intensity * 0.15, rate });
+                }
+            }
+            
+            // Airborne trail particles (continuous while in air)
+            if (!isGrounded && this.velocityY !== 0) {
+                this._jumpTrailTimer = (this._jumpTrailTimer || 0) + dt;
+                if (this._jumpTrailTimer > 0.04) { // Every 40ms
+                    this._jumpTrailTimer = 0;
+                    this.jumpSparks.push({
+                        x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width * 0.6,
+                        y: this.y + this.height * 0.5 + (Math.random() - 0.5) * this.height * 0.4,
+                        vx: (Math.random() - 0.5) * 20,
+                        vy: 10 + Math.random() * 20,
+                        life: 0.25 + Math.random() * 0.15,
+                        age: 0,
+                        size: 1.5 + Math.random() * 2,
+                        isTrail: true // Flag for trail rendering (softer glow)
+                    });
                 }
             }
             
@@ -911,15 +975,53 @@ class Enemy {
                 ctx.globalCompositeOperation = 'lighter';
                 for (const p of this.jumpSparks) {
                     const alpha = 1 - (p.age / p.life);
-                    ctx.globalAlpha = alpha * 0.9;
-                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5);
-                    grad.addColorStop(0, '#FFFFFF');
-                    grad.addColorStop(0.4, '#44FF44');
-                    grad.addColorStop(1, 'rgba(68, 255, 68, 0)');
-                    ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
-                    ctx.fill();
+
+                    if (p.isRing) {
+                        // Expanding shockwave ring
+                        ctx.globalAlpha = alpha * 0.6;
+                        ctx.strokeStyle = '#44FF88';
+                        ctx.shadowColor = '#00FF66';
+                        ctx.shadowBlur = 8;
+                        ctx.lineWidth = 2 + (1 - p.age / p.life) * 3;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.ringRadius || 1, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    } else if (p.isDust) {
+                        // Ground dust puff — softer, tan/brown
+                        ctx.globalAlpha = alpha * 0.5;
+                        const dGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+                        dGrad.addColorStop(0, 'rgba(200, 200, 180, 0.8)');
+                        dGrad.addColorStop(0.6, 'rgba(160, 150, 120, 0.4)');
+                        dGrad.addColorStop(1, 'rgba(120, 110, 90, 0)');
+                        ctx.fillStyle = dGrad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (p.isTrail) {
+                        // Airborne trail — small, soft green glow
+                        ctx.globalAlpha = alpha * 0.6;
+                        const tGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 1.8);
+                        tGrad.addColorStop(0, '#88FFAA');
+                        tGrad.addColorStop(0.5, '#44FF66');
+                        tGrad.addColorStop(1, 'rgba(68, 255, 102, 0)');
+                        ctx.fillStyle = tGrad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Standard jump spark — bright green burst
+                        ctx.globalAlpha = alpha * 0.9;
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5);
+                        grad.addColorStop(0, '#FFFFFF');
+                        grad.addColorStop(0.3, '#88FF88');
+                        grad.addColorStop(0.6, '#44FF44');
+                        grad.addColorStop(1, 'rgba(68, 255, 68, 0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
                 ctx.restore();
             }
