@@ -1561,31 +1561,37 @@ class Game {
                         const result = this.player.takeDamage(damage);
                         if (result) explosionHitPlayer = true;
 
-                        // Screen shake for explosion
-                        this.screenShake = new ScreenShake(0.2, 8);
+                        // Heavy screen shake for explosion (scales with damage)
+                        const shakeIntensity = 6 + Math.floor(falloff * 8);
+                        this.screenShake = new ScreenShake(0.3, shakeIntensity);
 
-                        // Floating damage text
+                        // Dramatic floating damage text
                         try {
                             this.damageNumbers.push(new FloatingText(
-                                pcx, playerRect.y - 10,
-                                '💥 ' + damage,
-                                { color: '#FF4400', lifetime: 1.5, velocityY: -80, font: 'bold 20px Arial' }
+                                pcx, playerRect.y - 20,
+                                '💥 BOOM! -' + damage,
+                                { color: '#FF2200', lifetime: 2.0, velocityY: -100, font: 'bold 24px Arial' }
                             ));
                         } catch (e) {}
 
-                        // Explosion hit spark
+                        // Explosion hit spark burst
                         try {
                             const burst = new HitSpark(explosion.x, explosion.y, {
-                                particleCount: 16, speedMin: 120, speedMax: 280
+                                particleCount: 24, speedMin: 150, speedMax: 350
                             });
                             for (const particle of burst.particles) {
-                                particle.color = Math.random() > 0.4 ? '#FF6600' : '#FF2200';
-                                particle.size = Utils.randomFloat(3, 6);
+                                particle.color = Math.random() > 0.3 ? '#FF6600' : (Math.random() > 0.5 ? '#FFAA00' : '#FF2200');
+                                particle.size = Utils.randomFloat(3, 7);
                             }
                             this.hitSparks.push(burst);
                         } catch (e) {}
                     }
                 }
+            }
+
+            // Screen shake for every explosion regardless of player damage (cinematic impact)
+            if (!this.screenShake) {
+                this.screenShake = new ScreenShake(0.15, 5);
             }
         }
 

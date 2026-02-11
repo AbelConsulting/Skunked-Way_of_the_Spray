@@ -443,19 +443,18 @@ class Enemy {
                 });
             }
 
-            // Fuse warning sparks (intensify as detonation approaches)
+            // Fuse warning sparks (contact-triggered, very intense since detonation is imminent)
             if (this.isExploding && !this.hasDetonated) {
-                const fuseProgress = 1 - (this.fuseTimer / (Config.EXPLODER_FUSE_TIME || 1.2));
-                const sparkRate = 0.3 + fuseProgress * 0.7; // More sparks as fuse burns
-                if (Math.random() < sparkRate) {
+                // Burst of warning sparks since explosion is about to happen
+                for (let s = 0; s < 3; s++) {
                     this.rushSparks.push({
                         x: this.x + Math.random() * this.width,
                         y: this.y + Math.random() * this.height,
-                        vx: (Math.random() - 0.5) * 120,
-                        vy: -60 - Math.random() * 80,
-                        life: 0.25,
+                        vx: (Math.random() - 0.5) * 200,
+                        vy: -80 - Math.random() * 120,
+                        life: 0.2,
                         age: 0,
-                        size: 2 + Math.random() * 3
+                        size: 3 + Math.random() * 4
                     });
                 }
             }
@@ -1057,29 +1056,27 @@ class Enemy {
             } catch (e) {}
         }
 
-        // THIRD_BASIC Kamikaze: fuse flashing overlay
+        // THIRD_BASIC Kamikaze: fuse flash overlay (very brief on contact)
         if (this.enemyType === 'THIRD_BASIC' && this.isExploding && !this.hasDetonated) {
-            const fuseProgress = 1 - (this.fuseTimer / (Config.EXPLODER_FUSE_TIME || 1.2));
-            // Flash faster as fuse burns down: frequency increases with progress
-            const flashFreq = 4 + fuseProgress * 16;
-            const flash = Math.sin(Date.now() * 0.001 * flashFreq * Math.PI * 2);
+            // Rapid bright flash to warn of imminent detonation
+            const flash = Math.sin(Date.now() * 0.04 * Math.PI * 2);
             if (flash > 0) {
                 ctx.save();
-                ctx.globalAlpha = 0.3 + fuseProgress * 0.4;
-                ctx.fillStyle = '#FF2200';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.globalAlpha = 0.6;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
                 ctx.restore();
             }
-            // \"FUSE\" text above
+            // Danger indicator
             ctx.save();
-            ctx.font = 'bold 12px Arial';
+            ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#FF4400';
+            ctx.fillStyle = '#FF0000';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
-            const fuseText = '💣';
-            ctx.strokeText(fuseText, this.x + this.width / 2, this.y - 14);
-            ctx.fillText(fuseText, this.x + this.width / 2, this.y - 14);
+            const warningText = '💥';
+            ctx.strokeText(warningText, this.x + this.width / 2, this.y - 14);
+            ctx.fillText(warningText, this.x + this.width / 2, this.y - 14);
             ctx.restore();
         }
 
@@ -1091,29 +1088,74 @@ class Enemy {
             const progress = this.explosionAge / this.explosionDuration;
 
             if (progress < 1) {
-                // Expanding shockwave ring
                 ctx.save();
                 ctx.globalCompositeOperation = 'lighter';
-                const ringRadius = radius * Math.min(1, progress * 1.5);
-                const ringAlpha = (1 - progress) * 0.6;
+
+                // --- Bright initial flash (first 20% of explosion) ---
+                if (progress < 0.2) {
+                    const flashAlpha = (1 - progress / 0.2) * 0.7;
+                    ctx.globalAlpha = flashAlpha;
+                    const flashGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.6);
+                    flashGrad.addColorStop(0, '#FFFFFF');
+                    flashGrad.addColorStop(0.5, '#FFFFAA');
+                    flashGrad.addColorStop(1, 'rgba(255, 200, 0, 0)');
+                    ctx.fillStyle = flashGrad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // --- Primary shockwave ring ---
+                const ringRadius = radius * Math.min(1, progress * 1.8);
+                const ringAlpha = (1 - progress) * 0.7;
                 ctx.globalAlpha = ringAlpha;
-                ctx.strokeStyle = '#FF6600';
-                ctx.lineWidth = 4 + (1 - progress) * 8;
+                ctx.strokeStyle = '#FF8800';
+                ctx.lineWidth = 4 + (1 - progress) * 10;
+                ctx.shadowColor = '#FF4400';
+                ctx.shadowBlur = 15;
                 ctx.beginPath();
                 ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
                 ctx.stroke();
+                ctx.shadowBlur = 0;
 
-                // Inner glow
-                const glowAlpha = (1 - progress) * 0.4;
-                ctx.globalAlpha = glowAlpha;
-                const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, ringRadius);
+                // --- Secondary inner shockwave (delayed, smaller) ---
+                if (progress > 0.1) {
+                    const innerProgress = (progress - 0.1) / 0.9;
+                    const innerRadius = radius * 0.6 * Math.min(1, innerProgress * 2.0);
+                    const innerAlpha = (1 - innerProgress) * 0.5;
+                    ctx.globalAlpha = innerAlpha;
+                    ctx.strokeStyle = '#FFCC00';
+                    ctx.lineWidth = 3 + (1 - innerProgress) * 6;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // --- Fireball core glow ---
+                const coreProgress = Math.min(1, progress * 2.5);
+                const coreRadius = radius * 0.5 * coreProgress;
+                const coreAlpha = (1 - progress) * 0.5;
+                ctx.globalAlpha = coreAlpha;
+                const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius);
                 glow.addColorStop(0, '#FFFFFF');
-                glow.addColorStop(0.3, '#FF8800');
-                glow.addColorStop(0.7, '#FF2200');
+                glow.addColorStop(0.2, '#FFCC00');
+                glow.addColorStop(0.5, '#FF6600');
+                glow.addColorStop(0.8, '#FF2200');
                 glow.addColorStop(1, 'rgba(255, 0, 0, 0)');
                 ctx.fillStyle = glow;
                 ctx.beginPath();
-                ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+                ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                // --- Ground scorch mark (below the explosion, normal composite) ---
+                ctx.save();
+                const scorchAlpha = Math.max(0, 0.4 * (1 - progress * 0.5));
+                ctx.globalAlpha = scorchAlpha;
+                ctx.fillStyle = '#1a0a00';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + this.height / 2 + 4, radius * 0.5 * Math.min(1, progress * 3), 8, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             }
