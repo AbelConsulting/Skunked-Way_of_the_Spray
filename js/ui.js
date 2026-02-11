@@ -326,7 +326,7 @@ class UI {
                     ctx.restore();
                     ctx.restore();
                 }
-            } catch (e) {}
+            } catch (e) { __err('ui', e); }
         }
 
         // Stats box - larger for more info
@@ -459,7 +459,7 @@ class UI {
             ctx.fillText(timeText, timerBoxX + 32, timerBoxY + timerBoxH / 2);
             
             ctx.restore();
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // Health bar (compact)
         const iconSize = 14;
@@ -484,7 +484,7 @@ class UI {
             ctx.closePath();
             ctx.fill();
             ctx.restore();
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // Health bar background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -523,7 +523,7 @@ class UI {
                         continue;
                     }
                 }
-            } catch (e) {}
+            } catch (e) { __err('ui', e); }
             
             // Fallback: draw a simple heart icon
             const cx = lifeX + lifeIconSize * 0.5;
@@ -675,7 +675,7 @@ class UI {
                     
                     ctx.restore();
                 }
-            } catch (e) {}
+            } catch (e) { __err('ui', e); }
             
             // Skunk ammo counter (below buff indicators)
             try {
@@ -736,8 +736,8 @@ class UI {
                     
                     ctx.restore();
                 }
-            } catch (e) {}
-        } catch (e) {}
+            } catch (e) { __err('ui', e); }
+        } catch (e) { __err('ui', e); }
 
         // Optional numeric HP (only when low, small + subtle)
         try {
@@ -748,7 +748,7 @@ class UI {
                 ctx.textBaseline = 'top';
                 ctx.fillText(`${Math.max(0, Math.floor(player.health))}/${player.maxHealth}`, healthBarX + 6, healthBarY + 2);
             }
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // Top-center progress bar (distance to boss/exit, or boss HP)
         try {
@@ -866,7 +866,7 @@ class UI {
 
                 ctx.restore();
             }
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // Boss Warning Overlay
         if (this.bossWarningTime > Date.now()) {
@@ -948,7 +948,7 @@ class UI {
             ctx.restore();
 
             ctx.restore();
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // Combo counter (below score, top-right area)
         try {
@@ -1031,7 +1031,7 @@ class UI {
                         ctx.globalAlpha = 0.85;
                         ctx.fillText(`SCORE ${mult.toFixed(1)}x`, comboBoxX + comboBoxW / 2, comboBoxY + comboBoxH * 0.75);
                     }
-                } catch (e) {}
+                } catch (e) { __err('ui', e); }
 
                 ctx.restore();
 
@@ -1050,7 +1050,7 @@ class UI {
                     ctx.restore();
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // Level title display (shown for 3 seconds at level start)
         try {
@@ -1091,7 +1091,7 @@ class UI {
                 
                 ctx.restore();
             }
-        } catch (e) {}
+        } catch (e) { __err('ui', e); }
 
         // (Removed) Attack cooldown debug bar
     }
