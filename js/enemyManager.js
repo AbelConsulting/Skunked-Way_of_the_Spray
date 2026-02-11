@@ -80,7 +80,7 @@ class EnemyManager {
                     if (target) boss.y = target.y - (boss.height || 128);
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('enemy', e); }
 
         // Apply multipliers if provided
         const hm = (typeof bossConfig.healthMultiplier === 'number') ? bossConfig.healthMultiplier : 5.0;
@@ -103,7 +103,7 @@ class EnemyManager {
         this.bossInstance = boss;
         try {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('EnemyManager.spawnBoss', { x: boss.x, y: boss.y, hp: boss.maxHealth });
-        } catch (e) {}
+        } catch (e) { __err('enemy', e); }
         return boss;
     }
 
@@ -147,7 +147,7 @@ class EnemyManager {
         this.enemies.push(enemy);
         try {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('EnemyManager.spawnEnemy', { type: enemyType, x: enemy.x, y: enemy.y, levelWidth: level && level.width, total: this.enemies.length });
-        } catch (e) {}
+        } catch (e) { __err('enemy', e); }
     }
 
     update(dt, player, level) {
