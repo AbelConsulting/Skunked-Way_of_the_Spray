@@ -139,7 +139,7 @@ class AudioManager {
                 if (document.hidden) this.suspend();
                 else this.resume();
             });
-        } catch (e) {}
+        } catch (e) { __err('audio', e); }
     }
 
     _now() {
@@ -159,7 +159,7 @@ class AudioManager {
 
     _releaseGainNode(node) {
         if (!node) return;
-        try { node.disconnect(); } catch (e) {}
+        try { node.disconnect(); } catch (e) { __err('audio', e); }
         this._gainPool.push(node);
     }
 
@@ -171,10 +171,10 @@ class AudioManager {
             this.musicGainNode.gain.cancelScheduledValues(now);
             this.musicGainNode.gain.setValueAtTime(this.musicGainNode.gain.value, now);
             this.musicGainNode.gain.linearRampToValueAtTime(target, now + this.duckAttack);
-        } catch (e) {}
+        } catch (e) { __err('audio', e); }
 
         if (this._duckTimer) {
-            try { clearTimeout(this._duckTimer); } catch (e) {}
+            try { clearTimeout(this._duckTimer); } catch (e) { __err('audio', e); }
         }
         this._duckTimer = setTimeout(() => {
             if (!this.audioCtx || !this.musicGainNode) return;
@@ -183,7 +183,7 @@ class AudioManager {
                 this.musicGainNode.gain.cancelScheduledValues(t);
                 this.musicGainNode.gain.setValueAtTime(this.musicGainNode.gain.value, t);
                 this.musicGainNode.gain.linearRampToValueAtTime(this.musicGain, t + this.duckRelease);
-            } catch (e) {}
+            } catch (e) { __err('audio', e); }
         }, Math.max(50, Math.floor(this.duckRelease * 1000)));
     }
 
@@ -191,7 +191,7 @@ class AudioManager {
         if (!key) return;
         const id = this._scheduledSfx[key];
         if (id) {
-            try { clearTimeout(id); } catch (e) {}
+            try { clearTimeout(id); } catch (e) { __err('audio', e); }
         }
         delete this._scheduledSfx[key];
     }
@@ -220,12 +220,12 @@ class AudioManager {
             this._scheduledSfx.death_followup = setTimeout(() => {
                 try {
                     if (this.playSound) this.playSound(follow, followVolume);
-                } catch (e) {}
+                } catch (e) { __err('audio', e); }
                 delete this._scheduledSfx.death_followup;
             }, Math.max(0, Math.floor(delayMs)));
         } catch (e) {
             // Fallback: at least play the initial sound
-            try { this.playSound && this.playSound('player_death', 0.9); } catch (err) {}
+            try { this.playSound && this.playSound('player_death', 0.9); } catch (err) { __err('audio', err); }
         }
     }
 
@@ -354,7 +354,7 @@ class AudioManager {
         const report = () => {
             try {
                 if (typeof onProgress === 'function') onProgress(loaded, total);
-            } catch (e) {}
+            } catch (e) { __err('audio', e); }
         };
         report();
 
@@ -404,7 +404,7 @@ class AudioManager {
         }
         if (this._activeSfx.length >= this.maxSfxVoices) {
             const oldest = this._activeSfx.shift();
-            try { oldest && oldest.source && oldest.source.stop(); } catch (e) {}
+            try { oldest && oldest.source && oldest.source.stop(); } catch (e) { __err('audio', e); }
         }
 
         const source = this.audioCtx.createBufferSource();
@@ -438,7 +438,7 @@ class AudioManager {
                     : detune;
                 source.detune.value = safeDetune;
             }
-        } catch (e) {}
+        } catch (e) { __err('audio', e); }
 
         // Optional panning support
         let panner = null;
@@ -458,7 +458,7 @@ class AudioManager {
 
         source.onended = () => {
             this._releaseGainNode(gainNode);
-            try { if (panner) panner.disconnect(); } catch (e) {}
+            try { if (panner) panner.disconnect(); } catch (e) { __err('audio', e); }
         };
 
         source.start();
@@ -511,7 +511,7 @@ class AudioManager {
                     this.currentMusic.volume = v;
                     if (t >= 1) clearInterval(timer);
                 }, stepMs);
-            } catch (e) {}
+            } catch (e) { __err('audio', e); }
         }
         if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Playing music '${name}'`);
     }
@@ -525,10 +525,10 @@ class AudioManager {
                 this.musicGainNode.gain.setValueAtTime(this.musicGainNode.gain.value, now);
                 this.musicGainNode.gain.linearRampToValueAtTime(0, now + fadeOut);
                 setTimeout(() => {
-                    try { toStop.pause(); toStop.currentTime = 0; } catch (e) {}
+                    try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
                 }, Math.max(0, fadeOut * 1000));
             } else {
-                try { toStop.pause(); toStop.currentTime = 0; } catch (e) {}
+                try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
             }
             this.currentMusic = null;
         }
@@ -564,17 +564,17 @@ class AudioManager {
     suspend() {
         try {
             if (this.audioCtx && this.audioCtx.state === 'running') this.audioCtx.suspend();
-        } catch (e) {}
-        try { this.pauseMusic(); } catch (e) {}
-        try { this.pauseAmbient(); } catch (e) {}
+        } catch (e) { __err('audio', e); }
+        try { this.pauseMusic(); } catch (e) { __err('audio', e); }
+        try { this.pauseAmbient(); } catch (e) { __err('audio', e); }
     }
 
     resume() {
         try {
             if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
-        } catch (e) {}
-        try { this.unpauseMusic(); } catch (e) {}
-        try { this.unpauseAmbient(); } catch (e) {}
+        } catch (e) { __err('audio', e); }
+        try { this.unpauseMusic(); } catch (e) { __err('audio', e); }
+        try { this.unpauseAmbient(); } catch (e) { __err('audio', e); }
     }
 
     setSoundVolume(val) {
@@ -699,7 +699,7 @@ class AudioManager {
                     this.currentAmbient.volume = v;
                     if (t >= 1) clearInterval(timer);
                 }, stepMs);
-            } catch (e) {}
+            } catch (e) { __err('audio', e); }
         }
     }
 
@@ -715,10 +715,10 @@ class AudioManager {
                 this.ambientGainNode.gain.setValueAtTime(this.ambientGainNode.gain.value, now);
                 this.ambientGainNode.gain.linearRampToValueAtTime(0, now + fadeOut);
                 setTimeout(() => {
-                    try { toStop.pause(); toStop.currentTime = 0; } catch (e) {}
+                    try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
                 }, Math.max(0, fadeOut * 1000));
             } else {
-                try { toStop.pause(); toStop.currentTime = 0; } catch (e) {}
+                try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
             }
             this.currentAmbient = null;
         }
