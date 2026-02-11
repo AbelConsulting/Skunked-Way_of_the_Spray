@@ -49,7 +49,7 @@ class Achievements {
     save() {
         try {
             localStorage.setItem('achievements', JSON.stringify(Array.from(this.unlocked)));
-        } catch (e) {}
+        } catch (e) { __err('ach', e); }
     }
 
     load() {

@@ -64,7 +64,7 @@
         window.dispatchEvent(new CustomEvent('highscoresUpdated', {
           detail: { scores: JSON.parse(e.newValue) }
         }));
-      } catch (err) {}
+      } catch (err) { __err('score', err); }
     }
   });
 
@@ -472,14 +472,14 @@
             navigator.clipboard.writeText(shareCode);
             codeBox.style.background = '#1a5928';
             setTimeout(() => codeBox.style.background = '#2d2d2d', 300);
-          } catch(e) {}
+          } catch(e) { __err('score', e); }
         };
         
         status.appendChild(codeBox);
         box.appendChild(status);
         
         setTimeout(() => {
-          try { document.body.removeChild(overlay); } catch(e){}
+          try { document.body.removeChild(overlay); } catch(e){ __err('score', e); }
         }, 3500);
         
         if (onDone) onDone(updated);
@@ -499,7 +499,7 @@
       skip.style.cursor = 'pointer';
       skip.style.transition = 'all 0.2s';
       skip.onclick = () => {
-        try { document.body.removeChild(overlay); } catch(e) {}
+        try { document.body.removeChild(overlay); } catch(e) { __err('score', e); }
         if (onDone) onDone(loadScores());
       };
 
