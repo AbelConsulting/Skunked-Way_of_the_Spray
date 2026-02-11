@@ -670,7 +670,7 @@ class AudioManager {
             return;
         }
         if (this.currentAmbient === audioEl) {
-            if (this.currentAmbient.paused) this.currentAmbient.play().catch(() => {});
+            if (this.currentAmbient.paused) this.currentAmbient.play().catch((e) => { __err('audio', e); });
             return;
         }
 
@@ -685,10 +685,10 @@ class AudioManager {
             this.ambientGainNode.gain.cancelScheduledValues(now);
             this.ambientGainNode.gain.setValueAtTime(0, now);
             this.ambientGainNode.gain.linearRampToValueAtTime(this.ambientGain, now + fadeIn);
-            this.currentAmbient.play().catch(() => {});
+            this.currentAmbient.play().catch((e) => { __err('audio', e); });
         } else {
             this.currentAmbient.volume = 0;
-            this.currentAmbient.play().catch(() => {});
+            this.currentAmbient.play().catch((e) => { __err('audio', e); });
             try {
                 const stepMs = 16;
                 const start = Date.now();
@@ -732,7 +732,7 @@ class AudioManager {
 
     unpauseAmbient() {
         if (this.currentAmbient && this.currentAmbient.paused) {
-            this.currentAmbient.play().catch(() => {});
+            this.currentAmbient.play().catch((e) => { __err('audio', e); });
         }
     }
 }
