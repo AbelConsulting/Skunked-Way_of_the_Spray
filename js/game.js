@@ -1865,7 +1865,8 @@ class Game {
         }
         
         // Prevent death during initial spawn invulnerability window
-        if (this.player.invulnerableTimer > 0) {
+        // BUT if health is already <= 0 the player IS dead — don't block it.
+        if (this.player.invulnerableTimer > 0 && this.player.health > 0) {
             console.log('=== DEATH BLOCKED - INVULNERABLE ===');
             console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
             console.log('Player health:', this.player.health);

@@ -471,7 +471,13 @@ class Player {
                 }
             }
             
-            this.invulnerableTimer = this.invulnerableDuration;
+            // Only grant i-frames if the player survived the hit.
+            // A lethal blow should NOT set invulnerability — it would
+            // block the death handler from recognising the kill.
+            const isDead = this.health <= 0;
+            if (!isDead) {
+                this.invulnerableTimer = this.invulnerableDuration;
+            }
             this.hitStunTimer = 0.2;
 
             // Track damage taken for achievements
@@ -493,7 +499,7 @@ class Player {
                 this.animations.hurt.reset();
             }
 
-            return this.health <= 0;
+            return isDead;
         }
         return false;
     }
