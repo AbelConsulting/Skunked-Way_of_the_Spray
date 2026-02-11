@@ -971,7 +971,7 @@ class GameApp {
                         if (musicValSpan) musicValSpan.textContent = val + '%';
                         am.setMusicVolume && am.setMusicVolume(val / 100);
                         // Also adjust ambient volume to match music volume
-                        am.setAmbientVolume && am.setAmbientVolume(val / 100 * 0.7);
+                        am.setAmbientVolume && am.setAmbientVolume(val / 100 * 0.20);
                         localStorage.setItem('musicVolume', val);
                     });
                 }

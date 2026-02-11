@@ -119,8 +119,8 @@ class AudioManager {
         this.ambientElements = {}; // name -> Audio element
         this.currentAmbient = null;
         this.ambientGainNode = null; // Routed through WebAudio when available
-        this.ambientGain = 0.35; // Default ambient volume (lower than music)
-        this._pendingAmbientVol = 0.35;
+        this.ambientGain = 0.10; // Very subtle ambient — should barely be noticeable
+        this._pendingAmbientVol = 0.10;
         
         // Gain Nodes for Volume Control (guard for environments without WebAudio)
         this.musicGain = 1.0; // fallback if WebAudio music routing not used
@@ -249,7 +249,7 @@ class AudioManager {
             // Re-apply volumes that were set before context existed
             this.setSoundVolume(this._pendingSfxVol != null ? this._pendingSfxVol : 0.7);
             this.setMusicVolume(this._pendingMusicVol != null ? this._pendingMusicVol : 0.5);
-            this.setAmbientVolume(this._pendingAmbientVol != null ? this._pendingAmbientVol : 0.35);
+            this.setAmbientVolume(this._pendingAmbientVol != null ? this._pendingAmbientVol : 0.10);
             return true;
         } catch (e) {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: WebAudio initialization failed', e);
