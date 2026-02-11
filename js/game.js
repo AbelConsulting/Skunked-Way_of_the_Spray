@@ -2,7 +2,7 @@
  * Game class - Main game controller
  */
 
-try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('game.js loaded'); } catch (e) {}
+try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('game.js loaded'); } catch (e) { __err('game', e); }
 
 class Game {
     constructor(canvas, audioManager, isMobile = false) {
@@ -41,9 +41,9 @@ class Game {
                         this.canvas.width = Math.max(1, Math.floor((this.viewWidth || this.width) * reduced));
                         this.canvas.height = Math.max(1, Math.floor((this.viewHeight || this.height) * reduced));
                     }
-                } catch (e) {}
+                } catch (e) { __err('game', e); }
             }
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
 
         // Initialize audio (use provided AudioManager if available)
         this.audioManager = audioManager || new AudioManager();
@@ -53,7 +53,7 @@ class Game {
                 this.achievements = new Achievements();
             }
         } catch (e) {
-            try { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Achievements init failed', e); } catch (err) {}
+            try { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Achievements init failed', e); } catch (err) { __err('game', err); }
             this.achievements = null;
         }
 
@@ -200,7 +200,7 @@ class Game {
                     });
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
 
         // Camera
         this.cameraX = 0;
@@ -210,7 +210,7 @@ class Game {
         if (typeof window !== 'undefined') {
             try {
                 window.gamePan = (dx) => { this.panCamera(dx); };
-                window.toggleGamePause = () => { try { this.togglePause(); } catch (e) {} };
+                window.toggleGamePause = () => { try { this.togglePause(); } catch (e) { __err('game', e); } };
             } catch (e) {
                 // ignore strict contexts
             }
@@ -235,7 +235,7 @@ class Game {
                         if (typeof Config === 'undefined') return;
                         if (typeof enable === 'boolean') Config.SHOW_HITBOXES = enable;
                         else Config.SHOW_HITBOXES = !Config.SHOW_HITBOXES;
-                        try { localStorage.setItem('hitboxes', Config.SHOW_HITBOXES ? '1' : '0'); } catch (e) {}
+                        try { localStorage.setItem('hitboxes', Config.SHOW_HITBOXES ? '1' : '0'); } catch (e) { __err('game', e); }
                         console.log('SHOW_HITBOXES =', !!Config.SHOW_HITBOXES);
                     } catch (e) { console.warn('toggleHitboxes failed', e); }
                 };
@@ -280,7 +280,7 @@ class Game {
                         console.log('Spawned skunk power-up at', px, py);
                     } catch (e) { console.warn('spawnSkunkPowerup failed', e); }
                 };
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
         }
     }
 
@@ -288,7 +288,7 @@ class Game {
         try {
             // Clear any active touch keys from the split-screen touch controls
             if (this._touchKeys && this._touchKeys.clear) this._touchKeys.clear();
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
 
         try {
             if (this.player) {
@@ -297,7 +297,7 @@ class Game {
                 this.player.targetVelocityX = 0;
                 this.player.velocityX = 0;
             }
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
     }
 
     
@@ -317,7 +317,7 @@ class Game {
             // Key down handler
             window.addEventListener('keydown', (event) => {
                 const key = normalize(event);
-                try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined' && console.log) console.log('Game.keydown', { key, state: this.state }); } catch (e) {}
+                try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined' && console.log) console.log('Game.keydown', { key, state: this.state }); } catch (e) { __err('game', e); }
 
                 // Prevent default for primary game keys
                 if (['space', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)) {
@@ -335,14 +335,14 @@ class Game {
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0);
                         this.dispatchGameStateChange();
-                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                     } else if (this.state === 'GAME_OVER') {
                         // Respect lockout period so player can see game over stats
                         if (this._isGameOverLocked()) return;
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0);
                         this.dispatchGameStateChange();
-                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                     }
                 }
 
@@ -364,10 +364,10 @@ class Game {
                     try {
                         if (typeof Config !== 'undefined') {
                             Config.SHOW_HITBOXES = !Config.SHOW_HITBOXES;
-                            try { localStorage.setItem('hitboxes', Config.SHOW_HITBOXES ? '1' : '0'); } catch (e) {}
+                            try { localStorage.setItem('hitboxes', Config.SHOW_HITBOXES ? '1' : '0'); } catch (e) { __err('game', e); }
                             console.log('SHOW_HITBOXES =', !!Config.SHOW_HITBOXES);
                         }
-                    } catch (e) {}
+                    } catch (e) { __err('game', e); }
                 }
             });
 
@@ -381,7 +381,7 @@ class Game {
             document.addEventListener('visibilitychange', () => {
                 try {
                     if (document.hidden) this._clearAllInput();
-                } catch (e) {}
+                } catch (e) { __err('game', e); }
             });
 
             // Listen for on-screen touch UI events
@@ -531,7 +531,7 @@ class Game {
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                     this.startGame(0);
                     this.dispatchGameStateChange();
-                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                     return;
                 }
                 if (this.state === 'GAME_OVER') {
@@ -539,7 +539,7 @@ class Game {
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                     this.startGame(0);
                     this.dispatchGameStateChange();
-                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                     return;
                 }
             };
@@ -572,7 +572,7 @@ class Game {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game.startGame() called, level:', levelIndex);
 
             // Prevent delayed death stingers from a previous run bleeding into a new start.
-            try { this.audioManager && this.audioManager.cancelDeathSequence && this.audioManager.cancelDeathSequence(); } catch (e) {}
+            try { this.audioManager && this.audioManager.cancelDeathSequence && this.audioManager.cancelDeathSequence(); } catch (e) { __err('game', e); }
             
             // Start with a fade in
             this.transitionState = 'FADE_IN';
@@ -728,9 +728,9 @@ class Game {
             await this.ensureLevelMusic();
             this.dispatchGameStateChange();
             // Ensure camera centers on player immediately after starting
-            try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) {}
+            try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) { __err('game', e); }
             // Pre-render static layer (platform tiles) so visuals are ready
-            try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) {}
+            try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { __err('game', e); }
         }
 
         // Key up handler
@@ -760,7 +760,7 @@ class Game {
         togglePause() {
             if (this.state === 'PLAYING') {
                 this.state = 'PAUSED';
-                try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) {}
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) { __err('game', e); }
                 this.audioManager.playSound && this.audioManager.playSound('pause');
                 this.audioManager.pauseMusic && this.audioManager.pauseMusic();
                 this.audioManager.pauseAmbient && this.audioManager.pauseAmbient();
@@ -777,11 +777,11 @@ class Game {
                     const musicVal = document.getElementById('music-volume-value');
                     if (sfxVal && sfxSlider) sfxVal.textContent = sfxSlider.value + '%';
                     if (musicVal && musicSlider) musicVal.textContent = musicSlider.value + '%';
-                } catch (e) {}
+                } catch (e) { __err('game', e); }
                 this.dispatchGameStateChange();
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
-                try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) {}
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) { __err('game', e); }
                 this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
                 this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient();
@@ -954,14 +954,14 @@ class Game {
             // Reset level damage tracking
             try {
                 this.gameStats.levelDamageTaken = 0;
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
             
             // Reset music playback rate when loading new level
             if (this.audioManager && this.audioManager.resetMusicPlaybackRate) {
                 this.audioManager.resetMusicPlaybackRate();
             }
             // Swap music based on level when transitioning.
-            try { this.ensureLevelMusic(); } catch (e) {}
+            try { this.ensureLevelMusic(); } catch (e) { __err('game', e); }
 
             // Update Enemy settings
             if (this.enemyManager && config.enemyConfig) {
@@ -991,7 +991,7 @@ class Game {
                 if (this.ui && this.ui.showLevelTitle) {
                     this.ui.showLevelTitle(config.name, index + 1);
                 }
-            } catch(e) {}
+            } catch (e) { __err('game', e); }
         }
 
         completeLevel() {
@@ -1007,7 +1007,7 @@ class Game {
                 if (this.gameStats.levelDamageTaken === 0) {
                     this.gameStats.perfectLevels++;
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
             
             // No progress/continue system: always play straight through.
 
@@ -1038,15 +1038,15 @@ class Game {
                     } else {
                         this.gameStats.fastestCompletion = savedFastest;
                     }
-                } catch (e) {}
-            } catch (e) {}
+                } catch (e) { __err('game', e); }
+            } catch (e) { __err('game', e); }
 
             // Check for completion achievement
             try {
                 if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
                     Highscores.checkAchievements(this.gameStats);
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
 
             // Stop gameplay music and play victory jingle if available
             try {
@@ -1054,13 +1054,13 @@ class Game {
                     this.audioManager.stopMusic && this.audioManager.stopMusic();
                     if (this.audioManager.playSound) {
                         // Prefer a dedicated victory sound if present; falls back silently otherwise
-                        try { this.audioManager.playSound('victory', 1.0); } catch (e) {}
+                        try { this.audioManager.playSound('victory', 1.0); } catch (e) { __err('game', e); }
                     }
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
 
             // Notify any external UI
-            try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) {}
+            try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) { __err('game', e); }
 
             // Finalize end-of-run statistics (mirrors GAME_OVER handling)
             try {
@@ -1068,7 +1068,7 @@ class Game {
                 this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
                 this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
                 this.gameStats.score = this.score;
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
 
             // Achievement checks on successful clear
             try {
@@ -1085,7 +1085,7 @@ class Game {
                 if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
                     try {
                         Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
-                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                             // If a DOM target exists, show the scoreboard there
                             try {
                                 const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
@@ -1187,7 +1187,7 @@ class Game {
                                 }
                             })();
                         }
-                    } catch(e) {}
+                    } catch (e) { __err('game', e); }
                 }
             }
 
@@ -1264,7 +1264,7 @@ class Game {
                 if (this.player && typeof this.player.updateDeath === 'function') {
                     this.player.updateDeath(dt);
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
 
             this.respawnTimer -= dt;
             if (this.respawnTimer <= 0) {
@@ -1310,7 +1310,7 @@ class Game {
             if (this.movementFX && typeof this.movementFX.emitFromPlayer === 'function') {
                 this.movementFX.emitFromPlayer(this.player, this.level, dt, { prevOnGround, prevVY });
             }
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
 
         // Hazard collision checks disabled: hazards and related damage are removed.
         try {
@@ -1405,8 +1405,8 @@ class Game {
                         this.idolProgress[levelId][idx] = true;
                         this.gameStats.idolsCollected = (this.gameStats.idolsCollected || 0) + 1;
                         this.score += (Config.IDOL_SCORE || 250);
-                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
-                        try { this._scorePulse = 1.0; } catch (e) {}
+                        try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
+                        try { this._scorePulse = 1.0; } catch (e) { __err('game', e); }
                         
                         // Track total idols across all runs
                         try {
@@ -1414,7 +1414,7 @@ class Game {
                             const totalIdols = parseInt(localStorage.getItem('totalIdolsCollected') || '0') + 1;
                             localStorage.setItem('totalIdolsCollected', totalIdols);
                             this.gameStats.totalIdolsCollected = totalIdols;
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
 
                         // INSTANT REWARDS on idol pickup:
                         // 1. Restore health
@@ -1475,9 +1475,9 @@ class Game {
                             this.idolProgress[levelId]._bonusGranted = true;
                             this.gameStats.idolSetsCompleted = (this.gameStats.idolSetsCompleted || 0) + 1;
                             this.score += (Config.IDOL_SET_BONUS || 2000);
-                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
-                            try { this._scorePulse = 1.0; } catch (e) {}
-                            try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.7); } catch (e) {}
+                            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
+                            try { this._scorePulse = 1.0; } catch (e) { __err('game', e); }
+                            try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.7); } catch (e) { __err('game', e); }
                             
                             // Full set bonus: Extra life!
                             this.lives = Math.min(this.lives + 1, 9);
@@ -1494,7 +1494,7 @@ class Game {
                             if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
                                 Highscores.checkAchievements(this.gameStats);
                             }
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
                     }
                 }
             }
@@ -1506,7 +1506,7 @@ class Game {
                 this.gameStats.attacksAttempted++;
                 this.player._attackJustStarted = false;
             }
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
 
         // Check player attacks hitting enemies
         const attackResult = this.enemyManager.checkPlayerAttack(this.player);
@@ -1522,10 +1522,10 @@ class Game {
                     this.gameStats.attacksHit++;
                     this.player._attackDidHit = true;
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
             this.gameStats.totalDamage += attackResult.totalDamage;
 
-            // ── Multi-enemy hit bonus ──
+            // â”€â”€ Multi-enemy hit bonus â”€â”€
             // Grants extra combo stacks + bonus score for cleaving 2+ enemies
             if (attackResult.enemiesHit > 1 && typeof this.player.registerMultiHit === 'function') {
                 this.player.registerMultiHit(attackResult.enemiesHit);
@@ -1544,18 +1544,18 @@ class Game {
                             { color: '#00FFFF', lifetime: 1.5, velocityY: -120, font: 'bold 22px Arial' }
                         ));
                     }
-                } catch (e) {}
+                } catch (e) { __err('game', e); }
             }
 
-            // ── Combo score multiplier ──
+            // â”€â”€ Combo score multiplier â”€â”€
             const comboMult = (typeof this.player.getComboMultiplier === 'function')
                 ? this.player.getComboMultiplier() : 1.0;
             const baseScore = attackResult.totalDamage * 10;
             this.score += Math.floor(baseScore * comboMult);
 
-            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+            try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
             // trigger score pulse animation
-            try { this._scorePulse = 1.0; } catch (e) {}
+            try { this._scorePulse = 1.0; } catch (e) { __err('game', e); }
 
             // Show multiplier text when above 1x
             if (comboMult > 1.0) {
@@ -1569,7 +1569,7 @@ class Game {
                             { color: '#FFD700', lifetime: 0.8, velocityY: -80, font: 'bold 18px Arial' }
                         ));
                     }
-                } catch (e) {}
+                } catch (e) { __err('game', e); }
             }
             
             // Create visual feedback (limit on mobile)
@@ -1610,7 +1610,7 @@ class Game {
                 }
             }
 
-            // ── Combo tier milestones ──
+            // â”€â”€ Combo tier milestones â”€â”€
             // Show milestone text and screen shake when hitting a new tier threshold
             try {
                 const tier = (typeof this.player.getComboTier === 'function') ? this.player.getComboTier() : null;
@@ -1620,7 +1620,7 @@ class Game {
                     this.damageNumbers.push(new FloatingText(
                         this.player.x + (this.player.width || 48) / 2,
                         this.player.y - 60,
-                        `🔥 ${tier.label} x${this.player.comboCount}`,
+                        `ðŸ”¥ ${tier.label} x${this.player.comboCount}`,
                         { color: tier.color, lifetime: 2.0, velocityY: -130, font: 'bold 26px Arial' }
                     ));
                     // Tier screen shake
@@ -1628,7 +1628,7 @@ class Game {
                     this.screenShake = new ScreenShake(shakeDur, tier.shake || 5);
                     this.audioManager.playSound('combo', 0.8 + Math.min(this.player.comboCount * 0.02, 0.2));
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
 
             // Screen shake and hit pause for impactful hits
             if (this.player.isShadowStriking) {
@@ -1641,7 +1641,7 @@ class Game {
         }
 
         // Reset milestone tracking each frame (milestone fires once per tier crossing)
-        try { this.player._prevMilestoneTier = this.player._lastComboTier || 0; } catch(e) {}
+        try { this.player._prevMilestoneTier = this.player._lastComboTier || 0; } catch (e) { __err('game', e); }
 
         // Sync stats from other systems
         this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
@@ -1665,7 +1665,7 @@ class Game {
             try {
                 this.gameStats.damageTaken += playerHit.damage;
                 this.gameStats.levelDamageTaken += playerHit.damage;
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
         }
         
         // Check skunk projectile collisions with enemies
@@ -1739,7 +1739,7 @@ class Game {
                                 particle.size = Utils.randomFloat(2, 5);
                             }
                             this.hitSparks.push(burst);
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
                         
                         // Play sound (quieter for spray effect)
                         if (this.audioManager) {
@@ -1789,7 +1789,7 @@ class Game {
                         try {
                             this.gameStats.damageTaken += damage;
                             this.gameStats.levelDamageTaken += damage;
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
 
                         // Heavy screen shake for explosion (scales with damage)
                         const shakeIntensity = 6 + Math.floor(falloff * 8);
@@ -1799,10 +1799,10 @@ class Game {
                         try {
                             this.damageNumbers.push(new FloatingText(
                                 pcx, playerRect.y - 20,
-                                '💥 BOOM! -' + damage,
+                                'ðŸ’¥ BOOM! -' + damage,
                                 { color: '#FF2200', lifetime: 2.0, velocityY: -100, font: 'bold 24px Arial' }
                             ));
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
 
                         // Explosion hit spark burst
                         try {
@@ -1814,7 +1814,7 @@ class Game {
                                 particle.size = Utils.randomFloat(3, 7);
                             }
                             this.hitSparks.push(burst);
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
                     }
                 }
             }
@@ -1843,7 +1843,7 @@ class Game {
         // Update camera to follow player
         this.updateCamera();
         // decay score pulse over time
-        try { this._scorePulse = Math.max(0, (this._scorePulse || 0) - dt * 2.5); } catch (e) {}
+        try { this._scorePulse = Math.max(0, (this._scorePulse || 0) - dt * 2.5); } catch (e) { __err('game', e); }
     }
 
     _handlePlayerDeath() {
@@ -1865,7 +1865,7 @@ class Game {
         }
         
         // Prevent death during initial spawn invulnerability window
-        // BUT if health is already <= 0 the player IS dead — don't block it.
+        // BUT if health is already <= 0 the player IS dead â€” don't block it.
         if (this.player.invulnerableTimer > 0 && this.player.health > 0) {
             console.log('=== DEATH BLOCKED - INVULNERABLE ===');
             console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
@@ -1890,7 +1890,7 @@ class Game {
                 if (this.player && typeof this.player.startDeath === 'function') {
                     this.player.startDeath();
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
 
             this.isRespawning = true;
             const baseDeath = (this.player && typeof this.player.deathDuration === 'number') ? this.player.deathDuration : 0.8;
@@ -1902,13 +1902,13 @@ class Game {
                 if (this.player && typeof this.player.startDeath === 'function') {
                     this.player.startDeath();
                 }
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
             this.state = "GAME_OVER";
             this._gameOverTime = Date.now();
             this.audioManager.stopMusic();
             // NOTE: game_over stinger is played by the death sequence (delayed).
             // Notify UI layers (mobile touch controls) about state change
-            try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch(e) {}
+            try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) { __err('game', e); }
 
             // Finalize game statistics
             this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
@@ -1940,7 +1940,7 @@ class Game {
                     if (window.Highscores && typeof Highscores.isHighScore === 'function' && Highscores.isHighScore(this.score)) {
                         try {
                             Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
-                                try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
+                                try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                                 // If a DOM target exists, show the scoreboard there
                                 try {
                                     const target = document.getElementById('score-container') || document.getElementById('highscore-overlay');
@@ -2003,7 +2003,7 @@ class Game {
         this.player.deathTimer = 0;
         this.player.isAttacking = false;
         this.player.isShadowStriking = false;
-        try { this.player.clearInputState && this.player.clearInputState(); } catch (e) {}
+        try { this.player.clearInputState && this.player.clearInputState(); } catch (e) { __err('game', e); }
 
         // Respawn slightly behind death position
         const deathX = this._pendingRespawn.deathX;
@@ -2029,10 +2029,10 @@ class Game {
             this.player.y = 300;
         }
 
-        try { this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) {}
+        try { this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) { __err('game', e); }
 
         // Play respawn sound
-        try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.5); } catch (e) {}
+        try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.5); } catch (e) { __err('game', e); }
 
         this.isRespawning = false;
         this.respawnTimer = 0;
@@ -2050,7 +2050,7 @@ class Game {
     }
 
     updateCamera() {
-        // Centered horizontal follow — snap camera to keep player centered.
+        // Centered horizontal follow â€” snap camera to keep player centered.
         // Snapping avoids the player running off-screen on narrow/mobile viewports.
         const viewW = this.viewWidth || this.width;
         const playerCenterX = this.player.x + (this.player.width || 0) * 0.5;
@@ -2103,7 +2103,7 @@ class Game {
     }
 
     panCamera(deltaX) {
-        // Simple pan helper — moves camera by delta and clamps to level bounds
+        // Simple pan helper â€” moves camera by delta and clamps to level bounds
         const cur = this.cameraX || 0;
         const maxX = Math.max(0, this.level.width - (this.viewWidth || this.width));
         const next = Utils.clamp(cur + (deltaX || 0), 0, maxX);
@@ -2185,7 +2185,7 @@ class Game {
 
                 // Hazards removed: nothing to draw here.
 
-                // Editor overlays (selection / hover) — draw in world coordinates
+                // Editor overlays (selection / hover) â€” draw in world coordinates
                 // Only draw if editor panel is actually visible
                 const editorPanel = document.getElementById('level-editor-panel');
                 const editorVisible = editorPanel && editorPanel.style.display !== 'none';
@@ -2210,11 +2210,11 @@ class Game {
                         if (typeof overlay.selectedIndex === 'number') {
                             drawOverlay(overlay.selectedIndex, { stroke: 'rgba(0,255,0,0.95)', fill: 'rgba(0,255,0,0.06)', lineWidth: 3 });
                         }
-                    } catch (e) {}
+                    } catch (e) { __err('game', e); }
                 }
 
                 ctx.restore();
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
         }
         this.ctx.restore();
 
@@ -2231,7 +2231,7 @@ class Game {
         try {
             this.ui.width = this.viewWidth || this.width;
             this.ui.height = this.viewHeight || this.height;
-        } catch (e) {}
+        } catch (e) { __err('game', e); }
 
         this.ctx.save();
         this.ctx.scale(scaleX, scaleY);
@@ -2256,7 +2256,7 @@ class Game {
                             if (b && typeof b.health === 'number' && typeof b.maxHealth === 'number' && b.maxHealth > 0) {
                                 bossHpPct = Math.max(0, Math.min(1, b.health / b.maxHealth));
                             }
-                        } catch (e) {}
+                        } catch (e) { __err('game', e); }
                         objectiveInfo = { mode: 'boss', bossHpPct };
                     } else {
                         const progress = exitX > 0 ? Utils.clamp(this.player.x / exitX, 0, 1) : 0;
@@ -2323,7 +2323,7 @@ class Game {
                         else if (e.enemyType === 'FAST_BASIC') f++;
                         else if (e.enemyType === 'SECOND_BASIC') s++;
                     }
-                } catch (e) {}
+                } catch (e) { __err('game', e); }
                 const lines = [
                         `cameraX: ${this.cameraX.toFixed(1)}`,
                     `player.x: ${this.player.x.toFixed(1)}`,
@@ -2342,9 +2342,9 @@ class Game {
                 ctx.font = '11px monospace';
                 ctx.fillText('Keys: [ ] snap L/R, O toggle overlay', 16, 26 + lines.length * 16);
                 ctx.restore();
-            } catch (e) {}
+            } catch (e) { __err('game', e); }
         }
     }
 }
 
-try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game class defined'); } catch (e) {}
+try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game class defined'); } catch (e) { __err('game', e); }
