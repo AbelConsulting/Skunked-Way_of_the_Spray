@@ -585,29 +585,50 @@ const LEVEL_CONFIGS = [
             { x: 2750, y: 610, width: 2700, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 5800, y: 630, width: 2700, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 8850, y: 620, width: 3150, height: 40, type: 'static', tile: 'ground_tile' },
-            // Reuse Level 2 layout for the city-themed finale
-            { x: 300, y: 500, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 500, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 800, y: 400, width: 120, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 1100, y: 500, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1800, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2200, y: 300, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2600, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3200, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4200, y: 600, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4500, y: 500, width: 150, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2, tile: 'platform_tile' },
-            { x: 4900, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5300, y: 500, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6200, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6550, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6950, y: 320, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7350, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7900, y: 520, width: 200, height: 24, type: 'moving', axis: 'y', range: 140, speed: 2.1, tile: 'platform_tile' },
-            { x: 8300, y: 430, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8800, y: 350, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 9500, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 10700, y: 560, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 11100, y: 460, width: 280, height: 24, type: 'static', tile: 'platform_tile' }
+            // Neon Crossroads: rooftop parkour with neon signs
+            // Street-level awnings
+            { x: 200, y: 540, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 650, y: 460, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1000, y: 380, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Neon Sign Hop: small platforms at varied heights
+            { x: 1400, y: 480, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1650, y: 380, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1900, y: 300, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2200, y: 400, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Crossroads Plaza: wide platform hub
+            { x: 2700, y: 500, width: 600, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Billboard Elevators: vertical movers
+            { x: 3500, y: 450, width: 120, height: 24, type: 'moving', axis: 'y', range: 200, speed: 1.8, tile: 'platform_tile' },
+            { x: 3800, y: 350, width: 120, height: 24, type: 'moving', axis: 'y', range: 200, speed: 1.8, timeOffset: 1.5, tile: 'platform_tile' },
+            { x: 4100, y: 480, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Fire Escape: ascending zigzag
+            { x: 4550, y: 530, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4850, y: 430, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 5150, y: 330, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 5500, y: 430, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Rooftop Highway: long run with gaps
+            { x: 6000, y: 490, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6700, y: 420, width: 350, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Floating Neon Bars: horizontal movers
+            { x: 7200, y: 500, width: 110, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, tile: 'platform_tile' },
+            { x: 7600, y: 400, width: 110, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, timeOffset: 1.0, tile: 'platform_tile' },
+
+            // Antenna Perch
+            { x: 8000, y: 350, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8400, y: 460, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Final Alley
+            { x: 9000, y: 380, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9400, y: 500, width: 700, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10400, y: 420, width: 320, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10900, y: 530, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 11200, y: 430, width: 280, height: 24, type: 'static', tile: 'platform_tile' }
         ],
         idols: [
             { x: 1200, y: 470 },
@@ -671,42 +692,61 @@ const LEVEL_CONFIGS = [
             { x: 3200, y: 600, width: 3100, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 6750, y: 620, width: 3200, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 10400, y: 610, width: 5600, height: 40, type: 'static', tile: 'ground_tile' },
-            // Reuse Level 4 layout
-            { x: 300, y: 550, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 600, y: 450, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 900, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1300, y: 450, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 1.8, tile: 'platform_tile' },
-            { x: 1650, y: 550, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 2.2, timeOffset: 1.0, tile: 'platform_tile' },
-            { x: 2000, y: 450, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2500, y: 520, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3500, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3850, y: 300, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4300, y: 450, width: 120, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, tile: 'platform_tile' },
-            { x: 4700, y: 550, width: 120, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, timeOffset: 1.5, tile: 'platform_tile' },
-            { x: 5100, y: 450, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5600, y: 380, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5900, y: 280, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6200, y: 380, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6500, y: 480, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6800, y: 580, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7300, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8400, y: 400, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8800, y: 500, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 9300, y: 450, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 9650, y: 350, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.4, timeOffset: 1.2, tile: 'platform_tile' },
-            { x: 10000, y: 450, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, timeOffset: 2.4, tile: 'platform_tile' },
-            { x: 10500, y: 360, width: 1200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 12000, y: 460, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 12450, y: 560, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 13000, y: 480, width: 150, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, tile: 'platform_tile' },
-            { x: 13400, y: 380, width: 150, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, timeOffset: 1.5, tile: 'platform_tile' },
-            { x: 14000, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 15000, y: 450, width: 300, height: 24, type: 'static', tile: 'platform_tile' }
+            // Crystal Ridge: ascending ridge climb with crystal outcrops
+            // Foothills: wide ledges to warm up
+            { x: 250, y: 530, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 700, y: 440, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1100, y: 520, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // First Ridge: stairstep ascent
+            { x: 1600, y: 480, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1900, y: 400, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2200, y: 320, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2550, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Crystal Outcrop: wide safe zone
+            { x: 2950, y: 480, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Swinging Crystals: pendulum-style movers
+            { x: 3700, y: 400, width: 130, height: 24, type: 'moving', axis: 'x', range: 180, speed: 1.6, tile: 'platform_tile' },
+            { x: 4200, y: 340, width: 130, height: 24, type: 'moving', axis: 'x', range: 180, speed: 1.6, timeOffset: 1.3, tile: 'platform_tile' },
+            { x: 4700, y: 450, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Ridge Spine: thin high walkway
+            { x: 5200, y: 360, width: 700, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Gem Grotto: descending then ascending
+            { x: 6100, y: 450, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6450, y: 530, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6800, y: 450, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7100, y: 370, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Crystal Elevator Shafts: fast vertical movers
+            { x: 7600, y: 500, width: 120, height: 24, type: 'moving', axis: 'y', range: 200, speed: 2.5, tile: 'platform_tile' },
+            { x: 7950, y: 380, width: 120, height: 24, type: 'moving', axis: 'y', range: 200, speed: 2.5, timeOffset: 1.0, tile: 'platform_tile' },
+            { x: 8300, y: 460, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Summit Approach
+            { x: 8800, y: 380, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9500, y: 460, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9900, y: 360, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Peak Traverse: long run to boss
+            { x: 10500, y: 430, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 11600, y: 350, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 12100, y: 460, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Ridge Crest: final platforms before boss
+            { x: 12700, y: 380, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 2.0, tile: 'platform_tile' },
+            { x: 13100, y: 300, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 2.0, timeOffset: 1.2, tile: 'platform_tile' },
+            { x: 13600, y: 420, width: 600, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 14500, y: 350, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 15100, y: 450, width: 300, height: 24, type: 'static', tile: 'platform_tile' }
         ],
         idols: [
-            { x: 3600, y: 370 },
-            { x: 7600, y: 470 },
-            { x: 13500, y: 350 }
+            { x: 3100, y: 450 },
+            { x: 7200, y: 340 },
+            { x: 13800, y: 390 }
         ],
         speedBoosts: [
             { x: 2100, y: 420 },    // Early ridge
@@ -767,37 +807,57 @@ const LEVEL_CONFIGS = [
             { x: 3050, y: 590, width: 3000, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 6550, y: 610, width: 3200, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 10250, y: 600, width: 5750, height: 40, type: 'static', tile: 'ground_tile' },
-            // Reuse Level 5 layout
-            { x: 300, y: 550, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 600, y: 450, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 900, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1300, y: 450, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 1.8, tile: 'platform_tile' },
-            { x: 1650, y: 550, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 2.2, timeOffset: 1.0, tile: 'platform_tile' },
-            { x: 2000, y: 450, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2500, y: 520, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3500, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3850, y: 300, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4300, y: 450, width: 120, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, tile: 'platform_tile' },
-            { x: 4700, y: 550, width: 120, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, timeOffset: 1.5, tile: 'platform_tile' },
-            { x: 5100, y: 450, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5600, y: 380, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5900, y: 280, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6200, y: 380, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6500, y: 480, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6800, y: 580, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7300, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8400, y: 400, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8800, y: 500, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 9300, y: 450, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 9650, y: 350, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.4, timeOffset: 1.2, tile: 'platform_tile' },
-            { x: 10000, y: 450, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, timeOffset: 2.4, tile: 'platform_tile' },
-            { x: 10500, y: 360, width: 1200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 12000, y: 460, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 12450, y: 560, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 13000, y: 480, width: 150, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, tile: 'platform_tile' },
-            { x: 13400, y: 380, width: 150, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, timeOffset: 1.5, tile: 'platform_tile' },
-            { x: 14000, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 15000, y: 450, width: 300, height: 24, type: 'static', tile: 'platform_tile' }
+            // Abyssal Caverns: perilous gaps, narrow bridges, treacherous drops
+            // Threshold: rocky ledges at the abyss entrance
+            { x: 200, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 600, y: 430, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 950, y: 520, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1300, y: 440, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Stalactite Drops: fast vertical movers simulating falling rocks
+            { x: 1800, y: 380, width: 100, height: 24, type: 'moving', axis: 'y', range: 220, speed: 3.0, tile: 'platform_tile' },
+            { x: 2100, y: 320, width: 100, height: 24, type: 'moving', axis: 'y', range: 220, speed: 3.0, timeOffset: 1.0, tile: 'platform_tile' },
+            { x: 2400, y: 440, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Bone Bridge: very long narrow crossing over void
+            { x: 2900, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Lava Shelf: wide shelf then descending
+            { x: 4000, y: 420, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4800, y: 440, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Pendulum Crossing: horizontal movers over gaps
+            { x: 5300, y: 480, width: 120, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.2, tile: 'platform_tile' },
+            { x: 5800, y: 380, width: 120, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.2, timeOffset: 1.5, tile: 'platform_tile' },
+            { x: 6300, y: 480, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Mushroom Shelf: alternating heights
+            { x: 6800, y: 530, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7100, y: 430, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7400, y: 330, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7700, y: 430, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8050, y: 530, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Abyss Crossing: triple vertical movers
+            { x: 8500, y: 450, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, tile: 'platform_tile' },
+            { x: 8850, y: 350, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, timeOffset: 0.7, tile: 'platform_tile' },
+            { x: 9200, y: 450, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, timeOffset: 1.4, tile: 'platform_tile' },
+
+            // Deep Shelf: safety platform
+            { x: 9600, y: 400, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Final Descent: steep drops to boss approach
+            { x: 10400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10800, y: 450, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 11400, y: 380, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Boss Gauntlet
+            { x: 12000, y: 460, width: 140, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.2, tile: 'platform_tile' },
+            { x: 12500, y: 380, width: 140, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.2, timeOffset: 1.0, tile: 'platform_tile' },
+            { x: 13100, y: 470, width: 700, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 14100, y: 400, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 14800, y: 500, width: 350, height: 24, type: 'static', tile: 'platform_tile' }
         ],
         idols: [
             { x: 2100, y: 420 },
@@ -864,34 +924,58 @@ const LEVEL_CONFIGS = [
             { x: 2750, y: 580, width: 2600, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 5800, y: 600, width: 2500, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 8750, y: 590, width: 3250, height: 40, type: 'static', tile: 'ground_tile' },
-            // Reuse Level 2 layout
-            { x: 300, y: 500, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 500, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 800, y: 400, width: 120, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 1100, y: 500, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1800, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2200, y: 300, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2600, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3200, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4200, y: 600, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4500, y: 500, width: 150, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2, tile: 'platform_tile' },
-            { x: 4900, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5300, y: 500, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6200, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6550, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6950, y: 320, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7350, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7900, y: 520, width: 200, height: 24, type: 'moving', axis: 'y', range: 140, speed: 2.1, tile: 'platform_tile' },
-            { x: 8300, y: 430, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8800, y: 350, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 9500, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 10700, y: 560, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 11100, y: 460, width: 280, height: 24, type: 'static', tile: 'platform_tile' }
+            // Neon Nexus: dense urban obstacle course, lots of moving parts
+            // Entrance Scaffolding
+            { x: 180, y: 510, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 520, y: 420, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 850, y: 330, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1200, y: 430, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Data Stream: fast horizontal movers in sequence
+            { x: 1650, y: 480, width: 110, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.5, tile: 'platform_tile' },
+            { x: 2000, y: 380, width: 110, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.5, timeOffset: 0.7, tile: 'platform_tile' },
+            { x: 2350, y: 480, width: 110, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.5, timeOffset: 1.4, tile: 'platform_tile' },
+
+            // Server Room: tight alternating heights
+            { x: 2700, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3050, y: 510, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3350, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3650, y: 300, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Nexus Core: hub with surrounding platforms
+            { x: 4000, y: 460, width: 600, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4200, y: 340, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Hologram Bridge: vertical movers across a gap
+            { x: 4800, y: 400, width: 100, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.8, tile: 'platform_tile' },
+            { x: 5100, y: 320, width: 100, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.8, timeOffset: 0.9, tile: 'platform_tile' },
+            { x: 5400, y: 400, width: 100, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.8, timeOffset: 1.8, tile: 'platform_tile' },
+
+            // Neon Catwalk
+            { x: 5700, y: 480, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Circuit Board: zigzag descent
+            { x: 6300, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6650, y: 500, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7000, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7350, y: 300, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Firewall: mixed movers gauntlet
+            { x: 7800, y: 460, width: 100, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2.0, tile: 'platform_tile' },
+            { x: 8100, y: 360, width: 100, height: 24, type: 'moving', axis: 'y', range: 120, speed: 2.3, tile: 'platform_tile' },
+            { x: 8450, y: 460, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Terminal Run: boss approach
+            { x: 8900, y: 380, width: 350, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9500, y: 480, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10200, y: 400, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10700, y: 500, width: 350, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 11200, y: 420, width: 280, height: 24, type: 'static', tile: 'platform_tile' }
         ],
         idols: [
-            { x: 1900, y: 370 },
-            { x: 6650, y: 390 },
-            { x: 10750, y: 530 }
+            { x: 2800, y: 370 },
+            { x: 5900, y: 450 },
+            { x: 9700, y: 450 }
         ],
         speedBoosts: [
             { x: 1300, y: 470 },    // Early nexus
@@ -952,29 +1036,51 @@ const LEVEL_CONFIGS = [
             { x: 2600, y: 570, width: 2500, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 5600, y: 590, width: 2400, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 8500, y: 580, width: 3500, height: 40, type: 'static', tile: 'ground_tile' },
-            // Reuse Level 6 layout
-            { x: 300, y: 500, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 500, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 800, y: 400, width: 120, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 1100, y: 500, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1800, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2200, y: 300, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2600, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3200, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4200, y: 600, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4500, y: 500, width: 150, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2, tile: 'platform_tile' },
-            { x: 4900, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5300, y: 500, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6200, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6550, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6950, y: 320, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7350, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7900, y: 520, width: 200, height: 24, type: 'moving', axis: 'y', range: 140, speed: 2.1, tile: 'platform_tile' },
-            { x: 8300, y: 430, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8800, y: 350, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 9500, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 10700, y: 560, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 11100, y: 460, width: 280, height: 24, type: 'static', tile: 'platform_tile' }
+            // Final Showdown: the hardest platforming, every trick used
+            // War Zone Entry: tight quick hops
+            { x: 150, y: 500, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 450, y: 400, width: 130, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 750, y: 310, width: 130, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1050, y: 400, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1350, y: 500, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Gauntlet Run: fast movers in both axes
+            { x: 1750, y: 420, width: 100, height: 24, type: 'moving', axis: 'y', range: 200, speed: 3.0, tile: 'platform_tile' },
+            { x: 2050, y: 340, width: 100, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.8, tile: 'platform_tile' },
+            { x: 2400, y: 450, width: 100, height: 24, type: 'moving', axis: 'y', range: 200, speed: 3.0, timeOffset: 1.0, tile: 'platform_tile' },
+            { x: 2700, y: 380, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Crumbling Fortress: ascending then descending
+            { x: 3100, y: 480, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3400, y: 380, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3700, y: 280, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4050, y: 380, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4350, y: 480, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Death Bridge: long narrow with movers on each side
+            { x: 4800, y: 420, width: 100, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2.4, tile: 'platform_tile' },
+            { x: 5100, y: 350, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 5750, y: 420, width: 100, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2.4, timeOffset: 1.2, tile: 'platform_tile' },
+
+            // Chaos Zone: mixed elevation with fast movers
+            { x: 6100, y: 500, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6450, y: 400, width: 100, height: 24, type: 'moving', axis: 'y', range: 160, speed: 2.6, tile: 'platform_tile' },
+            { x: 6750, y: 300, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7100, y: 400, width: 100, height: 24, type: 'moving', axis: 'y', range: 160, speed: 2.6, timeOffset: 0.8, tile: 'platform_tile' },
+            { x: 7400, y: 500, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Tower Ascent: steep vertical climb
+            { x: 7800, y: 460, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8000, y: 360, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8200, y: 260, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Arena Approach: final stretch to the boss
+            { x: 8600, y: 380, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9200, y: 480, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9700, y: 380, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10150, y: 480, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 10800, y: 400, width: 350, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 11300, y: 500, width: 300, height: 24, type: 'static', tile: 'platform_tile' }
         ],
         idols: [
             { x: 2300, y: 270 },
