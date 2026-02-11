@@ -42,11 +42,12 @@ class Enemy {
             this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.3); // Tanky, hits hard
             this.points = Math.floor(Config.ENEMY_POINTS * 1.5); // 50% more points
         } else if (this.enemyType === "THIRD_BASIC") {
-            this.health = Math.floor(Config.ENEMY_HEALTH * 0.6); // Low health
+            // Kamikaze / Exploder: low health, fast rush, detonates near player or on death
+            this.health = Math.floor(Config.ENEMY_HEALTH * 0.5); // Fragile
             this.maxHealth = this.health;
-            this.speed = Config.ENEMY_SPEED * 2.5; // Very fast
-            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.2); // Speed + sting
-            this.points = Math.floor(Config.ENEMY_POINTS * 1.8); // Reward speed threat
+            this.speed = Config.ENEMY_SPEED * 2.0; // Fast base
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 0.6); // Weak melee, explosion is the threat
+            this.points = Math.floor(Config.ENEMY_POINTS * 2.0); // Reward for dealing with threat
         } else if (this.enemyType === "FOURTH_BASIC") {
             this.health = Math.floor(Config.ENEMY_HEALTH * 1.2); // Slightly more health
             this.maxHealth = this.health;
@@ -102,6 +103,14 @@ class Enemy {
         this._spriteLoadAttempts = 0; // Track sprite loading attempts (allow multiple tries)
         this._maxSpriteLoadAttempts = 60; // Try for ~1 second at 60fps
         
+        // Kamikaze / Exploder state (THIRD_BASIC)
+        this.isExploding = false;      // Currently in fuse/detonation sequence
+        this.fuseTimer = 0;            // Countdown to detonation
+        this.hasDetonated = false;      // Prevent double-detonation
+        this.explosionParticles = [];   // Visual explosion particles
+        this.explosionAge = 0;          // For drawing the fading explosion
+        this.explosionDuration = 0.6;   // How long explosion visual lasts
+
         // Skunk effect state
         this.isSkunked = false;
         this.skunkTimer = 0;
@@ -311,6 +320,14 @@ class Enemy {
             }
         }
         
+        // Kamikaze fuse countdown (THIRD_BASIC)
+        if (this.enemyType === 'THIRD_BASIC' && this.isExploding && !this.hasDetonated) {
+            this.fuseTimer -= dt;
+            if (this.fuseTimer <= 0) {
+                this.detonate();
+            }
+        }
+
         // AI behavior (only if not stunned or skunked)
         if (this.hitStunTimer <= 0 && !this.isSkunked) {
             const playerRect = (player && typeof player.getRect === 'function')
@@ -386,8 +403,9 @@ class Enemy {
         // Update animations
         this.updateAnimation(dt);
 
-        // Update rush sparks for third basic during chase
+        // Update rush sparks + fuse sparks for THIRD_BASIC (kamikaze)
         if (this.enemyType === 'THIRD_BASIC') {
+            // Rush sparks while chasing
             const shouldSpark = !this.isSkunked && this.hitStunTimer <= 0 && this.state === 'CHASE' && Math.abs(this.velocityX) > this.speed * 0.6;
             if (shouldSpark && Math.random() < 0.35) {
                 const dir = this.facingRight ? -1 : 1;
@@ -402,6 +420,23 @@ class Enemy {
                 });
             }
 
+            // Fuse warning sparks (intensify as detonation approaches)
+            if (this.isExploding && !this.hasDetonated) {
+                const fuseProgress = 1 - (this.fuseTimer / (Config.EXPLODER_FUSE_TIME || 1.2));
+                const sparkRate = 0.3 + fuseProgress * 0.7; // More sparks as fuse burns
+                if (Math.random() < sparkRate) {
+                    this.rushSparks.push({
+                        x: this.x + Math.random() * this.width,
+                        y: this.y + Math.random() * this.height,
+                        vx: (Math.random() - 0.5) * 120,
+                        vy: -60 - Math.random() * 80,
+                        life: 0.25,
+                        age: 0,
+                        size: 2 + Math.random() * 3
+                    });
+                }
+            }
+
             for (let i = this.rushSparks.length - 1; i >= 0; i--) {
                 const p = this.rushSparks[i];
                 p.x += p.vx * dt;
@@ -411,6 +446,21 @@ class Enemy {
                 p.age += dt;
                 if (p.age >= p.life) {
                     this.rushSparks.splice(i, 1);
+                }
+            }
+
+            // Update explosion particles
+            if (this.hasDetonated) {
+                this.explosionAge += dt;
+                for (let i = this.explosionParticles.length - 1; i >= 0; i--) {
+                    const p = this.explosionParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 200 * dt; // gravity on debris
+                    p.age += dt;
+                    if (p.age >= p.life) {
+                        this.explosionParticles.splice(i, 1);
+                    }
                 }
             }
         }
@@ -514,6 +564,53 @@ class Enemy {
     }
 
     chase(dt, player, level) {
+        // THIRD_BASIC (Kamikaze): rush toward player at boosted speed, trigger fuse when close
+        if (this.enemyType === 'THIRD_BASIC') {
+            // If already detonated, do nothing
+            if (this.hasDetonated) return;
+
+            // Face the player
+            const playerCenterX = (player.x || 0) + (player.width || 0) * 0.5;
+            const enemyCenterX = this.x + this.width * 0.5;
+            this.facingRight = playerCenterX > enemyCenterX;
+
+            // Rush speed — faster than normal chase
+            const rushSpeed = this.speed * (Config.EXPLODER_RUSH_SPEED_MULT || 3.0);
+
+            if (!this.isExploding) {
+                // Rush toward player
+                if (enemyCenterX < playerCenterX) {
+                    this.velocityX = rushSpeed;
+                } else {
+                    this.velocityX = -rushSpeed;
+                }
+
+                // Check proximity to trigger fuse
+                const dx = playerCenterX - enemyCenterX;
+                const dy = ((player.y || 0) + (player.height || 0) * 0.5) - (this.y + this.height * 0.5);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const detonationRange = Config.EXPLODER_DETONATION_RANGE || 50;
+
+                if (dist < detonationRange) {
+                    this.isExploding = true;
+                    this.fuseTimer = Config.EXPLODER_FUSE_TIME || 1.2;
+                    this.velocityX = 0; // Stop moving, about to blow
+                    // Fuse warning sound
+                    if (this.audioManager) {
+                        this.audioManager.playSound('enemy_attack', { volume: 0.6, rate: 1.4 });
+                    }
+                }
+            } else {
+                // Fuse is lit — stay in place, shaking
+                this.velocityX = 0;
+            }
+
+            // Move horizontally
+            const nextX = this.x + this.velocityX * dt;
+            this.x = nextX;
+            return;
+        }
+
         // FOURTH_BASIC has special behavior: no horizontal movement, only vertical double jumps
         if (this.enemyType === 'FOURTH_BASIC') {
             this.velocityX = 0; // No side-to-side movement
@@ -641,6 +738,58 @@ class Enemy {
                 this.animations.attack.reset();
             }
         }
+    }
+
+    /**
+     * THIRD_BASIC Kamikaze: trigger the explosion.
+     * Sets hasDetonated = true, kills self, spawns explosion particles.
+     * The actual AoE damage to player/enemies is handled by EnemyManager/Game.
+     */
+    detonate() {
+        if (this.hasDetonated) return;
+        this.hasDetonated = true;
+        this.isExploding = false;
+        this.health = 0; // Kill self
+
+        // Explosion sound
+        if (this.audioManager) {
+            this.audioManager.playSound('enemy_death', { volume: 0.9, rate: 0.7 });
+        }
+
+        // Spawn explosion particles (fiery orange/red burst)
+        const cx = this.x + this.width / 2;
+        const cy = this.y + this.height / 2;
+        const radius = Config.EXPLODER_EXPLOSION_RADIUS || 120;
+        for (let i = 0; i < 24; i++) {
+            const angle = (Math.PI * 2 * i) / 24 + (Math.random() - 0.5) * 0.3;
+            const speed = 100 + Math.random() * 250;
+            this.explosionParticles.push({
+                x: cx,
+                y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 60,
+                life: 0.4 + Math.random() * 0.4,
+                age: 0,
+                size: 3 + Math.random() * 5,
+                color: Math.random() < 0.3 ? '#FFFFFF' : Math.random() < 0.6 ? '#FF6600' : '#FF2200'
+            });
+        }
+        // Add some smoke particles (darker, slower)
+        for (let i = 0; i < 10; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 30 + Math.random() * 80;
+            this.explosionParticles.push({
+                x: cx,
+                y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 40,
+                life: 0.6 + Math.random() * 0.5,
+                age: 0,
+                size: 5 + Math.random() * 6,
+                color: '#444444'
+            });
+        }
+        this.explosionAge = 0;
     }
 
     isAttackDamageActive() {
