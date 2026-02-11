@@ -536,7 +536,7 @@ class Player {
         this.skunkShotTimer = 0;
         this.attackTimer = 0;
         this.attackCooldownTimer = 0;
-        try { this.hitEnemies && this.hitEnemies.clear && this.hitEnemies.clear(); } catch (e) {}
+        try { this.hitEnemies && this.hitEnemies.clear && this.hitEnemies.clear(); } catch (e) { __err('player', e); }
         this._prevAttackHitbox = null;
         this.jumpBufferTimer = 0;
         this.jumpBufferCount = 0;
@@ -871,7 +871,7 @@ class Player {
                 // Fallback for older AudioManager
                 this.audioManager.playSound('player_death', 0.9);
             }
-        } catch (e) {}
+        } catch (e) { __err('player', e); }
         if (this.animations && this.animations.death) {
             this.animations.death.reset();
         }
@@ -1000,7 +1000,7 @@ class Player {
                 ctx.closePath();
                 ctx.fill();
                 ctx.restore();
-            } catch (e) {}
+            } catch (e) { __err('player', e); }
         }
 
         // Debug: draw collision boxes
@@ -1026,7 +1026,7 @@ class Player {
                         ctx.lineWidth = 2;
                         ctx.strokeRect(swept.x, swept.y, swept.width, swept.height);
                     }
-                } catch (e) {}
+                } catch (e) { __err('player', e); }
             }
         }
 
