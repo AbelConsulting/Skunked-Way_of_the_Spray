@@ -448,6 +448,9 @@ class Player {
             this.invulnerableTimer = this.invulnerableDuration;
             this.hitStunTimer = 0.2;
 
+            // Track damage taken for achievements
+            this._lastDamageTaken = damage;
+
             // Knockback
             if (source) {
                 const knockbackDirection = this.x < source.x ? -1 : 1;

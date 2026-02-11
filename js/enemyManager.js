@@ -285,11 +285,13 @@ class EnemyManager {
                     }
                 } catch (e) { /* ignore */ }
                 if (Utils.rectCollision(enemy.attackHitbox, player.getRect())) {
-                    return player.takeDamage(enemy.attackDamage, enemy);
+                    const result = player.takeDamage(enemy.attackDamage, enemy);
+                    // Return damage taken for stat tracking
+                    return { hit: result, damage: enemy.attackDamage };
                 }
             }
         }
-        return false;
+        return { hit: false, damage: 0 };
     }
 
     draw(ctx, cameraX = 0, cameraY = 0) {

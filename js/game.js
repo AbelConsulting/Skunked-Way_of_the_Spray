@@ -72,7 +72,7 @@ class Game {
         this.respawnTimer = 0;
         this._pendingRespawn = null;
 
-        // Game statistics for high scores
+        // Game statistics for high scores and achievements
         this.gameStats = {
             startTime: 0,
             timeSurvived: 0,
@@ -85,7 +85,18 @@ class Game {
             totalDamage: 0,
             attacksAttempted: 0,
             attacksHit: 0,
-            accuracy: 0
+            accuracy: 0,
+            // New achievement tracking
+            damageTaken: 0,
+            levelsCompleted: 0,
+            perfectLevels: 0,
+            levelDamageTaken: 0,  // Reset per level
+            idolsCollected: 0,
+            idolSetsCompleted: 0,
+            totalIdolsCollected: 0,  // Across all runs
+            gameCompleted: false,
+            completionTime: 0,  // Time to beat entire game
+            fastestCompletion: Infinity  // Best speedrun time
         };
 
         // Level timer
@@ -600,8 +611,16 @@ class Game {
                 attacksAttempted: 0,
                 attacksHit: 0,
                 accuracy: 0,
+                damageTaken: 0,
+                levelsCompleted: 0,
+                perfectLevels: 0,
+                levelDamageTaken: 0,
                 idolsCollected: 0,
-                idolSetsCompleted: 0
+                idolSetsCompleted: 0,
+                totalIdolsCollected: parseInt(localStorage.getItem('totalIdolsCollected') || '0'),
+                gameCompleted: false,
+                completionTime: 0,
+                fastestCompletion: parseFloat(localStorage.getItem('fastestCompletion')) || Infinity
             };
 
             // Reset idol tracking for a new run
@@ -791,6 +810,11 @@ class Game {
             this.levelStartTime = 0;
             this.levelTime = 0;
             
+            // Reset level damage tracking
+            try {
+                this.gameStats.levelDamageTaken = 0;
+            } catch (e) {}
+            
             // Reset music playback rate when loading new level
             if (this.audioManager && this.audioManager.resetMusicPlaybackRate) {
                 this.audioManager.resetMusicPlaybackRate();
@@ -836,6 +860,14 @@ class Game {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
             this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
             
+            // Track level completion and perfect runs
+            try {
+                this.gameStats.levelsCompleted++;
+                if (this.gameStats.levelDamageTaken === 0) {
+                    this.gameStats.perfectLevels++;
+                }
+            } catch (e) {}
+            
             // No progress/continue system: always play straight through.
 
             // Wait then transition
@@ -853,7 +885,20 @@ class Game {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('GAME VICTORY!');
 
             // Mark completion for achievements
-            try { this.gameStats.gameCompleted = true; } catch (e) {}
+            try {
+                this.gameStats.gameCompleted = true;
+                this.gameStats.completionTime = (Date.now() / 1000) - this.gameStats.startTime;
+                // Update fastest time
+                try {
+                    const savedFastest = parseFloat(localStorage.getItem('fastestCompletion')) || Infinity;
+                    if (this.gameStats.completionTime < savedFastest) {
+                        localStorage.setItem('fastestCompletion', this.gameStats.completionTime);
+                        this.gameStats.fastestCompletion = this.gameStats.completionTime;
+                    } else {
+                        this.gameStats.fastestCompletion = savedFastest;
+                    }
+                } catch (e) {}
+            } catch (e) {}
 
             // Check for completion achievement
             try {
@@ -1207,6 +1252,14 @@ class Game {
                         this.score += (Config.IDOL_SCORE || 250);
                         try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
                         try { this._scorePulse = 1.0; } catch (e) {}
+                        
+                        // Track total idols across all runs
+                        try {
+                            this.gameStats.totalIdolsCollected = (this.gameStats.totalIdolsCollected || 0) + 1;
+                            const totalIdols = parseInt(localStorage.getItem('totalIdolsCollected') || '0') + 1;
+                            localStorage.setItem('totalIdolsCollected', totalIdols);
+                            this.gameStats.totalIdolsCollected = totalIdols;
+                        } catch (e) {}
 
                         // INSTANT REWARDS on idol pickup:
                         // 1. Restore health
@@ -1452,6 +1505,13 @@ class Game {
 
         // Check enemy attacks hitting player
         const playerHit = this.enemyManager.checkEnemyAttacks(this.player);
+        if (playerHit && playerHit.hit) {
+            // Track damage taken
+            try {
+                this.gameStats.damageTaken += playerHit.damage;
+                this.gameStats.levelDamageTaken += playerHit.damage;
+            } catch (e) {}
+        }
         
         // Check skunk projectile collisions with enemies
         if (this.player && this.player.skunkProjectiles) {
@@ -1565,6 +1625,11 @@ class Game {
                         // Apply explosion damage
                         const result = this.player.takeDamage(damage);
                         if (result) explosionHitPlayer = true;
+                        // Track damage
+                        try {
+                            this.gameStats.damageTaken += damage;
+                            this.gameStats.levelDamageTaken += damage;
+                        } catch (e) {}
 
                         // Heavy screen shake for explosion (scales with damage)
                         const shakeIntensity = 6 + Math.floor(falloff * 8);

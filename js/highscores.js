@@ -96,22 +96,55 @@
     const achievements = loadAchievements();
     const newAchievements = [];
 
-    // Define achievement checks
+    // Define achievement checks - CHALLENGING EDITION
     const checks = [
+      // Basic progression
       { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', check: () => gameStats.enemiesDefeated >= 1 },
-      { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 10 enemies', check: () => gameStats.enemiesDefeated >= 10 },
-      { id: 'enemy_slayer_50', name: 'Relentless', desc: 'Defeat 50 enemies', check: () => gameStats.enemiesDefeated >= 50 },
-      { id: 'combo_master', name: 'Combo Master', desc: 'Achieve a 3-hit combo', check: () => gameStats.maxCombo >= 3 },
-      { id: 'speed_demon', name: 'Speed Demon', desc: 'Survive for 2 minutes', check: () => gameStats.timeSurvived >= 120 },
-      { id: 'survivor_5m', name: 'Survivor', desc: 'Survive for 5 minutes', check: () => gameStats.timeSurvived >= 300 },
-      { id: 'marksman', name: 'Marksman', desc: 'Achieve 80% accuracy', check: () => gameStats.accuracy >= 0.8 },
-      { id: 'precision_95', name: 'Deadeye', desc: 'Achieve 95% accuracy', check: () => gameStats.accuracy >= 0.95 },
-      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 10,000 points', check: () => gameStats.score >= 10000 },
-      { id: 'score_50k', name: 'Elite Scorer', desc: 'Score over 50,000 points', check: () => gameStats.score >= 50000 },
+      { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 50 enemies', check: () => gameStats.enemiesDefeated >= 50 },
+      { id: 'enemy_slayer_100', name: 'Century', desc: 'Defeat 100 enemies', check: () => gameStats.enemiesDefeated >= 100 },
+      { id: 'enemy_slayer_500', name: 'Mass Destruction', desc: 'Defeat 500 enemies', check: () => gameStats.enemiesDefeated >= 500 },
+      
+      // Combo mastery
+      { id: 'combo_master', name: 'Combo Starter', desc: 'Achieve a 5-hit combo', check: () => gameStats.maxCombo >= 5 },
+      { id: 'combo_king', name: 'Combo King', desc: 'Achieve a 15-hit combo', check: () => gameStats.maxCombo >= 15 },
+      { id: 'combo_god', name: 'Combo God', desc: 'Achieve a 30-hit combo', check: () => gameStats.maxCombo >= 30 },
+      { id: 'combo_legend', name: 'Combo Legend', desc: 'Achieve a 50-hit combo', check: () => gameStats.maxCombo >= 50 },
+      
+      // Precision and skill
+      { id: 'marksman', name: 'Marksman', desc: 'Achieve 90% accuracy with 50+ attacks', check: () => gameStats.accuracy >= 0.9 && gameStats.attacksAttempted >= 50 },
+      { id: 'precision_master', name: 'Deadeye', desc: 'Achieve 95% accuracy with 100+ attacks', check: () => gameStats.accuracy >= 0.95 && gameStats.attacksAttempted >= 100 },
+      
+      // Score challenges
+      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 50,000 points', check: () => gameStats.score >= 50000 },
+      { id: 'score_100k', name: 'Elite Scorer', desc: 'Score over 100,000 points', check: () => gameStats.score >= 100000 },
+      { id: 'score_250k', name: 'Score Master', desc: 'Score over 250,000 points', check: () => gameStats.score >= 250000 },
+      { id: 'score_500k', name: 'Score Legend', desc: 'Score over 500,000 points', check: () => gameStats.score >= 500000 },
+      
+      // Idol collection
       { id: 'idol_hunter', name: 'Idol Hunter', desc: 'Collect all 3 idols in a level', check: () => (gameStats.idolSetsCompleted || 0) >= 1 },
-      { id: 'idol_raider', name: 'Relic Raider', desc: 'Collect 3 idol sets', check: () => (gameStats.idolSetsCompleted || 0) >= 3 },
-      { id: 'idol_hoarder', name: 'Idol Hoarder', desc: 'Collect 20 golden idols', check: () => (gameStats.idolsCollected || 0) >= 20 },
-      { id: 'beat_game', name: 'Victory', desc: 'Beat the game', check: () => !!gameStats.gameCompleted }
+      { id: 'idol_master', name: 'Relic Raider', desc: 'Collect 5 idol sets', check: () => (gameStats.idolSetsCompleted || 0) >= 5 },
+      { id: 'idol_hoarder', name: 'Idol Hoarder', desc: 'Collect 50 golden idols (total)', check: () => (gameStats.totalIdolsCollected || 0) >= 50 },
+      { id: 'idol_completionist', name: 'Master Collector', desc: 'Collect all idols in all 10 levels', check: () => (gameStats.idolSetsCompleted || 0) >= 10 },
+      
+      // Game completion
+      { id: 'beat_game', name: 'Victory', desc: 'Beat the game', check: () => !!gameStats.gameCompleted },
+      { id: 'complete_all_levels', name: 'Completionist', desc: 'Complete all 10 levels', check: () => (gameStats.levelsCompleted || 0) >= 10 },
+      
+      // Perfection challenges - THE REAL CHALLENGES
+      { id: 'perfect_level', name: 'Untouchable', desc: 'Complete a level without taking damage', check: () => (gameStats.perfectLevels || 0) >= 1 },
+      { id: 'perfect_3_levels', name: 'Flawless Fighter', desc: 'Complete 3 levels without taking damage', check: () => (gameStats.perfectLevels || 0) >= 3 },
+      { id: 'perfect_5_levels', name: 'Evasion Master', desc: 'Complete 5 levels without taking damage', check: () => (gameStats.perfectLevels || 0) >= 5 },
+      { id: 'no_damage_run', name: 'Shadow Master', desc: 'Beat the entire game without taking any damage', check: () => gameStats.gameCompleted && (gameStats.damageTaken || 0) === 0 },
+      
+      // Speedrun challenges
+      { id: 'speedrun_30m', name: 'Quick Runner', desc: 'Beat the game in under 30 minutes', check: () => gameStats.gameCompleted && gameStats.completionTime > 0 && gameStats.completionTime <= 1800 },
+      { id: 'speedrun_20m', name: 'Speed Demon', desc: 'Beat the game in under 20 minutes', check: () => gameStats.gameCompleted && gameStats.completionTime > 0 && gameStats.completionTime <= 1200 },
+      { id: 'speedrun_15m', name: 'Speedrunner', desc: 'Beat the game in under 15 minutes', check: () => gameStats.gameCompleted && gameStats.completionTime > 0 && gameStats.completionTime <= 900 },
+      { id: 'speedrun_10m', name: 'Time Lord', desc: 'Beat the game in under 10 minutes', check: () => gameStats.gameCompleted && gameStats.completionTime > 0 && gameStats.completionTime <= 600 },
+      
+      // Ultimate challenges
+      { id: 'perfect_speedrun', name: 'Legendary Run', desc: 'Beat the game without taking damage AND in under 20 minutes', check: () => gameStats.gameCompleted && (gameStats.damageTaken || 0) === 0 && gameStats.completionTime > 0 && gameStats.completionTime <= 1200 },
+      { id: 'the_one', name: 'The One', desc: 'Beat the game without taking damage in under 15 minutes with all idols', check: () => gameStats.gameCompleted && (gameStats.damageTaken || 0) === 0 && gameStats.completionTime > 0 && gameStats.completionTime <= 900 && (gameStats.idolSetsCompleted || 0) >= 10 }
     ];
 
     for (const achievement of checks) {
@@ -150,20 +183,53 @@
     container.appendChild(title);
 
     const achievementList = [
+      // Basic progression
       { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', icon: '🩸' },
-      { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 10 enemies', icon: '⚔️' },
-      { id: 'enemy_slayer_50', name: 'Relentless', desc: 'Defeat 50 enemies', icon: '🗡️' },
-      { id: 'combo_master', name: 'Combo Master', desc: 'Achieve a 3-hit combo', icon: '🔥' },
-      { id: 'speed_demon', name: 'Speed Demon', desc: 'Survive for 2 minutes', icon: '💨' },
-      { id: 'survivor_5m', name: 'Survivor', desc: 'Survive for 5 minutes', icon: '🛡️' },
-      { id: 'marksman', name: 'Marksman', desc: 'Achieve 80% accuracy', icon: '🎯' },
-      { id: 'precision_95', name: 'Deadeye', desc: 'Achieve 95% accuracy', icon: '👁️' },
-      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 10,000 points', icon: '💎' },
-      { id: 'score_50k', name: 'Elite Scorer', desc: 'Score over 50,000 points', icon: '🏆' },
+      { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 50 enemies', icon: '⚔️' },
+      { id: 'enemy_slayer_100', name: 'Century', desc: 'Defeat 100 enemies', icon: '🗡️' },
+      { id: 'enemy_slayer_500', name: 'Mass Destruction', desc: 'Defeat 500 enemies', icon: '💀' },
+      
+      // Combo mastery
+      { id: 'combo_master', name: 'Combo Starter', desc: 'Achieve a 5-hit combo', icon: '🔥' },
+      { id: 'combo_king', name: 'Combo King', desc: 'Achieve a 15-hit combo', icon: '👑' },
+      { id: 'combo_god', name: 'Combo God', desc: 'Achieve a 30-hit combo', icon: '⚡' },
+      { id: 'combo_legend', name: 'Combo Legend', desc: 'Achieve a 50-hit combo', icon: '🌟' },
+      
+      // Precision and skill
+      { id: 'marksman', name: 'Marksman', desc: '90% accuracy with 50+ attacks', icon: '🎯' },
+      { id: 'precision_master', name: 'Deadeye', desc: '95% accuracy with 100+ attacks', icon: '👁️' },
+      
+      // Score challenges
+      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 50,000 points', icon: '💎' },
+      { id: 'score_100k', name: 'Elite Scorer', desc: 'Score over 100,000 points', icon: '🏆' },
+      { id: 'score_250k', name: 'Score Master', desc: 'Score over 250,000 points', icon: '💰' },
+      { id: 'score_500k', name: 'Score Legend', desc: 'Score over 500,000 points', icon: '🌠' },
+      
+      // Idol collection
       { id: 'idol_hunter', name: 'Idol Hunter', desc: 'Collect all 3 idols in a level', icon: '🗿' },
-      { id: 'idol_raider', name: 'Relic Raider', desc: 'Collect 3 idol sets', icon: '🥇' },
-      { id: 'idol_hoarder', name: 'Idol Hoarder', desc: 'Collect 20 golden idols', icon: '✨' },
-      { id: 'beat_game', name: 'Victory', desc: 'Beat the game', icon: '👑' }
+      { id: 'idol_master', name: 'Relic Raider', desc: 'Collect 5 idol sets', icon: '🥇' },
+      { id: 'idol_hoarder', name: 'Idol Hoarder', desc: 'Collect 50 golden idols (total)', icon: '✨' },
+      { id: 'idol_completionist', name: 'Master Collector', desc: 'Collect all idols in all 10 levels', icon: '👑' },
+      
+      // Game completion
+      { id: 'beat_game', name: 'Victory', desc: 'Beat the game', icon: '🎉' },
+      { id: 'complete_all_levels', name: 'Completionist', desc: 'Complete all 10 levels', icon: '🏁' },
+      
+      // Perfection challenges
+      { id: 'perfect_level', name: 'Untouchable', desc: 'Complete a level without taking damage', icon: '🛡️' },
+      { id: 'perfect_3_levels', name: 'Flawless Fighter', desc: 'Complete 3 perfect levels', icon: '💫' },
+      { id: 'perfect_5_levels', name: 'Evasion Master', desc: 'Complete 5 perfect levels', icon: '🌀' },
+      { id: 'no_damage_run', name: 'Shadow Master', desc: 'Beat game without taking damage', icon: '🥷' },
+      
+      // Speedrun challenges
+      { id: 'speedrun_30m', name: 'Quick Runner', desc: 'Beat game in under 30 minutes', icon: '💨' },
+      { id: 'speedrun_20m', name: 'Speed Demon', desc: 'Beat game in under 20 minutes', icon: '⚡' },
+      { id: 'speedrun_15m', name: 'Speedrunner', desc: 'Beat game in under 15 minutes', icon: '🚀' },
+      { id: 'speedrun_10m', name: 'Time Lord', desc: 'Beat game in under 10 minutes', icon: '⏱️' },
+      
+      // Ultimate challenges
+      { id: 'perfect_speedrun', name: 'Legendary Run', desc: 'No damage AND under 20 minutes', icon: '🔱' },
+      { id: 'the_one', name: 'The One', desc: 'No damage, under 15min, all idols', icon: '👿' }
     ];
 
     for (const ach of achievementList) {
