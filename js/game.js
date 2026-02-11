@@ -1735,7 +1735,7 @@ class Game {
         }
 
         // Log death triggers
-        if (playerHit || fellOut || explosionHitPlayer) {
+        if ((playerHit && playerHit.hit) || fellOut || explosionHitPlayer) {
             console.log('=== DEATH TRIGGER ===', {
                 playerHit: playerHit ? playerHit.hit : false,
                 fellOut,
@@ -1745,7 +1745,7 @@ class Game {
             });
         }
 
-        if (playerHit || fellOut || explosionHitPlayer) {
+        if ((playerHit && playerHit.hit) || fellOut || explosionHitPlayer) {
             this._handlePlayerDeath();
         }
 
