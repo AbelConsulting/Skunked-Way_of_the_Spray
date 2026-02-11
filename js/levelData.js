@@ -18,9 +18,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS",
             spawnX: 10000 - 520,
             spawnY: 520,
-            healthMultiplier: 8.0,
+            healthMultiplier: 6.0,
             speedMultiplier: 0.9,
-            attackDamageMultiplier: 1.8
+            attackDamageMultiplier: 1.3
         },
         background: 'bg_forest',
         music: ['forest_theme', 'gameplay'],
@@ -113,9 +113,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS2",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 11.0,
+            healthMultiplier: 8.0,
             speedMultiplier: 1.0,
-            attackDamageMultiplier: 2.0
+            attackDamageMultiplier: 1.5
         },
         background: 'bg_city',
         music: ['city_theme', 'action_theme', 'gameplay'],
@@ -217,9 +217,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS3",
             spawnX: 15000 - 520,
             spawnY: 520,
-            healthMultiplier: 14.0,
-            speedMultiplier: 1.05,
-            attackDamageMultiplier: 2.2
+            healthMultiplier: 10.0,
+            speedMultiplier: 1.0,
+            attackDamageMultiplier: 1.6
         },
         background: 'bg_mountains',
         music: ['gameplay', 'action_theme'],
@@ -330,9 +330,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 17.0,
-            speedMultiplier: 1.1,
-            attackDamageMultiplier: 2.5
+            healthMultiplier: 11.0,
+            speedMultiplier: 1.05,
+            attackDamageMultiplier: 1.7
         },
         background: 'bg_cave_crystal',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
@@ -444,9 +444,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS2",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 20.0,
-            speedMultiplier: 1.25,
-            attackDamageMultiplier: 2.9
+            healthMultiplier: 12.0,
+            speedMultiplier: 1.1,
+            attackDamageMultiplier: 1.8
         },
         background: 'bg_cave_depths',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
@@ -468,37 +468,58 @@ const LEVEL_CONFIGS = [
             { x: 3400, y: 620, width: 3200, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 7000, y: 640, width: 3300, height: 40, type: 'static', tile: 'ground_tile' },
             { x: 10750, y: 630, width: 5250, height: 40, type: 'static', tile: 'ground_tile' },
-            // Reuse Level 4 layout for now
-            { x: 300, y: 550, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 600, y: 450, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 900, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1300, y: 450, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 1.8, tile: 'platform_tile' },
-            { x: 1650, y: 550, width: 140, height: 24, type: 'moving', axis: 'y', range: 120, speed: 2.2, timeOffset: 1.0, tile: 'platform_tile' },
-            { x: 2000, y: 450, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2500, y: 520, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3500, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 3850, y: 300, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4300, y: 450, width: 120, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, tile: 'platform_tile' },
-            { x: 4700, y: 550, width: 120, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, timeOffset: 1.5, tile: 'platform_tile' },
-            { x: 5100, y: 450, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5600, y: 380, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5900, y: 280, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6200, y: 380, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6500, y: 480, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6800, y: 580, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 7300, y: 500, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8400, y: 400, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 8800, y: 500, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 9300, y: 450, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 9650, y: 350, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.4, timeOffset: 1.2, tile: 'platform_tile' },
-            { x: 10000, y: 450, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, timeOffset: 2.4, tile: 'platform_tile' },
-            { x: 10500, y: 360, width: 1200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 12000, y: 460, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 12450, y: 560, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 13000, y: 480, width: 150, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, tile: 'platform_tile' },
-            { x: 13400, y: 380, width: 150, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, timeOffset: 1.5, tile: 'platform_tile' },
-            { x: 14000, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 15000, y: 450, width: 300, height: 24, type: 'static', tile: 'platform_tile' }
+
+            // Depths Entrance: Tight ledges with drop-offs
+            { x: 200, y: 530, width: 140, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 480, y: 430, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 750, y: 530, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1050, y: 400, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Sinking Columns: vertical oscillators at different phases
+            { x: 1500, y: 500, width: 110, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.0, tile: 'platform_tile' },
+            { x: 1800, y: 420, width: 110, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.4, timeOffset: 0.8, tile: 'platform_tile' },
+            { x: 2100, y: 340, width: 110, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.0, timeOffset: 1.6, tile: 'platform_tile' },
+            { x: 2400, y: 460, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Chasm Bridge: long narrow crossing
+            { x: 2900, y: 500, width: 600, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Fungal Shelves: wide stagger pattern
+            { x: 3600, y: 540, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4000, y: 440, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4350, y: 340, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4700, y: 440, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 5100, y: 540, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Echo Chamber: horizontal movers over a pit
+            { x: 5500, y: 460, width: 130, height: 24, type: 'moving', axis: 'x', range: 150, speed: 1.6, tile: 'platform_tile' },
+            { x: 5950, y: 380, width: 130, height: 24, type: 'moving', axis: 'x', range: 150, speed: 1.6, timeOffset: 1.2, tile: 'platform_tile' },
+            { x: 6400, y: 460, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Waterfall Cliff: ascending staircase
+            { x: 7200, y: 560, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7500, y: 480, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 7800, y: 400, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8100, y: 320, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8500, y: 400, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Crystal Maze: zigzag with mixed movers
+            { x: 9000, y: 500, width: 140, height: 24, type: 'moving', axis: 'y', range: 130, speed: 2.2, tile: 'platform_tile' },
+            { x: 9400, y: 380, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 9800, y: 500, width: 140, height: 24, type: 'moving', axis: 'y', range: 130, speed: 2.2, timeOffset: 1.5, tile: 'platform_tile' },
+
+            // High Ledge Run
+            { x: 10400, y: 350, width: 900, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 11600, y: 450, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 12100, y: 350, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
+
+            // Collapsing Path to Boss
+            { x: 12700, y: 480, width: 120, height: 24, type: 'moving', axis: 'x', range: 130, speed: 2.0, tile: 'platform_tile' },
+            { x: 13200, y: 400, width: 120, height: 24, type: 'moving', axis: 'x', range: 130, speed: 2.0, timeOffset: 1.0, tile: 'platform_tile' },
+
+            // Boss Arena Approach
+            { x: 13800, y: 500, width: 700, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 14800, y: 430, width: 350, height: 24, type: 'static', tile: 'platform_tile' }
         ],
         idols: [
             { x: 1700, y: 520 },
@@ -541,9 +562,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS4",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 22.0,
-            speedMultiplier: 1.2,
-            attackDamageMultiplier: 2.6
+            healthMultiplier: 13.0,
+            speedMultiplier: 1.1,
+            attackDamageMultiplier: 1.9
         },
         background: 'bg_neon',
         music: ['city_theme', 'action_theme', 'gameplay'],
@@ -626,9 +647,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 24.0,
+            healthMultiplier: 14.0,
             speedMultiplier: 1.1,
-            attackDamageMultiplier: 2.6
+            attackDamageMultiplier: 2.0
         },
         background: 'bg_cave_crystal',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
@@ -722,9 +743,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS2",
             spawnX: 16000 - 520,
             spawnY: 520,
-            healthMultiplier: 26.0,
-            speedMultiplier: 1.3,
-            attackDamageMultiplier: 3.1
+            healthMultiplier: 15.0,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.1
         },
         background: 'bg_cave_depths',
         music: ['cave_ambient', 'ambient_cave_loop'],
@@ -820,9 +841,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS3",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 28.0,
-            speedMultiplier: 1.25,
-            attackDamageMultiplier: 2.9
+            healthMultiplier: 16.0,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.2
         },
         background: 'bg_neon',
         music: ['city_theme', 'action_theme', 'gameplay'],
@@ -908,9 +929,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS4",
             spawnX: 12000 - 520,
             spawnY: 520,
-            healthMultiplier: 30.0,
-            speedMultiplier: 1.35,
-            attackDamageMultiplier: 3.3
+            healthMultiplier: 18.0,
+            speedMultiplier: 1.2,
+            attackDamageMultiplier: 2.3
         },
         background: 'bg_neon',
         music: ['boss_theme', 'action_theme', 'city_theme'],

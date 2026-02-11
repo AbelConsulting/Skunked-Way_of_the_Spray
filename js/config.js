@@ -32,7 +32,7 @@ const Config = {
     // Player settings (Ninja Skunk)
     PLAYER_SPEED: 400,
     PLAYER_JUMP_FORCE: 700,
-    PLAYER_MAX_HEALTH: 80,
+    PLAYER_MAX_HEALTH: 100,
     PLAYER_ATTACK_DAMAGE: 15,
 
     // Enemy settings
@@ -57,7 +57,7 @@ const Config = {
     // Items / pickups
     HEALTH_REGEN_ITEM_SIZE: 32,
     HEALTH_REGEN_ITEM_DURATION: 6.0, // seconds
-    HEALTH_REGEN_HP_PER_SECOND: 8.0,
+    HEALTH_REGEN_HP_PER_SECOND: 10.0,
     EXTRA_LIFE_ITEM_SIZE: 32,
     IDOL_ITEM_SIZE: 30,
     IDOL_SCORE: 250,
@@ -79,10 +79,10 @@ const Config = {
     SPEED_BOOST_MULTIPLIER: 1.5, // 150% speed
     DAMAGE_BOOST_ITEM_SIZE: 32,
     DAMAGE_BOOST_DURATION: 10.0, // seconds
-    DAMAGE_BOOST_MULTIPLIER: 3.0, // 300% damage (3x)
+    DAMAGE_BOOST_MULTIPLIER: 1.75, // 175% damage (1.75x)
 
     // Item drop rates (0.0 - 1.0, where 1.0 = 100% chance)
-    HEALTH_REGEN_DROP_RATE: 0.15, // 15% chance per enemy
+    HEALTH_REGEN_DROP_RATE: 0.20, // 20% chance per enemy
     EXTRA_LIFE_DROP_RATE: 0.03,   // 3% chance per enemy
     SPEED_BOOST_DROP_RATE: 0.0,   // Placed in levels, not dropped
     DAMAGE_BOOST_DROP_RATE: 0.0,  // Placed in levels, not dropped
@@ -100,7 +100,7 @@ const Config = {
     // Ninja Skunk Character
     CHARACTER: {
         name: "Ninja Skunk",
-        health: 80,
+        health: 100,
         speed: 400,
         jump_force: 700,
         attack_damage: 15,

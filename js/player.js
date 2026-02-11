@@ -87,7 +87,7 @@ class Player {
         // Hit feedback
         this.hitStunTimer = 0;
         this.invulnerableTimer = 0;
-        this.invulnerableDuration = 0.5;
+        this.invulnerableDuration = 1.0; // 1 second i-frames after being hit
 
         // Death animation state
         this.isDying = false;
