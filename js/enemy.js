@@ -543,27 +543,27 @@ class Enemy {
                                 if (navigator && typeof navigator.sendBeacon === 'function') {
                                     try { navigator.sendBeacon('/__touch_log', body); } catch (e) { /* ignore */ }
                                 } else {
-                                    try { fetch('/__touch_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(()=>{}); } catch (e) {}
+                                    try { fetch('/__touch_log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch((e)=>{ __err('enemy', e); }); } catch (e) { __err('enemy', e); }
                                 }
-                            } catch (e) {}
+                            } catch (e) { __err('enemy', e); }
                             // Reset counter after attempt
                             window._enemyPatrolMissingLevelCount = 0;
                         };
 
                         // Periodically send aggregated counts (every 60s)
-                        try { window._reportEnemyPatrolMissingLevelTimer = setInterval(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) {} }, 60000); } catch (e) {}
+                        try { window._reportEnemyPatrolMissingLevelTimer = setInterval(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) { __err('enemy', e); } }, 60000); } catch (e) { __err('enemy', e); }
 
                         // Ensure a final send on unload
-                        try { window.addEventListener('beforeunload', () => { try { window._reportEnemyPatrolMissingLevel(true); } catch (e) {} }); } catch (e) {}
+                        try { window.addEventListener('beforeunload', () => { try { window._reportEnemyPatrolMissingLevel(true); } catch (e) { __err('enemy', e); } }); } catch (e) { __err('enemy', e); }
 
                         // Kick off a short delayed send so low-frequency occurrences are reported quickly
-                        try { setTimeout(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) {} }, 10000); } catch (e) {}
+                        try { setTimeout(() => { try { window._reportEnemyPatrolMissingLevel(); } catch (e) { __err('enemy', e); } }, 10000); } catch (e) { __err('enemy', e); }
                     }
                     return;
                 } else {
                     if (typeof console !== 'undefined' && console.log) console.log('Enemy.patrol: used fallback window.game.level');
                 }
-            } catch (e) {}
+            } catch (e) { __err('enemy', e); }
         }
 
         const nextX = this.x + this.velocityX * dt;
@@ -1155,7 +1155,7 @@ class Enemy {
                 ctx.closePath();
                 ctx.fill();
                 ctx.restore();
-            } catch (e) {}
+            } catch (e) { __err('enemy', e); }
         }
 
         // THIRD_BASIC Kamikaze: fuse flash overlay (very brief on contact)

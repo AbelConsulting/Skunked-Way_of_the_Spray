@@ -84,8 +84,8 @@ class SpriteLoader {
         const tryLoad = async (path) => {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                try { img.decoding = 'async'; } catch (e) {}
-                try { img.crossOrigin = 'anonymous'; } catch (e) {}
+                try { img.decoding = 'async'; } catch (e) { __err('sprite', e); }
+                try { img.crossOrigin = 'anonymous'; } catch (e) { __err('sprite', e); }
                 img.onload = () => resolve(img);
                 img.onerror = () => reject(new Error('failed to load ' + path));
                 try { img.src = path; } catch (e) { reject(e); }
@@ -105,19 +105,19 @@ class SpriteLoader {
                             const bitmap = await createImageBitmap(img);
                             this.sprites[name] = bitmap;
                             this.loadedCount++;
-                            try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${bitmap.width}x${bitmap.height}`); } catch (e) {}
+                            try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${bitmap.width}x${bitmap.height}`); } catch (e) { __err('sprite', e); }
                             return bitmap;
                         } catch (e) {
                             // fallback to image element if bitmap creation fails
                             this.sprites[name] = img;
                             this.loadedCount++;
-                            try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) {}
+                            try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) { __err('sprite', e); }
                             return img;
                         }
                     } else {
                         this.sprites[name] = img;
                         this.loadedCount++;
-                        try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) {}
+                        try { if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} from ${path} -> ${img.width}x${img.height}`); } catch (e) { __err('sprite', e); }
                         return img;
                     }
                 } catch (e) {
@@ -151,9 +151,9 @@ class SpriteLoader {
         return new Promise((resolve, reject) => {
             const img = new Image();
             // Hint to the browser to decode off-main-thread where supported
-            try { img.decoding = 'async'; } catch (e) {}
+            try { img.decoding = 'async'; } catch (e) { __err('sprite', e); }
             // Allow cross-origin decoding if assets are served from CDN
-            try { img.crossOrigin = 'anonymous'; } catch (e) {}
+            try { img.crossOrigin = 'anonymous'; } catch (e) { __err('sprite', e); }
 
             img.onload = () => {
                 // Prefer creating an ImageBitmap when available to avoid
@@ -162,7 +162,7 @@ class SpriteLoader {
                     this.sprites[name] = stored;
                     try {
                         if (typeof Config !== 'undefined' && Config.DEBUG && typeof console !== 'undefined') console.log(`SpriteLoader: loaded ${name} -> ${stored.width}x${stored.height}`);
-                    } catch (e) {}
+                    } catch (e) { __err('sprite', e); }
                     this.loadedCount++;
                     resolve(stored);
                 };
@@ -346,11 +346,11 @@ class SpriteLoader {
                         img._detectedFrameStride = detectedFrameWidth + detectedPad;
                         try {
                             if (typeof Config !== 'undefined' && Config.DEBUG) console.info(`SpriteLoader: sprite ${name} width ${img.width}; detected uniform ${detectedPad}px padding (frameWidth=${detectedFrameWidth}, stride=${img._detectedFrameStride})`);
-                        } catch (e) {}
+                        } catch (e) { __err('sprite', e); }
                     } else if ((img.width % count) !== 0) {
                         try {
                             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`SpriteLoader: sprite ${name} width ${img.width} is not divisible by frameCount ${count} (frame width=${(img.width/count).toFixed(2)})`);
-                        } catch (e) {}
+                        } catch (e) { __err('sprite', e); }
                     }
             }
             // Ensure tile sprites are upscaled to 64x64 for consistent tiling
@@ -373,7 +373,7 @@ class SpriteLoader {
                     // ignore scaling errors
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('sprite', e); }
 
         // Report missing assets once
         if (this._missing && this._missing.length > 0) {
@@ -414,7 +414,7 @@ class SpriteLoader {
                 // Choose the nearest integer stride and warn — this handles
                 // sheets that include padding or fractional frames.
                 frameStride = Math.round(sheet.width / frameCount);
-                try { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`SpriteLoader: ${name} width ${sheet.width} not divisible by ${frameCount}; using inferred stride ${frameStride}`); } catch (e) {}
+                try { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`SpriteLoader: ${name} width ${sheet.width} not divisible by ${frameCount}; using inferred stride ${frameStride}`); } catch (e) { __err('sprite', e); }
             }
         }
 
@@ -508,7 +508,7 @@ class Animation {
                 dw = Math.max(1, Math.round(width));
                 dh = Math.max(1, Math.round(height));
             }
-        } catch (e) {}
+        } catch (e) { __err('sprite', e); }
 
         const sheetFrameIndex = this.frameIndices ? (this.frameIndices[this.currentFrame] || 0) : this.currentFrame;
         const sx = Math.floor(this.frameOffset + (sheetFrameIndex * this.frameStride));

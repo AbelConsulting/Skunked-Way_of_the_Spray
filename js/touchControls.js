@@ -108,7 +108,7 @@
                     if (e && e.detail && typeof e.detail.score !== 'undefined') {
                         scorePanel.textContent = 'Score: ' + e.detail.score;
                     }
-                } catch (err) {}
+                } catch (err) { __err('touch', err); }
             });
 
             // Small settings control
@@ -217,12 +217,12 @@
                         { transform: 'translateX(-50%) scale(1.06)' },
                         { transform: 'translateX(-50%) scale(1)' }
                     ], { duration: 360, easing: 'ease-out' });
-                } catch (e) {}
+                } catch (e) { __err('touch', e); }
             };
 
             // Restart button: show confirm overlay on touch/click
             const showConfirm = (e) => {
-                try { e && e.preventDefault(); } catch (err) {}
+                try { e && e.preventDefault(); } catch (err) { __err('touch', err); }
                 restartConfirm.style.display = 'block';
                 restartConfirm.style.opacity = '1';
                 pulse(restartConfirm);
@@ -236,7 +236,7 @@
                 try {
                     window.dispatchEvent(new CustomEvent('touchcontrol', { detail: { action: 'restart', down: true } }));
                     setTimeout(() => { window.dispatchEvent(new CustomEvent('touchcontrol', { detail: { action: 'restart', down: false } })); }, 60);
-                } catch (err) {}
+                } catch (err) { __err('touch', err); }
             };
 
             yesBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); pulse(yesBtn); dispatchRestart(); hideConfirm(); }, { passive: false });
@@ -248,11 +248,11 @@
             restartBtn.addEventListener('click', (e)=>{ e.preventDefault(); showConfirm(e); });
 
             // Log creation
-            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_created', { touchControls: true }); } catch (e) {}
+            try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_created', { touchControls: true }); } catch (e) { __err('touch', e); }
 
             // Show/hide restart button on game state changes
             window.addEventListener('gameStateChange', (e) => {
-                try { window && window.logTouchControlEvent && window.logTouchControlEvent('gameStateChange', { state: e && e.detail && e.detail.state }); } catch (e) {}
+                try { window && window.logTouchControlEvent && window.logTouchControlEvent('gameStateChange', { state: e && e.detail && e.detail.state }); } catch (e) { __err('touch', e); }
                 if (!e || !e.detail) return;
                 const st = e.detail.state;
                 // Update pause button icon/label when paused or resumed
@@ -266,7 +266,7 @@
                             this._pauseBtn.setAttribute('aria-label', 'Pause');
                         }
                     }
-                } catch (err) {}
+                } catch (err) { __err('touch', err); }
                 if (st === 'GAME_OVER') {
                     // Delay showing restart button until lockout expires
                     restartBtn.style.display = 'none';
@@ -277,7 +277,7 @@
                             if (window.game && window.game.state === 'GAME_OVER') {
                                 restartBtn.style.display = 'block';
                             }
-                        } catch (ex) {}
+                        } catch (ex) { __err('touch', ex); }
                     }, lockoutMs);
                 } else {
                     restartBtn.style.display = 'none';

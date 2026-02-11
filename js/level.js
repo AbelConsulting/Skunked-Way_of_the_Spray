@@ -24,8 +24,8 @@ class Level {
                     const basePath = `assets/sprites/backgrounds/${base}_bg`;
                     // Use the robust variant loader which tries webp/png and suffixes
                     try {
-                        spriteLoader.loadSpriteBest(name, basePath).then(img => { try { this.cachedSprites[name] = img; } catch (e) {} }).catch(() => {});
-                    } catch (e) {}
+                        spriteLoader.loadSpriteBest(name, basePath).then(img => { try { this.cachedSprites[name] = img; } catch (e) { __err('level', e); } }).catch((e) => { __err('level', e); });
+                    } catch (e) { __err('level', e); }
                 };
 
                 ensureLoaded(this.backgroundName);
@@ -33,7 +33,7 @@ class Level {
                     if (layer && layer.name) ensureLoaded(layer.name);
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('level', e); }
         // Per-level background parallax factor (0..1). Lower = slower (farther away).
         this.backgroundParallax = (typeof levelData.backgroundParallax !== 'undefined') ? levelData.backgroundParallax : (typeof Config !== 'undefined' ? Config.BACKGROUND_PARALLAX : 0.5);
         
@@ -164,7 +164,7 @@ class Level {
         // Mobile performance tuning: allow the same draw path, but optionally
         // disable heavy background images on very low-end devices.
         let mobilePerfMode = null;
-        try { mobilePerfMode = (typeof localStorage !== 'undefined') ? localStorage.getItem('mobilePerfMode') : null; } catch (e) {}
+        try { mobilePerfMode = (typeof localStorage !== 'undefined') ? localStorage.getItem('mobilePerfMode') : null; } catch (e) { __err('level', e); }
         const allowBackgroundImage = !(this.useMobileOptimizations && mobilePerfMode === 'low');
 
         let bgImg = null;
@@ -255,7 +255,7 @@ class Level {
                         const dx = startX + i * tileW;
                         ctx.drawImage(layerImg, 0, 0, layerImg.width, layerImg.height, dx, 0, tileW, h);
                     }
-                } catch (e) {}
+                } catch (e) { __err('level', e); }
             }
         }
 
