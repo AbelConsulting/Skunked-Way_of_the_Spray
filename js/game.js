@@ -648,11 +648,19 @@ class Game {
                     const pool = (earlyPlatforms.length > 0) ? earlyPlatforms : nonGroundPlatforms;
                     spawnPlatform = pool.reduce((a, b) => (b.x < a.x ? b : a), pool[0]);
                 }
-                const spawnX = Math.floor(spawnPlatform.x + (spawnPlatform.width - this.player.width) / 2);
-                const spawnY = spawnPlatform.y - this.player.height - 8;
-                this.player.x = spawnX;
-                this.player.y = spawnY;
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Spawn placed on platform at', this.player.x, this.player.y, 'platform:', spawnPlatform.x, spawnPlatform.y, spawnPlatform.width, spawnPlatform.height);
+                
+                // Only set spawn position if we found a valid platform
+                if (spawnPlatform) {
+                    const spawnX = Math.floor(spawnPlatform.x + (spawnPlatform.width - this.player.width) / 2);
+                    const spawnY = spawnPlatform.y - this.player.height - 8;
+                    this.player.x = spawnX;
+                    this.player.y = spawnY;
+                    if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Spawn placed on platform at', this.player.x, this.player.y, 'platform:', spawnPlatform.x, spawnPlatform.y, spawnPlatform.width, spawnPlatform.height);
+                } else {
+                    // Fallback if no suitable platform found
+                    this.player.x = 100;
+                    this.player.y = this.height - this.player.height - 8;
+                }
             } else {
                 this.player.x = 100;
                 this.player.y = this.height - this.player.height - 8;
