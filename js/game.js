@@ -1465,7 +1465,56 @@ class Game {
         
         // Falling out of level bounds should count as a death
         const fellOut = this.player && this.level && (this.player.y > (this.level.height + 120));
-        if (playerHit || fellOut) {
+
+        // Check kamikaze explosion AoE damage to player
+        let explosionHitPlayer = false;
+        if (this.enemyManager._pendingExplosions && this.enemyManager._pendingExplosions.length > 0 && this.player) {
+            const playerRect = this.player.getRect();
+            const pcx = playerRect.x + playerRect.width / 2;
+            const pcy = playerRect.y + playerRect.height / 2;
+
+            for (const explosion of this.enemyManager._pendingExplosions) {
+                const dx = explosion.x - pcx;
+                const dy = explosion.y - pcy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < explosion.radius) {
+                    const falloff = 1 - (dist / explosion.radius);
+                    const damage = Math.floor(explosion.playerDamage * falloff);
+                    if (damage > 0 && !this.player.isInvulnerable) {
+                        // Apply explosion damage
+                        const result = this.player.takeDamage(damage);
+                        if (result) explosionHitPlayer = true;
+
+                        // Screen shake for explosion
+                        this.screenShake = new ScreenShake(0.2, 8);
+
+                        // Floating damage text
+                        try {
+                            this.damageNumbers.push(new FloatingText(
+                                pcx, playerRect.y - 10,
+                                '💥 ' + damage,
+                                { color: '#FF4400', lifetime: 1.5, velocityY: -80, font: 'bold 20px Arial' }
+                            ));
+                        } catch (e) {}
+
+                        // Explosion hit spark
+                        try {
+                            const burst = new HitSpark(explosion.x, explosion.y, {
+                                particleCount: 16, speedMin: 120, speedMax: 280
+                            });
+                            for (const particle of burst.particles) {
+                                particle.color = Math.random() > 0.4 ? '#FF6600' : '#FF2200';
+                                particle.size = Utils.randomFloat(3, 6);
+                            }
+                            this.hitSparks.push(burst);
+                        } catch (e) {}
+                    }
+                }
+            }
+        }
+
+        if (playerHit || fellOut || explosionHitPlayer) {
             this._handlePlayerDeath();
         }
 

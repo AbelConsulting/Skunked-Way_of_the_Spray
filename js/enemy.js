@@ -350,7 +350,20 @@ class Enemy {
 
             // Determine state
             if (verticallyAligned && horizontalGap < this.attackRange && this.attackCooldownTimer <= 0) {
-                this.state = "ATTACK";
+                // THIRD_BASIC (Kamikaze): entering attack range triggers fuse, no melee
+                if (this.enemyType === 'THIRD_BASIC' && !this.hasDetonated) {
+                    if (!this.isExploding) {
+                        this.isExploding = true;
+                        this.fuseTimer = Config.EXPLODER_FUSE_TIME || 1.2;
+                        this.velocityX = 0;
+                        if (this.audioManager) {
+                            this.audioManager.playSound('enemy_attack', { volume: 0.6, rate: 1.4 });
+                        }
+                    }
+                    this.state = "ATTACK"; // stay in attack state but won't do melee
+                } else {
+                    this.state = "ATTACK";
+                }
             } else if (horizontalGap < this.detectionRange) {
                 this.state = "CHASE";
             } else {
@@ -714,6 +727,12 @@ class Enemy {
     }
 
     attack(dt) {
+        // THIRD_BASIC (Kamikaze): no melee attack, just stay in place during fuse
+        if (this.enemyType === 'THIRD_BASIC') {
+            this.velocityX = 0;
+            return;
+        }
+
         // Stop moving and attack
         this.velocityX = 0;
 
@@ -1006,6 +1025,87 @@ class Enemy {
                 ctx.fill();
                 ctx.restore();
             } catch (e) {}
+        }
+
+        // THIRD_BASIC Kamikaze: fuse flashing overlay
+        if (this.enemyType === 'THIRD_BASIC' && this.isExploding && !this.hasDetonated) {
+            const fuseProgress = 1 - (this.fuseTimer / (Config.EXPLODER_FUSE_TIME || 1.2));
+            // Flash faster as fuse burns down: frequency increases with progress
+            const flashFreq = 4 + fuseProgress * 16;
+            const flash = Math.sin(Date.now() * 0.001 * flashFreq * Math.PI * 2);
+            if (flash > 0) {
+                ctx.save();
+                ctx.globalAlpha = 0.3 + fuseProgress * 0.4;
+                ctx.fillStyle = '#FF2200';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.restore();
+            }
+            // \"FUSE\" text above
+            ctx.save();
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#FF4400';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            const fuseText = '💣';
+            ctx.strokeText(fuseText, this.x + this.width / 2, this.y - 14);
+            ctx.fillText(fuseText, this.x + this.width / 2, this.y - 14);
+            ctx.restore();
+        }
+
+        // THIRD_BASIC Kamikaze: draw explosion effect after detonation
+        if (this.enemyType === 'THIRD_BASIC' && this.hasDetonated) {
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            const radius = Config.EXPLODER_EXPLOSION_RADIUS || 120;
+            const progress = this.explosionAge / this.explosionDuration;
+
+            if (progress < 1) {
+                // Expanding shockwave ring
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                const ringRadius = radius * Math.min(1, progress * 1.5);
+                const ringAlpha = (1 - progress) * 0.6;
+                ctx.globalAlpha = ringAlpha;
+                ctx.strokeStyle = '#FF6600';
+                ctx.lineWidth = 4 + (1 - progress) * 8;
+                ctx.beginPath();
+                ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner glow
+                const glowAlpha = (1 - progress) * 0.4;
+                ctx.globalAlpha = glowAlpha;
+                const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, ringRadius);
+                glow.addColorStop(0, '#FFFFFF');
+                glow.addColorStop(0.3, '#FF8800');
+                glow.addColorStop(0.7, '#FF2200');
+                glow.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Draw explosion debris particles
+            if (this.explosionParticles.length > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                for (const p of this.explosionParticles) {
+                    const alpha = 1 - (p.age / p.life);
+                    ctx.globalAlpha = alpha * 0.9;
+                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+                    grad.addColorStop(0, '#FFFFFF');
+                    grad.addColorStop(0.4, p.color || '#FF6600');
+                    grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
         }
 
         // Draw health bar

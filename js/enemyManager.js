@@ -156,6 +156,9 @@ class EnemyManager {
             this.spawnEnemy(level);
         }
 
+        // Track explosions that happen this frame (for AoE damage)
+        this._pendingExplosions = [];
+
         // Update all enemies
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
@@ -163,6 +166,23 @@ class EnemyManager {
 
             // Remove dead enemies
             if (enemy.health <= 0) {
+                // THIRD_BASIC (Kamikaze): trigger detonation on death if not already detonated
+                if (enemy.enemyType === 'THIRD_BASIC' && !enemy.hasDetonated) {
+                    enemy.detonate();
+                }
+
+                // If this was a kamikaze that just detonated, record it for AoE processing
+                if (enemy.enemyType === 'THIRD_BASIC' && enemy.hasDetonated) {
+                    this._pendingExplosions.push({
+                        x: enemy.x + enemy.width / 2,
+                        y: enemy.y + enemy.height / 2,
+                        radius: Config.EXPLODER_EXPLOSION_RADIUS || 120,
+                        enemyDamage: Config.EXPLODER_EXPLOSION_ENEMY_DAMAGE || 30,
+                        playerDamage: Config.EXPLODER_EXPLOSION_DAMAGE || 25,
+                        enemy: enemy // keep ref for particles/visual
+                    });
+                }
+
                 // Try to drop an item at enemy location
                 this.tryDropItem(enemy);
                 
@@ -172,6 +192,30 @@ class EnemyManager {
             // Remove enemies that fell off the map
             else if (enemy.y > level.height + 100) {
                 this.enemies.splice(i, 1);
+            }
+        }
+
+        // Apply AoE damage from kamikaze explosions to surviving enemies
+        for (const explosion of this._pendingExplosions) {
+            for (const enemy of this.enemies) {
+                // Don't damage other kamikazes that are already detonating
+                if (enemy.enemyType === 'THIRD_BASIC' && enemy.hasDetonated) continue;
+
+                const ecx = enemy.x + enemy.width / 2;
+                const ecy = enemy.y + enemy.height / 2;
+                const dx = explosion.x - ecx;
+                const dy = explosion.y - ecy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < explosion.radius) {
+                    // Damage falls off with distance
+                    const falloff = 1 - (dist / explosion.radius);
+                    const damage = Math.floor(explosion.enemyDamage * falloff);
+                    if (damage > 0) {
+                        const knockDir = ecx > explosion.x ? 1 : -1;
+                        enemy.takeDamage(damage, knockDir, { knockback: 300 * falloff, hitStun: 0.3 });
+                    }
+                }
             }
         }
     }
