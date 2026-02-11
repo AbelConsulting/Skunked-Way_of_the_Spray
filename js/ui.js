@@ -955,6 +955,47 @@ class UI {
             }
         } catch (e) {}
 
+        // Level title display (shown for 3 seconds at level start)
+        try {
+            const now = Date.now();
+            if (this._levelTitleUntil > 0 && now < this._levelTitleUntil) {
+                const remaining = this._levelTitleUntil - now;
+                const fadeTime = 500; // Fade out in last 500ms
+                const alpha = remaining < fadeTime ? remaining / fadeTime : 1.0;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                
+                // Background panel
+                const panelW = 500;
+                const panelH = 120;
+                const panelX = (this.width - panelW) / 2;
+                const panelY = (this.height - panelH) / 2 - 50;
+                
+                // Semi-transparent background with border
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.fillRect(panelX, panelY, panelW, panelH);
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(panelX, panelY, panelW, panelH);
+                
+                // Stage number (e.g., "STAGE 1")
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 28px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(this._levelTitleText, panelX + panelW / 2, panelY + 20);
+                
+                // Level name (e.g., "Forest Outskirts")
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 36px Arial';
+                ctx.textBaseline = 'top';
+                ctx.fillText(this._levelNameText, panelX + panelW / 2, panelY + 55);
+                
+                ctx.restore();
+            }
+        } catch (e) {}
+
         // (Removed) Attack cooldown debug bar
     }
 
