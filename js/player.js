@@ -78,9 +78,11 @@ class Player {
 
         // Combo system
         this.comboCount = 0;
-        this.comboWindow = 0.4;
+        this.comboWindow = (Config.COMBO && Config.COMBO.COMBO_WINDOW) || 2.0;
         this.comboTimer = 0;
-        this.maxCombo = 3;
+        this.maxCombo = (Config.COMBO && Config.COMBO.MAX_COMBO) || 99;
+        this._lastComboTier = 0; // Track tier for milestone events
+        this._multiHitCount = 0; // Enemies hit in current attack
 
         // Hit feedback
         this.hitStunTimer = 0;
@@ -242,6 +244,7 @@ class Player {
                 this.comboCount = 1;
             }
             this.comboTimer = this.comboWindow;
+            this._multiHitCount = 0; // Reset multi-hit tracker for new attack
 
             if (this.audioManager && this.comboCount >= 2) {
                 this.audioManager.playSound('combo_level_up', 0.55);
@@ -485,6 +488,8 @@ class Player {
         this.targetVelocityX = 0;
         this.jumpsRemaining = this.maxJumps;
         this.comboCount = 0;
+        this._lastComboTier = 0;
+        this._multiHitCount = 0;
         this.hitStunTimer = 0;
         this.invulnerableTimer = 0;
 
@@ -545,6 +550,7 @@ class Player {
             this.comboTimer -= dt;
         } else {
             this.comboCount = 0;
+            this._lastComboTier = 0;
         }
 
         // Update health regeneration effect
@@ -1141,6 +1147,48 @@ class Player {
             damage *= (1 + this.idolBonuses.damage);
         }
         return Math.floor(damage);
+    }
+
+    /**
+     * Get the current score multiplier based on combo count.
+     * Scales linearly from base, capped at max.
+     */
+    getComboMultiplier() {
+        const cfg = Config.COMBO || {};
+        const base = cfg.SCORE_MULTIPLIER_BASE || 1.0;
+        const perStack = cfg.SCORE_MULTIPLIER_PER_STACK || 0.25;
+        const max = cfg.SCORE_MULTIPLIER_MAX || 10.0;
+        if (this.comboCount <= 1) return base;
+        return Math.min(base + (this.comboCount - 1) * perStack, max);
+    }
+
+    /**
+     * Called when the player hits multiple enemies in one attack.
+     * Grants bonus combo stacks and extends the combo window.
+     */
+    registerMultiHit(enemiesHit) {
+        if (enemiesHit <= 1) return;
+        const cfg = Config.COMBO || {};
+        const extraStacks = (cfg.MULTI_HIT_COMBO_BOOST || 1) * (enemiesHit - 1);
+        this.comboCount = Math.min(this.comboCount + extraStacks, this.maxCombo);
+        // Extend combo window for multi-kills
+        const windowBonus = (cfg.COMBO_WINDOW_BONUS || 0.3) * (enemiesHit - 1);
+        this.comboTimer = Math.min(this.comboTimer + windowBonus, this.comboWindow + windowBonus);
+        this._multiHitCount = enemiesHit;
+    }
+
+    /**
+     * Get current combo tier info (label, color, etc.) or null if below any tier
+     */
+    getComboTier() {
+        const tiers = (Config.COMBO && Config.COMBO.TIERS) || [];
+        let best = null;
+        for (const tier of tiers) {
+            if (this.comboCount >= tier.threshold) {
+                best = tier;
+            }
+        }
+        return best;
     }
 
     getAttackHitboxForCollision() {

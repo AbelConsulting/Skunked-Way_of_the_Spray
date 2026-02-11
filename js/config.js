@@ -142,6 +142,36 @@ const Config = {
     // Enable tile-based platform graphics when assets are present
     USE_TILE_GRAPHICS: true,
 
+    // ── Combo System ──────────────────────────────────────────────────
+    COMBO: {
+        MAX_COMBO: 99,              // Effectively uncapped
+        COMBO_WINDOW: 2.0,          // Seconds before combo resets (generous)
+        COMBO_WINDOW_BONUS: 0.3,    // Extra seconds per multi-kill in same attack
+
+        // Score multiplier = base + (comboCount * perStack), capped at max
+        SCORE_MULTIPLIER_BASE: 1.0,
+        SCORE_MULTIPLIER_PER_STACK: 0.25, // +25% per combo level
+        SCORE_MULTIPLIER_MAX: 10.0,       // 10x cap
+
+        // Multi-enemy hit bonus: flat bonus * enemiesHit for hitting 2+ in one attack
+        MULTI_HIT_BONUS_POINTS: 150,      // Per extra enemy beyond the first
+        MULTI_HIT_COMBO_BOOST: 1,         // Extra combo stacks per additional enemy
+
+        // Tier thresholds for visual/audio escalation
+        TIERS: [
+            { threshold: 3,  label: 'NICE!',       color: '#FFD93D', shake: 3  },
+            { threshold: 5,  label: 'GREAT!',      color: '#FF9500', shake: 4  },
+            { threshold: 10, label: 'AWESOME!',     color: '#FF4500', shake: 5  },
+            { threshold: 15, label: 'INCREDIBLE!',  color: '#FF00FF', shake: 6  },
+            { threshold: 20, label: 'UNSTOPPABLE!', color: '#00FFFF', shake: 7  },
+            { threshold: 30, label: 'LEGENDARY!',   color: '#FFD700', shake: 8  },
+            { threshold: 50, label: 'GOD MODE!',    color: '#FF0000', shake: 10 }
+        ],
+
+        // Screen-shake at combo tier milestones
+        SHAKE_DURATION: 0.12
+    },
+
     // Game Over screen lockout: seconds before restart/high-score input is allowed.
     // Gives the player time to see stats and the death animation without
     // accidentally skipping the screen.

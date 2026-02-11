@@ -146,6 +146,7 @@ class UI {
             { label: '⚔️  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
             { label: '⏱️  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
             { label: '🔥 Max Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
+            { label: '💥 Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
             { label: '🎯 Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
             { label: '🏺 Idols Collected', value: gameStats.idolsCollected || 0, color: '#F38181' }
         ];
@@ -282,7 +283,8 @@ class UI {
         const leftStats = [
             { label: '⚔️  Total Kills', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
             { label: '⏱️  Time', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
-            { label: '🔥 Best Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' }
+            { label: '🔥 Best Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
+            { label: '💥 Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' }
         ];
         
         leftStats.forEach((stat, i) => {
@@ -854,40 +856,102 @@ class UI {
         // Combo counter (below score, top-right area)
         try {
             if (combo && combo > 1) {
-                const comboBoxW = 120;
-                const comboBoxH = 28;
+                // ── Determine combo tier for color/style ──
+                const comboTiers = (typeof Config !== 'undefined' && Config.COMBO && Config.COMBO.TIERS) || [];
+                let tierColor = '#FFD93D';
+                let tierLabel = '';
+                for (const t of comboTiers) {
+                    if (combo >= t.threshold) { tierColor = t.color; tierLabel = t.label; }
+                }
+
+                // Scale the box for higher combos
+                const comboScale = Math.min(1.0 + (combo - 1) * 0.02, 1.4);
+                const comboBoxW = Math.floor(140 * comboScale);
+                const comboBoxH = Math.floor(34 * comboScale);
                 const comboBoxX = this.width - padding - comboBoxW;
                 const comboBoxY = padding + 40; // Below score
 
                 ctx.save();
                 
                 // Animated background based on combo level
-                const comboIntensity = Math.min(combo / 10, 1);
-                const bgAlpha = 0.6 + (comboIntensity * 0.2);
-                ctx.fillStyle = `rgba(255, ${Math.floor(100 * (1 - comboIntensity))}, 0, ${bgAlpha})`;
+                const comboIntensity = Math.min(combo / 30, 1);
+                const bgAlpha = 0.6 + (comboIntensity * 0.3);
+
+                // Background gradient for high combos
+                if (combo >= 10) {
+                    const grad = ctx.createLinearGradient(comboBoxX, comboBoxY, comboBoxX + comboBoxW, comboBoxY + comboBoxH);
+                    grad.addColorStop(0, `rgba(255, 50, 0, ${bgAlpha})`);
+                    grad.addColorStop(0.5, `rgba(255, 150, 0, ${bgAlpha})`);
+                    grad.addColorStop(1, `rgba(255, 50, 0, ${bgAlpha})`);
+                    ctx.fillStyle = grad;
+                } else {
+                    ctx.fillStyle = `rgba(255, ${Math.floor(100 * (1 - comboIntensity))}, 0, ${bgAlpha})`;
+                }
                 ctx.fillRect(comboBoxX, comboBoxY, comboBoxW, comboBoxH);
                 
-                // Glowing border for high combos
-                if (combo >= 5) {
+                // Glowing border — escalates with combo
+                if (combo >= 20) {
+                    ctx.strokeStyle = tierColor;
+                    ctx.shadowColor = tierColor;
+                    ctx.shadowBlur = 15 + Math.sin(Date.now() / 80) * 8;
+                    ctx.lineWidth = 3;
+                } else if (combo >= 10) {
+                    ctx.strokeStyle = tierColor;
+                    ctx.shadowColor = tierColor;
+                    ctx.shadowBlur = 12 + Math.sin(Date.now() / 100) * 6;
+                    ctx.lineWidth = 2.5;
+                } else if (combo >= 5) {
                     ctx.strokeStyle = '#FF6600';
                     ctx.shadowColor = '#FF6600';
                     ctx.shadowBlur = 10 + Math.sin(Date.now() / 100) * 5;
+                    ctx.lineWidth = 2;
                 } else {
                     ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 2;
                 }
-                ctx.lineWidth = 2;
                 ctx.strokeRect(comboBoxX, comboBoxY, comboBoxW, comboBoxH);
 
-                // Combo text
+                // Combo count text
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 18px Arial';
+                ctx.fillStyle = tierColor;
+                const fontSize = Math.floor(18 * comboScale);
+                ctx.font = `bold ${fontSize}px Arial`;
                 ctx.shadowColor = 'black';
-                ctx.shadowBlur = 3;
-                ctx.fillText(`COMBO x${combo}`, comboBoxX + comboBoxW / 2, comboBoxY + comboBoxH / 2);
-                
+                ctx.shadowBlur = 4;
+                ctx.fillText(`COMBO x${combo}`, comboBoxX + comboBoxW / 2, comboBoxY + comboBoxH * 0.38);
+
+                // Multiplier line underneath
+                try {
+                    const cfg = (typeof Config !== 'undefined' && Config.COMBO) || {};
+                    const base = cfg.SCORE_MULTIPLIER_BASE || 1.0;
+                    const perStack = cfg.SCORE_MULTIPLIER_PER_STACK || 0.25;
+                    const max = cfg.SCORE_MULTIPLIER_MAX || 10.0;
+                    const mult = Math.min(base + (combo - 1) * perStack, max);
+                    if (mult > 1.0) {
+                        ctx.font = `bold ${Math.floor(12 * comboScale)}px Arial`;
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.globalAlpha = 0.85;
+                        ctx.fillText(`SCORE ${mult.toFixed(1)}x`, comboBoxX + comboBoxW / 2, comboBoxY + comboBoxH * 0.75);
+                    }
+                } catch (e) {}
+
                 ctx.restore();
+
+                // Tier label below the combo box (e.g., "AWESOME!", "LEGENDARY!")
+                if (tierLabel && combo >= 5) {
+                    ctx.save();
+                    const labelPulse = 1.0 + Math.sin(Date.now() / 150) * 0.1;
+                    const labelSize = Math.floor(16 * comboScale * labelPulse);
+                    ctx.font = `bold ${labelSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillStyle = tierColor;
+                    ctx.shadowColor = tierColor;
+                    ctx.shadowBlur = 8;
+                    ctx.fillText(tierLabel, comboBoxX + comboBoxW / 2, comboBoxY + comboBoxH + 4);
+                    ctx.restore();
+                }
             }
         } catch (e) {}
 

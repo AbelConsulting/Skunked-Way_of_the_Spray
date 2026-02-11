@@ -79,6 +79,9 @@ class Game {
             enemiesDefeated: 0,
             maxCombo: 0,
             currentCombo: 0,
+            comboMultiplier: 1.0,
+            bestMultiplier: 1.0,
+            multiKills: 0,
             totalDamage: 0,
             attacksAttempted: 0,
             attacksHit: 0,
@@ -590,6 +593,9 @@ class Game {
                 enemiesDefeated: 0,
                 maxCombo: 0,
                 currentCombo: 0,
+                comboMultiplier: 1.0,
+                bestMultiplier: 1.0,
+                multiKills: 0,
                 totalDamage: 0,
                 attacksAttempted: 0,
                 attacksHit: 0,
@@ -1305,11 +1311,53 @@ class Game {
                 }
             } catch (e) {}
             this.gameStats.totalDamage += attackResult.totalDamage;
-            
-            this.score += attackResult.totalDamage * 10;
+
+            // ── Multi-enemy hit bonus ──
+            // Grants extra combo stacks + bonus score for cleaving 2+ enemies
+            if (attackResult.enemiesHit > 1 && typeof this.player.registerMultiHit === 'function') {
+                this.player.registerMultiHit(attackResult.enemiesHit);
+
+                const bonusPts = ((Config.COMBO && Config.COMBO.MULTI_HIT_BONUS_POINTS) || 150) * (attackResult.enemiesHit - 1);
+                this.score += bonusPts;
+
+                // Show "MULTI HIT" floating text
+                try {
+                    const firstEnemy = this.enemyManager.getEnemies().find(e => this.player.hitEnemies.has(e));
+                    if (firstEnemy) {
+                        this.damageNumbers.push(new FloatingText(
+                            firstEnemy.x + (firstEnemy.width || 48) / 2,
+                            firstEnemy.y - 40,
+                            `MULTI x${attackResult.enemiesHit}! +${bonusPts}`,
+                            { color: '#00FFFF', lifetime: 1.5, velocityY: -120, font: 'bold 22px Arial' }
+                        ));
+                    }
+                } catch (e) {}
+            }
+
+            // ── Combo score multiplier ──
+            const comboMult = (typeof this.player.getComboMultiplier === 'function')
+                ? this.player.getComboMultiplier() : 1.0;
+            const baseScore = attackResult.totalDamage * 10;
+            this.score += Math.floor(baseScore * comboMult);
+
             try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch(e) {}
             // trigger score pulse animation
             try { this._scorePulse = 1.0; } catch (e) {}
+
+            // Show multiplier text when above 1x
+            if (comboMult > 1.0) {
+                try {
+                    const firstEnemy = this.enemyManager.getEnemies().find(e => this.player.hitEnemies.has(e));
+                    if (firstEnemy && (!this.isMobile || this.damageNumbers.length < ((Config.MOBILE_MAX_DAMAGE_NUMBERS || 1) + 2))) {
+                        this.damageNumbers.push(new FloatingText(
+                            firstEnemy.x + (firstEnemy.width || 48) / 2,
+                            firstEnemy.y - 70,
+                            `x${comboMult.toFixed(1)}`,
+                            { color: '#FFD700', lifetime: 0.8, velocityY: -80, font: 'bold 18px Arial' }
+                        ));
+                    }
+                } catch (e) {}
+            }
             
             // Create visual feedback (limit on mobile)
             if (attackResult.enemiesHit > 0) {
@@ -1349,21 +1397,48 @@ class Game {
                 }
             }
 
+            // ── Combo tier milestones ──
+            // Show milestone text and screen shake when hitting a new tier threshold
+            try {
+                const tier = (typeof this.player.getComboTier === 'function') ? this.player.getComboTier() : null;
+                if (tier && tier.threshold > (this.player._lastComboTier || 0)) {
+                    this.player._lastComboTier = tier.threshold;
+                    // Milestone floating text
+                    this.damageNumbers.push(new FloatingText(
+                        this.player.x + (this.player.width || 48) / 2,
+                        this.player.y - 60,
+                        `🔥 ${tier.label} x${this.player.comboCount}`,
+                        { color: tier.color, lifetime: 2.0, velocityY: -130, font: 'bold 26px Arial' }
+                    ));
+                    // Tier screen shake
+                    const shakeDur = (Config.COMBO && Config.COMBO.SHAKE_DURATION) || 0.12;
+                    this.screenShake = new ScreenShake(shakeDur, tier.shake || 5);
+                    this.audioManager.playSound('combo', 0.8 + Math.min(this.player.comboCount * 0.02, 0.2));
+                }
+            } catch (e) {}
+
             // Screen shake and hit pause for impactful hits
             if (this.player.isShadowStriking) {
                 // Shadow Strike: no screen shake, no hit-pause (keeps the dash snappy)
                 this.screenShake = null;
                 this.hitPauseTimer = 0;
-            } else if (this.player.comboCount >= 3) {
-                this.screenShake = new ScreenShake(0.08, 5);
-                this.audioManager.playSound('combo', 0.8);
+            } else if (this.player.comboCount >= 3 && !(this.player._lastComboTier > (this.player._prevMilestoneTier || 0))) {
+                // Only do generic shake if we didn't just trigger a milestone shake
             }
         }
+
+        // Reset milestone tracking each frame (milestone fires once per tier crossing)
+        try { this.player._prevMilestoneTier = this.player._lastComboTier || 0; } catch(e) {}
 
         // Sync stats from other systems
         this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
         this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
         this.gameStats.currentCombo = this.player.comboCount || 0;
+        this.gameStats.comboMultiplier = (typeof this.player.getComboMultiplier === 'function') ? this.player.getComboMultiplier() : 1.0;
+        this.gameStats.bestMultiplier = Math.max(this.gameStats.bestMultiplier || 1.0, this.gameStats.comboMultiplier);
+        if (attackResult && attackResult.enemiesHit > 1) {
+            this.gameStats.multiKills = (this.gameStats.multiKills || 0) + 1;
+        }
         
         // Calculate accuracy
         if (this.gameStats.attacksAttempted > 0) {
