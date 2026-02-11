@@ -19,6 +19,13 @@
   to = "/privacy.html"
   status = 200
 
+# Service Worker must be served directly, not redirected
+[[redirects]]
+  from = "/sw.js"
+  to = "/sw.js"
+  status = 200
+
+# Catch-all redirect for SPA (must be last)
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -1932,12 +1932,16 @@ window.addEventListener('gameStateChange', function(e) {
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        // Use relative path for better compatibility with different deployment contexts
+        const swPath = './sw.js';
+        navigator.serviceWorker.register(swPath)
             .then((reg) => {
-                console.log('[PWA] Service Worker registered, scope:', reg.scope);
+                console.log('[PWA] Service Worker registered successfully, scope:', reg.scope);
             })
             .catch((err) => {
-                console.warn('[PWA] Service Worker registration failed:', err);
+                // Service worker registration can fail if sw.js isn't deployed
+                // or if the server doesn't serve it with correct MIME type
+                console.log('[PWA] Service Worker registration skipped:', err.message);
             });
     });
 }
