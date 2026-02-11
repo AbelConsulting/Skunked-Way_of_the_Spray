@@ -454,8 +454,23 @@ class Player {
         if (this.isShadowStriking) {
             return false;
         }
+        
+        // Check invulnerability timer
         if (this.invulnerableTimer <= 0) {
             this.health -= damage;
+            
+            // Safety check - never let health go below 1 on first hit
+            // (prevents instant death from massive damage)
+            if (this.health <= 0 && this.maxHealth > 0) {
+                const wasFullHealth = (this.health + damage) >= this.maxHealth;
+                if (wasFullHealth && damage >= this.maxHealth) {
+                    // Took massive damage from full health - cap it
+                    console.warn('Prevented instant death from massive damage:', damage);
+                    this.health = 1;
+                    return false;
+                }
+            }
+            
             this.invulnerableTimer = this.invulnerableDuration;
             this.hitStunTimer = 0.2;
 
