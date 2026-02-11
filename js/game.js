@@ -632,25 +632,37 @@ class Game {
             if (this.itemManager && typeof this.itemManager.reset === 'function') this.itemManager.reset();
             this.damageNumbers = [];
             this.hitSparks = [];
+            
+            // Give player brief invulnerability on game start to prevent spawn collision bugs
+            if (this.player) {
+                this.player.invulnerableTimer = 1.5;
+            }
 
             // Load the level after resets so idol spawns are preserved
             this.loadLevel(levelIndex);
             // Place player at a spawn point near the level start.
             // (Previous logic spawned on the rightmost platform on desktop, which can
             // unintentionally drop you into the boss arena on long levels.)
-            if (this.level.platforms && this.level.platforms.length > 0) {
-                let spawnPlatform;
-                const nonGroundPlatforms = this.level.platforms.filter(p => !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
-                if (nonGroundPlatforms.length > 0) {
-                    // Prefer an early platform within the first ~20% of the level.
-                    const earlyLimit = Math.max(800, Math.floor(this.level.width * 0.2));
-                    const earlyPlatforms = nonGroundPlatforms.filter(p => typeof p.x === 'number' && p.x >= 0 && p.x <= earlyLimit);
-                    const pool = (earlyPlatforms.length > 0) ? earlyPlatforms : nonGroundPlatforms;
-                    spawnPlatform = pool.reduce((a, b) => (b.x < a.x ? b : a), pool[0]);
+            if (this.level && this.level.platforms && this.level.platforms.length > 0) {
+                let spawnPlatform = null;
+                try {
+                    const nonGroundPlatforms = this.level.platforms.filter(p => p && typeof p.x === 'number' && typeof p.y === 'number' && typeof p.width === 'number' && !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
+                    if (nonGroundPlatforms.length > 0) {
+                        // Prefer an early platform within the first ~20% of the level.
+                        const earlyLimit = Math.max(800, Math.floor(this.level.width * 0.2));
+                        const earlyPlatforms = nonGroundPlatforms.filter(p => p && typeof p.x === 'number' && p.x >= 0 && p.x <= earlyLimit);
+                        const pool = (earlyPlatforms.length > 0) ? earlyPlatforms : nonGroundPlatforms;
+                        if (pool.length > 0) {
+                            spawnPlatform = pool.reduce((a, b) => (b.x < a.x ? b : a), pool[0]);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Error finding spawn platform:', e);
+                    spawnPlatform = null;
                 }
                 
                 // Only set spawn position if we found a valid platform
-                if (spawnPlatform) {
+                if (spawnPlatform && typeof spawnPlatform.x === 'number' && typeof spawnPlatform.y === 'number' && typeof spawnPlatform.width === 'number') {
                     const spawnX = Math.floor(spawnPlatform.x + (spawnPlatform.width - this.player.width) / 2);
                     const spawnY = spawnPlatform.y - this.player.height - 8;
                     this.player.x = spawnX;
@@ -659,11 +671,35 @@ class Game {
                 } else {
                     // Fallback if no suitable platform found
                     this.player.x = 100;
-                    this.player.y = this.height - this.player.height - 8;
+                    this.player.y = Math.max(100, this.height - this.player.height - 100);
+                    if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Using fallback spawn position:', this.player.x, this.player.y);
                 }
             } else {
+                // No platforms available - use safe fallback
                 this.player.x = 100;
-                this.player.y = this.height - this.player.height - 8;
+                this.player.y = Math.max(100, this.height - this.player.height - 100);
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('No platforms found, using fallback spawn:', this.player.x, this.player.y);
+            }
+            // Validate player state after initialization
+            if (!this.player || typeof this.player.x !== 'number' || typeof this.player.y !== 'number' || isNaN(this.player.x) || isNaN(this.player.y)) {
+                console.error('Player position is invalid after startGame!', { x: this.player?.x, y: this.player?.y });
+                // Force safe position
+                if (this.player) {
+                    this.player.x = 100;
+                    this.player.y = 300;
+                }
+            }
+            if (this.player && (typeof this.player.health !== 'number' || this.player.health <= 0 || isNaN(this.player.health))) {
+                console.error('Player health is invalid after startGame!', { health: this.player.health, maxHealth: this.player.maxHealth });
+                // Force valid health
+                this.player.health = this.player.maxHealth || 80;
+            }
+            if (typeof Config !== 'undefined' && Config.DEBUG) {
+                console.log('Game started successfully:', { 
+                    playerPos: { x: this.player.x, y: this.player.y }, 
+                    playerHealth: this.player.health,
+                    levelSize: { width: this.level.width, height: this.level.height }
+                });
             }
         
                 await this.ensureLevelMusic();
@@ -1612,7 +1648,11 @@ class Game {
         }
         
         // Falling out of level bounds should count as a death
-        const fellOut = this.player && this.level && (this.player.y > (this.level.height + 120));
+        // But only if player has valid coordinates and not during initial spawn invulnerability
+        const fellOut = this.player && this.level && 
+                       typeof this.player.y === 'number' && !isNaN(this.player.y) &&
+                       this.player.invulnerableTimer <= 0 &&
+                       (this.player.y > (this.level.height + 120));
 
         // Check kamikaze explosion AoE damage to player
         let explosionHitPlayer = false;
@@ -1685,6 +1725,14 @@ class Game {
 
     _handlePlayerDeath() {
         if (this.isRespawning || !this.player || this.player.isDying || this.state !== 'PLAYING') return;
+        
+        // Prevent death during initial spawn invulnerability window
+        if (this.player.invulnerableTimer > 0) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) {
+                console.log('Death prevented - player is invulnerable');
+            }
+            return;
+        }
 
         // Player died - check for remaining lives
         this.lives--;
