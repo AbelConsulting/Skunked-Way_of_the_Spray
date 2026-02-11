@@ -1303,6 +1303,11 @@ class Game {
         // Check player attacks hitting enemies
         const attackResult = this.enemyManager.checkPlayerAttack(this.player);
         if (attackResult.hit) {
+            // Increment combo on successful hit (1 stack per attack, multi-hit bonus handled separately)
+            if (typeof this.player.incrementCombo === 'function') {
+                this.player.incrementCombo();
+            }
+
             // Track attack statistics (count hits once per attack)
             try {
                 if (this.player && !this.player._attackDidHit) {

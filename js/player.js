@@ -237,18 +237,8 @@ class Player {
             this.attackHitbox.height = this.defaultAttackHeight;
             this._updateAttackHitboxPosition();
 
-            // Update combo
-            if (this.comboTimer > 0) {
-                this.comboCount = Math.min(this.comboCount + 1, this.maxCombo);
-            } else {
-                this.comboCount = 1;
-            }
-            this.comboTimer = this.comboWindow;
-            this._multiHitCount = 0; // Reset multi-hit tracker for new attack
-
-            if (this.audioManager && this.comboCount >= 2) {
-                this.audioManager.playSound('combo_level_up', 0.55);
-            }
+            // Reset multi-hit tracker for new attack
+            this._multiHitCount = 0;
 
             // Play attack sound
             if (this.audioManager) {
@@ -1175,6 +1165,27 @@ class Player {
         const windowBonus = (cfg.COMBO_WINDOW_BONUS || 0.3) * (enemiesHit - 1);
         this.comboTimer = Math.min(this.comboTimer + windowBonus, this.comboWindow + windowBonus);
         this._multiHitCount = enemiesHit;
+    }
+
+    /**
+     * Increment combo when landing a hit on an enemy.
+     * Called from game.js when attackResult.hit is true.
+     * Adds 1 combo stack per successful attack (multi-hit bonus is handled separately).
+     */
+    incrementCombo() {
+        if (this.comboTimer > 0) {
+            // Continue combo
+            this.comboCount = Math.min(this.comboCount + 1, this.maxCombo);
+        } else {
+            // Start new combo
+            this.comboCount = 1;
+        }
+        this.comboTimer = this.comboWindow;
+
+        // Play combo level up sound for combo >= 2
+        if (this.audioManager && this.comboCount >= 2) {
+            this.audioManager.playSound('combo_level_up', 0.55);
+        }
     }
 
     /**
