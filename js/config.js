@@ -38,7 +38,7 @@ const Config = {
     // Enemy settings
     ENEMY_SPEED: 150,
     ENEMY_HEALTH: 50,
-    ENEMY_ATTACK_DAMAGE: 10,
+    ENEMY_ATTACK_DAMAGE: 15,
     ENEMY_POINTS: 100,
 
     // Enemy AI behavior

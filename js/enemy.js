@@ -33,25 +33,25 @@ class Enemy {
             this.health = Math.floor(Config.ENEMY_HEALTH * 0.8); // 80% health
             this.maxHealth = this.health;
             this.speed = Config.ENEMY_SPEED * 1.5; // 50% faster
-            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 0.8); // Fast but weaker hits
             this.points = Math.floor(Config.ENEMY_POINTS * 1.2); // 20% more points
         } else if (this.enemyType === "SECOND_BASIC") {
             this.health = Math.floor(Config.ENEMY_HEALTH * 1.5); // 150% health
             this.maxHealth = this.health;
             this.speed = Config.ENEMY_SPEED * 0.7; // 30% slower
-            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.3); // Tanky, hits hard
             this.points = Math.floor(Config.ENEMY_POINTS * 1.5); // 50% more points
         } else if (this.enemyType === "THIRD_BASIC") {
             this.health = Math.floor(Config.ENEMY_HEALTH * 0.6); // Low health
             this.maxHealth = this.health;
             this.speed = Config.ENEMY_SPEED * 2.5; // Very fast
-            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.2); // Speed + sting
             this.points = Math.floor(Config.ENEMY_POINTS * 1.8); // Reward speed threat
         } else if (this.enemyType === "FOURTH_BASIC") {
             this.health = Math.floor(Config.ENEMY_HEALTH * 1.2); // Slightly more health
             this.maxHealth = this.health;
             this.speed = 0; // No horizontal movement
-            this.attackDamage = Config.ENEMY_ATTACK_DAMAGE;
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.5); // Stationary but punishing
             this.points = Math.floor(Config.ENEMY_POINTS * 2.0); // High reward for unique threat
         } else {
             this.health = Config.ENEMY_HEALTH;
