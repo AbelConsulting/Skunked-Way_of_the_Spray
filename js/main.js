@@ -46,25 +46,25 @@ class GameApp {
                 if (typeof window !== 'undefined' && window._vrControllersEnabled === true) {
                     this._primeGamepadInput(reason);
                 }
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
         };
 
         try {
             window.setVrControllersEnabled = (enabled) => {
                 const isOn = !!enabled;
-                try { window._vrControllersEnabled = isOn; } catch (e) {}
-                try { localStorage.setItem('vrControllers', isOn ? '1' : '0'); } catch (e) {}
+                try { window._vrControllersEnabled = isOn; } catch (e) { __err('main', e); }
+                try { localStorage.setItem('vrControllers', isOn ? '1' : '0'); } catch (e) { __err('main', e); }
                 if (isOn) prime('enable');
                 else this._clearGamepadKeys();
                 // Reset debug flag so we can see the state change in console
-                try { this._vrDebugOnce = null; } catch (e) {}
+                try { this._vrDebugOnce = null; } catch (e) { __err('main', e); }
                 try {
                     window.dispatchEvent(new CustomEvent('vrControllersToggle', { detail: { enabled: isOn } }));
-                } catch (e) {}
+                } catch (e) { __err('main', e); }
                 return isOn;
             };
             window.primeVrControllers = () => prime('manual');
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
 
         try {
             window.addEventListener('gamepadconnected', (e) => {
@@ -76,17 +76,17 @@ class GameApp {
                         if (!window._vrControllersEnabled) {
                             console.log('[VR] Oculus/Quest controller connected – auto-enabling:', gp.id);
                             window._vrControllersEnabled = true;
-                            try { localStorage.setItem('vrControllers', '1'); } catch (e) {}
+                            try { localStorage.setItem('vrControllers', '1'); } catch (e) { __err('main', e); }
                             this._disableTouchControlsForVr();
                         }
                     }
-                } catch (ex) {}
+                } catch (ex) { __err('main', ex); }
             });
             window.addEventListener('gamepaddisconnected', () => {
                 // Release any stuck keys when a controller disconnects
                 this._clearGamepadKeys();
             });
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
 
         // On Quest browser, DON'T auto-enable gamepad mode eagerly.
         // In 2D browsing mode the controllers act as laser-pointers and
@@ -104,7 +104,7 @@ class GameApp {
                 // Attempt the WebXR gamepad bridge after a user gesture
                 this._tryWebXRGamepadBridge();
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
     }
 
     /** Detect Meta Quest / Oculus browser from user agent */
@@ -135,20 +135,20 @@ class GameApp {
                 console.log('[VR] Skipping touch-control disable – no gamepad in navigator.getGamepads()');
                 return;
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
 
-        try { window._vrTouchControlsDisabled = true; } catch (e) {}
+        try { window._vrTouchControlsDisabled = true; } catch (e) { __err('main', e); }
         try {
             const tc = document.getElementById('touch-controls');
             if (tc) {
-                try { window._forceTouchControls = false; } catch (e) {}
-                try { window._touchControlsLockUntil = 0; } catch (e) {}
-                try { window._touchControlsVisibilityCount = 0; } catch (e) {}
+                try { window._forceTouchControls = false; } catch (e) { __err('main', e); }
+                try { window._touchControlsLockUntil = 0; } catch (e) { __err('main', e); }
+                try { window._touchControlsVisibilityCount = 0; } catch (e) { __err('main', e); }
                 tc.classList.remove('visible');
                 tc.style.pointerEvents = 'none';
                 tc.style.display = 'none';
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
     }
 
     // ── WebXR Gamepad Bridge ──────────────────────────────────────
@@ -222,7 +222,7 @@ class GameApp {
                 if (!window._vrControllersEnabled) {
                     console.log('[VR-XR] Controller found via WebXR – enabling VR mode, hand:', hand);
                     window._vrControllersEnabled = true;
-                    try { localStorage.setItem('vrControllers', '1'); } catch (e) {}
+                    try { localStorage.setItem('vrControllers', '1'); } catch (e) { __err('main', e); }
                     this._disableTouchControlsForVr();
                 }
 
@@ -261,18 +261,18 @@ class GameApp {
                     if (this.game) {
                         const st = this.game.state;
                         if (st === 'MENU' || st === 'VICTORY') {
-                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                             this.game.startGame(0);
-                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
+                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
                         } else if (st === 'GAME_OVER') {
                             if (typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
-                                try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                                try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                                 this.game.startGame(0);
-                                try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
+                                try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
                             }
                         }
                     }
-                } catch (e) {}
+                } catch (e) { __err('main', e); }
             }
 
             return anyButton;
@@ -296,7 +296,7 @@ class GameApp {
                 const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
                 const anyPad = pads.some(p => !!p);
                 if (anyPad) {
-                    try { window._vrControllersDetected = true; } catch (e) {}
+                    try { window._vrControllersDetected = true; } catch (e) { __err('main', e); }
                     if (this._gamepadPrimeTimer) {
                         clearInterval(this._gamepadPrimeTimer);
                         this._gamepadPrimeTimer = null;
@@ -375,7 +375,7 @@ class GameApp {
             if (this.game && this.game._forcedDpr) {
                 finalDpr = Math.max(1, Math.min(finalDpr, this.game._forcedDpr));
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
 
         // Reduce effective resolution more aggressively on small devices
         const scaleReduction = isMobileDevice ? (Config.MOBILE_DPR_SCALE_REDUCTION || 0.7) : 1.0;
@@ -428,7 +428,7 @@ class GameApp {
         const finalEffectiveCssHeight = Math.max(Math.max(1, cssHeight - cappedOverlayH), minEffective);
 
         // Log adjustments for diagnostics (non-intrusive)
-        try { window && window.logTouchControlEvent && window.logTouchControlEvent('adjustCanvas_mobile_viewClamp', { cssHeight, overlayH, cappedOverlayH, finalEffectiveCssHeight }); } catch (e) {}
+        try { window && window.logTouchControlEvent && window.logTouchControlEvent('adjustCanvas_mobile_viewClamp', { cssHeight, overlayH, cappedOverlayH, finalEffectiveCssHeight }); } catch (e) { __err('main', e); }
 
         // Keep the visual CSS size of the canvas unchanged to avoid
         // interfering with layout/asset code that expects the normal
@@ -493,7 +493,7 @@ class GameApp {
                         this._lastStaticRender = now;
                     }
                 }
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
         }
     }
 
@@ -533,15 +533,15 @@ class GameApp {
                         if (fps < low) mode = 'low';
                         else if (fps < mid) mode = 'mid';
 
-                        try { console.log('FPS probe result', { fps: Math.round(fps), avgDt, frames, samples: samples.length }); } catch (e) {}
-                        try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileFpsProbe', { fps: Math.round(fps), mode }); } catch (e) {}
+                        try { console.log('FPS probe result', { fps: Math.round(fps), avgDt, frames, samples: samples.length }); } catch (e) { __err('main', e); }
+                        try { window && window.logTouchControlEvent && window.logTouchControlEvent('mobileFpsProbe', { fps: Math.round(fps), mode }); } catch (e) { __err('main', e); }
                         // Apply mode only when forced or when no persisted pref set
                         try {
                             const pm = localStorage.getItem('mobilePerfMode');
                             if (force || !pm) {
-                                try { window.setMobilePerformanceMode(mode); } catch (e) {}
+                                try { window.setMobilePerformanceMode(mode); } catch (e) { __err('main', e); }
                             }
-                        } catch (e) {}
+                        } catch (e) { __err('main', e); }
                         resolve(mode);
                         return;
                     }
@@ -549,7 +549,7 @@ class GameApp {
                 };
                 rafId = requestAnimationFrame(onFrame);
                 // timeout safety
-                setTimeout(() => { try { if (rafId) cancelAnimationFrame(rafId); } catch (e) {}; resolve(null); }, duration + 1200);
+                setTimeout(() => { try { if (rafId) cancelAnimationFrame(rafId); } catch (e) { __err('main', e); }; resolve(null); }, duration + 1200);
             } catch (e) { resolve(null); }
         });
     }
@@ -560,11 +560,11 @@ class GameApp {
                 window.triggerKeyEvent(key, type);
                 return;
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
         try {
             const event = new KeyboardEvent(type, { key, bubbles: true, cancelable: true });
             window.dispatchEvent(event);
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
     }
 
     _setKeyState(key, isDown) {
@@ -584,7 +584,7 @@ class GameApp {
                     this._sendKeyEvent(k, 'keyup');
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
     }
 
     _getButtonPressed(gamepad, index) {
@@ -664,11 +664,11 @@ class GameApp {
                     }
                 }
             }
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
         
         // If VR was explicitly disabled, don't process gamepad input at all
         if (vrExplicitlySet && !vrEnabled) {
-            try { if (this._vrDebugOnce !== 'disabled') { console.log('[VR] Controllers explicitly disabled - ignoring gamepad input'); this._vrDebugOnce = 'disabled'; } } catch (e) {}
+            try { if (this._vrDebugOnce !== 'disabled') { console.log('[VR] Controllers explicitly disabled - ignoring gamepad input'); this._vrDebugOnce = 'disabled'; } } catch (e) { __err('main', e); }
             return;
         }
         
@@ -693,7 +693,7 @@ class GameApp {
                     }
                     // Auto-disable touch controls when VR controllers take over
                     this._disableTouchControlsForVr();
-                } catch (e) {}
+                } catch (e) { __err('main', e); }
             } else {
                 return;
             }
@@ -705,7 +705,7 @@ class GameApp {
                 console.log('[VR] Processing gamepad input - vrEnabled:', vrEnabled, 'hasXboxPad:', hasXboxPad, 'hasOculusPad:', hasOculusPad); 
                 this._vrDebugOnce = 'enabled'; 
             } 
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
 
         const movePad = leftPad || rightPad;
         const actionPad = rightPad || leftPad;
@@ -786,21 +786,21 @@ class GameApp {
                 if (this.game) {
                     const st = this.game.state;
                     if (st === 'MENU' || st === 'VICTORY') {
-                        try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                        try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                         this.game.startGame(0);
-                        try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
-                        try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) {}
+                        try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
+                        try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) { __err('main', e); }
                     } else if (st === 'GAME_OVER') {
                         if (typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
-                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) {}
+                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                             this.game.startGame(0);
-                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) {}
-                            try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) {}
+                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
+                            try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) { __err('main', e); }
                         }
                     }
                 }
             } catch (e) {
-                try { console.warn('[Gamepad] startGame from controller failed', e); } catch (ex) {}
+                try { console.warn('[Gamepad] startGame from controller failed', e); } catch (ex) { __err('main', ex); }
             }
         }
         // Release the synthetic Enter on falling edge
@@ -825,7 +825,7 @@ class GameApp {
                         if (startBtn) startBtn.addEventListener('click', () => {
                             window._allowFileStart = true;
                             fileOverlay.style.display = 'none';
-                            try { console.log('User opted to start anyway on file:// (audio may be disabled)'); } catch (e) {}
+                            try { console.log('User opted to start anyway on file:// (audio may be disabled)'); } catch (e) { __err('main', e); }
                         });
                     } else {
                         // Fallback to showing error-overlay if file-protocol overlay isn't present
@@ -839,8 +839,8 @@ class GameApp {
 
                     // Set a flag so later asset-loading can gracefully skip audio
                     window._fileProtocol = true;
-                    try { console.warn('Running from file:// — audio and some assets may not load. You can click "Start Anyway" to continue in a degraded mode.'); } catch (e) {}
-                } catch (e) {}
+                    try { console.warn('Running from file:// — audio and some assets may not load. You can click "Start Anyway" to continue in a degraded mode.'); } catch (e) { __err('main', e); }
+                } catch (e) { __err('main', e); }
             }
 
             // Load all assets
@@ -899,10 +899,10 @@ class GameApp {
                     // Apply immediate changes
                     if (this.isMobile) {
                         Config.FPS = Math.min(Config.FPS || 60, Config.MOBILE_FPS || 30);
-                        try { this.adjustCanvasForMobile(); } catch (e) {}
+                        try { this.adjustCanvasForMobile(); } catch (e) { __err('main', e); }
                     }
-                    try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Mobile performance mode set to', mode, { MOBILE_FPS: Config.MOBILE_FPS, MOBILE_DPR_SCALE_REDUCTION: Config.MOBILE_DPR_SCALE_REDUCTION }); } catch (e) {}
-                    try { localStorage.setItem('mobilePerfMode', mode); } catch (e) {}
+                    try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Mobile performance mode set to', mode, { MOBILE_FPS: Config.MOBILE_FPS, MOBILE_DPR_SCALE_REDUCTION: Config.MOBILE_DPR_SCALE_REDUCTION }); } catch (e) { __err('main', e); }
+                    try { localStorage.setItem('mobilePerfMode', mode); } catch (e) { __err('main', e); }
                     return true;
                 } catch (e) { console.warn('setMobilePerformanceMode failed', e); return false; }
             };
@@ -913,7 +913,7 @@ class GameApp {
                 if (pm && typeof window.setMobilePerformanceMode === 'function') {
                     window.setMobilePerformanceMode(pm);
                 }
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
 
             // Create game instance (pass mobile flag)
             this.game = new Game(this.canvas, this.audioManager, this.isMobile);
@@ -924,7 +924,7 @@ class GameApp {
             // automated tests don't hang if later optional steps fail.
             try {
                 if (typeof window.gameReady === 'undefined') window.gameReady = true;
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
 
             // Load extra SFX after the game is live to smooth startup.
             this.loadDeferredAudio();
@@ -986,7 +986,7 @@ class GameApp {
                         am.playSound && am.playSound('ui_hover', 0.4);
                     });
                 });
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
 
             // --- Start Menu Music ---
             try {
@@ -1007,11 +1007,11 @@ class GameApp {
                     Config.MOBILE_FPS = Math.min(Config.MOBILE_FPS || 40, 30);
                     // Apply now if mobile mode already active
                     if (this.isMobile && typeof window.setMobilePerformanceMode === 'function') {
-                        try { window.setMobilePerformanceMode('mid'); } catch (e) {}
+                        try { window.setMobilePerformanceMode('mid'); } catch (e) { __err('main', e); }
                     }
-                    try { console.log('Applied iPad-Safari conservative DPR/FPS settings', { forcedDpr: this.game._forcedDpr, MOBILE_DPR_SCALE_REDUCTION: Config.MOBILE_DPR_SCALE_REDUCTION, MOBILE_FPS: Config.MOBILE_FPS }); } catch (e) {}
+                    try { console.log('Applied iPad-Safari conservative DPR/FPS settings', { forcedDpr: this.game._forcedDpr, MOBILE_DPR_SCALE_REDUCTION: Config.MOBILE_DPR_SCALE_REDUCTION, MOBILE_FPS: Config.MOBILE_FPS }); } catch (e) { __err('main', e); }
                 }
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
 
             // Allow overriding mobile parallax via URL or runtime change for quick tuning.
             // URL: ?mobileParallax=0.2  (applies when app initializes)
@@ -1028,11 +1028,11 @@ class GameApp {
                         const snum = parseFloat(stored);
                         if (!Number.isNaN(snum)) return snum;
                     }
-                } catch (e) {}
+                } catch (e) { __err('main', e); }
                 return null;
             })();
             if (initMobileParallax !== null && this.isMobile) {
-                try { Config.BACKGROUND_PARALLAX_MOBILE = initMobileParallax; console.log('Applied mobileParallax override from URL/localStorage', initMobileParallax); } catch (e) {}
+                try { Config.BACKGROUND_PARALLAX_MOBILE = initMobileParallax; console.log('Applied mobileParallax override from URL/localStorage', initMobileParallax); } catch (e) { __err('main', e); }
             }
 
             // Optionally apply mobile performance preset from URL: ?mobilePerf=low|mid|high
@@ -1040,9 +1040,9 @@ class GameApp {
                 const params = new URLSearchParams(location.search);
                 const mp = params.get('mobilePerf');
                 if (mp && this.isMobile && typeof window.setMobilePerformanceMode === 'function') {
-                    try { window.setMobilePerformanceMode(mp); console.log('Applied mobile performance preset from URL', mp); } catch (e) {}
+                    try { window.setMobilePerformanceMode(mp); console.log('Applied mobile performance preset from URL', mp); } catch (e) { __err('main', e); }
                 }
-            } catch (e) {}
+            } catch (e) { __err('main', e); }
 
             // Auto-detect low-end mobile devices and apply conservative presets
             try {
@@ -1054,13 +1054,13 @@ class GameApp {
                         const sw = Math.min(window.screen.width, window.screen.height) || 0;
                         // Heuristic: low-end if <=2 logical cores or <=2GB RAM or small screen or low DPR
                         if (hw <= 2 || dm <= 2 || sw <= 360 || dpr <= 1) return true;
-                    } catch (e) {}
+                    } catch (e) { __err('main', e); }
                     return false;
                 };
                 const pm = localStorage.getItem('mobilePerfMode');
                 let autoAppliedLow = false;
                 if (this.isMobile && !pm && detectLowEndDevice()) {
-                    try { window.setMobilePerformanceMode('low'); console.log('Auto-applied mobilePerf=low based on device heuristics'); autoAppliedLow = true; } catch (e) {}
+                    try { window.setMobilePerformanceMode('low'); console.log('Auto-applied mobilePerf=low based on device heuristics'); autoAppliedLow = true; } catch (e) { __err('main', e); }
                 }
                 // If on mobile and no preset persisted and heuristics didn't auto-apply, run a short FPS probe
                 try {
@@ -1069,11 +1069,11 @@ class GameApp {
                     if (this.isMobile && !pm && !autoAppliedLow) {
                         // Delay probe slightly so rendering has stabilized
                         setTimeout(() => {
-                            try { this.runMobileFpsProbe(forceProbe).then(mode => { if (mode) console.log('Probe selected mode', mode); }).catch(()=>{}); } catch (e) {}
+                            try { this.runMobileFpsProbe(forceProbe).then(mode => { if (mode) console.log('Probe selected mode', mode); }).catch((e)=>{ __err('main', e); }); } catch (e) { __err('main', e); }
                         }, 200);
                     }
-                } catch (e) {}
-            } catch (e) {}
+                } catch (e) { __err('main', e); }
+            } catch (e) { __err('main', e); }
 
             // Expose helpers to change mobile parallax at runtime and persist choice
             window.setMobileParallax = (val, persist = true) => {
@@ -1165,7 +1165,7 @@ class GameApp {
                             // Create a Game instance if not present
                             if (!this.game) {
                                 this.game = new Game(this.canvas, this.audioManager, this.isMobile);
-                                try { window.game = this.game; window.gameApp = this; } catch (e) {}
+                                try { window.game = this.game; window.gameApp = this; } catch (e) { __err('main', e); }
                             }
 
                             // Hide overlay and loading screen
@@ -1218,7 +1218,7 @@ class GameApp {
         // Load sprites, while polling SpriteLoader counters to keep the bar moving
         const spritePromise = spriteLoader.loadAllSprites();
         const spritePoll = setInterval(() => {
-            try { computeAndSetProgress(); } catch (e) {}
+            try { computeAndSetProgress(); } catch (e) { __err('main', e); }
         }, 50);
         await spritePromise;
         clearInterval(spritePoll);
@@ -1299,13 +1299,13 @@ class GameApp {
 
         // If running from file://, skip audio loading (browsers often block it) unless user clicked "Start Anyway"
         if (window._fileProtocol && !window._allowFileStart) {
-            try { console.warn('File protocol detected: skipping audio asset loading. Click "Start Anyway" to attempt enabling audio.'); } catch (e) {}
+            try { console.warn('File protocol detected: skipping audio asset loading. Click "Start Anyway" to attempt enabling audio.'); } catch (e) { __err('main', e); }
             // Treat skipped audio as "done" for progress purposes
             audioLoaded = audioTotal;
             computeAndSetProgress();
         } else {
             // Enable audio on first user interaction (required by browsers)
-            const initAudio = () => { try { this.audioManager.initialize(); } catch (e) {} };
+            const initAudio = () => { try { this.audioManager.initialize(); } catch (e) { __err('main', e); } };
             window.addEventListener('keydown', initAudio, { once: true });
             window.addEventListener('mousedown', initAudio, { once: true });
             // Mobile / touch devices may never emit mousedown/keydown.
@@ -1347,10 +1347,10 @@ class GameApp {
         this.running = false;
         try {
             if (this.audioManager && typeof this.audioManager.pause === 'function') this.audioManager.pause();
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
         try {
             if (this.game && typeof this.game.pause === 'function') this.game.pause();
-        } catch (e) {}
+        } catch (e) { __err('main', e); }
     }
 
     start() {
@@ -1369,9 +1369,9 @@ class GameApp {
         if (!this.running) return;
 
         // Poll gamepads once per frame before update
-        try { this._handleGamepadInput(); } catch (e) {}
+        try { this._handleGamepadInput(); } catch (e) { __err('main', e); }
         // Also poll XR input sources if the WebXR bridge is active
-        try { this._pollXRInputSources(); } catch (e) {}
+        try { this._pollXRInputSources(); } catch (e) { __err('main', e); }
 
         // Throttle to target FPS to save CPU on mobile
         const step = 1 / Config.FPS;
