@@ -328,6 +328,66 @@
             justify-content: center;
         }
 
+        .pause-volume-controls {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .volume-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-row label {
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+            min-width: 65px;
+            text-align: right;
+        }
+
+        .volume-row input[type=range] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-row input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(80,255,244,0.9);
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+
+        .volume-row input[type=range]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(80,255,244,0.9);
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+
+        .volume-row .volume-value {
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            min-width: 36px;
+            text-align: left;
+        }
+
         #mobile-restart-btn {
             padding: 15px 40px;
             font-size: 1.5rem;
@@ -523,6 +583,18 @@
         <div id="pause-overlay" style="display:none;">
             <div class="pause-panel">
                 <h1 class="pause-title">PAUSED</h1>
+                <div class="pause-volume-controls">
+                    <div class="volume-row">
+                        <label for="sfx-volume">🔊 SFX</label>
+                        <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                        <span class="volume-value" id="sfx-volume-value">70%</span>
+                    </div>
+                    <div class="volume-row">
+                        <label for="music-volume">🎵 Music</label>
+                        <input type="range" id="music-volume" min="0" max="100" value="50">
+                        <span class="volume-value" id="music-volume-value">50%</span>
+                    </div>
+                </div>
                 <div class="pause-actions">
                     <button id="resume-btn" class="menu-btn menu-btn--primary">Resume</button>
                     <button id="view-highscores-btn" title="View High Scores" class="menu-btn">🏆 High Scores</button>

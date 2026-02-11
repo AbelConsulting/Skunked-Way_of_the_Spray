@@ -929,6 +929,72 @@ class GameApp {
             // Load extra SFX after the game is live to smooth startup.
             this.loadDeferredAudio();
 
+            // --- Wire up Volume Sliders in Pause Menu ---
+            try {
+                const sfxSlider = document.getElementById('sfx-volume');
+                const musicSlider = document.getElementById('music-volume');
+                const sfxValSpan = document.getElementById('sfx-volume-value');
+                const musicValSpan = document.getElementById('music-volume-value');
+                const am = this.audioManager;
+
+                // Restore persisted volume preferences
+                const savedSfx = localStorage.getItem('sfxVolume');
+                const savedMusic = localStorage.getItem('musicVolume');
+                if (savedSfx !== null) {
+                    const v = parseInt(savedSfx, 10);
+                    if (!isNaN(v)) {
+                        if (sfxSlider) sfxSlider.value = v;
+                        if (sfxValSpan) sfxValSpan.textContent = v + '%';
+                        am.setSoundVolume && am.setSoundVolume(v / 100);
+                    }
+                }
+                if (savedMusic !== null) {
+                    const v = parseInt(savedMusic, 10);
+                    if (!isNaN(v)) {
+                        if (musicSlider) musicSlider.value = v;
+                        if (musicValSpan) musicValSpan.textContent = v + '%';
+                        am.setMusicVolume && am.setMusicVolume(v / 100);
+                    }
+                }
+
+                if (sfxSlider) {
+                    sfxSlider.addEventListener('input', (e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (sfxValSpan) sfxValSpan.textContent = val + '%';
+                        am.setSoundVolume && am.setSoundVolume(val / 100);
+                        localStorage.setItem('sfxVolume', val);
+                    });
+                }
+                if (musicSlider) {
+                    musicSlider.addEventListener('input', (e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (musicValSpan) musicValSpan.textContent = val + '%';
+                        am.setMusicVolume && am.setMusicVolume(val / 100);
+                        // Also adjust ambient volume to match music volume
+                        am.setAmbientVolume && am.setAmbientVolume(val / 100 * 0.7);
+                        localStorage.setItem('musicVolume', val);
+                    });
+                }
+            } catch (e) { console.warn('Volume slider wiring failed:', e); }
+
+            // --- Wire up UI Hover Sounds on Menu Buttons ---
+            try {
+                const hoverButtons = document.querySelectorAll('.menu-btn, #pause-overlay button, #pause-overlay .menu-btn');
+                const am = this.audioManager;
+                hoverButtons.forEach(btn => {
+                    btn.addEventListener('mouseenter', () => {
+                        am.playSound && am.playSound('ui_hover', 0.4);
+                    });
+                });
+            } catch (e) {}
+
+            // --- Start Menu Music ---
+            try {
+                if (this.game && this.game.playMenuMusic) {
+                    this.game.playMenuMusic();
+                }
+            } catch (e) { console.warn('Menu music failed:', e); }
+
             // If the Game instance indicated a forced DPR (iPad Safari), apply
             // conservative mobile performance defaults to reduce FPS and DPR
             // pressure. This avoids visible jank on iPad Safari caused by large
@@ -1222,7 +1288,8 @@ class GameApp {
             ['damage_boost', 'assets/audio/sfx/damage_boost.wav'],
             ['warning_alert', 'assets/audio/sfx/warning_alert.wav'],
             ['critical_hit', 'assets/audio/sfx/critical_hit.wav'],
-            ['wall_bounce', 'assets/audio/sfx/wall_bounce.wav']
+            ['wall_bounce', 'assets/audio/sfx/wall_bounce.wav'],
+            ['ui_hover', 'assets/audio/sfx/ui_hover.wav']
         ];
         // Defer music loading until game start to reduce initial bandwidth and decoding on mobile
         const musicList = [];

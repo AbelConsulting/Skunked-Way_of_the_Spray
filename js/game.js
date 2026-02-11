@@ -722,7 +722,10 @@ class Game {
             });
             console.log('======================');
         
-                await this.ensureLevelMusic();
+            // Stop menu music before starting level music
+            this.stopMenuMusic();
+            this.audioManager && this.audioManager.stopAmbient && this.audioManager.stopAmbient();
+            await this.ensureLevelMusic();
             this.dispatchGameStateChange();
             // Ensure camera centers on player immediately after starting
             try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) {}
@@ -760,15 +763,28 @@ class Game {
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) {}
                 this.audioManager.playSound && this.audioManager.playSound('pause');
                 this.audioManager.pauseMusic && this.audioManager.pauseMusic();
+                this.audioManager.pauseAmbient && this.audioManager.pauseAmbient();
                 // Show pause overlay when available (keeps gameplay UI clean; hosts pause actions)
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) overlay.style.display = 'flex';
+                // Sync volume sliders with current values
+                try {
+                    const sfxSlider = document.getElementById('sfx-volume');
+                    const musicSlider = document.getElementById('music-volume');
+                    if (sfxSlider) sfxSlider.value = Math.round((this.audioManager._pendingSfxVol != null ? this.audioManager._pendingSfxVol : 0.7) * 100);
+                    if (musicSlider) musicSlider.value = Math.round((this.audioManager._pendingMusicVol != null ? this.audioManager._pendingMusicVol : 0.5) * 100);
+                    const sfxVal = document.getElementById('sfx-volume-value');
+                    const musicVal = document.getElementById('music-volume-value');
+                    if (sfxVal && sfxSlider) sfxVal.textContent = sfxSlider.value + '%';
+                    if (musicVal && musicSlider) musicVal.textContent = musicSlider.value + '%';
+                } catch (e) {}
                 this.dispatchGameStateChange();
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) {}
                 this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
+                this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient();
                 // Hide pause overlay
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) overlay.style.display = 'none';
@@ -780,7 +796,7 @@ class Game {
             if (!this.audioManager) return;
             
             // Get music options from level config, default to gameplay
-            const config = LEVEL_CONFIGS[this.currentLevel];
+            const config = LEVEL_CONFIGS[this.currentLevelIndex];
             const musicOptions = (config && Array.isArray(config.music) && config.music.length > 0)
                 ? config.music
                 : ['gameplay'];
@@ -798,6 +814,67 @@ class Game {
             }
 
             this.audioManager.playMusic && this.audioManager.playMusic(musicName, true);
+
+            // Load and play ambient sound based on level background type
+            this._ensureLevelAmbient();
+        }
+
+        /** Determine and play appropriate ambient sound for the current level */
+        async _ensureLevelAmbient() {
+            if (!this.audioManager || !this.audioManager.playAmbient) return;
+            const config = LEVEL_CONFIGS[this.currentLevelIndex];
+            if (!config) return;
+
+            // Map background types to ambient tracks
+            const bgType = (config.background || '').toLowerCase();
+            let ambientName = null;
+            if (bgType.includes('forest') || bgType.includes('grass') || bgType.includes('park')) {
+                ambientName = 'ambient_forest';
+            } else if (bgType.includes('cave') || bgType.includes('dungeon') || bgType.includes('underground')) {
+                ambientName = 'ambient_cave_deep';
+            } else if (bgType.includes('city') || bgType.includes('urban') || bgType.includes('street') || bgType.includes('rooftop') || bgType.includes('neon')) {
+                ambientName = 'ambient_city';
+            } else if (bgType.includes('mountain') || bgType.includes('dojo')) {
+                ambientName = 'ambient_forest';
+            }
+            // Also check level music array for hints
+            if (!ambientName && config.music) {
+                const musicStr = config.music.join(' ').toLowerCase();
+                if (musicStr.includes('cave') || musicStr.includes('ambient_cave')) ambientName = 'ambient_cave_deep';
+                else if (musicStr.includes('city')) ambientName = 'ambient_city';
+                else if (musicStr.includes('forest')) ambientName = 'ambient_forest';
+            }
+            // Default to forest for early levels, city for later
+            if (!ambientName) {
+                ambientName = (this.currentLevelIndex >= 7) ? 'ambient_city' : 'ambient_forest';
+            }
+
+            const ambientPath = `assets/audio/music/${ambientName}.wav`;
+            try {
+                await this.audioManager.loadAmbient(ambientName, ambientPath);
+                this.audioManager.playAmbient(ambientName, true);
+            } catch (e) {
+                console.warn('Failed to load ambient:', ambientName, e);
+            }
+        }
+
+        /** Load and play the menu theme music */
+        async playMenuMusic() {
+            if (!this.audioManager) return;
+            try {
+                if (!this.audioManager.musicElements['menu_theme']) {
+                    await this.audioManager.loadMusic('menu_theme', 'assets/audio/music/menu_theme.wav');
+                }
+                this.audioManager.playMusic('menu_theme', true);
+            } catch (e) {
+                console.warn('Failed to load menu music:', e);
+            }
+        }
+
+        /** Stop menu music (called when game starts) */
+        stopMenuMusic() {
+            if (!this.audioManager) return;
+            this.audioManager.stopMusic && this.audioManager.stopMusic();
         }
 
         /**
@@ -1094,9 +1171,21 @@ class Game {
                             const spawnSound = (bossType === 'BOSS2' || bossType === 'BOSS3' || bossType === 'BOSS4') ? 'boss2_spawn' : 'boss_spawn';
                             this.audioManager.playSound(spawnSound, 0.8);
                         }
-                        // Double music BPM for boss encounter
-                        if (this.audioManager && this.audioManager.setMusicPlaybackRate) {
-                            this.audioManager.setMusicPlaybackRate(2.0);
+                        // Switch to boss battle music
+                        if (this.audioManager) {
+                            (async () => {
+                                try {
+                                    if (!this.audioManager.musicElements['boss_battle']) {
+                                        await this.audioManager.loadMusic('boss_battle', 'assets/audio/music/boss_battle.wav');
+                                    }
+                                    this.audioManager.playMusic('boss_battle', true);
+                                    // Also increase playback rate for extra intensity
+                                    if (this.audioManager.setMusicPlaybackRate) this.audioManager.setMusicPlaybackRate(1.5);
+                                } catch (e) {
+                                    // Fallback: just speed up current music
+                                    if (this.audioManager.setMusicPlaybackRate) this.audioManager.setMusicPlaybackRate(2.0);
+                                }
+                            })();
                         }
                     } catch(e) {}
                 }
@@ -1120,10 +1209,12 @@ class Game {
                                 this.enemyManager.spawningEnabled = true;
                                 this.enemyManager.bossInstance = null;
                                 this.enemyManager.spawnTimer = 0;
-                            // Reset music BPM to normal after boss defeat
+                            // Reset music BPM and restore level music after boss defeat
                             if (this.audioManager && this.audioManager.resetMusicPlaybackRate) {
                                 this.audioManager.resetMusicPlaybackRate();
                             }
+                            // Switch back to level music
+                            this.ensureLevelMusic();
                             }
                 }
                 

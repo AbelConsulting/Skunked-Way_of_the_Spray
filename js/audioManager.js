@@ -56,7 +56,8 @@ class AudioManager {
             damage_boost: 1,
             warning_alert: 1,
             critical_hit: 2,
-            wall_bounce: 2
+            wall_bounce: 2,
+            ui_hover: 2
         };
         this.soundCooldownsMs = {
             footstep: 120,
@@ -98,7 +99,8 @@ class AudioManager {
             damage_boost: 300,
             warning_alert: 400,
             critical_hit: 100,
-            wall_bounce: 80
+            wall_bounce: 80,
+            ui_hover: 60
         };
         this._lastPlayTimes = {};
         this._activeSfx = [];
@@ -112,6 +114,13 @@ class AudioManager {
         this.duckAttack = 0.02;
         this.duckRelease = 0.25;
         this._duckTimer = null;
+
+        // Ambient sound layer (separate from music, loops underneath)
+        this.ambientElements = {}; // name -> Audio element
+        this.currentAmbient = null;
+        this.ambientGainNode = null; // Routed through WebAudio when available
+        this.ambientGain = 0.35; // Default ambient volume (lower than music)
+        this._pendingAmbientVol = 0.35;
         
         // Gain Nodes for Volume Control (guard for environments without WebAudio)
         this.musicGain = 1.0; // fallback if WebAudio music routing not used
@@ -232,12 +241,15 @@ class AudioManager {
             this.masterGain = this.audioCtx.createGain();
             this.sfxGain = this.audioCtx.createGain();
             this.musicGainNode = this.audioCtx.createGain();
+            this.ambientGainNode = this.audioCtx.createGain();
             this.masterGain.connect(this.audioCtx.destination);
             this.sfxGain.connect(this.masterGain);
             this.musicGainNode.connect(this.masterGain);
+            this.ambientGainNode.connect(this.masterGain);
             // Re-apply volumes that were set before context existed
             this.setSoundVolume(this._pendingSfxVol != null ? this._pendingSfxVol : 0.7);
             this.setMusicVolume(this._pendingMusicVol != null ? this._pendingMusicVol : 0.5);
+            this.setAmbientVolume(this._pendingAmbientVol != null ? this._pendingAmbientVol : 0.35);
             return true;
         } catch (e) {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: WebAudio initialization failed', e);
@@ -541,7 +553,10 @@ class AudioManager {
         this.soundEnabled = !this.soundEnabled;
         this.musicEnabled = !this.musicEnabled;
         
-        if (!this.musicEnabled) this.stopMusic();
+        if (!this.musicEnabled) {
+            this.stopMusic();
+            this.stopAmbient();
+        }
         // Web Audio mute
         if (this.audioCtx && this.masterGain) this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1 : 0, this.audioCtx.currentTime);
     }
@@ -551,6 +566,7 @@ class AudioManager {
             if (this.audioCtx && this.audioCtx.state === 'running') this.audioCtx.suspend();
         } catch (e) {}
         try { this.pauseMusic(); } catch (e) {}
+        try { this.pauseAmbient(); } catch (e) {}
     }
 
     resume() {
@@ -558,6 +574,7 @@ class AudioManager {
             if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
         } catch (e) {}
         try { this.unpauseMusic(); } catch (e) {}
+        try { this.unpauseAmbient(); } catch (e) {}
     }
 
     setSoundVolume(val) {
@@ -597,5 +614,125 @@ class AudioManager {
      */
     resetMusicPlaybackRate() {
         this.setMusicPlaybackRate(1.0);
+    }
+
+    /**
+     * Set ambient sound volume
+     */
+    setAmbientVolume(val) {
+        const volume = Math.max(0, Math.min(1, val));
+        this.ambientGain = volume;
+        this._pendingAmbientVol = volume;
+        if (this.audioCtx && this.ambientGainNode) {
+            this.ambientGainNode.gain.setValueAtTime(volume, this.audioCtx.currentTime);
+        } else if (this.currentAmbient) {
+            this.currentAmbient.volume = volume;
+        }
+    }
+
+    /**
+     * Load an ambient sound (HTML5 Audio, streamed, looped)
+     */
+    loadAmbient(name, path) {
+        return new Promise((resolve) => {
+            this._ensureContext();
+            const audio = new Audio();
+            audio.oncanplaythrough = () => {
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Ambient '${name}' loaded`);
+                this.ambientElements[name] = audio;
+                // Route through WebAudio ambient gain if available
+                try {
+                    if (this.audioCtx && this.ambientGainNode) {
+                        const source = this.audioCtx.createMediaElementSource(audio);
+                        source.connect(this.ambientGainNode);
+                    }
+                } catch (e) {
+                    if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: ambient routing failed', e);
+                }
+                resolve(audio);
+            };
+            audio.onerror = () => {
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load ambient: ${path}`);
+                resolve(null);
+            };
+            audio.src = path;
+            audio.load();
+        });
+    }
+
+    /**
+     * Play an ambient sound loop (crossfades with current)
+     */
+    playAmbient(name, opts = {}) {
+        const audioEl = this.ambientElements[name];
+        if (!audioEl) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: ambient element missing '${name}'`);
+            return;
+        }
+        if (this.currentAmbient === audioEl) {
+            if (this.currentAmbient.paused) this.currentAmbient.play().catch(() => {});
+            return;
+        }
+
+        const fadeOut = typeof opts.fadeOut === 'number' ? opts.fadeOut : 0.8;
+        const fadeIn = typeof opts.fadeIn === 'number' ? opts.fadeIn : 1.0;
+        this.stopAmbient(fadeOut);
+
+        this.currentAmbient = audioEl;
+        this.currentAmbient.loop = true;
+        if (this.audioCtx && this.ambientGainNode) {
+            const now = this.audioCtx.currentTime;
+            this.ambientGainNode.gain.cancelScheduledValues(now);
+            this.ambientGainNode.gain.setValueAtTime(0, now);
+            this.ambientGainNode.gain.linearRampToValueAtTime(this.ambientGain, now + fadeIn);
+            this.currentAmbient.play().catch(() => {});
+        } else {
+            this.currentAmbient.volume = 0;
+            this.currentAmbient.play().catch(() => {});
+            try {
+                const stepMs = 16;
+                const start = Date.now();
+                const target = this.ambientGain;
+                const timer = setInterval(() => {
+                    const t = (Date.now() - start) / (fadeIn * 1000);
+                    const v = Math.min(1, Math.max(0, t)) * target;
+                    this.currentAmbient.volume = v;
+                    if (t >= 1) clearInterval(timer);
+                }, stepMs);
+            } catch (e) {}
+        }
+    }
+
+    /**
+     * Stop ambient sound
+     */
+    stopAmbient(fadeOut = 0.5) {
+        if (this.currentAmbient) {
+            const toStop = this.currentAmbient;
+            if (this.audioCtx && this.ambientGainNode) {
+                const now = this.audioCtx.currentTime;
+                this.ambientGainNode.gain.cancelScheduledValues(now);
+                this.ambientGainNode.gain.setValueAtTime(this.ambientGainNode.gain.value, now);
+                this.ambientGainNode.gain.linearRampToValueAtTime(0, now + fadeOut);
+                setTimeout(() => {
+                    try { toStop.pause(); toStop.currentTime = 0; } catch (e) {}
+                }, Math.max(0, fadeOut * 1000));
+            } else {
+                try { toStop.pause(); toStop.currentTime = 0; } catch (e) {}
+            }
+            this.currentAmbient = null;
+        }
+    }
+
+    pauseAmbient() {
+        if (this.currentAmbient && !this.currentAmbient.paused) {
+            this.currentAmbient.pause();
+        }
+    }
+
+    unpauseAmbient() {
+        if (this.currentAmbient && this.currentAmbient.paused) {
+            this.currentAmbient.play().catch(() => {});
+        }
     }
 }
