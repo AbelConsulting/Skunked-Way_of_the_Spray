@@ -439,6 +439,17 @@ class Player {
     }
 
     takeDamage(damage, source = null) {
+        // Debug logging for instant death investigation
+        if (typeof Config !== 'undefined' && Config.DEBUG) {
+            console.log('Player.takeDamage called', { 
+                damage, 
+                health: this.health, 
+                invulnerable: this.invulnerableTimer > 0,
+                isShadowStriking: this.isShadowStriking,
+                source: source ? source.enemyType || 'unknown' : 'none'
+            });
+        }
+        
         // Shadow Strike grants brief i-frames without the normal invuln flashing
         if (this.isShadowStriking) {
             return false;

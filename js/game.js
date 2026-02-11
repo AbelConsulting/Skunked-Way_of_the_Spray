@@ -587,6 +587,11 @@ class Game {
             this.score = 0;
             this.lives = 3;
             this._gameOverTime = 0; // Clear lockout from previous game over
+            
+            // Set a game-level grace period timestamp - player cannot die before this time
+            this._gameStartTime = Date.now();
+            this._gracePeriodMs = 2500; // 2.5 seconds of absolute invincibility
+            
             // Notify UI immediately so touch controls can show without waiting on async music.
             this.dispatchGameStateChange();
             
@@ -694,13 +699,28 @@ class Game {
                 // Force valid health
                 this.player.health = this.player.maxHealth || 80;
             }
-            if (typeof Config !== 'undefined' && Config.DEBUG) {
-                console.log('Game started successfully:', { 
-                    playerPos: { x: this.player.x, y: this.player.y }, 
-                    playerHealth: this.player.health,
-                    levelSize: { width: this.level.width, height: this.level.height }
-                });
-            }
+            
+            // Log detailed game start state
+            console.log('=== GAME START DEBUG ===');
+            console.log('Player state:', { 
+                pos: { x: this.player.x, y: this.player.y }, 
+                health: this.player.health,
+                maxHealth: this.player.maxHealth,
+                invulnerable: this.player.invulnerableTimer,
+                isDying: this.player.isDying
+            });
+            console.log('Enemy state:', {
+                count: this.enemyManager.enemies.length,
+                spawningEnabled: this.enemyManager.spawningEnabled,
+                spawnTimer: this.enemyManager.spawnTimer,
+                spawnInterval: this.enemyManager.spawnInterval
+            });
+            console.log('Level:', { 
+                width: this.level.width, 
+                height: this.level.height,
+                platforms: this.level.platforms?.length || 0
+            });
+            console.log('======================');
         
                 await this.ensureLevelMusic();
             this.dispatchGameStateChange();
@@ -1669,7 +1689,8 @@ class Game {
                 if (dist < explosion.radius) {
                     const falloff = 1 - (dist / explosion.radius);
                     const damage = Math.floor(explosion.playerDamage * falloff);
-                    if (damage > 0 && !this.player.isInvulnerable) {
+                    // Check invulnerableTimer, not undefined isInvulnerable property
+                    if (damage > 0 && this.player.invulnerableTimer <= 0) {
                         // Apply explosion damage
                         const result = this.player.takeDamage(damage);
                         if (result) explosionHitPlayer = true;
@@ -1713,6 +1734,17 @@ class Game {
             }
         }
 
+        // Log death triggers
+        if (playerHit || fellOut || explosionHitPlayer) {
+            console.log('=== DEATH TRIGGER ===', {
+                playerHit: playerHit ? playerHit.hit : false,
+                fellOut,
+                explosionHitPlayer,
+                playerY: this.player.y,
+                levelHeight: this.level.height
+            });
+        }
+
         if (playerHit || fellOut || explosionHitPlayer) {
             this._handlePlayerDeath();
         }
@@ -1726,13 +1758,36 @@ class Game {
     _handlePlayerDeath() {
         if (this.isRespawning || !this.player || this.player.isDying || this.state !== 'PLAYING') return;
         
+        // Absolute grace period - cannot die within first 2.5 seconds of game start
+        if (this._gameStartTime && this._gracePeriodMs) {
+            const elapsed = Date.now() - this._gameStartTime;
+            if (elapsed < this._gracePeriodMs) {
+                console.log('=== DEATH BLOCKED - GRACE PERIOD ===');
+                console.log('Grace period remaining:', ((this._gracePeriodMs - elapsed) / 1000).toFixed(2), 'seconds');
+                console.log('Player health:', this.player.health);
+                // Restore health if somehow damaged during grace period
+                if (this.player.health < this.player.maxHealth) {
+                    this.player.health = this.player.maxHealth;
+                }
+                return;
+            }
+        }
+        
         // Prevent death during initial spawn invulnerability window
         if (this.player.invulnerableTimer > 0) {
-            if (typeof Config !== 'undefined' && Config.DEBUG) {
-                console.log('Death prevented - player is invulnerable');
-            }
+            console.log('=== DEATH BLOCKED - INVULNERABLE ===');
+            console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
+            console.log('Player health:', this.player.health);
             return;
         }
+        
+        console.log('=== PLAYER DEATH TRIGGERED ===');
+        console.log('Player state:', {
+            health: this.player.health,
+            pos: { x: this.player.x, y: this.player.y },
+            invulnerable: this.player.invulnerableTimer
+        });
+        console.log('Reason unknown - check takeDamage logs above');
 
         // Player died - check for remaining lives
         this.lives--;

@@ -23,6 +23,8 @@ class EnemyManager {
         this.enemiesDefeated = 0;
         this.spawningEnabled = true;
         this.bossInstance = null;
+        // Start with a longer spawn delay on reset to give player breathing room
+        this.spawnTimer = -2.0; // Don't spawn for first 2 seconds
     }
 
     isBossType(enemyType) {
