@@ -42,3 +42,11 @@ Thumbs.db
 *.bak
 toolshed/backups/
 tmp/sprite_backups/
+
+# Capacitor / Android build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+android/app/release/
+*.keystore
+*.jks

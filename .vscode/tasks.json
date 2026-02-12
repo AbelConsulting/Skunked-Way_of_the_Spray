@@ -78,6 +78,29 @@
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
 			"args": ["generate_music.py"]
+		},
+		{
+			"label": "Capacitor: Build & Copy",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "cap:build"],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Capacitor: Sync Android",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "cap:sync"],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Capacitor: Open Android Studio",
+			"type": "shell",
+			"command": "npx",
+			"args": ["cap", "open", "android"],
+			"problemMatcher": []
 		}
 	]
 }

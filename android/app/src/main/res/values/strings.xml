@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Skunked: Way of the Spray</string>
+    <string name="title_activity_main">Skunked: Way of the Spray</string>
+    <string name="package_name">com.skunksquad.skunkfu</string>
+    <string name="custom_url_scheme">com.skunksquad.skunkfu</string>
+</resources>
