@@ -809,8 +809,98 @@ class GameApp {
         }
     }
 
+    // ── Capacitor / Android native bridge ───────────────────────────
+    _initCapacitorBridge() {
+        // Detect Capacitor runtime (window.Capacitor is injected by the native shell)
+        const isCap = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        window._isCapacitor = !!isCap;
+        window._isNativeApp = !!isCap;
+
+        if (!isCap) return; // nothing else to do in a browser
+
+        try { console.log('[Capacitor] Running inside native shell (' + window.Capacitor.getPlatform() + ')'); } catch (e) { __err('main', e); }
+
+        // ── 1. Android back-button handling ─────────────────────────
+        // Without this, pressing Back instantly kills the app.
+        // Strategy: PLAYING → pause · PAUSED → resume · MENU/GAME_OVER → let OS handle (minimise)
+        try {
+            document.addEventListener('backbutton', (e) => {
+                e.preventDefault();
+                this._handleNativeBack();
+            });
+
+            // Capacitor also exposes the 'ionBackButton' event (Ionic compat)
+            document.addEventListener('ionBackButton', (ev) => {
+                if (ev && ev.detail && ev.detail.register) {
+                    ev.detail.register(10, () => this._handleNativeBack());
+                } else {
+                    this._handleNativeBack();
+                }
+            });
+        } catch (e) { __err('main', e); }
+
+        // ── 2. App-state changes (background / foreground) ──────────
+        // Capacitor fires 'pause' & 'resume' on the document when the
+        // app goes to background / returns. Suspend audio & pause game.
+        try {
+            document.addEventListener('pause', () => {
+                try { console.log('[Capacitor] App going to background'); } catch (e) { __err('main', e); }
+                if (this.game && this.game.state === 'PLAYING') {
+                    this.game.togglePause();
+                }
+                if (this.audioManager) this.audioManager.suspend();
+            });
+
+            document.addEventListener('resume', () => {
+                try { console.log('[Capacitor] App returning to foreground'); } catch (e) { __err('main', e); }
+                if (this.audioManager) this.audioManager.resume();
+            });
+        } catch (e) { __err('main', e); }
+
+        // ── 3. Keep the screen awake via Capacitor plugin (if available)
+        try {
+            if (window.Capacitor.Plugins && window.Capacitor.Plugins.KeepAwake) {
+                window.Capacitor.Plugins.KeepAwake.keepAwake();
+            }
+        } catch (e) { /* plugin not installed — fine, manifest handles it */ }
+
+        // ── 4. Lock orientation to landscape via plugin ──────────────
+        try {
+            if (window.Capacitor.Plugins && window.Capacitor.Plugins.ScreenOrientation) {
+                window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+            }
+        } catch (e) { __err('main', e); }
+
+        // ── 5. Hide splash screen after assets load ─────────────────
+        try {
+            if (window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+                // Will be called after loadAssets() completes; set a safety timeout
+                setTimeout(() => {
+                    try { window.Capacitor.Plugins.SplashScreen.hide(); } catch (e) { __err('main', e); }
+                }, 4000);
+            }
+        } catch (e) { __err('main', e); }
+    }
+
+    _handleNativeBack() {
+        if (!this.game) return;
+        const state = this.game.state;
+        if (state === 'PLAYING') {
+            // Pause the game
+            this.game.togglePause();
+        } else if (state === 'PAUSED') {
+            // Resume the game
+            this.game.togglePause();
+        }
+        // On MENU or GAME_OVER we do nothing — lets the OS minimise the app
+        // (Capacitor default behaviour if we don't preventDefault)
+    }
+
     async init() {
         try {
+            // ── Capacitor / native-app bridge ──────────────────────────
+            this._initCapacitorBridge();
+
             // Warn if opened via file:// — audio and some assets may fail due to browser restrictions
             if (location && location.protocol === 'file:') {
                 try {
