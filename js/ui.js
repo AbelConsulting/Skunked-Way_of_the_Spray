@@ -12,6 +12,30 @@ class UI {
         this._levelTitleUntil = 0;
         this._levelTitleText = '';
         this._levelNameText = '';
+
+        // Safe-area insets for notched / cutout devices (read from CSS env())
+        this.safeTop = 0;
+        this.safeBottom = 0;
+        this.safeLeft = 0;
+        this.safeRight = 0;
+        this._refreshSafeAreaInsets();
+    }
+
+    /**
+     * Read CSS safe-area-inset env() values exposed as custom properties on :root.
+     * Call once on construction and again if the viewport changes (orientation, resize).
+     */
+    _refreshSafeAreaInsets() {
+        try {
+            const style = getComputedStyle(document.documentElement);
+            const parse = (prop) => parseInt(style.getPropertyValue(prop), 10) || 0;
+            this.safeTop = parse('--safe-top');
+            this.safeBottom = parse('--safe-bottom');
+            this.safeLeft = parse('--safe-left');
+            this.safeRight = parse('--safe-right');
+        } catch (e) {
+            // Fallback: no insets (desktop / older WebView)
+        }
     }
 
     showLevelTitle(levelName, levelNumber) {
@@ -425,14 +449,23 @@ class UI {
     }
 
     drawHUD(ctx, player, score, combo, pulse, levelNumber = 1, objectiveInfo = null, lives = 1, idolStatus = null, levelTime = 0) {
-        const padding = 12;
+        // Refresh safe-area insets (cheap — just reads cached CSS vars)
+        this._refreshSafeAreaInsets();
+
+        // Base padding + safe-area offsets so HUD elements avoid notches/cutouts
+        const basePad = 12;
+        const padTop = basePad + this.safeTop;
+        const padBottom = basePad + this.safeBottom;
+        const padLeft = basePad + this.safeLeft;
+        const padRight = basePad + this.safeRight;
+        const padding = padLeft; // legacy alias used by existing layout code
 
         // Level timer (top-left, below health bar area)
         try {
             const timerBoxW = 140;
             const timerBoxH = 32;
-            const timerBoxX = padding;
-            const timerBoxY = this.height - padding - timerBoxH; // Bottom-left corner
+            const timerBoxX = padLeft;
+            const timerBoxY = this.height - padBottom - timerBoxH; // Bottom-left corner
 
             ctx.save();
             
@@ -466,12 +499,12 @@ class UI {
         const iconGap = 8;
         const healthBarWidth = 210;
         const healthBarHeight = 16;
-        const healthBarX = padding + iconSize + iconGap;
-        const healthBarY = padding;
+        const healthBarX = padLeft + iconSize + iconGap;
+        const healthBarY = padTop;
 
         // Health icon (simple heart)
         try {
-            const cx = padding + iconSize * 0.5;
+            const cx = padLeft + iconSize * 0.5;
             const cy = healthBarY + healthBarHeight * 0.5;
             const s = iconSize;
             ctx.save();
@@ -761,12 +794,12 @@ class UI {
                 const barH = 6;
                 const totalW = barW + (iconSize * 2) + (iconGap * 2);
                 const centerStartX = Math.floor((this.width - totalW) / 2);
-                const minStartX = healthBarX + healthBarWidth + padding;
-                const maxStartX = this.width - totalW - padding;
+                const minStartX = healthBarX + healthBarWidth + padLeft;
+                const maxStartX = this.width - totalW - padRight;
                 const startX = Math.max(Math.min(centerStartX, maxStartX), minStartX);
-                const iconY = padding + 1;
+                const iconY = padTop + 1;
                 const barX = startX + iconSize + iconGap;
-                const barY = padding + 6;
+                const barY = padTop + 6;
 
                 const drawIcon = (x, y, kind) => {
                     const s = iconSize;
@@ -915,8 +948,8 @@ class UI {
             const labelW = ctx.measureText(label).width;
             const boxW = Math.ceil(Math.max(valueW, labelW) + scorePadX * 2);
             const boxH = 34;
-            const boxX = this.width - padding - boxW;
-            const boxY = padding;
+            const boxX = this.width - padRight - boxW;
+            const boxY = padTop;
 
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(boxX, boxY, boxW, boxH);
@@ -965,8 +998,8 @@ class UI {
                 const comboScale = Math.min(1.0 + (combo - 1) * 0.02, 1.4);
                 const comboBoxW = Math.floor(140 * comboScale);
                 const comboBoxH = Math.floor(34 * comboScale);
-                const comboBoxX = this.width - padding - comboBoxW;
-                const comboBoxY = padding + 40; // Below score
+                const comboBoxX = this.width - padRight - comboBoxW;
+                const comboBoxY = padTop + 40; // Below score
 
                 ctx.save();
                 
