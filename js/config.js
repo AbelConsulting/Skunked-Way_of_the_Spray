@@ -42,12 +42,14 @@ const Config = {
     ENEMY_POINTS: 100,
 
     // Exploder / Kamikaze (THIRD_BASIC)
-    EXPLODER_RUSH_SPEED_MULT: 3.0,   // Speed multiplier when rushing player
-    EXPLODER_FUSE_TIME: 1.2,         // Seconds of flashing before detonation
+    EXPLODER_RUSH_SPEED_MULT: 3.5,   // Speed multiplier during dash phase (after fuse)
+    EXPLODER_FUSE_TIME: 1.6,         // Seconds of flashing before dash begins
+    EXPLODER_DASH_DURATION: 1.2,     // Max seconds of dash before auto-detonation
+    EXPLODER_FUSE_RANGE: 160,        // How close to player before fuse ignites
     EXPLODER_EXPLOSION_RADIUS: 120,  // AoE radius in pixels
     EXPLODER_EXPLOSION_DAMAGE: 25,   // Damage dealt to player by explosion
     EXPLODER_EXPLOSION_ENEMY_DAMAGE: 30, // Damage dealt to nearby enemies
-    EXPLODER_DETONATION_RANGE: 50,   // How close before fuse starts
+    EXPLODER_DETONATION_RANGE: 50,   // Contact range during dash for immediate detonation
 
     // Enemy AI behavior
     // When true, enemies will avoid walking off ledges in patrol/chase.

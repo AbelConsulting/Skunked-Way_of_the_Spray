@@ -1274,6 +1274,9 @@ class GameApp {
             ['coin_collect', 'assets/audio/sfx/coin_collect.wav'],
             ['footstep', 'assets/audio/sfx/footstep.wav'],
             ['enemy_attack', 'assets/audio/sfx/enemy_attack_gen.wav'],
+            // Kamikaze-specific sounds
+            ['kamikaze_explosion', 'assets/audio/sfx/kamikaze_explosion.wav'],
+            ['kamikaze_fuse', 'assets/audio/sfx/kamikaze_fuse.wav'],
             // New gameplay sound effects
             ['skunk_spray', 'assets/audio/sfx/skunk_spray.wav'],
             ['dash', 'assets/audio/sfx/dash.wav'],

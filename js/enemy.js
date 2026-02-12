@@ -105,11 +105,15 @@ class Enemy {
         
         // Kamikaze / Exploder state (THIRD_BASIC)
         this.isExploding = false;      // Currently in detonation sequence
-        this.fuseTimer = 0;            // Brief flash before actual explosion (very short)
+        this.fuseTimer = 0;            // Fuse countdown before dash phase
         this.hasDetonated = false;      // Prevent double-detonation
         this.explosionParticles = [];   // Visual explosion particles
         this.explosionAge = 0;          // For drawing the fading explosion
         this.explosionDuration = 0.9;   // How long explosion visual lasts (longer for impact)
+        // Kamikaze phase state machine: 'FOLLOW' -> 'FUSE' -> 'DASH' -> detonated
+        this.kamikazePhase = 'FOLLOW';  // Current phase
+        this.dashTimer = 0;            // How long the dash has been going
+        this.fuseSoundPlayed = false;   // Whether the fuse ignition sound played
 
         // Skunk effect state
         this.isSkunked = false;
@@ -322,27 +326,56 @@ class Enemy {
             }
         }
         
-        // Kamikaze fuse countdown (THIRD_BASIC) — very brief flash before detonation
-        if (this.enemyType === 'THIRD_BASIC' && this.isExploding && !this.hasDetonated) {
-            this.fuseTimer -= dt;
-            if (this.fuseTimer <= 0) {
-                this.detonate();
-            }
-        }
-
-        // Kamikaze contact detection (THIRD_BASIC): detonate on touching the player
-        if (this.enemyType === 'THIRD_BASIC' && !this.hasDetonated && !this.isExploding && player) {
+        // Kamikaze phase machine (THIRD_BASIC): FOLLOW -> FUSE -> DASH -> detonate
+        if (this.enemyType === 'THIRD_BASIC' && !this.hasDetonated && player) {
             const enemyRect = this.getRect();
             const playerRect = (typeof player.getRect === 'function')
                 ? player.getRect()
                 : { x: player.x, y: player.y, width: player.width || 0, height: player.height || 0 };
-            if (Utils.rectCollision(enemyRect, playerRect)) {
-                // Contact! Instant detonation (tiny flash delay for visual feedback)
-                this.isExploding = true;
-                this.fuseTimer = 0.08; // Near-instant — just enough for a flash frame
+
+            if (this.kamikazePhase === 'FOLLOW') {
+                // Check if player is within fuse ignition range
+                const ecx = this.x + this.width / 2;
+                const pcx = playerRect.x + playerRect.width / 2;
+                const dist = Math.abs(ecx - pcx);
+                const fuseRange = Config.EXPLODER_FUSE_RANGE || 160;
+                if (dist < fuseRange && this.state === 'CHASE') {
+                    // Ignite the fuse!
+                    this.kamikazePhase = 'FUSE';
+                    this.fuseTimer = Config.EXPLODER_FUSE_TIME || 1.6;
+                    this.isExploding = true;
+                    this.velocityX = 0;
+                    this.fuseSoundPlayed = false;
+                    if (this.audioManager) {
+                        this.audioManager.playSound('kamikaze_fuse', { volume: 0.8, rate: 1.0 });
+                        this.fuseSoundPlayed = true;
+                    }
+                }
+            } else if (this.kamikazePhase === 'FUSE') {
+                // Countdown the fuse — enemy is stopped, flashing/sparking
+                this.fuseTimer -= dt;
                 this.velocityX = 0;
-                if (this.audioManager) {
-                    this.audioManager.playSound('enemy_attack', { volume: 0.7, rate: 1.6 });
+                if (this.fuseTimer <= 0) {
+                    // Fuse complete — begin the dash!
+                    this.kamikazePhase = 'DASH';
+                    this.dashTimer = 0;
+                    this.isExploding = false; // stop the fuse flash, now dashing
+                    if (this.audioManager) {
+                        this.audioManager.playSound('dash', { volume: 0.6, rate: 1.4 });
+                    }
+                }
+            } else if (this.kamikazePhase === 'DASH') {
+                // Dash toward the player at high speed
+                this.dashTimer += dt;
+                const maxDash = Config.EXPLODER_DASH_DURATION || 1.2;
+
+                // Contact detection — detonate on touching the player
+                if (Utils.rectCollision(enemyRect, playerRect)) {
+                    this.detonate();
+                }
+                // Auto-detonate if dash time expires (missed the player)
+                else if (this.dashTimer >= maxDash) {
+                    this.detonate();
                 }
             }
         }
@@ -369,17 +402,29 @@ class Enemy {
 
             // Determine state
             if (verticallyAligned && horizontalGap < this.attackRange && this.attackCooldownTimer <= 0) {
-                // THIRD_BASIC (Kamikaze): never does melee — just keeps rushing
-                // Detonation is handled by contact detection above, not proximity
+                // THIRD_BASIC (Kamikaze): never does melee, chases until fuse/dash takes over
                 if (this.enemyType === 'THIRD_BASIC') {
-                    this.state = 'CHASE'; // Keep chasing, don't stop
+                    // During FUSE or DASH, don't change state — those are handled by the phase machine
+                    if (this.kamikazePhase === 'FOLLOW') {
+                        this.state = 'CHASE';
+                    }
                 } else {
                     this.state = "ATTACK";
                 }
             } else if (horizontalGap < this.detectionRange) {
-                this.state = "CHASE";
+                // THIRD_BASIC: only chase during FOLLOW phase; FUSE/DASH are self-managed
+                if (this.enemyType === 'THIRD_BASIC' && this.kamikazePhase !== 'FOLLOW') {
+                    // Let the phase machine control movement
+                } else {
+                    this.state = "CHASE";
+                }
             } else {
-                this.state = "PATROL";
+                // THIRD_BASIC: don't patrol during FUSE/DASH
+                if (this.enemyType === 'THIRD_BASIC' && this.kamikazePhase !== 'FOLLOW') {
+                    // Let the phase machine control movement
+                } else {
+                    this.state = "PATROL";
+                }
             }
 
             // Execute state behavior
@@ -430,35 +475,40 @@ class Enemy {
 
         // Update rush sparks + fuse sparks for THIRD_BASIC (kamikaze)
         if (this.enemyType === 'THIRD_BASIC') {
-            // Rush sparks while chasing
-            const shouldSpark = !this.isSkunked && this.hitStunTimer <= 0 && this.state === 'CHASE' && Math.abs(this.velocityX) > this.speed * 0.6;
-            if (shouldSpark && Math.random() < 0.35) {
+            // Rush sparks while dashing (DASH phase only)
+            const isDashing = this.kamikazePhase === 'DASH' && !this.hasDetonated;
+            if (isDashing && Math.random() < 0.5) {
                 const dir = this.facingRight ? -1 : 1;
                 this.rushSparks.push({
                     x: this.x + this.width / 2 + dir * 10,
                     y: this.y + this.height - 6 + (Math.random() - 0.5) * 6,
-                    vx: dir * (40 + Math.random() * 60),
-                    vy: -40 - Math.random() * 60,
-                    life: 0.35,
+                    vx: dir * (60 + Math.random() * 80),
+                    vy: -50 - Math.random() * 70,
+                    life: 0.3,
                     age: 0,
-                    size: 2 + Math.random() * 2
+                    size: 2 + Math.random() * 3
                 });
             }
 
-            // Fuse warning sparks (contact-triggered, very intense since detonation is imminent)
-            if (this.isExploding && !this.hasDetonated) {
-                // Burst of warning sparks since explosion is about to happen
-                for (let s = 0; s < 3; s++) {
-                    this.rushSparks.push({
-                        x: this.x + Math.random() * this.width,
-                        y: this.y + Math.random() * this.height,
-                        vx: (Math.random() - 0.5) * 200,
-                        vy: -80 - Math.random() * 120,
-                        life: 0.2,
-                        age: 0,
-                        size: 3 + Math.random() * 4
-                    });
+            // Fuse warning sparks (FUSE phase — escalating intensity as fuse burns down)
+            if (this.kamikazePhase === 'FUSE' && !this.hasDetonated) {
+                const fuseTotal = Config.EXPLODER_FUSE_TIME || 1.6;
+                const fuseProgress = 1 - (this.fuseTimer / fuseTotal); // 0 -> 1
+                const sparkRate = 1 + Math.floor(fuseProgress * 5); // 1..6 sparks per frame
+                for (let s = 0; s < sparkRate; s++) {
+                    if (Math.random() < 0.5 + fuseProgress * 0.4) {
+                        this.rushSparks.push({
+                            x: this.x + Math.random() * this.width,
+                            y: this.y + Math.random() * this.height,
+                            vx: (Math.random() - 0.5) * (100 + fuseProgress * 150),
+                            vy: -60 - Math.random() * (80 + fuseProgress * 80),
+                            life: 0.2 + Math.random() * 0.2,
+                            age: 0,
+                            size: 2 + Math.random() * (3 + fuseProgress * 3)
+                        });
+                    }
                 }
+            }
             }
 
             for (let i = this.rushSparks.length - 1; i >= 0; i--) {
@@ -594,12 +644,12 @@ class Enemy {
     }
 
     chase(dt, player, level) {
-        // THIRD_BASIC (Kamikaze): rush toward player at boosted speed, detonate on contact
+        // THIRD_BASIC (Kamikaze): behavior depends on kamikazePhase
         if (this.enemyType === 'THIRD_BASIC') {
             // If already detonated, do nothing
             if (this.hasDetonated) return;
-            // If fuse is lit (contact triggered), freeze in place
-            if (this.isExploding) {
+            // If fuse is lit, freeze in place (flash & spark)
+            if (this.kamikazePhase === 'FUSE') {
                 this.velocityX = 0;
                 return;
             }
@@ -609,14 +659,14 @@ class Enemy {
             const enemyCenterX = this.x + this.width * 0.5;
             this.facingRight = playerCenterX > enemyCenterX;
 
-            // Rush speed — faster than normal chase
-            const rushSpeed = this.speed * (Config.EXPLODER_RUSH_SPEED_MULT || 3.0);
-
-            // Always rush toward player (contact detection handles detonation)
-            if (enemyCenterX < playerCenterX) {
-                this.velocityX = rushSpeed;
+            if (this.kamikazePhase === 'DASH') {
+                // DASH phase: rocket toward player at boosted speed
+                const rushSpeed = this.speed * (Config.EXPLODER_RUSH_SPEED_MULT || 3.5);
+                this.velocityX = (enemyCenterX < playerCenterX) ? rushSpeed : -rushSpeed;
             } else {
-                this.velocityX = -rushSpeed;
+                // FOLLOW phase: normal chase speed (like other enemies)
+                const chaseSpeed = this.speed;
+                this.velocityX = (enemyCenterX < playerCenterX) ? chaseSpeed : -chaseSpeed;
             }
 
             // Move horizontally
@@ -784,7 +834,7 @@ class Enemy {
     }
 
     attack(dt) {
-        // THIRD_BASIC (Kamikaze): no melee attack, just stay in place during fuse
+        // THIRD_BASIC (Kamikaze): no melee attack, phase machine handles everything
         if (this.enemyType === 'THIRD_BASIC') {
             this.velocityX = 0;
             return;
@@ -825,11 +875,12 @@ class Enemy {
         if (this.hasDetonated) return;
         this.hasDetonated = true;
         this.isExploding = false;
+        this.kamikazePhase = 'DETONATED';
         this.health = 0; // Kill self
 
-        // Explosion sound
+        // Pronounced explosion sound — use dedicated kamikaze_explosion, fall back to enemy_death
         if (this.audioManager) {
-            this.audioManager.playSound('enemy_death', { volume: 0.95, rate: 0.6 });
+            this.audioManager.playSound('kamikaze_explosion', { volume: 1.0, rate: 0.9 });
         }
 
         // Spawn massive explosion particles (fiery orange/red burst)
@@ -1158,27 +1209,59 @@ class Enemy {
             } catch (e) { __err('enemy', e); }
         }
 
-        // THIRD_BASIC Kamikaze: fuse flash overlay (very brief on contact)
-        if (this.enemyType === 'THIRD_BASIC' && this.isExploding && !this.hasDetonated) {
-            // Rapid bright flash to warn of imminent detonation
-            const flash = Math.sin(Date.now() * 0.04 * Math.PI * 2);
+        // THIRD_BASIC Kamikaze: fuse flash overlay (during FUSE phase)
+        if (this.enemyType === 'THIRD_BASIC' && this.kamikazePhase === 'FUSE' && !this.hasDetonated) {
+            // Escalating flash — faster as fuse burns down
+            const fuseTotal = Config.EXPLODER_FUSE_TIME || 1.6;
+            const fuseProgress = 1 - (this.fuseTimer / fuseTotal); // 0 -> 1
+            const flashSpeed = 0.015 + fuseProgress * 0.04; // Flash frequency increases
+            const flash = Math.sin(Date.now() * flashSpeed * Math.PI * 2);
             if (flash > 0) {
                 ctx.save();
-                ctx.globalAlpha = 0.6;
-                ctx.fillStyle = '#FFFFFF';
+                ctx.globalAlpha = 0.3 + fuseProgress * 0.4; // Gets brighter
+                ctx.fillStyle = fuseProgress > 0.7 ? '#FF4400' : '#FFFFFF';
                 ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
                 ctx.restore();
             }
-            // Danger indicator
+            // Danger indicator with countdown
             ctx.save();
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.fillStyle = '#FF0000';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
-            const warningText = '💥';
+            const warningText = fuseProgress > 0.75 ? '💥💥' : '💣';
             ctx.strokeText(warningText, this.x + this.width / 2, this.y - 14);
             ctx.fillText(warningText, this.x + this.width / 2, this.y - 14);
+            // Fuse bar under the bomb emoji
+            const barW = this.width + 8;
+            const barH = 3;
+            const barX = this.x - 4;
+            const barY = this.y - 8;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(barX, barY, barW, barH);
+            ctx.fillStyle = fuseProgress > 0.75 ? '#FF2200' : '#FF8800';
+            ctx.fillRect(barX, barY, barW * fuseProgress, barH);
+            ctx.restore();
+        }
+
+        // THIRD_BASIC Kamikaze: dash glow (during DASH phase)
+        if (this.enemyType === 'THIRD_BASIC' && this.kamikazePhase === 'DASH' && !this.hasDetonated) {
+            ctx.save();
+            const pulseAlpha = 0.3 + Math.sin(Date.now() * 0.02 * Math.PI * 2) * 0.2;
+            ctx.globalAlpha = pulseAlpha;
+            ctx.fillStyle = '#FF4400';
+            ctx.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
+            ctx.restore();
+            // Danger indicator
+            ctx.save();
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#FF0000';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeText('💥', this.x + this.width / 2, this.y - 14);
+            ctx.fillText('💥', this.x + this.width / 2, this.y - 14);
             ctx.restore();
         }
 

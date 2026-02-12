@@ -51,6 +51,8 @@ class AudioManager {
             achievement_unlock: 1,
             combo_break: 1,
             enemy_spawn: 2,
+            kamikaze_explosion: 2,
+            kamikaze_fuse: 1,
             teleport: 1,
             speed_boost: 1,
             damage_boost: 1,
@@ -94,6 +96,8 @@ class AudioManager {
             achievement_unlock: 500,
             combo_break: 200,
             enemy_spawn: 200,
+            kamikaze_explosion: 150,
+            kamikaze_fuse: 300,
             teleport: 250,
             speed_boost: 300,
             damage_boost: 300,
@@ -465,7 +469,7 @@ class AudioManager {
         if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Playing sound '${name}'`);
 
         // Duck music on impactful SFX
-        if (name === 'player_hit' || name === 'enemy_hit' || name === 'boss_attack') {
+        if (name === 'player_hit' || name === 'enemy_hit' || name === 'boss_attack' || name === 'kamikaze_explosion') {
             this._applyDuck();
         }
     }
