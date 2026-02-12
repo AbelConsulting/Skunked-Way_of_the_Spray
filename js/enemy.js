@@ -509,7 +509,6 @@ class Enemy {
                     }
                 }
             }
-            }
 
             for (let i = this.rushSparks.length - 1; i >= 0; i--) {
                 const p = this.rushSparks[i];
