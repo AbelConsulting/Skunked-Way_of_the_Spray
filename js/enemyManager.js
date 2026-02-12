@@ -145,6 +145,13 @@ class EnemyManager {
         
         const enemy = new Enemy(sx, sy, enemyType, this.audioManager);
         this.enemies.push(enemy);
+
+        // Play spawn sound with slight randomisation
+        if (this.audioManager) {
+            const rate = 0.92 + Math.random() * 0.16; // 0.92..1.08
+            this.audioManager.playSound('enemy_spawn', { volume: 0.45, rate });
+        }
+
         try {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('EnemyManager.spawnEnemy', { type: enemyType, x: enemy.x, y: enemy.y, levelWidth: level && level.width, total: this.enemies.length });
         } catch (e) { __err('enemy', e); }

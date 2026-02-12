@@ -382,26 +382,26 @@ class ItemManager {
                 item.collected = true;
                 collected.push(item);
                 
-                // Play pickup sound
+                // Play pickup sound (use dedicated sounds per type)
                 if (this.audioManager) {
                     if (item.type === 'HEALTH_REGEN') {
-                        const rate = 0.96 + Math.random() * 0.10; // 0.96..1.06
-                        this.audioManager.playSound('item_pickup', { volume: 0.6, rate });
+                        const rate = 0.96 + Math.random() * 0.10;
+                        this.audioManager.playSound('health_restore', { volume: 0.7, rate });
                     } else if (item.type === 'EXTRA_LIFE') {
-                        const rate = 0.95 + Math.random() * 0.10; // 0.95..1.05
-                        this.audioManager.playSound('item_pickup', { volume: 0.8, rate });
+                        const rate = 0.95 + Math.random() * 0.10;
+                        this.audioManager.playSound('powerup', { volume: 0.8, rate });
                     } else if (item.type === 'GOLDEN_IDOL') {
-                        const rate = 0.97 + Math.random() * 0.10; // 0.97..1.07
+                        const rate = 0.97 + Math.random() * 0.10;
                         this.audioManager.playSound('coin_collect', { volume: 0.7, rate });
                     } else if (item.type === 'SPEED_BOOST') {
-                        const rate = 1.05 + Math.random() * 0.10; // 1.05..1.15 (higher pitch)
-                        this.audioManager.playSound('item_pickup', { volume: 0.7, rate });
+                        const rate = 1.05 + Math.random() * 0.10;
+                        this.audioManager.playSound('speed_boost', { volume: 0.7, rate });
                     } else if (item.type === 'DAMAGE_BOOST') {
-                        const rate = 0.85 + Math.random() * 0.10; // 0.85..0.95 (lower, aggressive pitch)
-                        this.audioManager.playSound('item_pickup', { volume: 0.75, rate });
+                        const rate = 0.90 + Math.random() * 0.10;
+                        this.audioManager.playSound('damage_boost', { volume: 0.75, rate });
                     } else if (item.type === 'SKUNK_POWERUP') {
-                        const rate = 0.90 + Math.random() * 0.10; // 0.90..1.00
-                        this.audioManager.playSound('item_pickup', { volume: 0.7, rate });
+                        const rate = 0.93 + Math.random() * 0.10;
+                        this.audioManager.playSound('powerup', { volume: 0.7, rate });
                     }
                 }
             }

@@ -214,8 +214,14 @@ class Player {
                 this.jumpsRemaining = Math.max(0, this.jumpsRemaining - 1);
             }
             if (this.audioManager) {
-                const rate = 0.97 + Math.random() * 0.08; // 0.97..1.05
-                this.audioManager.playSound('jump', { volume: 0.6, rate });
+                if (canAirJump) {
+                    // Air jump gets its own sound — higher pitched, lighter
+                    const rate = 1.0 + Math.random() * 0.1;
+                    this.audioManager.playSound('double_jump', { volume: 0.55, rate });
+                } else {
+                    const rate = 0.97 + Math.random() * 0.08;
+                    this.audioManager.playSound('jump', { volume: 0.6, rate });
+                }
             }
         }
     }
@@ -283,7 +289,7 @@ class Player {
             
             // Play skunk shot sound
             if (this.audioManager) {
-                this.audioManager.playSound('shadow_strike', { volume: 0.65, rate: 1.2 });
+                this.audioManager.playSound('skunk_spray', { volume: 0.7, rate: 1.1 });
             }
         }
     }
@@ -310,6 +316,7 @@ class Player {
 
             if (this.audioManager) {
                 this.audioManager.playSound('shadow_strike', 0.8);
+                this.audioManager.playSound('dash', { volume: 0.4, rate: 1.2 });
             }
 
             // Reset shadow strike animation
@@ -434,7 +441,7 @@ class Player {
         
         // Play spray impact sound
         if (this.audioManager) {
-            this.audioManager.playSound('enemy_hit', { volume: 0.6, rate: 0.85 });
+            this.audioManager.playSound('skunk_spray', { volume: 0.5, rate: 0.8 });
         }
     }
 
@@ -573,8 +580,13 @@ class Player {
         }
         if (this.comboTimer > 0) {
             this.comboTimer -= dt;
-        } else {
+        } else if (this.comboCount > 0) {
+            if (this.comboCount >= 3 && this.audioManager) {
+                // Dropped a meaningful combo — play the break sound
+                this.audioManager.playSound('combo_break', { volume: 0.5, rate: 0.95 });
+            }
             this.comboCount = 0;
+            this.comboTimer = 0;
             this._lastComboTier = 0;
         }
 

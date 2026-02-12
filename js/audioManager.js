@@ -474,6 +474,55 @@ class AudioManager {
         }
     }
 
+    /**
+     * Play a SFX with automatic stereo panning based on world position.
+     * Call this instead of playSound() when you have world coordinates and a camera.
+     *
+     * @param {string} name            - Sound buffer name
+     * @param {number} worldX          - Source X position in world space
+     * @param {number} cameraX         - Camera left edge in world space
+     * @param {number} canvasWidth     - Visible canvas width in pixels
+     * @param {object|number} opts     - Volume number or options { volume, rate, detune }
+     */
+    playSoundAt(name, worldX, cameraX, canvasWidth, opts = 1.0) {
+        // Convert world position to screen-relative pan (-1 left .. +1 right)
+        const screenX = worldX - cameraX;
+        const normalised = (canvasWidth > 0) ? (screenX / canvasWidth) : 0.5; // 0..1
+        const pan = Math.max(-1, Math.min(1, (normalised - 0.5) * 2));
+
+        // Merge pan into options
+        if (opts && typeof opts === 'object') {
+            opts.pan = pan;
+        } else {
+            opts = { volume: (typeof opts === 'number') ? opts : 1.0, pan };
+        }
+
+        this.playSound(name, opts);
+    }
+
+    /**
+     * Play a multi-layer compound sound for heavy impacts.
+     * Plays the primary sound immediately and optional follow-up(s) after short delays.
+     *
+     * @param {Array<{name: string, delay?: number, volume?: number, rate?: number}>} layers
+     */
+    playCompoundSound(layers) {
+        if (!layers || !Array.isArray(layers)) return;
+        for (const layer of layers) {
+            if (!layer || !layer.name) continue;
+            const vol = (typeof layer.volume === 'number') ? layer.volume : 1.0;
+            const rate = (typeof layer.rate === 'number') ? layer.rate : 1.0;
+            const delay = (typeof layer.delay === 'number') ? Math.max(0, layer.delay) : 0;
+            if (delay === 0) {
+                this.playSound(layer.name, { volume: vol, rate });
+            } else {
+                setTimeout(() => {
+                    try { this.playSound(layer.name, { volume: vol, rate }); } catch (e) { __err('audio', e); }
+                }, delay);
+            }
+        }
+    }
+
     playMusic(name, loop = true, opts = {}) {
         if (!this.musicEnabled) return;
         const audioEl = this.musicElements[name];

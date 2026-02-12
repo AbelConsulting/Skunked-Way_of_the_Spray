@@ -1,7 +1,8 @@
 // achievements.js
 
 class Achievements {
-    constructor() {
+    constructor(audioManager = null) {
+        this.audioManager = audioManager;
         this.achievements = {};
         this.unlocked = new Set();
         this.queue = [];
@@ -22,6 +23,10 @@ class Achievements {
                 this.showNextNotification();
             }
             this.save();
+            // Play achievement unlock fanfare
+            if (this.audioManager) {
+                this.audioManager.playSound('achievement_unlock', { volume: 0.85, rate: 1.0 });
+            }
         }
     }
 

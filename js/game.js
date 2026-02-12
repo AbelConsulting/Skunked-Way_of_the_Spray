@@ -50,7 +50,7 @@ class Game {
         this.achievements = null;
         try {
             if (typeof Achievements !== 'undefined') {
-                this.achievements = new Achievements();
+                this.achievements = new Achievements(this.audioManager);
             }
         } catch (e) {
             try { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Achievements init failed', e); } catch (err) { __err('game', err); }
@@ -1627,6 +1627,10 @@ class Game {
                     const shakeDur = (Config.COMBO && Config.COMBO.SHAKE_DURATION) || 0.12;
                     this.screenShake = new ScreenShake(shakeDur, tier.shake || 5);
                     this.audioManager.playSound('combo', 0.8 + Math.min(this.player.comboCount * 0.02, 0.2));
+                    // Higher tiers get the level-up fanfare layered in
+                    if (tier.threshold >= 10) {
+                        this.audioManager.playSound('combo_level_up', { volume: 0.65, rate: 1.0 + (tier.threshold - 10) * 0.02 });
+                    }
                 }
             } catch (e) { __err('game', e); }
 
