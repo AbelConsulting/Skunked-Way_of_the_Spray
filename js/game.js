@@ -1827,6 +1827,27 @@ class Game {
             if (!this.screenShake) {
                 this.screenShake = new ScreenShake(0.15, 5);
             }
+
+            // Chain explosion bonus scoring — reward the player for triggering chain reactions
+            for (const explosion of this.enemyManager._pendingExplosions) {
+                const depth = (explosion.enemy && typeof explosion.enemy.chainExplosionDepth === 'number')
+                    ? explosion.enemy.chainExplosionDepth : 0;
+                if (depth > 0) {
+                    const chainBonus = (Config.CHAIN_EXPLOSION_BONUS || 500) * depth;
+                    this.score += chainBonus;
+                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
+                    try { this._scorePulse = 1.0; } catch (e) { __err('game', e); }
+
+                    // Show chain bonus floating text
+                    try {
+                        this.damageNumbers.push(new FloatingText(
+                            explosion.x, explosion.y - 40,
+                            `💥 CHAIN x${depth}! +${chainBonus}`,
+                            { color: '#FF6600', lifetime: 2.0, velocityY: -130, font: 'bold 24px Arial' }
+                        ));
+                    } catch (e) { __err('game', e); }
+                }
+            }
         }
 
         // Log death triggers
@@ -2276,6 +2297,69 @@ class Game {
 
             const idolStatus = (this.currentLevelId && this.idolProgress[this.currentLevelId]) ? this.idolProgress[this.currentLevelId] : null;
             this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime);
+
+            // ── Offscreen kamikaze warning arrows ──
+            // Show a pulsing warning arrow at the screen edge when a kamikaze in FUSE or DASH
+            // is outside the visible viewport, so the player is never blindsided.
+            try {
+                const vw = this.viewWidth || this.width;
+                const vh = this.viewHeight || this.height;
+                const camX = this.cameraX || 0;
+                const enemies = this.enemyManager ? this.enemyManager.getEnemies() : [];
+                const ctx = this.ctx;
+
+                for (const e of enemies) {
+                    if (e.enemyType !== 'THIRD_BASIC') continue;
+                    if (e.exploderPhase !== 'FUSE' && e.exploderPhase !== 'DASH') continue;
+
+                    const ecx = e.x + (e.width || 48) / 2;
+                    const ecy = e.y + (e.height || 48) / 2;
+                    const screenX = ecx - camX;
+                    const screenY = ecy;
+
+                    // Only draw if the enemy center is outside the viewport
+                    const margin = 40; // px inside edge where arrow sits
+                    const offLeft = screenX < 0;
+                    const offRight = screenX > vw;
+
+                    if (!offLeft && !offRight) continue;
+
+                    // Clamp Y to viewport with padding
+                    const arrowY = Math.max(margin + 20, Math.min(vh - margin - 20, screenY));
+                    const arrowX = offLeft ? margin : vw - margin;
+                    const dir = offLeft ? -1 : 1; // points toward enemy
+
+                    // Pulse alpha based on time
+                    const pulse = 0.6 + 0.4 * Math.sin(Date.now() * 0.008);
+                    const isDash = e.exploderPhase === 'DASH';
+
+                    ctx.save();
+                    ctx.globalAlpha = pulse;
+                    ctx.translate(arrowX, arrowY);
+
+                    // Warning triangle pointing toward enemy
+                    ctx.beginPath();
+                    ctx.moveTo(dir * 16, 0);
+                    ctx.lineTo(-dir * 8, -12);
+                    ctx.lineTo(-dir * 8, 12);
+                    ctx.closePath();
+
+                    ctx.fillStyle = isDash ? '#FF2200' : '#FF8800';
+                    ctx.fill();
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Bomb emoji / exclamation
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(isDash ? '💣' : '⚠', -dir * 22, 0);
+
+                    ctx.restore();
+                }
+            } catch (e) { __err('game', e); }
         } else if (this.state === "LEVEL_COMPLETE") {
             // Draw Level Complete screen
             if (this.ui && typeof this.ui.drawLevelComplete === 'function') {

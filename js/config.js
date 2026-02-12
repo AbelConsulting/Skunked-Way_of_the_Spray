@@ -50,6 +50,7 @@ const Config = {
     EXPLODER_EXPLOSION_DAMAGE: 25,   // Damage dealt to player by explosion
     EXPLODER_EXPLOSION_ENEMY_DAMAGE: 30, // Damage dealt to nearby enemies
     EXPLODER_DETONATION_RANGE: 50,   // Contact range during dash for immediate detonation
+    CHAIN_EXPLOSION_BONUS: 500,      // Bonus score per chain depth when explosions cascade
 
     // Enemy AI behavior
     // When true, enemies will avoid walking off ledges in patrol/chase.

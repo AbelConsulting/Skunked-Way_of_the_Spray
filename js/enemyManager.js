@@ -223,6 +223,13 @@ class EnemyManager {
                     if (damage > 0) {
                         const knockDir = ecx > explosion.x ? 1 : -1;
                         enemy.takeDamage(damage, knockDir, { knockback: 300 * falloff, hitStun: 0.3 });
+
+                        // Chain reaction: if this kills another kamikaze, propagate chain depth
+                        if (enemy.enemyType === 'THIRD_BASIC' && enemy.health <= 0 && !enemy.hasDetonated) {
+                            const sourceDepth = (explosion.enemy && typeof explosion.enemy.chainExplosionDepth === 'number')
+                                ? explosion.enemy.chainExplosionDepth : 0;
+                            enemy.chainExplosionDepth = sourceDepth + 1;
+                        }
                     }
                 }
             }

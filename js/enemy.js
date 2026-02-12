@@ -114,6 +114,8 @@ class Enemy {
         this.kamikazePhase = 'FOLLOW';  // Current phase
         this.dashTimer = 0;            // How long the dash has been going
         this.fuseSoundPlayed = false;   // Whether the fuse ignition sound played
+        this.dashDirX = 0;             // Locked dash direction (set once at dash start)
+        this.chainExplosionDepth = 0;   // How many chain explosions deep (for bonus scoring)
 
         // Skunk effect state
         this.isSkunked = false;
@@ -301,6 +303,12 @@ class Enemy {
                 this.isSkunked = false;
                 this.skunkParticles = [];
             } else {
+                // Skunk spray disrupts kamikaze fuse/dash — forces early detonation
+                if (this.enemyType === 'THIRD_BASIC' && !this.hasDetonated) {
+                    if (this.kamikazePhase === 'FUSE' || this.kamikazePhase === 'DASH') {
+                        this.detonate();
+                    }
+                }
                 // Generate green particles
                 if (Math.random() < 0.3) {
                     this.skunkParticles.push({
@@ -360,12 +368,18 @@ class Enemy {
                     this.kamikazePhase = 'DASH';
                     this.dashTimer = 0;
                     this.isExploding = false; // stop the fuse flash, now dashing
+
+                    // Lock dash direction at launch — player can dodge by jumping
+                    const ecx = this.x + this.width / 2;
+                    const pcx = playerRect.x + playerRect.width / 2;
+                    this.dashDirX = (ecx < pcx) ? 1 : -1;
+
                     if (this.audioManager) {
                         this.audioManager.playSound('dash', { volume: 0.6, rate: 1.4 });
                     }
                 }
             } else if (this.kamikazePhase === 'DASH') {
-                // Dash toward the player at high speed
+                // Dash in the locked direction at high speed
                 this.dashTimer += dt;
                 const maxDash = Config.EXPLODER_DASH_DURATION || 1.2;
 
@@ -375,6 +389,10 @@ class Enemy {
                 }
                 // Auto-detonate if dash time expires (missed the player)
                 else if (this.dashTimer >= maxDash) {
+                    this.detonate();
+                }
+                // Safety: detonate if hitting a level boundary during dash
+                else if (level && (this.x <= 0 || this.x + this.width >= level.width)) {
                     this.detonate();
                 }
             }
@@ -659,9 +677,10 @@ class Enemy {
             this.facingRight = playerCenterX > enemyCenterX;
 
             if (this.kamikazePhase === 'DASH') {
-                // DASH phase: rocket toward player at boosted speed
+                // DASH phase: rocket in locked direction at boosted speed
                 const rushSpeed = this.speed * (Config.EXPLODER_RUSH_SPEED_MULT || 3.5);
-                this.velocityX = (enemyCenterX < playerCenterX) ? rushSpeed : -rushSpeed;
+                this.velocityX = this.dashDirX * rushSpeed;
+                this.facingRight = this.dashDirX > 0;
             } else {
                 // FOLLOW phase: normal chase speed (like other enemies)
                 const chaseSpeed = this.speed;
@@ -1222,6 +1241,33 @@ class Enemy {
                 ctx.fillRect(this.x - 4, this.y - 4, this.width + 8, this.height + 8);
                 ctx.restore();
             }
+
+            // --- AoE danger radius ring (shows blast zone preview) ---
+            ctx.save();
+            const radius = Config.EXPLODER_EXPLOSION_RADIUS || 120;
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            const ringAlpha = 0.08 + fuseProgress * 0.18; // Fades in as fuse burns
+            const ringPulse = 1 + Math.sin(Date.now() * 0.01) * 0.04;
+
+            // Filled danger zone (subtle red wash)
+            ctx.globalAlpha = ringAlpha * 0.5;
+            ctx.fillStyle = '#FF2200';
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * ringPulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dashed ring outline
+            ctx.globalAlpha = ringAlpha + 0.1;
+            ctx.strokeStyle = fuseProgress > 0.7 ? '#FF2200' : '#FF6600';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * ringPulse, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+
             // Danger indicator with countdown
             ctx.save();
             ctx.font = 'bold 16px Arial';
@@ -1364,7 +1410,7 @@ class Enemy {
             }
         }
 
-        // Draw health bar
+        // Draw health bar (kamikaze gets distinct orange/red bar)
         const barWidth = this.width;
         const barHeight = 4;
         const barY = this.y - 10;
@@ -1373,7 +1419,12 @@ class Enemy {
         ctx.fillRect(this.x, barY, barWidth, barHeight);
 
         const healthPercent = this.health / this.maxHealth;
-        ctx.fillStyle = healthPercent > 0.5 ? '#00FF00' : healthPercent > 0.25 ? '#FFFF00' : '#FF0000';
+        if (this.enemyType === 'THIRD_BASIC') {
+            // Kamikaze: orange → red bar (always looks dangerous)
+            ctx.fillStyle = healthPercent > 0.5 ? '#FF8800' : '#FF2200';
+        } else {
+            ctx.fillStyle = healthPercent > 0.5 ? '#00FF00' : healthPercent > 0.25 ? '#FFFF00' : '#FF0000';
+        }
         ctx.fillRect(this.x, barY, barWidth * healthPercent, barHeight);
 
         // Debug: draw collision boxes
