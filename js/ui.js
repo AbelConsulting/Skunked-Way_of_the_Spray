@@ -689,28 +689,6 @@ class UI {
 
                     ctx.restore();
                 }
-                
-                // Skunk ammo display
-                if (player && typeof player.skunkAmmo === 'number' && player.skunkAmmo > 0) {
-                    const buffIndicatorY = idolY + idolSize + 6;
-                    const buffPillH = 18;
-                    const hasActiveBuffs = (player.idolBonuses && (speedPercent > 0 || damagePercent > 0));
-                    const ammoY = hasActiveBuffs ? (buffIndicatorY + buffPillH + 8) : (buffIndicatorY);
-                    ctx.save();
-                    ctx.font = 'bold 16px Arial';
-                    ctx.textBaseline = 'top';
-                    ctx.textAlign = 'left';
-                    
-                    // Draw skunk icon and ammo count
-                    ctx.fillStyle = '#40FF40';
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = 3;
-                    const ammoText = `🦨 x${player.skunkAmmo}`;
-                    ctx.strokeText(ammoText, idolX, ammoY);
-                    ctx.fillText(ammoText, idolX, ammoY);
-                    
-                    ctx.restore();
-                }
             } catch (e) { __err('ui', e); }
             
             // Skunk ammo counter (below buff indicators)
