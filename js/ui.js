@@ -692,7 +692,10 @@ class UI {
                 
                 // Skunk ammo display
                 if (player && typeof player.skunkAmmo === 'number' && player.skunkAmmo > 0) {
-                    const ammoY = indicatorY + pillH + 8;
+                    const buffIndicatorY = idolY + idolSize + 6;
+                    const buffPillH = 18;
+                    const hasActiveBuffs = (player.idolBonuses && (speedPercent > 0 || damagePercent > 0));
+                    const ammoY = hasActiveBuffs ? (buffIndicatorY + buffPillH + 8) : (buffIndicatorY);
                     ctx.save();
                     ctx.font = 'bold 16px Arial';
                     ctx.textBaseline = 'top';
