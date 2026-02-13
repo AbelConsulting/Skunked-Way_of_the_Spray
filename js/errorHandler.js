@@ -44,6 +44,12 @@
 
     // ── Global error handler ────────────────────────────────────────────
     window.onerror = function(message, source, lineno, colno, error) {
+        var src = String(source || '');
+        var msg = String(message || '');
+        // Silently ignore MetaMask / browser-extension noise
+        if (/MetaMask|inpage\.js|lockdown-install|SES|Extension context/i.test(msg + ' ' + src)) {
+            return true; // swallow
+        }
         window.__err('global',
             error || (message + ' at ' + source + ':' + lineno + ':' + colno));
         return false; // allow default browser handling too
@@ -51,6 +57,13 @@
 
     // ── Unhandled promise rejection handler ──────────────────────────────
     window.addEventListener('unhandledrejection', function(event) {
-        window.__err('promise', event.reason || 'Unhandled promise rejection');
+        var reason = event.reason;
+        var rStr = String(reason && reason.stack ? reason.stack : reason || '');
+        // Silently ignore MetaMask / browser-extension noise
+        if (/MetaMask|inpage\.js|lockdown-install|SES_UNCAUGHT|Extension context invalidated|chromePort disconnected/i.test(rStr)) {
+            event.preventDefault();
+            return;
+        }
+        window.__err('promise', reason || 'Unhandled promise rejection');
     });
 })();

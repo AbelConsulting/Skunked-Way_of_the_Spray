@@ -1950,9 +1950,9 @@ window.addEventListener('gameStateChange', function(e) {
         const reason = ev.reason ? (ev.reason.stack || ev.reason) : 'Unknown';
         const reasonStr = String(reason);
         
-        // Suppress MetaMask browser extension errors (extension injects itself into all pages)
-        if (reasonStr.includes('MetaMask') || reasonStr.includes('inpage.js')) {
-            console.warn('[Suppressed] MetaMask extension error (not used by this game):', reasonStr);
+        // Suppress MetaMask / browser-extension errors (extension injects itself into all pages)
+        if (/MetaMask|inpage\.js|lockdown-install|SES_UNCAUGHT|Extension context invalidated|chromePort disconnected/i.test(reasonStr)) {
+            console.debug('[Suppressed] Browser extension error (not used by this game)');
             ev.preventDefault();
             return;
         }
