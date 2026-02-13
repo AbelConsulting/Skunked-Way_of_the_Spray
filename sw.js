@@ -7,7 +7,7 @@
  * Bump CACHE_VERSION when you deploy new code/assets to bust the cache.
  */
 
-const CACHE_VERSION = 'skunked-v3';
+const CACHE_VERSION = 'skunked-v4';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Determine base path from service worker location
@@ -118,21 +118,21 @@ const CORE_ASSETS_RELATIVE = [
   'assets/sprites/backgrounds/tiles/platform_tile.png',
   'assets/sprites/backgrounds/tiles/wall_tile.png',
 
-  // Audio — critical SFX (small, needed immediately)
-  'assets/audio/sfx/jump.wav',
-  'assets/audio/sfx/attack1.wav',
-  'assets/audio/sfx/attack2.wav',
-  'assets/audio/sfx/attack3.wav',
-  'assets/audio/sfx/shadow_strike.wav',
-  'assets/audio/sfx/shadow_strike_hit.wav',
-  'assets/audio/sfx/player_hit.wav',
-  'assets/audio/sfx/player_death.wav',
-  'assets/audio/sfx/land.wav',
-  'assets/audio/sfx/enemy_hit.wav',
-  'assets/audio/sfx/enemy_death.wav',
-  'assets/audio/sfx/ui_confirm.wav',
-  'assets/audio/sfx/game_over.wav',
-  'assets/audio/sfx/pause.wav'
+  // Audio — critical SFX (OGG preferred — much smaller than WAV)
+  'assets/audio/sfx/jump.ogg',
+  'assets/audio/sfx/attack1.ogg',
+  'assets/audio/sfx/attack2.ogg',
+  'assets/audio/sfx/attack3.ogg',
+  'assets/audio/sfx/shadow_strike.ogg',
+  'assets/audio/sfx/shadow_strike_hit.ogg',
+  'assets/audio/sfx/player_hit.ogg',
+  'assets/audio/sfx/player_death.ogg',
+  'assets/audio/sfx/land.ogg',
+  'assets/audio/sfx/enemy_hit.ogg',
+  'assets/audio/sfx/enemy_death.ogg',
+  'assets/audio/sfx/ui_confirm.ogg',
+  'assets/audio/sfx/game_over.ogg',
+  'assets/audio/sfx/pause.ogg'
 ];
 
 // ────────────────────────────────────────────────────────────

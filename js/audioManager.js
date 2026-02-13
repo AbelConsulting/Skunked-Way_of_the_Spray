@@ -109,6 +109,16 @@ class AudioManager {
         this._lastPlayTimes = {};
         this._activeSfx = [];
         this._gainPool = [];
+        this._pannerPool = [];
+
+        // Throttle _cleanupActiveSfx — once every 200ms max
+        this._lastCleanup = 0;
+        this._cleanupIntervalMs = 200;
+
+        // Per-frame SFX budget to prevent burst stalls
+        this._frameSfxCount = 0;
+        this._frameSfxMax = 4;
+        this._lastFrameTime = 0;
 
         // Scheduled SFX (setTimeout-based) for multi-stage cues
         this._scheduledSfx = {};
@@ -137,6 +147,13 @@ class AudioManager {
         this.setSoundVolume(0.7);
         this.setMusicVolume(0.5);
 
+        // Detect OGG Vorbis support (prefer OGG over WAV for smaller files)
+        this._canPlayOgg = false;
+        try {
+            const a = document.createElement('audio');
+            this._canPlayOgg = !!(a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"').replace(/no/, ''));
+        } catch (e) { /* fallback to WAV */ }
+
         // Visibility-based suspend/resume
         try {
             document.addEventListener('visibilitychange', () => {
@@ -151,7 +168,10 @@ class AudioManager {
         return (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000;
     }
 
-    _cleanupActiveSfx() {
+    _cleanupActiveSfx(force) {
+        const nowMs = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        if (!force && nowMs - this._lastCleanup < this._cleanupIntervalMs) return;
+        this._lastCleanup = nowMs;
         const now = this._now();
         this._activeSfx = this._activeSfx.filter(entry => entry && entry.endTime && entry.endTime > now);
     }
@@ -164,11 +184,40 @@ class AudioManager {
     _releaseGainNode(node) {
         if (!node) return;
         try { node.disconnect(); } catch (e) { __err('audio', e); }
-        this._gainPool.push(node);
+        if (this._gainPool.length < 20) this._gainPool.push(node);
+    }
+
+    _getPannerNode() {
+        if (this._pannerPool.length > 0) return this._pannerPool.pop();
+        return (this.audioCtx && this.audioCtx.createStereoPanner) ? this.audioCtx.createStereoPanner() : null;
+    }
+
+    _releasePannerNode(node) {
+        if (!node) return;
+        try { node.disconnect(); } catch (e) { __err('audio', e); }
+        if (this._pannerPool.length < 10) this._pannerPool.push(node);
     }
 
     _applyDuck() {
         if (!this.audioCtx || !this.musicGainNode) return;
+        // Debounce: skip if already ducked within last 80ms
+        const duckNow = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        if (this._lastDuckTime && duckNow - this._lastDuckTime < 80) {
+            // Just extend the release timer
+            if (this._duckTimer) { try { clearTimeout(this._duckTimer); } catch (e) { __err('audio', e); } }
+            this._duckTimer = setTimeout(() => {
+                if (!this.audioCtx || !this.musicGainNode) return;
+                const t = this.audioCtx.currentTime;
+                try {
+                    this.musicGainNode.gain.cancelScheduledValues(t);
+                    this.musicGainNode.gain.setValueAtTime(this.musicGainNode.gain.value, t);
+                    this.musicGainNode.gain.linearRampToValueAtTime(this.musicGain, t + this.duckRelease);
+                } catch (e) { __err('audio', e); }
+            }, Math.max(50, Math.floor(this.duckRelease * 1000)));
+            return;
+        }
+        this._lastDuckTime = duckNow;
+
         const now = this.audioCtx.currentTime;
         const target = Math.max(0, Math.min(1, this.duckTarget));
         try {
@@ -289,26 +338,36 @@ class AudioManager {
     }
 
     /**
+     * Return the preferred audio path: try .ogg first (smaller), fall back to original.
+     * @param {string} path - Original path (e.g. 'assets/audio/sfx/jump.wav')
+     * @returns {string} Preferred path
+     */
+    _preferredPath(path) {
+        if (!this._canPlayOgg) return path;
+        if (path.endsWith('.ogg')) return path;
+        // Replace .wav extension with .ogg
+        return path.replace(/\.wav$/i, '.ogg');
+    }
+
+    /**
      * Load a short sound effect into memory (Web Audio API)
+     * Automatically tries OGG first, falls back to WAV.
      */
     async loadSound(name, path) {
         try {
-            // Ensure the AudioContext exists before decoding (it may have been
-            // deferred until the first user gesture, but fetch + decode is OK
-            // to do eagerly — the context just needs to exist for decodeAudioData)
             this._ensureContext();
-            const response = await fetch(path);
-            if (!response || !response.ok) {
-                const msg = `AudioManager: fetch failed for '${path}' (status: ${response ? response.status : 'no response'})`;
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(msg);
-                return null;
+            const preferred = this._preferredPath(path);
+            let response = await fetch(preferred);
+            // If OGG fetch fails, fall back to original WAV path
+            if ((!response || !response.ok) && preferred !== path) {
+                response = await fetch(path);
             }
+            if (!response || !response.ok) return null;
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = this.audioCtx ? await this.audioCtx.decodeAudioData(arrayBuffer) : null;
             this.sfxBuffers[name] = audioBuffer;
             return audioBuffer;
         } catch (e) {
-            // This most commonly indicates a network/CORS error when running under file://
             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load sound: ${path}`, e);
             return null;
         }
@@ -316,33 +375,41 @@ class AudioManager {
 
     /**
      * Load background music (HTML5 Audio - Streaming)
+     * Automatically tries OGG first, falls back to WAV.
      */
     loadMusic(name, path) {
         return new Promise((resolve) => {
             this._ensureContext();
+            const preferred = this._preferredPath(path);
             const audio = new Audio();
-            audio.oncanplaythrough = () => {
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Music '${name}' loaded successfully`);
-                this.musicElements[name] = audio;
+            let triedFallback = false;
 
-                // If WebAudio is available, create a MediaElement source and route through musicGainNode
+            const onReady = () => {
+                this.musicElements[name] = audio;
                 try {
                     if (this.audioCtx) {
                         const source = this.audioCtx.createMediaElementSource(audio);
                         source.connect(this.musicGainNode);
                     }
                 } catch (e) {
-                    // Some browsers disallow multiple media element sources; ignore silently unless debugging
                     if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: media element routing failed', e);
                 }
-
                 resolve(audio);
             };
+
+            audio.oncanplaythrough = onReady;
             audio.onerror = () => {
+                // Fall back to WAV if OGG failed
+                if (!triedFallback && preferred !== path) {
+                    triedFallback = true;
+                    audio.src = path;
+                    audio.load();
+                    return;
+                }
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load music: ${path}`);
                 resolve(null);
             };
-            audio.src = path;
+            audio.src = preferred;
             audio.load();
         });
     }
@@ -385,12 +452,16 @@ class AudioManager {
     playSound(name, volumeScale = 1.0) {
         if (!this.soundEnabled) return;
         const buffer = this.sfxBuffers[name];
-        if (!buffer) {
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: sound buffer missing '${name}'`);
-            return;
-        }
-
+        if (!buffer) return;
         if (!this.audioCtx) return;
+
+        // Per-frame budget: reset counter on new frame, cap at _frameSfxMax
+        const frameNow = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        if (frameNow - this._lastFrameTime > 12) { // ~1 frame at 60fps
+            this._frameSfxCount = 0;
+            this._lastFrameTime = frameNow;
+        }
+        if (this._frameSfxCount >= this._frameSfxMax) return;
 
         const nowMs = this._now() * 1000;
         const cooldown = this.soundCooldownsMs[name];
@@ -444,13 +515,15 @@ class AudioManager {
             }
         } catch (e) { __err('audio', e); }
 
-        // Optional panning support
+        // Optional panning support (pooled)
         let panner = null;
-        if (pan !== null && this.audioCtx.createStereoPanner) {
-            panner = this.audioCtx.createStereoPanner();
-            panner.pan.value = Math.max(-1, Math.min(1, pan));
-            source.connect(panner);
-            panner.connect(gainNode);
+        if (pan !== null) {
+            panner = this._getPannerNode();
+            if (panner) {
+                panner.pan.value = Math.max(-1, Math.min(1, pan));
+                source.connect(panner);
+                panner.connect(gainNode);
+            }
         }
 
         if (!panner) source.connect(gainNode);
@@ -462,11 +535,11 @@ class AudioManager {
 
         source.onended = () => {
             this._releaseGainNode(gainNode);
-            try { if (panner) panner.disconnect(); } catch (e) { __err('audio', e); }
+            this._releasePannerNode(panner);
         };
 
+        this._frameSfxCount++;
         source.start();
-        if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Playing sound '${name}'`);
 
         // Duck music on impactful SFX
         if (name === 'player_hit' || name === 'enemy_hit' || name === 'boss_attack' || name === 'kamikaze_explosion') {
@@ -685,15 +758,17 @@ class AudioManager {
 
     /**
      * Load an ambient sound (HTML5 Audio, streamed, looped)
+     * Automatically tries OGG first, falls back to WAV.
      */
     loadAmbient(name, path) {
         return new Promise((resolve) => {
             this._ensureContext();
+            const preferred = this._preferredPath(path);
             const audio = new Audio();
-            audio.oncanplaythrough = () => {
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Ambient '${name}' loaded`);
+            let triedFallback = false;
+
+            const onReady = () => {
                 this.ambientElements[name] = audio;
-                // Route through WebAudio ambient gain if available
                 try {
                     if (this.audioCtx && this.ambientGainNode) {
                         const source = this.audioCtx.createMediaElementSource(audio);
@@ -704,11 +779,19 @@ class AudioManager {
                 }
                 resolve(audio);
             };
+
+            audio.oncanplaythrough = onReady;
             audio.onerror = () => {
+                if (!triedFallback && preferred !== path) {
+                    triedFallback = true;
+                    audio.src = path;
+                    audio.load();
+                    return;
+                }
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load ambient: ${path}`);
                 resolve(null);
             };
-            audio.src = path;
+            audio.src = preferred;
             audio.load();
         });
     }
