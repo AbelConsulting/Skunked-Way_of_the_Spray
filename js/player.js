@@ -456,6 +456,12 @@ class Player {
                 source: source ? source.enemyType || 'unknown' : 'none'
             });
         }
+
+        // If the player is already dead, signal death immediately so the
+        // death handler can pick it up (prevents zombie-player state).
+        if (this.health <= 0) {
+            return true;
+        }
         
         // Shadow Strike grants brief i-frames without the normal invuln flashing
         if (this.isShadowStriking) {
@@ -477,6 +483,9 @@ class Player {
                     return false;
                 }
             }
+
+            // Clamp health to 0 minimum (prevents confusing negative values)
+            if (this.health < 0) this.health = 0;
             
             // Only grant i-frames if the player survived the hit.
             // A lethal blow should NOT set invulnerability — it would
@@ -590,8 +599,8 @@ class Player {
             this._lastComboTier = 0;
         }
 
-        // Update health regeneration effect
-        if (this.healthRegen) {
+        // Update health regeneration effect (only if alive)
+        if (this.healthRegen && this.health > 0) {
             this.healthRegen.timer += dt;
             const healAmount = this.healthRegen.hpPerSecond * dt;
             this.health = Math.min(this.maxHealth, this.health + healAmount);
