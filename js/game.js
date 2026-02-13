@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Game class - Main game controller
  */
 
@@ -1865,6 +1865,14 @@ class Game {
             this._handlePlayerDeath();
         }
 
+        // Safety net: catch zombie-player state where health <= 0 but death
+        // was never processed (e.g. due to timing edge cases).
+        if (this.player && this.player.health <= 0 && !this.player.isDying &&
+            !this.isRespawning && this.state === 'PLAYING') {
+            console.warn('=== ZOMBIE STATE DETECTED - forcing death ===');
+            this._handlePlayerDeath();
+        }
+
         // Update camera to follow player
         this.updateCamera();
         // decay score pulse over time
@@ -1873,9 +1881,13 @@ class Game {
 
     _handlePlayerDeath() {
         if (this.isRespawning || !this.player || this.player.isDying || this.state !== 'PLAYING') return;
+
+        // If health is already <= 0, skip all grace/invulnerability checks -
+        // the player is dead and must not be kept alive.
+        const alreadyDead = this.player.health <= 0;
         
         // Absolute grace period - cannot die within first 2.5 seconds of game start
-        if (this._gameStartTime && this._gracePeriodMs) {
+        if (!alreadyDead && this._gameStartTime && this._gracePeriodMs) {
             const elapsed = Date.now() - this._gameStartTime;
             if (elapsed < this._gracePeriodMs) {
                 console.log('=== DEATH BLOCKED - GRACE PERIOD ===');
@@ -1891,7 +1903,7 @@ class Game {
         
         // Prevent death during initial spawn invulnerability window
         // BUT if health is already <= 0 the player IS dead â€” don't block it.
-        if (this.player.invulnerableTimer > 0 && this.player.health > 0) {
+        if (!alreadyDead && this.player.invulnerableTimer > 0) {
             console.log('=== DEATH BLOCKED - INVULNERABLE ===');
             console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
             console.log('Player health:', this.player.health);
