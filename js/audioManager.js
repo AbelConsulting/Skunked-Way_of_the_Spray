@@ -142,6 +142,10 @@ class AudioManager {
         this.masterGain = null;
         this.sfxGain = null;
         this.musicGainNode = null;
+
+        // Music transition state
+        this._musicFadeInterval = null;
+        this._isFading = false;
         
         // Defaults
         this.setSoundVolume(0.7);
@@ -604,57 +608,160 @@ class AudioManager {
             return;
         }
 
-        if (this.currentMusic === audioEl) {
-            if (this.currentMusic.paused) this.currentMusic.play();
+        if (this.currentMusic === audioEl && !this.currentMusic.paused) {
+            return; // Already playing and not paused
+        }
+
+        if (this._isFading) {
+            // If a fade is in progress, queue up the next track to play after.
+            // This is a simple solution; a more complex one might blend three tracks.
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Fading in progress, queuing '${name}'`);
+            this._queuedMusic = { name, loop, opts };
             return;
         }
 
-        const fadeOut = typeof opts.fadeOut === 'number' ? opts.fadeOut : 0.4;
-        const fadeIn = typeof opts.fadeIn === 'number' ? opts.fadeIn : 0.4;
-        this.stopMusic(fadeOut);
+        const fadeOutDuration = typeof opts.fadeOut === 'number' ? opts.fadeOut : 400;
+        const fadeInDuration = typeof opts.fadeIn === 'number' ? opts.fadeIn : 400;
 
+        // Stop any previously running fades
+        if (this._musicFadeInterval) {
+            clearInterval(this._musicFadeInterval);
+            this._musicFadeInterval = null;
+        }
+
+        const oldMusic = this.currentMusic;
         this.currentMusic = audioEl;
         this.currentMusic.loop = loop;
-        // If routed through WebAudio, control volume via gain node; otherwise use element volume
-        if (this.audioCtx) {
+        this.currentMusic.volume = 0;
+
+        const playPromise = this.currentMusic.play();
+        if (playPromise) {
+            playPromise.catch(e => {
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Auto-play blocked for music '${name}'`, e);
+            });
+        }
+
+        this._isFading = true;
+
+        if (this.audioCtx && this.musicGainNode) {
+            // Web Audio API path (preferred)
             const now = this.audioCtx.currentTime;
-            this.musicGainNode.gain.cancelScheduledValues(now);
-            this.musicGainNode.gain.setValueAtTime(0, now);
-            this.musicGainNode.gain.linearRampToValueAtTime(this.musicGain, now + fadeIn);
-            const playPromise = this.currentMusic.play();
-            if (playPromise !== undefined) playPromise.catch(e => { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Auto-play blocked for music', e); });
+            const currentGain = this.musicGainNode.gain.value;
+
+            // Fade out old music (if any)
+            if (oldMusic) {
+                this.musicGainNode.gain.cancelScheduledValues(now);
+                this.musicGainNode.gain.setValueAtTime(currentGain, now);
+                this.musicGainNode.gain.linearRampToValueAtTime(0, now + fadeOutDuration / 1000);
+            }
+
+            // Fade in new music
+            setTimeout(() => {
+                const source = this.audioCtx.createMediaElementSource(this.currentMusic);
+                source.connect(this.musicGainNode);
+                const nowFadeIn = this.audioCtx.currentTime;
+                this.musicGainNode.gain.cancelScheduledValues(nowFadeIn);
+                this.musicGainNode.gain.setValueAtTime(0, nowFadeIn);
+                this.musicGainNode.gain.linearRampToValueAtTime(this.musicGain, nowFadeIn + fadeInDuration / 1000);
+                
+                if (oldMusic) {
+                    setTimeout(() => {
+                        try {
+                            oldMusic.pause();
+                            oldMusic.currentTime = 0;
+                        } catch (e) { __err('audio', e); }
+                    }, fadeOutDuration);
+                }
+
+                setTimeout(() => {
+                    this._isFading = false;
+                    this._checkQueuedMusic();
+                }, fadeInDuration);
+
+            }, oldMusic ? fadeOutDuration : 0);
+
         } else {
-            this.currentMusic.volume = 0;
-            const playPromise = this.currentMusic.play();
-            if (playPromise !== undefined) playPromise.catch(e => { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Auto-play blocked for music', e); });
-            try {
-                const stepMs = 16;
-                const start = Date.now();
-                const target = this.musicGain;
-                const timer = setInterval(() => {
-                    const t = (Date.now() - start) / (fadeIn * 1000);
-                    const v = Math.min(1, Math.max(0, t)) * target;
-                    this.currentMusic.volume = v;
-                    if (t >= 1) clearInterval(timer);
-                }, stepMs);
-            } catch (e) { __err('audio', e); }
+            // Fallback path (HTML5 Audio with requestAnimationFrame)
+            let start = null;
+            const fade = (timestamp) => {
+                if (!start) start = timestamp;
+                const elapsed = timestamp - start;
+
+                // Fade out old music
+                if (oldMusic && oldMusic.volume > 0) {
+                    const fadeOutProgress = Math.min(1, elapsed / fadeOutDuration);
+                    oldMusic.volume = this.musicGain * (1 - fadeOutProgress);
+                    if (fadeOutProgress >= 1) {
+                        try {
+                            oldMusic.pause();
+                            oldMusic.currentTime = 0;
+                        } catch (e) { __err('audio', e); }
+                    }
+                }
+
+                // Fade in new music
+                const fadeInProgress = Math.min(1, elapsed / fadeInDuration);
+                this.currentMusic.volume = this.musicGain * fadeInProgress;
+
+                if (fadeInProgress < 1 || (oldMusic && oldMusic.volume > 0)) {
+                    requestAnimationFrame(fade);
+                } else {
+                    this._isFading = false;
+                    this._checkQueuedMusic();
+                }
+            };
+            requestAnimationFrame(fade);
         }
         if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Playing music '${name}'`);
     }
 
-    stopMusic(fadeOut = 0.3) {
+    _checkQueuedMusic() {
+        if (this._queuedMusic) {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Dequeuing music: '${this._queuedMusic.name}'`);
+            const { name, loop, opts } = this._queuedMusic;
+            this._queuedMusic = null;
+            this.playMusic(name, loop, opts);
+        }
+    }
+
+    stopMusic(fadeOut = 300) {
+        if (this._musicFadeInterval) {
+            clearInterval(this._musicFadeInterval);
+        }
         if (this.currentMusic) {
             const toStop = this.currentMusic;
+            this._isFading = true;
+
             if (this.audioCtx && this.musicGainNode) {
                 const now = this.audioCtx.currentTime;
                 this.musicGainNode.gain.cancelScheduledValues(now);
                 this.musicGainNode.gain.setValueAtTime(this.musicGainNode.gain.value, now);
-                this.musicGainNode.gain.linearRampToValueAtTime(0, now + fadeOut);
+                this.musicGainNode.gain.linearRampToValueAtTime(0, now + fadeOut / 1000);
                 setTimeout(() => {
-                    try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
-                }, Math.max(0, fadeOut * 1000));
+                    try {
+                        toStop.pause();
+                        toStop.currentTime = 0;
+                    } catch (e) { __err('audio', e); }
+                    this._isFading = false;
+                }, fadeOut);
             } else {
-                try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
+                let start = null;
+                const fadeOutFn = (timestamp) => {
+                    if (!start) start = timestamp;
+                    const elapsed = timestamp - start;
+                    const progress = Math.min(1, elapsed / fadeOut);
+                    toStop.volume = this.musicGain * (1 - progress);
+                    if (progress < 1) {
+                        requestAnimationFrame(fadeOutFn);
+                    } else {
+                        try {
+                            toStop.pause();
+                            toStop.currentTime = 0;
+                        } catch (e) { __err('audio', e); }
+                        this._isFading = false;
+                    }
+                };
+                requestAnimationFrame(fadeOutFn);
             }
             this.currentMusic = null;
         }
