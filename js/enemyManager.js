@@ -59,6 +59,13 @@ class EnemyManager {
         const y = (typeof bossConfig.spawnY === 'number') ? bossConfig.spawnY : 520;
 
         const bossType = (bossConfig && typeof bossConfig.type === 'string') ? bossConfig.type : 'BOSS';
+
+        // Guard: Enemy class must be loaded (enemy.js before enemyManager.js)
+        if (typeof Enemy === 'undefined') {
+            console.error('EnemyManager.spawnBoss: Enemy class not found — is enemy.js loaded?');
+            return null;
+        }
+
         const boss = new Enemy(x, y, bossType, this.audioManager);
 
         // Snap boss onto the nearest supporting platform to avoid falling through gaps
@@ -142,7 +149,13 @@ class EnemyManager {
             const rand = Math.random();
             enemyType = rand < 0.45 ? "BASIC" : rand < 0.65 ? "FAST_BASIC" : "SECOND_BASIC";
         }
-        
+
+        // Guard: Enemy class must be loaded (enemy.js before enemyManager.js)
+        if (typeof Enemy === 'undefined') {
+            console.error('EnemyManager.spawnEnemy: Enemy class not found — is enemy.js loaded?');
+            return;
+        }
+
         const enemy = new Enemy(sx, sy, enemyType, this.audioManager);
         this.enemies.push(enemy);
 
