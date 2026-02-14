@@ -852,6 +852,7 @@ class AudioManager {
                         toStop.currentTime = 0;
                     } catch (e) { __err('audio', e); }
                     this._isFading = false;
+                    this._checkQueuedMusic();
                 }, fadeOut);
             } else {
                 let start = null;
@@ -868,6 +869,7 @@ class AudioManager {
                             toStop.currentTime = 0;
                         } catch (e) { __err('audio', e); }
                         this._isFading = false;
+                        this._checkQueuedMusic();
                     }
                 };
                 requestAnimationFrame(fadeOutFn);
