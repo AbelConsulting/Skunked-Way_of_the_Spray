@@ -454,6 +454,7 @@ class AudioManager {
                     if (this.audioCtx && this.musicGainNode) {
                         const source = this.audioCtx.createMediaElementSource(audio);
                         source.connect(this.musicGainNode);
+                        audio._audioConnected = true;
                     }
                 } catch (e) {
                     if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: media element routing failed', e);
@@ -719,8 +720,19 @@ class AudioManager {
 
             // Fade in new music
             setTimeout(() => {
-                const source = this.audioCtx.createMediaElementSource(this.currentMusic);
-                source.connect(this.musicGainNode);
+                // Ensure the element is routed through the audio graph.
+                // loadMusic() connects it during oncanplaythrough, but if the
+                // AudioContext didn't exist yet (Edge before user gesture) the
+                // element may not be connected.  Use a flag to track.
+                if (!this.currentMusic._audioConnected) {
+                    try {
+                        const source = this.audioCtx.createMediaElementSource(this.currentMusic);
+                        source.connect(this.musicGainNode);
+                        this.currentMusic._audioConnected = true;
+                    } catch (e) {
+                        // Already connected or other error — safe to ignore
+                    }
+                }
                 const nowFadeIn = this.audioCtx.currentTime;
                 this.musicGainNode.gain.cancelScheduledValues(nowFadeIn);
                 this.musicGainNode.gain.setValueAtTime(0, nowFadeIn);
@@ -947,6 +959,7 @@ class AudioManager {
                     if (this.audioCtx && this.ambientGainNode) {
                         const source = this.audioCtx.createMediaElementSource(audio);
                         source.connect(this.ambientGainNode);
+                        audio._audioConnected = true;
                     }
                 } catch (e) {
                     if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: ambient routing failed', e);
