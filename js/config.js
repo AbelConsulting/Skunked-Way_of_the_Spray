@@ -47,7 +47,7 @@ const Config = {
     EXPLODER_DASH_DURATION: 1.2,     // Max seconds of dash before auto-detonation
     EXPLODER_FUSE_RANGE: 160,        // How close to player before fuse ignites
     EXPLODER_EXPLOSION_RADIUS: 120,  // AoE radius in pixels
-    EXPLODER_EXPLOSION_DAMAGE: 25,   // Damage dealt to player by explosion
+    EXPLODER_EXPLOSION_DAMAGE: 55,   // Damage dealt to player by explosion
     EXPLODER_EXPLOSION_ENEMY_DAMAGE: 30, // Damage dealt to nearby enemies
     EXPLODER_DETONATION_RANGE: 50,   // Contact range during dash for immediate detonation
     CHAIN_EXPLOSION_BONUS: 500,      // Bonus score per chain depth when explosions cascade
