@@ -155,6 +155,8 @@ class AudioManager {
         // Music transition state
         this._musicFadeInterval = null;
         this._isFading = false;
+        this._fadeInTimer = null;  // tracks the outer setTimeout in playMusic
+        this._fadeCleanupTimer = null; // tracks the inner cleanup setTimeout
         
         // Defaults
         this.setSoundVolume(0.7);
@@ -167,11 +169,21 @@ class AudioManager {
             this._canPlayOgg = !!(a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"').replace(/no/, ''));
         } catch (e) { /* fallback to WAV */ }
 
-        // Visibility-based suspend/resume
+        // Visibility-based suspend/resume.
+        // Only auto-resume audio if the game isn't paused; otherwise the game's
+        // own unpause flow will call resume() / unpauseMusic() when appropriate.
         try {
             document.addEventListener('visibilitychange', () => {
-                if (document.hidden) this.suspend();
-                else this.resume();
+                if (document.hidden) {
+                    this.suspend();
+                } else {
+                    // Resume the AudioContext so SFX work when the tab comes back,
+                    // but do NOT unpause music/ambient — that's the game's job
+                    // (the user may still be on the pause screen).
+                    try {
+                        if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    } catch (e) { __err('audio', e); }
+                }
             });
         } catch (e) { __err('audio', e); }
     }
@@ -719,13 +731,22 @@ class AudioManager {
             }
 
             // Fade in new music
-            setTimeout(() => {
+            this._fadeInTimer = setTimeout(() => {
+                this._fadeInTimer = null;
                 // currentMusic may have been nulled (e.g. stopMusic() on touch)
                 // between scheduling and firing — bail out safely.
                 if (!this.currentMusic) {
                     this._isFading = false;
                     this._checkQueuedMusic();
                     return;
+                }
+                // Old music gain has reached 0 — stop it immediately to free
+                // the decoder and avoid audible overlap through the shared gain node.
+                if (oldMusic) {
+                    try {
+                        oldMusic.pause();
+                        oldMusic.currentTime = 0;
+                    } catch (e) { __err('audio', e); }
                 }
                 // Ensure the element is routed through the audio graph.
                 // loadMusic() connects it during oncanplaythrough, but if the
@@ -744,17 +765,9 @@ class AudioManager {
                 this.musicGainNode.gain.cancelScheduledValues(nowFadeIn);
                 this.musicGainNode.gain.setValueAtTime(0, nowFadeIn);
                 this.musicGainNode.gain.linearRampToValueAtTime(this.musicGain, nowFadeIn + fadeInDuration / 1000);
-                
-                if (oldMusic) {
-                    setTimeout(() => {
-                        try {
-                            oldMusic.pause();
-                            oldMusic.currentTime = 0;
-                        } catch (e) { __err('audio', e); }
-                    }, fadeOutDuration);
-                }
 
-                setTimeout(() => {
+                this._fadeCleanupTimer = setTimeout(() => {
+                    this._fadeCleanupTimer = null;
                     this._isFading = false;
                     this._checkQueuedMusic();
                 }, fadeInDuration);
@@ -768,10 +781,20 @@ class AudioManager {
                 if (!start) start = timestamp;
                 const elapsed = timestamp - start;
 
+                // Bail if currentMusic was nulled during the fade (e.g. stopMusic)
+                if (!this.currentMusic) {
+                    if (oldMusic) {
+                        try { oldMusic.pause(); oldMusic.currentTime = 0; } catch (e) { __err('audio', e); }
+                    }
+                    this._isFading = false;
+                    this._checkQueuedMusic();
+                    return;
+                }
+
                 // Fade out old music
                 if (oldMusic && oldMusic.volume > 0) {
                     const fadeOutProgress = Math.min(1, elapsed / fadeOutDuration);
-                    oldMusic.volume = this.musicGain * (1 - fadeOutProgress);
+                    try { oldMusic.volume = this.musicGain * (1 - fadeOutProgress); } catch (e) { __err('audio', e); }
                     if (fadeOutProgress >= 1) {
                         try {
                             oldMusic.pause();
@@ -782,7 +805,7 @@ class AudioManager {
 
                 // Fade in new music
                 const fadeInProgress = Math.min(1, elapsed / fadeInDuration);
-                this.currentMusic.volume = this.musicGain * fadeInProgress;
+                try { this.currentMusic.volume = this.musicGain * fadeInProgress; } catch (e) { __err('audio', e); }
 
                 if (fadeInProgress < 1 || (oldMusic && oldMusic.volume > 0)) {
                     requestAnimationFrame(fade);
@@ -808,7 +831,12 @@ class AudioManager {
     stopMusic(fadeOut = 300) {
         if (this._musicFadeInterval) {
             clearInterval(this._musicFadeInterval);
+            this._musicFadeInterval = null;
         }
+        // Cancel any in-flight fade timeouts from playMusic() to prevent
+        // stale callbacks from operating on a null currentMusic.
+        if (this._fadeInTimer) { clearTimeout(this._fadeInTimer); this._fadeInTimer = null; }
+        if (this._fadeCleanupTimer) { clearTimeout(this._fadeCleanupTimer); this._fadeCleanupTimer = null; }
         if (this.currentMusic) {
             const toStop = this.currentMusic;
             this._isFading = true;

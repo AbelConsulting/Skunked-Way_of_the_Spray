@@ -853,7 +853,12 @@ class GameApp {
 
             document.addEventListener('resume', () => {
                 try { console.log('[Capacitor] App returning to foreground'); } catch (e) { __err('main', e); }
-                if (this.audioManager) this.audioManager.resume();
+                // Only resume the AudioContext (for SFX readiness).
+                // Don't auto-unpause music/ambient — the game may still be on
+                // the pause screen.  The user's "Resume" action will handle that.
+                if (this.audioManager && this.audioManager.audioCtx) {
+                    try { if (this.audioManager.audioCtx.state === 'suspended') this.audioManager.audioCtx.resume(); } catch (e) { __err('main', e); }
+                }
             });
         } catch (e) { __err('main', e); }
 

@@ -1203,7 +1203,10 @@ try {
 
         const onResumePress = (e) => {
             try { e && e.preventDefault(); e && e.stopPropagation(); } catch (_) {}
-            resumeBtn._lastResumePress = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            // Debounce: prevent double-toggle when touchstart + pointerdown both fire
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            if (resumeBtn._lastResumePress && (now - resumeBtn._lastResumePress) < 300) return;
+            resumeBtn._lastResumePress = now;
             try { window && window.logTouchControlEvent && window.logTouchControlEvent('resumeBtn_press', { type: e && e.type }); } catch (e) {}
             invokeResume();
         };
