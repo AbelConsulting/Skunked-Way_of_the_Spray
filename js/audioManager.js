@@ -720,6 +720,13 @@ class AudioManager {
 
             // Fade in new music
             setTimeout(() => {
+                // currentMusic may have been nulled (e.g. stopMusic() on touch)
+                // between scheduling and firing — bail out safely.
+                if (!this.currentMusic) {
+                    this._isFading = false;
+                    this._checkQueuedMusic();
+                    return;
+                }
                 // Ensure the element is routed through the audio graph.
                 // loadMusic() connects it during oncanplaythrough, but if the
                 // AudioContext didn't exist yet (Edge before user gesture) the
