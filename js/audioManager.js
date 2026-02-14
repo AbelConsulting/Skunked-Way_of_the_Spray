@@ -4,7 +4,16 @@ class AudioManager {
         // DEFER context creation until first user gesture to satisfy browser
         // autoplay policies (Oculus browser, Edge, Chrome, Safari all require
         // a user interaction before an AudioContext may start).
-        this._AudioContextClass = window.AudioContext || window.webkitAudioContext || null;
+        // Pick a single AudioContext constructor — avoids ambiguity in Edge
+        // which exposes both AudioContext and webkitAudioContext.
+        this._AudioContextClass = null;
+        try {
+            if (typeof window.AudioContext === 'function') {
+                this._AudioContextClass = window.AudioContext;
+            } else if (typeof window.webkitAudioContext === 'function') {
+                this._AudioContextClass = window.webkitAudioContext;
+            }
+        } catch (e) { /* no Web Audio support */ }
         this.audioCtx = null; // created lazily via _ensureContext()
         
         this.sfxBuffers = {}; // Stores decoded audio data
@@ -339,6 +348,29 @@ class AudioManager {
         } else {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: WebAudio not available; running in fallback mode.');
         }
+
+        // Decode any raw buffers that were fetched before the context was ready
+        // (Edge blocks AudioContext creation until user gesture)
+        await this._decodePendingBuffers();
+    }
+
+    /**
+     * Decode raw ArrayBuffers that were stashed during loadSound() before
+     * the AudioContext was available (common in Edge on first load).
+     */
+    async _decodePendingBuffers() {
+        if (!this._pendingRawBuffers || !this.audioCtx) return;
+        const pending = this._pendingRawBuffers;
+        this._pendingRawBuffers = null;
+        for (const name of Object.keys(pending)) {
+            if (this.sfxBuffers[name]) continue; // already decoded
+            try {
+                const audioBuffer = await this.audioCtx.decodeAudioData(pending[name]);
+                this.sfxBuffers[name] = audioBuffer;
+            } catch (e) {
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: deferred decode failed for '${name}'`, e);
+            }
+        }
     }
 
     /**
@@ -359,18 +391,40 @@ class AudioManager {
      */
     async loadSound(name, path) {
         try {
-            this._ensureContext();
+            // _ensureContext may fail before user gesture (Edge autoplay policy).
+            // That's OK — we still fetch + decode; playback will work once
+            // initialize() is called on the first interaction.
+            try { this._ensureContext(); } catch (e) { /* deferred */ }
+
             const preferred = this._preferredPath(path);
-            let response = await fetch(preferred);
+            let response = null;
+            try { response = await fetch(preferred); } catch (e) { /* network error */ }
             // If OGG fetch fails, fall back to original WAV path
             if ((!response || !response.ok) && preferred !== path) {
-                response = await fetch(path);
+                try { response = await fetch(path); } catch (e) { /* network error */ }
             }
             if (!response || !response.ok) return null;
             const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = this.audioCtx ? await this.audioCtx.decodeAudioData(arrayBuffer) : null;
-            this.sfxBuffers[name] = audioBuffer;
-            return audioBuffer;
+            // decodeAudioData requires a live AudioContext; if context is
+            // missing (Edge before gesture) store the raw buffer and decode later.
+            if (this.audioCtx) {
+                try {
+                    const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+                    this.sfxBuffers[name] = audioBuffer;
+                    return audioBuffer;
+                } catch (decodeErr) {
+                    // Decoding can fail if context is suspended in strict browsers.
+                    // Store raw buffer so we can retry after initialize().
+                    if (!this._pendingRawBuffers) this._pendingRawBuffers = {};
+                    this._pendingRawBuffers[name] = arrayBuffer;
+                    return null;
+                }
+            } else {
+                // No context yet — stash raw buffer for later decoding
+                if (!this._pendingRawBuffers) this._pendingRawBuffers = {};
+                this._pendingRawBuffers[name] = arrayBuffer;
+                return null;
+            }
         } catch (e) {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load sound: ${path}`, e);
             return null;
@@ -387,11 +441,17 @@ class AudioManager {
             const preferred = this._preferredPath(path);
             const audio = new Audio();
             let triedFallback = false;
+            let resolved = false;
 
             const onReady = () => {
+                // Guard: oncanplaythrough can fire multiple times in Edge/Chromium.
+                // createMediaElementSource must only be called once per element.
+                if (resolved) return;
+                resolved = true;
+                audio.oncanplaythrough = null; // prevent duplicate fires
                 this.musicElements[name] = audio;
                 try {
-                    if (this.audioCtx) {
+                    if (this.audioCtx && this.musicGainNode) {
                         const source = this.audioCtx.createMediaElementSource(audio);
                         source.connect(this.musicGainNode);
                     }
@@ -410,6 +470,8 @@ class AudioManager {
                     audio.load();
                     return;
                 }
+                if (resolved) return;
+                resolved = true;
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load music: ${path}`);
                 resolve(null);
             };
@@ -873,8 +935,13 @@ class AudioManager {
             const preferred = this._preferredPath(path);
             const audio = new Audio();
             let triedFallback = false;
+            let resolved = false;
 
             const onReady = () => {
+                // Guard: oncanplaythrough can fire multiple times in Edge/Chromium.
+                if (resolved) return;
+                resolved = true;
+                audio.oncanplaythrough = null;
                 this.ambientElements[name] = audio;
                 try {
                     if (this.audioCtx && this.ambientGainNode) {
@@ -895,6 +962,8 @@ class AudioManager {
                     audio.load();
                     return;
                 }
+                if (resolved) return;
+                resolved = true;
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load ambient: ${path}`);
                 resolve(null);
             };
