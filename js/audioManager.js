@@ -170,19 +170,32 @@ class AudioManager {
         } catch (e) { /* fallback to WAV */ }
 
         // Visibility-based suspend/resume.
-        // Only auto-resume audio if the game isn't paused; otherwise the game's
-        // own unpause flow will call resume() / unpauseMusic() when appropriate.
+        // When hidden: suspend context + pause music/ambient.
+        // When visible: resume context + unpause music/ambient.
+        // The game's pause screen will re-pause music if the user is on the
+        // pause screen, but we should always resume here to avoid permanently
+        // stuck silent music when the user just tab-switches during gameplay.
+        this._wasMusicPlayingBeforeHide = false;
+        this._wasAmbientPlayingBeforeHide = false;
         try {
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
+                    // Remember if music/ambient were active before suspending
+                    this._wasMusicPlayingBeforeHide = !!(this.currentMusic && !this.currentMusic.paused);
+                    this._wasAmbientPlayingBeforeHide = !!(this.currentAmbient && !this.currentAmbient.paused);
                     this.suspend();
                 } else {
-                    // Resume the AudioContext so SFX work when the tab comes back,
-                    // but do NOT unpause music/ambient — that's the game's job
-                    // (the user may still be on the pause screen).
+                    // Resume AudioContext
                     try {
                         if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
                     } catch (e) { __err('audio', e); }
+                    // Unpause music/ambient if they were playing before hide
+                    if (this._wasMusicPlayingBeforeHide) {
+                        try { this.unpauseMusic(); } catch (e) { __err('audio', e); }
+                    }
+                    if (this._wasAmbientPlayingBeforeHide) {
+                        try { this.unpauseAmbient(); } catch (e) { __err('audio', e); }
+                    }
                 }
             });
         } catch (e) { __err('audio', e); }
@@ -344,7 +357,7 @@ class AudioManager {
      * to unlock the browser's audio engine.
      */
     async initialize() {
-        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Initializing audio context...');
+        console.log('AudioManager: Initializing audio context...');
         this._ensureContext();
         if (this.audioCtx) {
             if (this.audioCtx.state === 'suspended') {
@@ -353,17 +366,30 @@ class AudioManager {
                 } catch (e) {
                     console.warn('AudioManager: resume() failed (will retry on next interaction)', e);
                 }
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context resumed.');
+                console.log('AudioManager: Audio context resumed, state:', this.audioCtx.state);
             } else {
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: Audio context already running.');
+                console.log('AudioManager: Audio context already running.');
             }
         } else {
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('AudioManager: WebAudio not available; running in fallback mode.');
+            console.log('AudioManager: WebAudio not available; running in fallback mode.');
         }
 
         // Decode any raw buffers that were fetched before the context was ready
         // (Edge blocks AudioContext creation until user gesture)
         await this._decodePendingBuffers();
+
+        // Retry playing music that was blocked by autoplay policy.
+        // This covers the case where playMenuMusic() ran before the user
+        // interacted with the page — play() was rejected, but now the
+        // AudioContext is unlocked and we can retry.
+        if (this._musicPlayPending && this.currentMusic && this.currentMusic.paused) {
+            this._musicPlayPending = false;
+            console.log('AudioManager: Retrying music play() after context unlock');
+            try {
+                const p = this.currentMusic.play();
+                if (p) p.catch(e => console.warn('AudioManager: Retry play() still blocked', e.message || e));
+            } catch (e) { __err('audio', e); }
+        }
     }
 
     /**
@@ -485,11 +511,15 @@ class AudioManager {
                     if (this.audioCtx && this.musicGainNode) {
                         const source = this.audioCtx.createMediaElementSource(audio);
                         source.connect(this.musicGainNode);
+                        // Store the source node on the element to prevent
+                        // garbage collection from disconnecting it.
+                        audio._sourceNode = source;
                         audio._audioConnected = true;
                     }
                 } catch (e) {
-                    if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('AudioManager: media element routing failed', e);
+                    console.warn('AudioManager: media element routing failed for', name, e);
                 }
+                console.log(`AudioManager: loadMusic('${name}') complete — connected=${!!audio._audioConnected}, src=${audio.src}`);
                 resolve(audio);
             };
 
@@ -498,13 +528,14 @@ class AudioManager {
                 // Fall back to WAV if OGG failed
                 if (!triedFallback && preferred !== path) {
                     triedFallback = true;
+                    console.log(`AudioManager: OGG failed for '${name}', falling back to WAV: ${path}`);
                     audio.src = path;
                     audio.load();
                     return;
                 }
                 if (resolved) return;
                 resolved = true;
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Failed to load music: ${path}`);
+                console.warn(`AudioManager: Failed to load music: ${path}`);
                 resolve(null);
             };
             audio.src = preferred;
@@ -698,7 +729,7 @@ class AudioManager {
         if (!this.musicEnabled) return;
         const audioEl = this.musicElements[name];
         if (!audioEl) {
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: music element missing '${name}'`);
+            console.warn(`AudioManager: music element missing '${name}'`);
             return;
         }
 
@@ -706,21 +737,25 @@ class AudioManager {
             // Same track — just resume if paused, otherwise no-op
             if (this.currentMusic.paused) {
                 const p = this.currentMusic.play();
-                if (p) p.catch(e => { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Auto-play blocked on resume', e); });
+                if (p) p.catch(e => console.warn('AudioManager: Auto-play blocked on resume', e));
             }
             return;
         }
 
         if (this._isFading) {
             // If a fade is in progress, queue up the next track to play after.
-            // This is a simple solution; a more complex one might blend three tracks.
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Fading in progress, queuing '${name}'`);
+            console.log(`AudioManager: Fading in progress, queuing '${name}'`);
             this._queuedMusic = { name, loop, opts };
             return;
         }
 
         const fadeOutDuration = typeof opts.fadeOut === 'number' ? opts.fadeOut : 400;
         const fadeInDuration = typeof opts.fadeIn === 'number' ? opts.fadeIn : 400;
+
+        // Attempt to resume the AudioContext if suspended (helps when called after user gesture)
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            try { this.audioCtx.resume(); } catch (e) { /* ignore */ }
+        }
 
         // Stop any previously running fades
         if (this._musicFadeInterval) {
@@ -731,19 +766,27 @@ class AudioManager {
         const oldMusic = this.currentMusic;
         this.currentMusic = audioEl;
         this.currentMusic.loop = loop;
-        this.currentMusic.volume = 0;
-
-        const playPromise = this.currentMusic.play();
-        if (playPromise) {
-            playPromise.catch(e => {
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`Auto-play blocked for music '${name}'`, e);
-            });
-        }
+        // Track the name so we can retry after autoplay unlock
+        this._currentMusicName = name;
 
         this._isFading = true;
 
+        // Safety timeout: if _isFading stays true for >3s, force-reset to
+        // prevent permanently stuck music state.
+        if (this._fadingSafetyTimer) clearTimeout(this._fadingSafetyTimer);
+        this._fadingSafetyTimer = setTimeout(() => {
+            this._fadingSafetyTimer = null;
+            if (this._isFading) {
+                console.warn('AudioManager: _isFading stuck — force-resetting');
+                this._isFading = false;
+                this._checkQueuedMusic();
+            }
+        }, 3000);
+
         if (this.audioCtx && this.musicGainNode) {
             // Web Audio API path (preferred)
+            // Element volume is irrelevant when routed through MediaElementSource;
+            // the gain node controls actual output volume.
             const now = this.audioCtx.currentTime;
             const currentGain = this.musicGainNode.gain.value;
 
@@ -752,6 +795,18 @@ class AudioManager {
                 this.musicGainNode.gain.cancelScheduledValues(now);
                 this.musicGainNode.gain.setValueAtTime(currentGain, now);
                 this.musicGainNode.gain.linearRampToValueAtTime(0, now + fadeOutDuration / 1000);
+            }
+
+            // Start playback (may be rejected by autoplay policy before user gesture)
+            const playPromise = this.currentMusic.play();
+            if (playPromise) {
+                playPromise.then(() => {
+                    console.log(`AudioManager: Music '${name}' play() succeeded`);
+                }).catch(e => {
+                    console.warn(`AudioManager: Auto-play blocked for music '${name}' — will retry on user interaction`, e.message || e);
+                    // Mark for retry when the AudioContext is unlocked via initialize()
+                    this._musicPlayPending = true;
+                });
             }
 
             // Fade in new music
@@ -800,6 +855,16 @@ class AudioManager {
 
         } else {
             // Fallback path (HTML5 Audio with requestAnimationFrame)
+            this.currentMusic.volume = 0;
+            const playPromise = this.currentMusic.play();
+            if (playPromise) {
+                playPromise.then(() => {
+                    console.log(`AudioManager: Music '${name}' play() succeeded (fallback)`);
+                }).catch(e => {
+                    console.warn(`AudioManager: Auto-play blocked for music '${name}' (fallback)`, e.message || e);
+                    this._musicPlayPending = true;
+                });
+            }
             let start = null;
             const fade = (timestamp) => {
                 if (!start) start = timestamp;
@@ -840,12 +905,12 @@ class AudioManager {
             };
             requestAnimationFrame(fade);
         }
-        if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Playing music '${name}'`);
+        console.log(`AudioManager: playMusic('${name}') — loop=${loop}, hasOldMusic=${!!oldMusic}, ctxState=${this.audioCtx ? this.audioCtx.state : 'none'}`);
     }
 
     _checkQueuedMusic() {
         if (this._queuedMusic) {
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: Dequeuing music: '${this._queuedMusic.name}'`);
+            console.log(`AudioManager: Dequeuing music: '${this._queuedMusic.name}'`);
             const { name, loop, opts } = this._queuedMusic;
             this._queuedMusic = null;
             this.playMusic(name, loop, opts);
@@ -861,6 +926,7 @@ class AudioManager {
         // stale callbacks from operating on a null currentMusic.
         if (this._fadeInTimer) { clearTimeout(this._fadeInTimer); this._fadeInTimer = null; }
         if (this._fadeCleanupTimer) { clearTimeout(this._fadeCleanupTimer); this._fadeCleanupTimer = null; }
+        if (this._fadingSafetyTimer) { clearTimeout(this._fadingSafetyTimer); this._fadingSafetyTimer = null; }
         if (this.currentMusic) {
             const toStop = this.currentMusic;
             this._isFading = true;
@@ -899,6 +965,7 @@ class AudioManager {
                 requestAnimationFrame(fadeOutFn);
             }
             this.currentMusic = null;
+            this._currentMusicName = null;
         }
     }
 

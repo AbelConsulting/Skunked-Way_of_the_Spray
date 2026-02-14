@@ -725,6 +725,14 @@ class Game {
             // Stop menu music before starting level music
             this.stopMenuMusic();
             this.audioManager && this.audioManager.stopAmbient && this.audioManager.stopAmbient();
+
+            // Ensure AudioContext is unlocked before playing level music.
+            // initialize() may not have completed yet since main.js calls it
+            // without await on the first user gesture.
+            if (this.audioManager && typeof this.audioManager.initialize === 'function') {
+                try { await this.audioManager.initialize(); } catch (e) { __err('game', e); }
+            }
+
             await this.ensureLevelMusic();
             this.dispatchGameStateChange();
             // Ensure camera centers on player immediately after starting
@@ -795,6 +803,13 @@ class Game {
         async ensureLevelMusic() {
             if (!this.audioManager) return;
             
+            // Ensure AudioContext is initialized before attempting music playback
+            try {
+                if (this.audioManager.audioCtx && this.audioManager.audioCtx.state === 'suspended') {
+                    await this.audioManager.audioCtx.resume();
+                }
+            } catch (e) { /* ignore */ }
+
             // Get music options from level config, default to gameplay
             const config = LEVEL_CONFIGS[this.currentLevelIndex];
             const musicOptions = (config && Array.isArray(config.music) && config.music.length > 0)
@@ -811,6 +826,11 @@ class Game {
                 } catch (e) {
                     console.warn('Failed to load music:', musicName, e);
                 }
+            }
+
+            if (!this.audioManager.musicElements[musicName]) {
+                console.warn('ensureLevelMusic: music element still null after load for', musicName);
+                return;
             }
 
             this.audioManager.playMusic && this.audioManager.playMusic(musicName, true);
