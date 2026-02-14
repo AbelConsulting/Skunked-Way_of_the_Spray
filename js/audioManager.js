@@ -376,8 +376,15 @@ class AudioManager {
         this._pendingRawBuffers = null;
         for (const name of Object.keys(pending)) {
             if (this.sfxBuffers[name]) continue; // already decoded
+            const buf = pending[name];
+            // Guard: decodeAudioData detaches the ArrayBuffer on failure,
+            // so skip buffers that are already empty/detached.
+            if (!buf || buf.byteLength === 0) {
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: skipping detached buffer for '${name}'`);
+                continue;
+            }
             try {
-                const audioBuffer = await this.audioCtx.decodeAudioData(pending[name]);
+                const audioBuffer = await this.audioCtx.decodeAudioData(buf);
                 this.sfxBuffers[name] = audioBuffer;
             } catch (e) {
                 if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: deferred decode failed for '${name}'`, e);
@@ -425,10 +432,22 @@ class AudioManager {
                     this.sfxBuffers[name] = audioBuffer;
                     return audioBuffer;
                 } catch (decodeErr) {
-                    // Decoding can fail if context is suspended in strict browsers.
-                    // Store raw buffer so we can retry after initialize().
-                    if (!this._pendingRawBuffers) this._pendingRawBuffers = {};
-                    this._pendingRawBuffers[name] = arrayBuffer;
+                    // Decode failed (OGG codec issue, detached buffer, etc.).
+                    // Try the original WAV path as a fallback before giving up.
+                    if (preferred !== path) {
+                        try {
+                            const wavResp = await fetch(path);
+                            if (wavResp && wavResp.ok) {
+                                const wavBuf = await wavResp.arrayBuffer();
+                                const audioBuffer = await this.audioCtx.decodeAudioData(wavBuf);
+                                this.sfxBuffers[name] = audioBuffer;
+                                return audioBuffer;
+                            }
+                        } catch (wavErr) { /* WAV fallback also failed */ }
+                    }
+                    // No context-less retry will help — decodeAudioData detaches
+                    // the ArrayBuffer on failure, so stashing it is pointless.
+                    if (typeof Config !== 'undefined' && Config.DEBUG) console.warn(`AudioManager: decode failed for '${name}'`, decodeErr);
                     return null;
                 }
             } else {
@@ -683,8 +702,13 @@ class AudioManager {
             return;
         }
 
-        if (this.currentMusic === audioEl && !this.currentMusic.paused) {
-            return; // Already playing and not paused
+        if (this.currentMusic === audioEl) {
+            // Same track — just resume if paused, otherwise no-op
+            if (this.currentMusic.paused) {
+                const p = this.currentMusic.play();
+                if (p) p.catch(e => { if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('Auto-play blocked on resume', e); });
+            }
+            return;
         }
 
         if (this._isFading) {
