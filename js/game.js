@@ -644,7 +644,7 @@ class Game {
             }
 
             // Load the level after resets so idol spawns are preserved
-            this.loadLevel(levelIndex);
+            this.loadLevel(levelIndex, { skipMusic: true });
             // Place player at a spawn point near the level start.
             // (Previous logic spawned on the rightmost platform on desktop, which can
             // unintentionally drop you into the boss arena on long levels.)
@@ -880,8 +880,10 @@ class Game {
         /**
          * Load a specific level by index from LEVEL_CONFIGS
          * @param {number} index 
+         * @param {object} [opts] - Options
+         * @param {boolean} [opts.skipMusic=false] - Skip ensureLevelMusic (caller handles it)
          */
-        loadLevel(index) {
+        loadLevel(index, opts) {
             if (typeof LEVEL_CONFIGS === 'undefined' || !LEVEL_CONFIGS[index]) {
                 console.error('Level not found:', index);
                 return;
@@ -961,7 +963,10 @@ class Game {
                 this.audioManager.resetMusicPlaybackRate();
             }
             // Swap music based on level when transitioning.
-            try { this.ensureLevelMusic(); } catch (e) { __err('game', e); }
+            // Callers that manage music themselves (e.g. startGame) pass { skipMusic: true }.
+            if (!(opts && opts.skipMusic)) {
+                try { this.ensureLevelMusic(); } catch (e) { __err('game', e); }
+            }
 
             // Update Enemy settings
             if (this.enemyManager && config.enemyConfig) {
