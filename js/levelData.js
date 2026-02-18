@@ -327,7 +327,7 @@ const LEVEL_CONFIGS = [
             exitX: 16000 - 100
         },
         boss: {
-            type: "BOSS",
+            type: "BOSS5",
             spawnX: 16000 - 520,
             spawnY: 520,
             healthMultiplier: 11.0,
