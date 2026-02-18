@@ -1697,7 +1697,43 @@ class Game {
             } catch (e) { __err('game', e); }
         }
         
-        // Check skunk projectile collisions with enemies
+        // Check FIFTH_BASIC thrown projectile collisions with player
+        if (this.player && this.enemyManager) {
+            const playerRect = this.player.getRect ? this.player.getRect() :
+                { x: this.player.x, y: this.player.y, width: this.player.width, height: this.player.height };
+            for (const enemy of this.enemyManager.getEnemies()) {
+                if (enemy.enemyType !== 'FIFTH_BASIC') continue;
+                if (!enemy.thrownProjectiles || enemy.thrownProjectiles.length === 0) continue;
+                for (let i = enemy.thrownProjectiles.length - 1; i >= 0; i--) {
+                    const proj = enemy.thrownProjectiles[i];
+                    const projRect = {
+                        x: proj.x - proj.width / 2,
+                        y: proj.y - proj.height / 2,
+                        width: proj.width,
+                        height: proj.height
+                    };
+                    if (Utils.rectCollision(projRect, playerRect)) {
+                        // Deal damage and remove projectile
+                        if (typeof this.player.takeDamage === 'function') {
+                            this.player.takeDamage(proj.damage, enemy);
+                        }
+                        // Create a purple spray burst at impact
+                        try {
+                            const burst = new HitSpark(proj.x, proj.y, {
+                                particleCount: 10, speedMin: 80, speedMax: 180
+                            });
+                            for (const particle of burst.particles) {
+                                particle.color = Math.random() > 0.5 ? '#CC44FF' : '#AA00EE';
+                                particle.size = Utils.randomFloat(2, 5);
+                            }
+                            this.hitSparks.push(burst);
+                        } catch (e) { __err('game', e); }
+                        enemy.thrownProjectiles.splice(i, 1);
+                    }
+                }
+            }
+        }
+
         if (this.player && this.player.skunkProjectiles) {
             for (let i = this.player.skunkProjectiles.length - 1; i >= 0; i--) {
                 const proj = this.player.skunkProjectiles[i];
@@ -2195,6 +2231,13 @@ class Game {
         // Render game world (level, player, enemies) using logical coordinates
         this.level.draw(this.ctx, this.cameraX, this.cameraY, this.viewWidth, this.viewHeight);
         this.enemyManager.draw(this.ctx, this.cameraX, this.cameraY);
+
+        // Draw FIFTH_BASIC thrown projectiles
+        for (const enemy of this.enemyManager.getEnemies()) {
+            if (enemy.enemyType === 'FIFTH_BASIC' && typeof enemy.drawProjectiles === 'function') {
+                enemy.drawProjectiles(this.ctx, this.cameraX, this.cameraY);
+            }
+        }
 
         // Draw items
         if (this.itemManager) {

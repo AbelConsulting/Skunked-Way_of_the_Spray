@@ -57,11 +57,11 @@ class Enemy {
             this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.5); // Stationary but punishing
             this.points = Math.floor(Config.ENEMY_POINTS * 2.0); // High reward for unique threat
         } else if (this.enemyType === 'FIFTH_BASIC') {
-            this.health = Math.floor(Config.ENEMY_HEALTH * 2.0); // Elite — very tanky
+            this.health = Math.floor(Config.ENEMY_HEALTH * 1.2); // Moderate — relies on range
             this.maxHealth = this.health;
-            this.speed = Config.ENEMY_SPEED * 1.2; // Moves at a brisk pace
-            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 2.0); // Heavy hitter
-            this.points = Math.floor(Config.ENEMY_POINTS * 3.0); // High reward
+            this.speed = Config.ENEMY_SPEED * 0.85; // Slightly slower, prefers to keep distance
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.4); // Projectile hits hard
+            this.points = Math.floor(Config.ENEMY_POINTS * 2.5); // High reward
         } else {
             this.health = Config.ENEMY_HEALTH;
             this.maxHealth = Config.ENEMY_HEALTH;
@@ -87,6 +87,12 @@ class Enemy {
         this.attackCooldownTimer = 0;
         this.attackRange = 80;
         this.attackHitbox = { x: 0, y: 0, width: 60, height: 40 };
+
+        // FIFTH_BASIC (Thrower): extended attack range to trigger ATTACK from range
+        if (this.enemyType === 'FIFTH_BASIC') {
+            this.attackRange = 400;
+            this.attackCooldown = 2.8;
+        }
 
         // Type-specific combat tuning (kept conservative)
         if (this.isBossType()) {
@@ -140,6 +146,13 @@ class Enemy {
         this._jumpTrailTimer = 0; // Airborne trail particle timer
         this._lastJumpY = 0; // Y position of last jump for ring effect
 
+        // Thrower state (FIFTH_BASIC)
+        this.thrownProjectiles = [];     // Active purple spray projectiles
+        this.throwCooldown = 2.8;        // Seconds between throws
+        this.throwCooldownTimer = 0.8;   // Initial delay before first throw
+        this.preferredRangeMin = 180;    // Stay at least this far from player
+        this.preferredRangeMax = 380;    // Back off if closer than min
+
         // Load sprites AFTER all fields are initialised so loadSprites()
         // can safely set this.currentAnimation without it being overwritten.
         this.loadSprites();
@@ -160,7 +173,7 @@ class Enemy {
     isBasicType() {
         return this.enemyType === 'BASIC' || this.enemyType === 'FAST_BASIC' ||
                this.enemyType === 'SECOND_BASIC' || this.enemyType === 'THIRD_BASIC' ||
-               this.enemyType === 'FOURTH_BASIC';
+               this.enemyType === 'FOURTH_BASIC' || this.enemyType === 'FIFTH_BASIC';
     }
 
     loadSprites() {
@@ -435,6 +448,9 @@ class Enemy {
                     if (this.kamikazePhase === 'FOLLOW') {
                         this.state = 'CHASE';
                     }
+                } else if (this.enemyType === 'FIFTH_BASIC') {
+                    // Thrower: enters ATTACK from range, but backs off if player is too close
+                    this.state = 'ATTACK';
                 } else {
                     this.state = "ATTACK";
                 }
@@ -463,10 +479,30 @@ class Enemy {
                     this.chase(dt, player, level);
                     break;
                 case "ATTACK":
-                    this.attack(dt);
+                    this.attack(dt, player);
                     break;
             }
-        }
+
+            // FIFTH_BASIC: tick throw cooldown and keep preferred distance
+            if (this.enemyType === 'FIFTH_BASIC' && player) {
+                if (this.throwCooldownTimer > 0) this.throwCooldownTimer -= dt;
+
+                // Maintain preferred range — back away if player is too close
+                const ecx = this.x + this.width / 2;
+                const pcx = player.x + (player.width || 0) / 2;
+                const dist = Math.abs(ecx - pcx);
+                if (dist < this.preferredRangeMin) {
+                    // Retreat away from player
+                    const dir = ecx < pcx ? -1 : 1;
+                    this.x += dir * this.speed * 1.2 * dt;
+                    this.facingRight = dir > 0;
+                    this.velocityX = 0; // handled manually above
+                }
+
+                // Update thrown projectiles
+                this._updateThrownProjectiles(dt, level);
+            }
+        } // end if (!hitStunTimer && !isSkunked)
 
         // Apply gravity
         this.velocityY += Config.GRAVITY * dt;
@@ -860,10 +896,52 @@ class Enemy {
         }
     }
 
-    attack(dt) {
+    attack(dt, player) {
         // THIRD_BASIC (Kamikaze): no melee attack, phase machine handles everything
         if (this.enemyType === 'THIRD_BASIC') {
             this.velocityX = 0;
+            return;
+        }
+
+        // FIFTH_BASIC (Thrower): fire a purple projectile instead of melee
+        if (this.enemyType === 'FIFTH_BASIC') {
+            this.velocityX = 0; // stand still while targeting
+            if (!this.isAttacking && this.throwCooldownTimer <= 0 && player) {
+                this.isAttacking = true;
+                this.attackTimer = this.attackDuration;
+                this.attackCooldownTimer = this.attackCooldown;
+                this.throwCooldownTimer = this.throwCooldown;
+
+                if (this.animations.attack) this.animations.attack.reset();
+
+                // Aim toward player center
+                const ecx = this.x + this.width / 2;
+                const ecy = this.y + this.height / 2;
+                const pcx = player.x + (player.width || 0) / 2;
+                const pcy = player.y + (player.height || 0) / 2;
+                const dx = pcx - ecx;
+                const dy = pcy - ecy;
+                const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+                const speed = 420;
+
+                this.thrownProjectiles.push({
+                    x: ecx,
+                    y: ecy,
+                    width: 22,
+                    height: 22,
+                    velocityX: (dx / mag) * speed,
+                    velocityY: (dy / mag) * speed - 40, // slight upward arc
+                    damage: this.attackDamage,
+                    lifetime: 2.2,
+                    age: 0
+                });
+
+                this.facingRight = dx > 0;
+
+                if (this.audioManager) {
+                    this.audioManager.playSound('skunk_spray', { volume: 0.55, rate: 0.85 });
+                }
+            }
             return;
         }
 
@@ -892,6 +970,69 @@ class Enemy {
             if (this.animations.attack) {
                 this.animations.attack.reset();
             }
+        }
+    }
+
+    /**
+     * FIFTH_BASIC Thrower: move and cull active projectiles.
+     */
+    _updateThrownProjectiles(dt, level) {
+        for (let i = this.thrownProjectiles.length - 1; i >= 0; i--) {
+            const p = this.thrownProjectiles[i];
+            p.x += p.velocityX * dt;
+            p.y += p.velocityY * dt;
+            p.velocityY += Config.GRAVITY * 0.18 * dt; // gentle arc
+            p.age += dt;
+            if (p.age >= p.lifetime) { this.thrownProjectiles.splice(i, 1); continue; }
+            if (level && (p.x < -100 || p.x > level.width + 100 || p.y > level.height + 100)) {
+                this.thrownProjectiles.splice(i, 1); continue;
+            }
+        }
+    }
+
+    /**
+     * Draw purple spray projectiles for FIFTH_BASIC.
+     */
+    drawProjectiles(ctx, cameraX, cameraY) {
+        if (!this.thrownProjectiles || this.thrownProjectiles.length === 0) return;
+        for (const proj of this.thrownProjectiles) {
+            const sx = proj.x - cameraX;
+            const sy = proj.y - cameraY;
+            ctx.save();
+            ctx.translate(sx, sy);
+
+            // Motion trail
+            const mag = Math.sqrt(proj.velocityX * proj.velocityX + proj.velocityY * proj.velocityY) || 1;
+            const nx = proj.velocityX / mag;
+            const ny = proj.velocityY / mag;
+            for (let j = 1; j <= 3; j++) {
+                const a = ((3 - j) / 3) * 0.28;
+                ctx.fillStyle = `rgba(160, 60, 255, ${a})`;
+                ctx.beginPath();
+                ctx.arc(-nx * j * 8, -ny * j * 8, proj.width * (1 - j / 3 * 0.5) / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Outer glow
+            const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, proj.width * 1.4);
+            glow.addColorStop(0, 'rgba(200, 80, 255, 0.55)');
+            glow.addColorStop(0.5, 'rgba(150, 40, 255, 0.25)');
+            glow.addColorStop(1, 'rgba(120, 0, 255, 0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(0, 0, proj.width * 1.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core orb
+            ctx.fillStyle = '#CC44FF';
+            ctx.strokeStyle = '#8800CC';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, proj.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
         }
     }
 
