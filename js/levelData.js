@@ -25,77 +25,74 @@ const LEVEL_CONFIGS = [
         background: 'bg_forest',
         music: ['forest_theme', 'gameplay'],
         spawnPoints: [ 
-            { x: 'right', y: 300 }, 
             { x: 1200, y: 300 }, 
-            { x: 2400, y: 300 },
-            { x: 3600, y: 300 },
-            { x: 5200, y: 300 },
-            { x: 6600, y: 300 },
-            { x: 7900, y: 300 },
-            { x: 9100, y: 300 },
+            { x: 2800, y: 300 }, 
+            { x: 4500, y: 300 },
+            { x: 6200, y: 300 },
+            { x: 8000, y: 300 },
+            { x: 'right', y: 300 },
             { x: 'left', y: 300 } 
         ],
         platforms: [
-            // Ground
-            { x: 0, y: 680, width: 3000, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 3200, y: 670, width: 3300, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 6750, y: 680, width: 3250, height: 40, type: 'static', tile: 'ground_tile' },
+            // --- GROUND LAYOUT (Fragmented for dynamic traversal) ---
+            { x: 0, y: 680, width: 2200, height: 40, type: 'static', tile: 'ground_tile' },
+            { x: 2600, y: 680, width: 2000, height: 40, type: 'static', tile: 'ground_tile' }, // The Gap at 2200-2600
+            { x: 5000, y: 650, width: 2500, height: 40, type: 'static', tile: 'ground_tile' }, // Raised ground section
+            { x: 8000, y: 680, width: 2000, height: 40, type: 'static', tile: 'ground_tile' },
             
-            // Section 1: Intro stepping stones
-            { x: 200, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 500, y: 450, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 900, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            // --- SECTION 1: THE TALL OAK (Vertical Challenge) ---
+            // Stepping stones leading up to a high branch
+            { x: 400, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 700, y: 440, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1000, y: 330, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1300, y: 240, width: 400, height: 24, type: 'static', tile: 'platform_tile' }, // High branch for Idol 1
+            { x: 1800, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' }, // Path back down
             
-            // Section 2: Height exploration & longer path
-            { x: 1300, y: 450, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1700, y: 550, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2200, y: 450, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            // --- SECTION 2: THE HOLLOW LOGS (Precision platforming over the first gap) ---
+            { x: 2100, y: 500, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2350, y: 400, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2600, y: 500, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
             
-            // Section 3: Bridge
-            { x: 2800, y: 500, width: 600, height: 24, type: 'static', tile: 'platform_tile' },
+            // --- SECTION 3: CANOPY RUN (Long chain of platforms) ---
+            { x: 3200, y: 550, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3600, y: 450, width: 250, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4000, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4400, y: 450, width: 250, height: 24, type: 'static', tile: 'platform_tile' }, // Near Idol 2
             
-            // Section 4: Final stretch to exit
-            { x: 3800, y: 450, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4200, y: 550, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4700, y: 500, width: 200, height: 24, type: 'static', tile: 'platform_tile' }
-
-            // Section 5: Deep woods
-            ,{ x: 5200, y: 550, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 5550, y: 450, width: 240, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 5950, y: 520, width: 320, height: 24, type: 'static', tile: 'platform_tile' }
-
-            // Section 6: Canopy run
-            ,{ x: 6600, y: 380, width: 180, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 6900, y: 300, width: 180, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 7250, y: 380, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 7600, y: 460, width: 260, height: 24, type: 'static', tile: 'platform_tile' }
-
-            // Section 7: Approach to boss arena
-            ,{ x: 8200, y: 520, width: 600, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 9000, y: 450, width: 220, height: 24, type: 'static', tile: 'platform_tile' }
-            ,{ x: 9400, y: 550, width: 320, height: 24, type: 'static', tile: 'platform_tile' }
+            // --- SECTION 4: THE GREAT RAVINE (Deep traversal) ---
+            // Platforms inside a dip in the ground height
+            { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform_tile' }, // Peak of Section 4
+            { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+            
+            // --- SECTION 5: APPROACHING THE CHIEFTAIN (Zig-Zag) ---
+            { x: 7600, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8000, y: 450, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 8800, y: 450, width: 600, height: 24, type: 'static', tile: 'platform_tile' } // Final high ledge before boss
         ],
         idols: [
-            { x: 600, y: 420 },
-            { x: 3100, y: 470 },
-            { x: 8500, y: 490 }
+            { x: 1500, y: 200 },  // High Ground: Only reachable by the "Tall Oak" vertical path
+            { x: 4500, y: 410 },  // Risky Mid-Air: Requires careful jumping during the Canopy Run
+            { x: 6400, y: 280 }   // Peak Traversal: At the very top of the Ravine section
         ],
         speedBoosts: [
-            { x: 1800, y: 520 },  // Early speed boost on platform
-            { x: 7700, y: 430 }   // Late speed boost before boss
+            { x: 1000, y: 290 },
+            { x: 7000, y: 410 }
         ],
         damageBoosts: [
-            { x: 4500, y: 520 }   // Mid-level damage boost
+            { x: 5500, y: 480 }
         ],
         skunkPowerups: [
-            { x: 2500, y: 470 },  // Mid-forest skunk ammo
-            { x: 6200, y: 490 }   // Deep woods skunk ammo
+            { x: 2350, y: 360 }, // On the floating platform over the first gap
+            { x: 8500, y: 310 }
         ],
         enemyConfig: {
             spawnInterval: 3.0,
             maxEnemies: 5,
             aggression: 0.5,
-            allowedTypes: ['BASIC']
+            allowedTypes: ['BASIC', 'SECOND_BASIC']
         }
     },
 
