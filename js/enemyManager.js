@@ -342,9 +342,9 @@ class EnemyManager {
         const dropX = enemy.x + (enemy.width || 48) / 2;
         const dropY = enemy.y + (enemy.height || 48) / 2;
 
-        // Boss enemies have higher drop rates
+        // Boss enemies have higher drop rates; basic enemies drop nothing
         const isBoss = this.isBossType(enemy.enemyType);
-        const healthRegenRate = isBoss ? 0.5 : (Config.HEALTH_REGEN_DROP_RATE || 0.15);
+        const healthRegenRate = isBoss ? 0.5 : 0;
         const extraLifeRate = isBoss ? 0.01 : 0; // 1% from bosses, 0% from regular enemies
         // Speed boost and damage boost are placed in levels, not dropped
 
