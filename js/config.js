@@ -42,8 +42,8 @@ const Config = {
     ENEMY_POINTS: 100,
 
     // SECOND_BASIC Shield Bubble
-    SECOND_BASIC_SHIELD_DURATION: 1.0,  // Seconds shield stays active per activation
-    SECOND_BASIC_SHIELD_COOLDOWN: 5.0,  // Seconds between shield activations
+    SECOND_BASIC_SHIELD_DURATION: 1.5,  // Seconds shield stays active per activation
+    SECOND_BASIC_SHIELD_COOLDOWN: 2.2,  // Seconds between shield activations
 
     // Exploder / Kamikaze (THIRD_BASIC)
     EXPLODER_RUSH_SPEED_MULT: 3.5,   // Speed multiplier during dash phase (after fuse)
@@ -184,5 +184,5 @@ const Config = {
     // accidentally skipping the screen.
     GAME_OVER_LOCKOUT: 3.0,
     // How long (seconds) after game over before the high-score prompt appears
-    GAME_OVER_HIGHSCORE_DELAY: 5.0
+    GAME_OVER_HIGHSCORE_DELAY: 8.0
 };
