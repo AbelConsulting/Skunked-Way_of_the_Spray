@@ -41,6 +41,10 @@ const Config = {
     ENEMY_ATTACK_DAMAGE: 15,
     ENEMY_POINTS: 100,
 
+    // SECOND_BASIC Shield Bubble
+    SECOND_BASIC_SHIELD_DURATION: 1.0,  // Seconds shield stays active per activation
+    SECOND_BASIC_SHIELD_COOLDOWN: 5.0,  // Seconds between shield activations
+
     // Exploder / Kamikaze (THIRD_BASIC)
     EXPLODER_RUSH_SPEED_MULT: 3.5,   // Speed multiplier during dash phase (after fuse)
     EXPLODER_FUSE_TIME: 1.6,         // Seconds of flashing before dash begins

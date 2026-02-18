@@ -153,6 +153,15 @@ class Enemy {
         this.preferredRangeMin = 180;    // Stay at least this far from player
         this.preferredRangeMax = 380;    // Back off if closer than min
 
+        // Shield bubble state (SECOND_BASIC)
+        // The shield activates automatically every SECOND_BASIC_SHIELD_COOLDOWN seconds
+        // and lasts SECOND_BASIC_SHIELD_DURATION seconds, absorbing all incoming damage.
+        this.shieldActive = false;
+        this.shieldTimer = 0;            // Countdown while shield is active
+        this.shieldCooldownTimer = 1.5;  // Initial delay before first activation
+        this.shieldBreakFlash = 0;       // Short flash timer when a hit is blocked
+        this.shieldParticles = [];       // Burst particles shown on a blocked hit
+
         // Load sprites AFTER all fields are initialised so loadSprites()
         // can safely set this.currentAnimation without it being overwritten.
         this.loadSprites();
@@ -250,6 +259,32 @@ class Enemy {
     }
 
     takeDamage(damage, knockbackDirection = 1, opts = null) {
+        // SECOND_BASIC: shield bubble absorbs the hit entirely
+        if (this.enemyType === 'SECOND_BASIC' && this.shieldActive) {
+            // Trigger visual ripple flash
+            this.shieldBreakFlash = 0.28;
+            // Burst of shield impact particles
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            for (let i = 0; i < 10; i++) {
+                const angle = (Math.PI * 2 * i) / 10;
+                const spd = 90 + Math.random() * 70;
+                this.shieldParticles.push({
+                    x: cx + Math.cos(angle) * 28,
+                    y: cy + Math.sin(angle) * 28,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    life: 0.45,
+                    age: 0,
+                    size: 4 + Math.random() * 4
+                });
+            }
+            if (this.audioManager) {
+                this.audioManager.playSound('enemy_hit', { volume: 0.45, rate: 1.9 });
+            }
+            return false; // damage fully absorbed — enemy does NOT die
+        }
+
         this.health -= damage;
 
         // Backwards compatible signature:
@@ -355,7 +390,39 @@ class Enemy {
                 }
             }
         }
-        
+
+        // Shield bubble timer (SECOND_BASIC)
+        if (this.enemyType === 'SECOND_BASIC') {
+            if (this.shieldActive) {
+                this.shieldTimer -= dt;
+                if (this.shieldTimer <= 0) {
+                    this.shieldActive = false;
+                    this.shieldCooldownTimer = Config.SECOND_BASIC_SHIELD_COOLDOWN || 5.0;
+                }
+            } else {
+                if (this.shieldCooldownTimer > 0) {
+                    this.shieldCooldownTimer -= dt;
+                } else {
+                    // Activate shield
+                    this.shieldActive = true;
+                    this.shieldTimer = Config.SECOND_BASIC_SHIELD_DURATION || 1.0;
+                    this.shieldBreakFlash = 0;
+                }
+            }
+            // Decay hit-flash
+            if (this.shieldBreakFlash > 0) this.shieldBreakFlash = Math.max(0, this.shieldBreakFlash - dt);
+            // Update shield impact particles
+            for (let i = this.shieldParticles.length - 1; i >= 0; i--) {
+                const p = this.shieldParticles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vx *= 0.87;
+                p.vy *= 0.87;
+                p.age += dt;
+                if (p.age >= p.life) this.shieldParticles.splice(i, 1);
+            }
+        }
+
         // Kamikaze phase machine (THIRD_BASIC): FOLLOW -> FUSE -> DASH -> detonate
         if (this.enemyType === 'THIRD_BASIC' && !this.hasDetonated && player) {
             const enemyRect = this.getRect();
@@ -1556,6 +1623,78 @@ class Enemy {
                     ctx.fillStyle = grad;
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // SECOND_BASIC: shield bubble overlay
+        if (this.enemyType === 'SECOND_BASIC' && (this.shieldActive || (this.shieldBreakFlash && this.shieldBreakFlash > 0) || (this.shieldParticles && this.shieldParticles.length > 0))) {
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            const radius = Math.max(this.width, this.height) * 0.62;
+
+            if (this.shieldActive) {
+                ctx.save();
+                const pulse = 0.7 + Math.sin(Date.now() * 0.006) * 0.3;
+                const flashBoost = (this.shieldBreakFlash && this.shieldBreakFlash > 0) ? (this.shieldBreakFlash / 0.28) : 0;
+
+                // Outer radial glow
+                const outerGrad = ctx.createRadialGradient(cx, cy, radius * 0.5, cx, cy, radius * 1.2);
+                outerGrad.addColorStop(0, `rgba(80, 200, 255, ${(0.12 * pulse + flashBoost * 0.25).toFixed(3)})`);
+                outerGrad.addColorStop(0.6, `rgba(40, 120, 255, ${(0.2 * pulse + flashBoost * 0.15).toFixed(3)})`);
+                outerGrad.addColorStop(1, 'rgba(0, 60, 200, 0)');
+                ctx.fillStyle = outerGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 1.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Bubble outline
+                ctx.globalAlpha = Math.min(1, 0.55 + pulse * 0.25 + flashBoost * 0.4);
+                ctx.strokeStyle = flashBoost > 0.1 ? '#FFFFFF' : '#88EEFF';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = '#44AAFF';
+                ctx.shadowBlur = 14 + flashBoost * 10;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Progress arc (clockwise, shows remaining shield time)
+                const duration = Config.SECOND_BASIC_SHIELD_DURATION || 1.0;
+                const progress = Math.max(0, this.shieldTimer / duration);
+                ctx.globalAlpha = 0.75;
+                ctx.strokeStyle = '#AADDFF';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+                ctx.stroke();
+
+                // Shield icon above enemy
+                ctx.globalAlpha = 0.9;
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#AADDFF';
+                ctx.fillText('🛡', cx, this.y - 16);
+
+                ctx.restore();
+            }
+
+            // Shield impact burst particles
+            if (this.shieldParticles && this.shieldParticles.length > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                for (const p of this.shieldParticles) {
+                    const alpha = (1 - p.age / p.life) * 0.9;
+                    ctx.globalAlpha = alpha;
+                    const pGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                    pGrad.addColorStop(0, '#FFFFFF');
+                    pGrad.addColorStop(0.4, '#88DDFF');
+                    pGrad.addColorStop(1, 'rgba(40, 120, 255, 0)');
+                    ctx.fillStyle = pGrad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 ctx.restore();
