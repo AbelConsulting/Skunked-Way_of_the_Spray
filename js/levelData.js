@@ -312,7 +312,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.8,
             maxEnemies: 8,
             aggression: 1.0,
-            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC']
+            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -426,7 +426,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.5,
             maxEnemies: 10,
             aggression: 1.2,
-            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -544,7 +544,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.2,
             maxEnemies: 12,
             aggression: 1.4,
-            allowedTypes: ['FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -651,7 +651,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.6,
             maxEnemies: 9,
             aggression: 1.15,
-            allowedTypes: ['SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -766,7 +766,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.4,
             maxEnemies: 11,
             aggression: 1.25,
-            allowedTypes: ['SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -884,7 +884,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.2,
             maxEnemies: 12,
             aggression: 1.4,
-            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -996,7 +996,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.5,
             maxEnemies: 10,
             aggression: 1.25,
-            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 
@@ -1108,7 +1108,7 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.3,
             maxEnemies: 12,
             aggression: 1.35,
-            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC']
+            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     }
 ];

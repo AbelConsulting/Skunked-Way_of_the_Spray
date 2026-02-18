@@ -9,6 +9,7 @@ const ENEMY_TYPE_CONFIG = {
     'SECOND_BASIC': { prefix: 'second', size: { width: 48, height: 48 }, fallback: 'basic' },
     'THIRD_BASIC': { prefix: 'third', size: { width: 48, height: 48 }, fallback: 'second' },
     'FOURTH_BASIC': { prefix: 'fourth', size: { width: 48, height: 48 }, fallback: 'third' },
+    'FIFTH_BASIC': { prefix: 'fifth', size: { width: 48, height: 48 }, fallback: 'fourth' },
     'FLYING': { prefix: 'fly', size: { width: 40, height: 40 }, fallback: null },
     'BOSS': { prefix: 'boss', size: { width: 128, height: 128 }, fallback: null, attackAnim: 'boss_attack1' },
     'BOSS2': { prefix: 'boss2', size: { width: 128, height: 128 }, fallback: 'boss', attackAnim: 'boss2_attack' },
@@ -55,6 +56,12 @@ class Enemy {
             this.speed = 0; // No horizontal movement
             this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 1.5); // Stationary but punishing
             this.points = Math.floor(Config.ENEMY_POINTS * 2.0); // High reward for unique threat
+        } else if (this.enemyType === 'FIFTH_BASIC') {
+            this.health = Math.floor(Config.ENEMY_HEALTH * 2.0); // Elite — very tanky
+            this.maxHealth = this.health;
+            this.speed = Config.ENEMY_SPEED * 1.2; // Moves at a brisk pace
+            this.attackDamage = Math.floor(Config.ENEMY_ATTACK_DAMAGE * 2.0); // Heavy hitter
+            this.points = Math.floor(Config.ENEMY_POINTS * 3.0); // High reward
         } else {
             this.health = Config.ENEMY_HEALTH;
             this.maxHealth = Config.ENEMY_HEALTH;
