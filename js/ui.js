@@ -19,6 +19,9 @@ class UI {
         this.safeLeft = 0;
         this.safeRight = 0;
         this._refreshSafeAreaInsets();
+
+        // Title-screen particle field (lazy-initialised on first drawMenu call)
+        this._menuParticles = null;
     }
 
     /**
@@ -60,6 +63,51 @@ class UI {
         bgGrad.addColorStop(1,   'rgba(0, 12, 4, 0.94)');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, this.width, this.height);
+
+        // ── Animated particle field ─────────────────────────────────
+        const PARTICLE_COUNT = 60;
+        const PALETTE = ['#00FF77', '#FFFFFF', '#FFD700', '#FF8844', '#AAFFCC', '#88CCFF'];
+        if (!this._menuParticles) {
+            this._menuParticles = Array.from({ length: PARTICLE_COUNT }, () => ({
+                x:     Math.random() * this.width,
+                y:     Math.random() * this.height,
+                r:     0.6 + Math.random() * 2.2,
+                vy:    0.18 + Math.random() * 0.55,
+                vx:    (Math.random() - 0.5) * 0.18,
+                color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+                phase: Math.random() * Math.PI * 2,   // twinkle phase offset
+                speed: 280 + Math.random() * 320,     // twinkle speed (ms per cycle)
+            }));
+        }
+        ctx.save();
+        for (const p of this._menuParticles) {
+            // Drift
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.y > this.height + 4) { p.y = -4; p.x = Math.random() * this.width; }
+            if (p.x < -4)  p.x = this.width + 4;
+            if (p.x > this.width + 4) p.x = -4;
+            // Twinkle
+            const alpha = 0.25 + 0.6 * (0.5 + 0.5 * Math.sin(now / p.speed + p.phase));
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+            // Add a soft cross-hair sparkle on larger particles
+            if (p.r > 1.8) {
+                ctx.globalAlpha = alpha * 0.35;
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 0.6;
+                const arm = p.r * 2.2;
+                ctx.beginPath();
+                ctx.moveTo(p.x - arm, p.y); ctx.lineTo(p.x + arm, p.y);
+                ctx.moveTo(p.x, p.y - arm); ctx.lineTo(p.x, p.y + arm);
+                ctx.stroke();
+            }
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
 
         ctx.save();
         ctx.textAlign = 'center';
