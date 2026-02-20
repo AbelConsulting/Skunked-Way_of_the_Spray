@@ -78,7 +78,6 @@ const LEVEL_CONFIGS = [
         ],
         idols: [
             { x: 50, y: 110 },  // High Ground: Only reachable by the "Tall Oak" vertical path (top-left platform)
-            { x: 1500, y: 200 },  // Idol 1: On the high branch at the top of the Tall Oak climb
             { x: 4500, y: 410 },  // Risky Mid-Air: Requires careful jumping during the Canopy Run
             { x: 6400, y: 280 }   // Peak Traversal: At the very top of the Ravine section
         ],
