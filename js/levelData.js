@@ -1014,7 +1014,7 @@ const LEVEL_CONFIGS = [
             speedMultiplier: 1.2,
             attackDamageMultiplier: 2.3
         },
-        background: 'bg_neon',
+        background: 'bg_final',
         music: ['boss_theme', 'action_theme', 'city_theme'],
         spawnPoints: [
             { x: 'right', y: 300 },
