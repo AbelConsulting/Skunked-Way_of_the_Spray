@@ -335,7 +335,7 @@ const LEVEL_CONFIGS = [
             speedMultiplier: 1.05,
             attackDamageMultiplier: 1.7
         },
-        background: 'bg_cave_crystal',
+        background: 'bg_caves_crystal',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
