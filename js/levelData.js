@@ -42,10 +42,10 @@ const LEVEL_CONFIGS = [
             
             // --- SECTION 1: THE TALL OAK (Vertical Challenge) ---
             // Stepping stones leading up to a high branch
-            { x: 0, y: 150, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 0, y: 250, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 0, y: 350, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 0, y: 450, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 50, y: 150, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 50, y: 250, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 50, y: 350, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 50, y: 450, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 400, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 700, y: 440, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 1000, y: 330, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
