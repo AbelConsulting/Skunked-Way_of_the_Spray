@@ -77,7 +77,7 @@ const LEVEL_CONFIGS = [
             { x: 8800, y: 450, width: 600, height: 24, type: 'static', tile: 'platform_tile' } // Final high ledge before boss
         ],
         idols: [
-            { x: 1500, y: 200 },  // High Ground: Only reachable by the "Tall Oak" vertical path
+            { x: 1, y: 851 },  // High Ground: Only reachable by the "Tall Oak" vertical path
             { x: 4500, y: 410 },  // Risky Mid-Air: Requires careful jumping during the Canopy Run
             { x: 6400, y: 280 }   // Peak Traversal: At the very top of the Ravine section
         ],
