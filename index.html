@@ -18,6 +18,12 @@
             Content-Security-Policy: script-src 'self' 'nonce-<random>' https://static.cloudflareinsights.com; object-src 'none'; base-uri 'self';
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
+    <!-- Arcade / ninja title fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Hidden element to force-load canvas fonts before the game loop starts -->
+    <span style="font-family:'Bangers','Press Start 2P';position:absolute;left:-9999px;font-size:0;pointer-events:none" aria-hidden="true">.</span>
     <link rel="stylesheet" href="styles.css?v=2026-01-27">
     <link rel="stylesheet" href="achievements.css?v=2026-01-27">
 
