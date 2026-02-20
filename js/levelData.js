@@ -136,33 +136,33 @@ const LEVEL_CONFIGS = [
             { x: 9200, y: 660, width: 2800, height: 40, type: 'static', tile: 'ground3_tile' },
             
             // Urban District 1
-            { x: 300, y: 500, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 500, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 300, y: 500, width: 150, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 500, y: 400, width: 150, height: 24, type: 'static', tile: 'platform2_tile' },
             // Elevator
             { x: 800, y: 400, width: 120, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
             
-            { x: 1100, y: 500, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1100, y: 500, width: 400, height: 24, type: 'static', tile: 'platform2_tile' },
             
             // Rooftops
-            { x: 1800, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1800, y: 400, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
             { x: 2200, y: 300, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 2600, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2600, y: 400, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
 
             // Highway Bridge
             { x: 3200, y: 500, width: 800, height: 24, type: 'static', tile: 'platform_tile' },
             
             // Construction Zone
-            { x: 4200, y: 600, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 4500, y: 500, width: 150, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2, tile: 'platform_tile' },
-            { x: 4900, y: 400, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 4200, y: 600, width: 150, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 4500, y: 500, width: 150, height: 24, type: 'moving', axis: 'x', range: 100, speed: 2, tile: 'platform2_tile' },
+            { x: 4900, y: 400, width: 150, height: 24, type: 'static', tile: 'platform2_tile' },
             
             // Final Stretch
             { x: 5300, y: 500, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
 
             // District 2: Alley rooftops
             { x: 6200, y: 520, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6550, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6950, y: 320, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 6550, y: 420, width: 240, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 6950, y: 320, width: 260, height: 24, type: 'static', tile: 'platform2_tile' },
             { x: 7350, y: 420, width: 240, height: 24, type: 'static', tile: 'platform_tile' },
 
             // District 3: Billboard run
