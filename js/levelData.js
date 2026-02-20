@@ -130,10 +130,10 @@ const LEVEL_CONFIGS = [
         ],
         platforms: [
             // Ground
-            { x: 0, y: 660, width: 2600, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 2850, y: 650, width: 3200, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 6350, y: 670, width: 2600, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 9200, y: 660, width: 2800, height: 40, type: 'static', tile: 'ground_tile' },
+            { x: 0, y: 660, width: 2600, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 2850, y: 650, width: 3200, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 6350, y: 670, width: 2600, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 9200, y: 660, width: 2800, height: 40, type: 'static', tile: 'ground3_tile' },
             
             // Urban District 1
             { x: 300, y: 500, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
