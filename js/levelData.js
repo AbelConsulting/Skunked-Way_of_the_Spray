@@ -68,6 +68,7 @@ const LEVEL_CONFIGS = [
             { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform3_tile' }, // Peak of Section 4
+             { x: 6300, y: 220, width: 100, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform3_tile' },
             
             // --- SECTION 5: APPROACHING THE CHIEFTAIN (Zig-Zag) ---
