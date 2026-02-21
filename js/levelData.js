@@ -42,15 +42,15 @@ const LEVEL_CONFIGS = [
             
             // --- SECTION 1: THE TALL OAK (Vertical Challenge) ---
             // Stepping stones leading up to a high branch
-            { x: 50, y: 150, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 50, y: 250, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 50, y: 350, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 50, y: 450, width: 50, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 50, y: 150, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 50, y: 250, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 50, y: 350, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 50, y: 450, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 400, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 700, y: 440, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 1000, y: 330, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 1300, y: 240, width: 400, height: 24, type: 'static', tile: 'platform_tile' }, // High branch for Idol 1
-            { x: 1800, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' }, // Path back down
+            { x: 1300, y: 240, width: 400, height: 24, type: 'static', tile: 'platform2_tile' }, // High branch for Idol 1
+            { x: 1800, y: 350, width: 200, height: 24, type: 'static', tile: 'platform3_tile' }, // Path back down
             
             // --- SECTION 2: THE HOLLOW LOGS (Precision platforming over the first gap) ---
             { x: 2100, y: 500, width: 120, height: 24, type: 'static', tile: 'platform_tile' },
@@ -65,10 +65,10 @@ const LEVEL_CONFIGS = [
             
             // --- SECTION 4: THE GREAT RAVINE (Deep traversal) ---
             // Platforms inside a dip in the ground height
-            { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform_tile' }, // Peak of Section 4
-            { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform3_tile' }, // Peak of Section 4
+            { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform3_tile' },
             
             // --- SECTION 5: APPROACHING THE CHIEFTAIN (Zig-Zag) ---
             { x: 7600, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
