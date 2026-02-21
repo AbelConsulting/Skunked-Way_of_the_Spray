@@ -68,7 +68,7 @@ const LEVEL_CONFIGS = [
             { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform3_tile' }, // Peak of Section 4
-             { x: 6300, y: 220, width: 100, height: 24, type: 'static', tile: 'platform3_tile' },
+             { x: 6300, y: 220, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
             { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform3_tile' },
             
             // --- SECTION 5: APPROACHING THE CHIEFTAIN (Zig-Zag) ---
@@ -80,7 +80,7 @@ const LEVEL_CONFIGS = [
         idols: [
             { x: 50, y: 110 },  // High Ground: Only reachable by the "Tall Oak" vertical path (top-left platform)
             { x: 4500, y: 410 },  // Risky Mid-Air: Requires careful jumping during the Canopy Run
-            { x: 6400, y: 280 }   // Peak Traversal: At the very top of the Ravine section
+            { x: 6400, y: 180 }   // Peak Traversal: At the very top of the Ravine section
         ],
         speedBoosts: [
             { x: 1000, y: 290 },
