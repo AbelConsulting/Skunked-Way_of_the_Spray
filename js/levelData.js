@@ -198,8 +198,8 @@ const LEVEL_CONFIGS = [
             { x: 7200, y: 260 }    // Rooftop skunk ammo
         ],
         enemyConfig: {
-            spawnInterval: 2.2,
-            maxEnemies: 7,
+            spawnInterval: 2.0,
+            maxEnemies: 10,
             aggression: 0.7,
             allowedTypes: ['BASIC', 'FAST_BASIC', 'FIFTH_BASIC']
         }
