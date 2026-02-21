@@ -239,10 +239,10 @@ const LEVEL_CONFIGS = [
             { x: 14000, y: 300 }
         ],
         platforms: [
-            { x: 0, y: 650, width: 3400, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 3700, y: 640, width: 3500, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 7550, y: 660, width: 3500, height: 40, type: 'static', tile: 'ground_tile' },
-            { x: 11400, y: 650, width: 3600, height: 40, type: 'static', tile: 'ground_tile' },
+            { x: 0, y: 650, width: 3400, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 3700, y: 640, width: 3500, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 7550, y: 660, width: 3500, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 11400, y: 650, width: 3600, height: 40, type: 'static', tile: 'ground2_tile' },
             
             // Courtyard
             { x: 400, y: 550, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
