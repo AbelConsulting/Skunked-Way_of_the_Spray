@@ -220,8 +220,8 @@ const LEVEL_CONFIGS = [
             spawnX: 15000 - 520,
             spawnY: 520,
             healthMultiplier: 10.0,
-            speedMultiplier: 1.0,
-            attackDamageMultiplier: 1.6
+            speedMultiplier: 1.1,
+            attackDamageMultiplier: 1.9
         },
         background: 'bg_dojo',
         music: ['gameplay', 'action_theme'],
@@ -246,14 +246,14 @@ const LEVEL_CONFIGS = [
             
             // Courtyard
             { x: 400, y: 550, width: 100, height: 24, type: 'static', tile: 'platform_tile' },
-            { x: 600, y: 450, width: 150, height: 24, type: 'moving', axis: 'x', range: 80, speed: 1.5, tile: 'platform_tile' },
+            { x: 600, y: 450, width: 150, height: 24, type: 'moving', axis: 'x', range: 80, speed: 1.9, tile: 'platform_tile' },
             
             // Training Hall
             { x: 1200, y: 400, width: 800, height: 24, type: 'static', tile: 'platform_tile' }, 
             
             // Moving Pillars
-            { x: 2200, y: 550, width: 100, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform_tile' },
-            { x: 2500, y: 550, width: 100, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.5, timeOffset: 1.5, tile: 'platform_tile' },
+            { x: 2200, y: 550, width: 100, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.4, tile: 'platform_tile' },
+            { x: 2500, y: 550, width: 100, height: 24, type: 'moving', axis: 'y', range: 150, speed: 3.0, timeOffset: 1.5, tile: 'platform_tile' },
             
             { x: 2900, y: 400, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
             
@@ -279,8 +279,8 @@ const LEVEL_CONFIGS = [
             { x: 9150, y: 460, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
 
             // Hanging lanterns (moving)
-            { x: 9800, y: 520, width: 120, height: 24, type: 'moving', axis: 'y', range: 160, speed: 2.3, tile: 'platform_tile' },
-            { x: 10150, y: 420, width: 120, height: 24, type: 'moving', axis: 'y', range: 160, speed: 2.6, timeOffset: 1.2, tile: 'platform_tile' },
+            { x: 9800, y: 520, width: 120, height: 24, type: 'moving', axis: 'y', range: 160, speed: 2.8, tile: 'platform_tile' },
+            { x: 10150, y: 420, width: 120, height: 24, type: 'moving', axis: 'y', range: 160, speed: 3.1, timeOffset: 1.2, tile: 'platform_tile' },
             { x: 10500, y: 320, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
 
             // Upper ridge
@@ -298,23 +298,20 @@ const LEVEL_CONFIGS = [
             { x: 11250, y: 330 }
         ],
         speedBoosts: [
-            { x: 3000, y: 370 },    // Before gauntlet
             { x: 8750, y: 330 }     // Inner temple
         ],
         damageBoosts: [
-            { x: 1600, y: 370 },    // Early training hall
             { x: 12000, y: 330 },   // Upper ridge
             { x: 14400, y: 420 }    // Just before boss
         ],
         skunkPowerups: [
-            { x: 3200, y: 490 },   // Temple approach skunk ammo
             { x: 8400, y: 330 }    // Mountain path skunk ammo
         ],
         enemyConfig: {
-            spawnInterval: 1.8,
-            maxEnemies: 8,
-            aggression: 1.0,
-            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'FIFTH_BASIC']
+            spawnInterval: 1.4,
+            maxEnemies: 11,
+            aggression: 1.15,
+            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     },
 

@@ -10,6 +10,7 @@ class EnemyManager {
         this.spawnTimer = 0;
         this.spawnInterval = 3.0; // Seconds between spawns
         this.maxEnemies = 5;
+        this.aggression = 1.0;
         this.waveNumber = 1;
         this.enemiesDefeated = 0;
         this.spawningEnabled = true;
@@ -21,6 +22,7 @@ class EnemyManager {
         this.spawnTimer = 0;
         this.waveNumber = 1;
         this.enemiesDefeated = 0;
+        this.aggression = 1.0;
         this.spawningEnabled = true;
         this.bossInstance = null;
         // Start with a longer spawn delay on reset to give player breathing room
@@ -157,6 +159,22 @@ class EnemyManager {
         }
 
         const enemy = new Enemy(sx, sy, enemyType, this.audioManager);
+
+        // Apply per-level aggression tuning from level config
+        const aggression = (typeof this.aggression === 'number' && Number.isFinite(this.aggression))
+            ? this.aggression
+            : 1.0;
+        const clampedAggression = Math.max(0.6, Math.min(2.0, aggression));
+        if (clampedAggression !== 1.0) {
+            const speedScale = 1 + ((clampedAggression - 1) * 0.25);
+            enemy.speed *= speedScale;
+            enemy.velocityX = enemy.facingRight ? enemy.speed : -enemy.speed;
+
+            enemy.attackCooldown = Math.max(0.45, enemy.attackCooldown / clampedAggression);
+            enemy.detectionRange = Math.max(220, (enemy.detectionRange || 300) * clampedAggression);
+            enemy.attackRange = Math.max(50, (enemy.attackRange || 80) * (0.9 + ((clampedAggression - 1) * 0.35)));
+        }
+
         this.enemies.push(enemy);
 
         // Play spawn sound with slight randomisation

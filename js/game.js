@@ -992,6 +992,7 @@ class Game {
             if (this.enemyManager && config.enemyConfig) {
                 this.enemyManager.spawnInterval = config.enemyConfig.spawnInterval || 3.0;
                 this.enemyManager.maxEnemies = config.enemyConfig.maxEnemies || 5;
+                this.enemyManager.aggression = (typeof config.enemyConfig.aggression === 'number') ? config.enemyConfig.aggression : 1.0;
                 // Update allowed types
                 this.enemyManager.allowedEnemyTypes = config.enemyConfig.allowedTypes || null;
                 this.enemyManager.spawningEnabled = true;
