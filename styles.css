@@ -1,3 +1,4 @@
+
 #mobile-start-overlay {
     position: absolute;
     top: 0;
@@ -172,7 +173,157 @@ body {
     margin-top: 10px;
 }
 
-/* Responsive design */
+/* Highscore Prompt */
+.highscore-prompt-overlay {
+    position: fixed;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.highscore-prompt-box {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 320px;
+    font-family: sans-serif;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    border: 2px solid #ffd700;
+}
+
+.highscore-prompt-title {
+    font-size: 20px;
+    margin-bottom: 12px;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.highscore-prompt-score {
+    font-size: 24px;
+    margin-bottom: 16px;
+    font-weight: bold;
+}
+
+.highscore-prompt-input {
+    font-size: 18px;
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #666;
+    border-radius: 6px;
+    background: #333;
+    color: #fff;
+    outline: none;
+    text-align: center;
+}
+
+.highscore-prompt-buttons {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.highscore-prompt-save, .highscore-prompt-skip {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.highscore-prompt-save {
+    background: #4CAF50;
+    color: white;
+}
+
+.highscore-prompt-skip {
+    background: #f44336;
+    color: white;
+}
+
+/* Scoreboard */
+.scoreboard-container {
+    font-family: sans-serif;
+    color: #fff;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    min-width: 300px;
+}
+
+.scoreboard-title {
+    margin: 0 0 16px 0;
+    color: #ffd700;
+    font-size: 24px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.scoreboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scoreboard-entry {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scoreboard-entry.gold {
+    background: rgba(255, 215, 0, 0.1);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.scoreboard-entry.silver {
+    background: rgba(192, 192, 192, 0.1);
+    border-color: rgba(192, 192, 192, 0.3);
+}
+
+.scoreboard-entry.bronze {
+    background: rgba(205, 127, 50, 0.1);
+    border-color: rgba(205, 127, 50, 0.3);
+}
+
+.scoreboard-rank {
+    font-size: 18px;
+    font-weight: bold;
+    width: 30px;
+}
+
+.scoreboard-entry.gold .scoreboard-rank { color: #ffd700; }
+.scoreboard-entry.silver .scoreboard-rank { color: #c0c0c0; }
+.scoreboard-entry.bronze .scoreboard-rank { color: #cd7f32; }
+
+.scoreboard-info {
+    flex: 1;
+}
+
+.scoreboard-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.scoreboard-date {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-left: auto;
+}
+
+
+
 @media (max-width: 1320px) {
     #game-container {
         transform: scale(0.9);

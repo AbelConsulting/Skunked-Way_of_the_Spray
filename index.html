@@ -676,6 +676,9 @@
     </div>
 
     <script src="js/errorHandler.js?v=2026-02-14a"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js" type="module"></script>
+    <script src="js/firebase.js?v=2026-02-14a" type="module"></script>
     <script src="js/config.js?v=2026-02-14a"></script>
     <script src="js/utils.js?v=2026-02-14a"></script>
     <script src="js/highscores.js?v=2026-02-14a"></script>
@@ -809,8 +812,8 @@
             try {
                 const current = localStorage.getItem('forceTouch') === '1';
                 localStorage.setItem('forceTouch', current ? '0' : '1');
-                forceBtn.textContent = localStorage.getItem('forceTouch') === '1' ? 'Always ON' : 'Always OFF';
                 window._forceTouchControls = localStorage.getItem('forceTouch') === '1';
+                forceBtn.textContent = window._forceTouchControls ? 'Always ON' : 'Always OFF';
                 logTouchControlEvent('forceTouchToggled', { enabled: window._forceTouchControls });
                 // apply immediately
                 if (window._forceTouchControls) showTouchControls(3600000);
