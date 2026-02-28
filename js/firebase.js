@@ -3,15 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAKbP-5LCjpguNJzVgycpyh2XMlelPmAnM",
-  authDomain: "wayofthespray-66d4f.firebaseapp.com",
-  projectId: "wayofthespray-66d4f",
-  storageBucket: "wayofthespray-66d4f.firebasestorage.app",
-  messagingSenderId: "72220609934",
-  appId: "1:72220609934:web:56b63a07ffe4614c7968df",
-  measurementId: "G-VRQ7KZKFW0"
-};
+const firebaseConfig = Config.FIREBASE_CONFIG;
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
