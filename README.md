@@ -8,7 +8,7 @@
 
 No downloads. No installs. **Just play.**
 
-👉 **[Play Now](https://skunksquadnft.com/SkunkFU/)** — works on desktop, mobile, tablet, and even Meta Quest VR headsets.
+👉 **[Play Now](https://skunked.io/)** — works on desktop, mobile, tablet, and even Meta Quest VR headsets.
 
 ---
 
