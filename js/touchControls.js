@@ -117,40 +117,11 @@
                 } catch (err) { __err('touch', err); }
             });
 
-            // Small settings control
-            const settings = document.createElement('div');
-            settings.style.position = 'absolute';
-            settings.style.left = '50%';
-            settings.style.bottom = '12px';
-            settings.style.transform = 'translateX(-50%)';
-            settings.style.pointerEvents = 'auto';
-
-            const sensitivityLabel = document.createElement('label');
-            sensitivityLabel.style.color = '#fff';
-            sensitivityLabel.style.fontSize = '12px';
-            sensitivityLabel.style.display = 'block';
-            sensitivityLabel.style.textAlign = 'center';
-            sensitivityLabel.textContent = 'Sensitivity';
-
-            const sensitivityInput = document.createElement('input');
-            sensitivityInput.type = 'range';
-            sensitivityInput.min = '0.5';
-            sensitivityInput.max = '1.5';
-            sensitivityInput.step = '0.05';
-            sensitivityInput.value = String(this.sensitivity);
-            sensitivityInput.style.width = '160px';
-
-            sensitivityInput.addEventListener('input', (e) => {
-                this.sensitivity = parseFloat(e.target.value);
-                window.dispatchEvent(new CustomEvent('touchSensitivityChanged', { detail: { sensitivity: this.sensitivity } }));
-            });
-
-            settings.appendChild(sensitivityLabel);
-            settings.appendChild(sensitivityInput);
+            // Small settings control — hidden; sensitivity is in pause/settings menu
+            // The sensitivity value is still reactive via touchSensitivityChanged event
 
             container.appendChild(leftGroup);
             container.appendChild(rightGroup);
-            container.appendChild(settings);
 
             document.body.appendChild(container);
             this.container = container;
@@ -307,8 +278,14 @@
                 const ev = new CustomEvent('touchcontrol', { detail: { action, down } });
                 window.dispatchEvent(ev);
             };
+            // Haptic feedback helper — short vibration pulse on press
+            const haptic = () => {
+                try {
+                    if (navigator.vibrate) navigator.vibrate(12);
+                } catch (_) { /* not supported */ }
+            };
             // Touch
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); dispatch(true); }, { passive: false });
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); haptic(); dispatch(true); }, { passive: false });
             el.addEventListener('touchend', (e) => { e.preventDefault(); dispatch(false); }, { passive: false });
             el.addEventListener('touchcancel', (e) => { e.preventDefault(); dispatch(false); }, { passive: false });
             // Mouse fallback

@@ -210,39 +210,71 @@
         }
 
         .touch-btn:active {
-            filter: brightness(1.12);
-            transform: scale(0.94);
-            box-shadow:
-                0 10px 18px rgba(0,0,0,0.32),
-                0 0 18px rgba(255,255,255,0.10);
+            filter: brightness(1.18);
+            transform: scale(0.92);
+        }
+        .touch-btn--move:active {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 22px rgba(80,255,244,0.28), inset 0 0 8px rgba(80,255,244,0.10);
+        }
+        .touch-btn--attack:active {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 22px rgba(255,80,80,0.28), inset 0 0 8px rgba(255,80,80,0.10);
+        }
+        .touch-btn--special:active {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 22px rgba(180,90,255,0.28), inset 0 0 8px rgba(180,90,255,0.10);
+        }
+        .touch-btn--jump:active {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 22px rgba(120,220,255,0.28), inset 0 0 8px rgba(120,220,255,0.10);
+        }
+        .touch-btn--skunk:active {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 22px rgba(80,255,80,0.28), inset 0 0 8px rgba(80,255,80,0.10);
+        }
+        .touch-btn--restart:active {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 22px rgba(255,160,80,0.28), inset 0 0 8px rgba(255,160,80,0.10);
         }
 
         /* --- OVERLAYS --- */
         #mobile-start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: transparent;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.45), rgba(0,0,0,0.7));
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             z-index: 200;
             color: white;
-            font-family: sans-serif;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
             opacity: 0;
             transform: translateY(10px);
-            transition: opacity 240ms cubic-bezier(.2,.9,.2,1), transform 240ms cubic-bezier(.2,.9,.2,1);
+            transition: opacity 280ms cubic-bezier(.2,.9,.2,1), transform 280ms cubic-bezier(.2,.9,.2,1);
         }
 
         #mobile-start-btn {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: #ff4d4d;
-            border: none;
-            color: white;
-            border-radius: 8px;
+            padding: 18px 48px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: clamp(1.2rem, 4vw, 1.6rem);
+            background: linear-gradient(180deg, rgba(0,255,120,0.25), rgba(0,80,30,0.7));
+            border: 1px solid rgba(0,255,120,0.35);
+            color: #fff;
+            border-radius: 14px;
             text-transform: uppercase;
-            font-weight: bold;
+            letter-spacing: 0.06em;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 24px rgba(0,255,120,0.14);
+            transition: transform 120ms ease, filter 180ms ease;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+            animation: mobileStartPulse 2.4s ease-in-out infinite;
+        }
+
+        #mobile-start-btn:active {
+            transform: scale(0.95);
+            filter: brightness(1.2);
+        }
+
+        @keyframes mobileStartPulse {
+            0%, 100% { box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 24px rgba(0,255,120,0.14); }
+            50%      { box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 40px rgba(0,255,120,0.28); }
         }
 
         #mobile-start-overlay.visible {
@@ -1178,12 +1210,15 @@
             align-items: center; 
             justify-content: center; 
             text-align: center; 
-            gap: 16px; 
+            gap: 14px; 
             padding: 24px;
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 60%, #000 100%);
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(0,60,30,0.35), transparent 55%),
+                radial-gradient(ellipse at 70% 70%, rgba(40,0,80,0.30), transparent 55%),
+                linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #050510 100%);
             z-index: 9999;
             color: white;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Bangers', 'Arial Black', Impact, sans-serif;
             opacity: 1;
         }
 
@@ -1197,13 +1232,14 @@
         #rotate-message .rotate-phone-icon .phone-body {
             width: 60px;
             height: 100px;
-            border: 3px solid #fff;
+            border: 3px solid rgba(0,255,120,0.7);
             border-radius: 12px;
             position: absolute;
             top: 10px;
             left: 10px;
             animation: rotatePhone 2.5s ease-in-out infinite;
             transform-origin: center center;
+            box-shadow: 0 0 14px rgba(0,255,120,0.15);
         }
         #rotate-message .rotate-phone-icon .phone-body::after {
             content: '';
@@ -1213,7 +1249,7 @@
             transform: translateX(-50%);
             width: 20px;
             height: 3px;
-            background: #fff;
+            background: rgba(0,255,120,0.5);
             border-radius: 2px;
         }
         #rotate-message .rotate-phone-icon .phone-body::before {
@@ -1224,7 +1260,7 @@
             transform: translateX(-50%);
             width: 8px;
             height: 3px;
-            background: rgba(255,255,255,0.5);
+            background: rgba(0,255,120,0.35);
             border-radius: 2px;
         }
         @keyframes rotatePhone {
@@ -1239,7 +1275,8 @@
             top: -2px;
             right: -18px;
             font-size: 28px;
-            color: #4dff4d;
+            color: #FFD700;
+            filter: drop-shadow(0 0 8px rgba(255,215,0,0.4));
             animation: arrowPulse 2.5s ease-in-out infinite;
         }
         @keyframes arrowPulse {
@@ -1249,47 +1286,55 @@
         }
 
         #rotate-message h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            font-weight: 400;
             margin: 0;
-            letter-spacing: 0.02em;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            letter-spacing: 0.06em;
+            background: linear-gradient(180deg, #FFA040, #FF2200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 12px rgba(255,85,0,0.45));
         }
         #rotate-message p {
-            font-size: 1rem;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(9px, 2.2vw, 12px);
             margin: 0;
-            color: rgba(255,255,255,0.7);
-            max-width: 280px;
-            line-height: 1.4;
+            color: rgba(255,255,255,0.6);
+            max-width: 300px;
+            line-height: 1.8;
         }
 
         #rotate-message .rotate-divider {
-            width: 60px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #4dff4d, transparent);
+            width: 90px;
+            height: 1.5px;
+            background: linear-gradient(90deg, transparent, rgba(255,200,0,0.7), transparent);
             margin: 4px 0;
         }
 
         #rotate-message .rotate-actions { margin-top: 8px; }
         #rotate-message #rotate-play-btn {
-            padding: 14px 28px;
-            font-size: 15px;
-            font-weight: 600;
-            border-radius: 10px;
-            border: 2px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.8);
+            padding: 14px 32px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 17px;
+            font-weight: 400;
+            border-radius: 12px;
+            border: 1px solid rgba(0,255,120,0.30);
+            background: linear-gradient(180deg, rgba(0,255,120,0.18), rgba(0,60,20,0.55));
+            color: rgba(255,255,255,0.9);
             cursor: pointer;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            transition: background 200ms, color 200ms, border-color 200ms;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.35), 0 0 18px rgba(0,255,120,0.10);
+            transition: transform 120ms ease, filter 180ms ease, box-shadow 180ms ease;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
+            -webkit-tap-highlight-color: transparent;
         }
         #rotate-message #rotate-play-btn:active {
-            background: rgba(255,255,255,0.18);
-            color: #fff;
-            border-color: rgba(255,255,255,0.3);
+            transform: scale(0.96);
+            filter: brightness(1.15);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.3), 0 0 24px rgba(0,255,120,0.18);
         }
 
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
@@ -1314,6 +1359,15 @@
             #pause-overlay { left: 0; right: 0; width: 100%; }
             .start-menu-enter-hint { display: none; } /* Hide keyboard hint on mobile */
             .pause-esc-hint { display: none; } /* Hide ESC hint on mobile */
+            /* Slightly larger touch targets on small phones */
+            .touch-btn {
+                width: clamp(58px, 11vw, 88px);
+                height: clamp(58px, 11vw, 88px);
+                font-size: clamp(22px, 3.6vw, 30px);
+            }
+            #btn-left, #btn-right {
+                width: clamp(68px, 13vw, 100px);
+            }
         }
 
         /* ── Compact pause panel for short landscape screens ── */
@@ -1433,6 +1487,26 @@
         body.force-landscape #game-container { display: flex !important; }
         body.force-landscape #canvas-rotator { transform: rotate(90deg); transform-origin: center center; width: calc(100vh); height: calc(100vw); display:flex; align-items:center; justify-content:center; }
         body.force-landscape canvas { max-width: calc(100vh - var(--safe-top) - var(--safe-bottom)); max-height: calc(100vw - var(--safe-left) - var(--safe-right)); }
+
+        /* Compact touch controls on very short landscape screens */
+        @media screen and (max-height: 420px) {
+            #touch-controls { height: 160px !important; }
+            .control-group { bottom: 8px; padding: 6px 6px 2px; }
+            .touch-btn {
+                width: clamp(46px, 8vw, 64px) !important;
+                height: clamp(46px, 8vw, 64px) !important;
+                font-size: clamp(16px, 2.8vw, 22px) !important;
+                margin: 3px !important;
+                border-radius: 12px;
+            }
+            #btn-left, #btn-right {
+                width: clamp(52px, 9vw, 72px) !important;
+            }
+            #pause-btn {
+                width: 36px; height: 36px; font-size: 14px;
+                top: 6px; right: 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1475,9 +1549,9 @@
                 </div>
                 <h1>Rotate Your Device</h1>
                 <div class="rotate-divider"></div>
-                <p>This game is best experienced in landscape mode. Please turn your phone sideways to play.</p>
+                <p>Best experienced in landscape. Turn your phone sideways to play.</p>
                 <div class="rotate-actions">
-                    <button id="rotate-play-btn">Play in Portrait</button>
+                    <button id="rotate-play-btn">&#9654; Play in Portrait</button>
                 </div>
             </div>
 
