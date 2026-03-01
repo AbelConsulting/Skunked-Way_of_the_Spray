@@ -1,4 +1,4 @@
-﻿﻿<!--
+﻿<!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
   Proprietary and confidential â€” unauthorized copying, distribution, or use
@@ -980,6 +980,9 @@
             gap: 16px;
             transform: translateY(12px);
             transition: transform 220ms cubic-bezier(.2,.9,.2,1);
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         #pause-overlay.visible .pause-panel {
@@ -1300,6 +1303,36 @@
             canvas { max-width: calc(100vw - var(--safe-left) - var(--safe-right)); }
             #touch-controls { left: 0; }
             #pause-overlay { left: 0; width: 100%; }
+
+        /* ── Compact pause panel for short landscape screens ── */
+        @media screen and (max-height: 500px) {
+            #pause-overlay {
+                align-items: flex-start;
+                padding: 8px 0 8px;
+                overflow-y: auto;
+            }
+            .pause-panel {
+                max-height: calc(100vh - 16px);
+                gap: 8px;
+                padding: 12px 18px 10px;
+                border-radius: 12px;
+                width: min(420px, 92vw);
+            }
+            .pause-title { font-size: clamp(18px, 4vw, 26px) !important; }
+            .pause-level-info { font-size: 9px !important; }
+            .pause-divider { margin: 2px 0 !important; }
+            .pause-volume-controls { gap: 4px; }
+            .volume-row { gap: 6px; }
+            .pause-esc-hint { display: none; }
+        }
+
+        @media screen and (max-height: 380px) {
+            .pause-panel {
+                gap: 5px;
+                padding: 8px 14px 6px;
+            }
+            .pause-title { font-size: clamp(15px, 3.5vw, 20px) !important; }
+        }
             .start-menu-enter-hint { display: none; } /* Hide keyboard hint on mobile */
             .pause-esc-hint { display: none; } /* Hide ESC hint on mobile */
         }
