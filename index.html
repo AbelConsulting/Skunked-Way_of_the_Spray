@@ -275,6 +275,9 @@
                 0 0 80px rgba(0,255,120,0.08),
                 0 20px 60px rgba(0,0,0,0.5);
             min-width: min(440px, 88vw);
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             animation: menuFadeIn 0.6s cubic-bezier(.2,.9,.2,1) both;
         }
 
@@ -407,6 +410,7 @@
             font-size: 11px;
             color: rgba(255,255,255,0.3);
             font-family: sans-serif;
+            flex-shrink: 0;
         }
 
         /* Sub-screen overlays (Info / Scores / Settings from main menu) */
@@ -1250,6 +1254,14 @@
         @media screen and (orientation: portrait) {
             #rotate-message { display: flex !important; }
             #game-container { display: none !important; }
+            /* Keep the start-menu visible above the rotate message in portrait
+               so users can still see/interact with the menu before rotating */
+            #start-menu-overlay {
+                display: flex !important;
+                position: fixed !important;
+                z-index: 10000 !important;
+            }
+            #start-menu-overlay.hidden { display: none !important; }
         }
 
         /* Hide ad on portrait mobile */
@@ -1261,6 +1273,88 @@
             #pause-overlay { left: 0; width: 100%; }
             .start-menu-enter-hint { display: none; } /* Hide keyboard hint on mobile */
             .pause-esc-hint { display: none; } /* Hide ESC hint on mobile */
+        }
+
+        /* ── Landscape with limited height (mobile landscape) ── */
+        @media screen and (max-height: 500px) {
+            .start-menu-panel {
+                gap: 2px;
+                padding: 10px 20px 8px;
+                max-height: 96vh;
+            }
+            .start-menu-title {
+                font-size: clamp(24px, 6vw, 40px);
+            }
+            .start-menu-subtitle {
+                font-size: clamp(16px, 4vw, 28px);
+            }
+            .start-menu-divider {
+                margin: 2px 0;
+            }
+            .start-menu-tagline {
+                font-size: clamp(8px, 1.6vw, 12px);
+            }
+            .start-menu-actions {
+                gap: 6px;
+                margin-top: 4px;
+            }
+            .start-menu-actions .menu-btn {
+                padding: 8px 14px;
+                font-size: clamp(12px, 2vw, 15px);
+                max-width: 260px;
+            }
+            .menu-btn--play {
+                font-size: clamp(13px, 2.4vw, 17px) !important;
+                padding: 10px 16px !important;
+            }
+            .start-menu-footer {
+                margin: 4px 0 0;
+                font-size: 9px;
+            }
+            .menu-sub-panel {
+                padding: 14px 18px 12px;
+                max-height: 94vh;
+            }
+        }
+
+        /* ── Very short landscape (e.g. phone landscape with keyboard/nav bar) ── */
+        @media screen and (max-height: 380px) {
+            .start-menu-panel {
+                gap: 1px;
+                padding: 6px 14px 4px;
+                border-radius: 14px;
+            }
+            .start-menu-title {
+                font-size: clamp(20px, 5vw, 32px);
+            }
+            .start-menu-subtitle {
+                font-size: clamp(14px, 3.5vw, 22px);
+            }
+            .start-menu-divider {
+                margin: 1px 0;
+                height: 1px;
+            }
+            .start-menu-tagline {
+                font-size: clamp(7px, 1.4vw, 10px);
+            }
+            .start-menu-actions {
+                gap: 4px;
+                margin-top: 2px;
+            }
+            .start-menu-actions .menu-btn {
+                padding: 6px 10px;
+                font-size: clamp(10px, 1.8vw, 13px);
+                max-width: 220px;
+                border-radius: 8px;
+            }
+            .menu-btn--play {
+                font-size: clamp(11px, 2vw, 14px) !important;
+                padding: 7px 12px !important;
+            }
+            .start-menu-footer {
+                margin: 2px 0 0;
+                font-size: 8px;
+            }
         }
 
         /* Allow a 'force portrait->landscape' mode: when body has .force-landscape, treat as landscape */
