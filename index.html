@@ -240,7 +240,7 @@
            START MENU SPLASH PAGE
            ═══════════════════════════════════════════════════════ */
         #start-menu-overlay {
-            position: absolute;
+            position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             justify-content: center;
@@ -417,7 +417,7 @@
         #menu-scores-overlay,
         #menu-info-overlay,
         #menu-settings-overlay {
-            position: absolute;
+            position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             justify-content: center;
@@ -1254,11 +1254,9 @@
         @media screen and (orientation: portrait) {
             #rotate-message { display: flex !important; }
             #game-container { display: none !important; }
-            /* Keep the start-menu visible above the rotate message in portrait
-               so users can still see/interact with the menu before rotating */
+            /* Overlays are now outside #game-container, so they remain
+               accessible in portrait. Bump z-index above #rotate-message. */
             #start-menu-overlay {
-                display: flex !important;
-                position: fixed !important;
                 z-index: 10000 !important;
             }
             #start-menu-overlay.hidden { display: none !important; }
@@ -1435,366 +1433,8 @@
                     <button id="mobile-start-btn">Tap to Start</button>
                 </div>
 
-                <!-- ══════ START MENU SPLASH PAGE ══════ -->
-                <div id="start-menu-overlay">
-                    <div class="start-menu-panel">
-                        <h1 class="start-menu-title">SKUNKED:</h1>
-                        <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
-                        <div class="start-menu-divider"></div>
-                        <p class="start-menu-tagline">NINJA SKUNK</p>
-                        <div class="start-menu-actions">
-                            <button id="menu-play-btn" class="menu-btn menu-btn--play">&#9654; PLAY GAME</button>
-                            <button id="menu-scores-btn" class="menu-btn menu-btn--scores">&#127942; HIGH SCORES</button>
-                            <button id="menu-info-btn" class="menu-btn menu-btn--info">&#9432; INFO</button>
-                            <button id="menu-settings-btn" class="menu-btn menu-btn--settings">&#9881; SETTINGS</button>
-                        </div>
-                        <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
-                        <p class="start-menu-footer">&#169; 2026 Mephitideus Interactive &mdash; skunked.io</p>
-                    </div>
-                </div>
-
-                <!-- ══════ HIGH SCORES SCREEN (from main menu) ══════ -->
-                <div id="menu-scores-overlay" style="display:none;">
-                    <div class="menu-sub-panel">
-                        <h2 class="menu-sub-title">&#127942; HIGH SCORES</h2>
-                        <hr class="pause-divider">
-                        <div id="menu-scores-board"></div>
-                        <hr class="pause-divider">
-                        <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
-                    </div>
-                </div>
-
-                <!-- ══════ INFO SCREEN (from main menu) — Tabbed ══════ -->
-                <div id="menu-info-overlay" style="display:none;">
-                    <div class="menu-sub-panel menu-sub-panel--info">
-                        <h2 class="menu-sub-title">&#9432; GAME INFO</h2>
-                        <hr class="pause-divider">
-
-                        <!-- Tab bar -->
-                        <div class="info-tabs">
-                            <button class="info-tab active" data-info-tab="about">About</button>
-                            <button class="info-tab" data-info-tab="controls">Controls</button>
-                            <button class="info-tab" data-info-tab="enemies">Enemies</button>
-                            <button class="info-tab" data-info-tab="stages">Stages</button>
-                            <button class="info-tab" data-info-tab="items">Items</button>
-                        </div>
-
-                        <!-- ── TAB: About ── -->
-                        <div class="info-tab-content active" data-info-panel="about">
-                            <div class="info-section info-story">
-                                <h3 class="info-heading">&#128220; Story</h3>
-                                <p class="info-lore">You are the last Ninja Skunk. Dark forces have invaded the forest, and only your legendary spray technique can save the woodland realm. Battle through 10 stages of increasingly dangerous foes, defeat powerful bosses, and prove you are the ultimate skunk warrior!</p>
-                            </div>
-
-                            <h3 class="info-heading" style="margin-top:12px;">&#11088; Key Features</h3>
-                            <div class="info-features">
-                                <div class="info-feature"><strong>10 Stages</strong>Forests, caverns, neon cities &amp; more</div>
-                                <div class="info-feature"><strong>6 Enemy Types</strong>Each with unique AI behaviour</div>
-                                <div class="info-feature"><strong>5 Bosses</strong>Massive health, deadly patterns</div>
-                                <div class="info-feature"><strong>Combo System</strong>Chain hits for up to 10&times; score</div>
-                                <div class="info-feature"><strong>3 Attack Types</strong>Melee, Shadow Strike &amp; Skunk Shot</div>
-                                <div class="info-feature"><strong>6 Power-ups</strong>Health, lives, speed &amp; damage boosts</div>
-                                <div class="info-feature"><strong>5 Achievements</strong>Unlock badges for skilled play</div>
-                                <div class="info-feature"><strong>Online Scores</strong>Compete on the global leaderboard</div>
-                            </div>
-
-                            <h3 class="info-heading" style="margin-top:12px;">&#128161; Pro Tips</h3>
-                            <ul class="info-tips">
-                                <li>Chain combos within 2 seconds &mdash; multiplier caps at 10&times;</li>
-                                <li>Collect all 3 Golden Idols per stage for a huge +30% damage &amp; +25% speed set bonus</li>
-                                <li>Shadow Strike grants invincibility frames &mdash; dash through attacks!</li>
-                                <li>Skunk Shot disrupts Kamikaze fuses &mdash; force early detonation on groups</li>
-                                <li>Watch boss wind-up animations before committing to attacks</li>
-                                <li>Double-jump lets you platform over the Jumper enemy&rsquo;s arc</li>
-                            </ul>
-
-                            <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.35);">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
-                        </div>
-
-                        <!-- ── TAB: Controls ── -->
-                        <div class="info-tab-content" data-info-panel="controls">
-                            <div class="info-ctrl-group">
-                                <h4>&#9000; Keyboard</h4>
-                                <table class="info-table">
-                                    <tr><td class="info-key">&#8592; &#8594; / A, D</td><td>Move left / right</td></tr>
-                                    <tr><td class="info-key">SPACE</td><td>Jump (tap twice for double-jump)</td></tr>
-                                    <tr><td class="info-key">X</td><td>Basic Attack</td></tr>
-                                    <tr><td class="info-key">Z</td><td>Shadow Strike (dash + i-frames)</td></tr>
-                                    <tr><td class="info-key">C</td><td>Skunk Shot (ranged projectile)</td></tr>
-                                    <tr><td class="info-key">ESC</td><td>Pause / Resume</td></tr>
-                                    <tr><td class="info-key">ENTER</td><td>Start / Restart</td></tr>
-                                </table>
-                            </div>
-
-                            <div class="info-ctrl-group">
-                                <h4>&#128241; Touch / Mobile</h4>
-                                <table class="info-table">
-                                    <tr><td class="info-key">&#10094; &#10095;</td><td>Left / Right movement pads</td></tr>
-                                    <tr><td class="info-key">&#8679;</td><td>Jump button</td></tr>
-                                    <tr><td class="info-key">&#128481;</td><td>Attack button (melee)</td></tr>
-                                    <tr><td class="info-key">&#128165;</td><td>Special button (Shadow Strike / Skunk Shot)</td></tr>
-                                    <tr><td class="info-key">&#8634;</td><td>Restart (on game-over)</td></tr>
-                                </table>
-                            </div>
-
-                            <div class="info-ctrl-group">
-                                <h4>&#127918; Gamepad (Xbox / PlayStation)</h4>
-                                <table class="info-table">
-                                    <tr><td class="info-key">Left Stick</td><td>Move</td></tr>
-                                    <tr><td class="info-key">A / Cross</td><td>Jump</td></tr>
-                                    <tr><td class="info-key">X / Square</td><td>Basic Attack</td></tr>
-                                    <tr><td class="info-key">B / Circle</td><td>Shadow Strike</td></tr>
-                                    <tr><td class="info-key">LT / LB</td><td>Skunk Shot</td></tr>
-                                    <tr><td class="info-key">LB</td><td>Pause</td></tr>
-                                </table>
-                            </div>
-
-                            <h3 class="info-heading" style="margin-top:10px;">&#9876; Combat Moves</h3>
-                            <div class="info-moves">
-                                <div class="info-move-card">
-                                    <h4>&#128481; Basic Attack</h4>
-                                    <p>Quick melee strike. Fast cooldown, chain rapidly for combos.</p>
-                                    <div class="move-stat">DMG: 15 &bull; Cooldown: 0.3s &bull; Range: 120px</div>
-                                </div>
-                                <div class="info-move-card">
-                                    <h4>&#9889; Shadow Strike</h4>
-                                    <p>Dashing lunge with invincibility frames. Pass through enemy attacks unscathed.</p>
-                                    <div class="move-stat">DMG: 15 &bull; Cooldown: 0.45s &bull; Dash: 380px/s &bull; i-frames!</div>
-                                </div>
-                                <div class="info-move-card">
-                                    <h4>&#128163; Skunk Shot</h4>
-                                    <p>Ranged spray projectile. Creates an AoE cloud on impact &mdash; &ldquo;Skunks&rdquo; enemies for 5s, disabling movement &amp; attacks.</p>
-                                    <div class="move-stat">Ammo-based &bull; Cooldown: 0.5s &bull; Speed: 600px/s</div>
-                                </div>
-                            </div>
-
-                            <h3 class="info-heading" style="margin-top:10px;">&#128293; Combo Tiers</h3>
-                            <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Hit enemies within 2s windows. Multiplier = 1 + (hits &times; 0.25), max 10&times;</p>
-                            <div class="info-combo-tiers">
-                                <span class="combo-tier" style="color:#FFD93D;">3+ NICE!</span>
-                                <span class="combo-tier" style="color:#FF9500;">5+ GREAT!</span>
-                                <span class="combo-tier" style="color:#FF4500;">10+ AWESOME!</span>
-                                <span class="combo-tier" style="color:#FF00FF;">15+ INCREDIBLE!</span>
-                                <span class="combo-tier" style="color:#00FFFF;">20+ UNSTOPPABLE!</span>
-                                <span class="combo-tier" style="color:#FFD700;">30+ LEGENDARY!</span>
-                                <span class="combo-tier" style="color:#FF0000;">50+ GOD MODE!</span>
-                            </div>
-                        </div>
-
-                        <!-- ── TAB: Enemies ── -->
-                        <div class="info-tab-content" data-info-panel="enemies">
-                            <h3 class="info-heading">&#128126; Enemy Types</h3>
-                            <div class="info-enemies-grid">
-                                <div class="info-enemy-card">
-                                    <h4>&#128128; Grunt</h4>
-                                    <div class="enemy-stats">HP 50 &bull; SPD 150 &bull; 100 pts</div>
-                                    <p>Standard patrol enemy. Chases player within 300px, melee attacks at close range.</p>
-                                </div>
-                                <div class="info-enemy-card">
-                                    <h4>&#128168; Speedster</h4>
-                                    <div class="enemy-stats">HP 40 &bull; SPD 225 &bull; 120 pts</div>
-                                    <p>50% faster but fragile. Quick points if you can catch them before they overwhelm you.</p>
-                                </div>
-                                <div class="info-enemy-card">
-                                    <h4>&#128737; Shield Tank</h4>
-                                    <div class="enemy-stats">HP 75 &bull; SPD 105 &bull; 150 pts</div>
-                                    <p>Slow bruiser with a Shield Bubble (every 2.2s, lasts 1.5s). Time your attacks between shields!</p>
-                                </div>
-                                <div class="info-enemy-card">
-                                    <h4>&#128165; Kamikaze</h4>
-                                    <div class="enemy-stats">HP 25 &bull; SPD 300 &bull; 200 pts</div>
-                                    <p>Closes in, ignites a 1.6s fuse, then dashes and detonates! AoE deals 55 damage. Chain explosions = 500 bonus pts. Skunk Shot disrupts the fuse.</p>
-                                </div>
-                                <div class="info-enemy-card">
-                                    <h4>&#128640; Jumper</h4>
-                                    <div class="enemy-stats">HP 60 &bull; Stationary &bull; 200 pts</div>
-                                    <p>Doesn&rsquo;t walk &mdash; performs up to 5 rapid vertical jumps to reach you. Watch for the green sparks!</p>
-                                </div>
-                                <div class="info-enemy-card">
-                                    <h4>&#127919; Thrower</h4>
-                                    <div class="enemy-stats">HP 60 &bull; SPD 128 &bull; 250 pts</div>
-                                    <p>Ranged attacker throwing purple spray orbs from 400px. Retreats when you close in. Highest points among regular enemies.</p>
-                                </div>
-                            </div>
-
-                            <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
-                            <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Each stage ends with a boss fight. Boss health scales from 6&times; to 18&times; base enemy HP.</p>
-                            <div class="info-boss-row">
-                                <div class="boss-badge"><strong>Boss 1</strong><span>Forest Chieftain<br>6&times; HP</span></div>
-                                <div class="boss-badge"><strong>Boss 2</strong><span>City Overlord<br>8&times; HP</span></div>
-                                <div class="boss-badge"><strong>Boss 3</strong><span>Dojo Master<br>10&times; HP</span></div>
-                                <div class="boss-badge"><strong>Boss 4</strong><span>Neon Warden<br>13&times; HP</span></div>
-                                <div class="boss-badge"><strong>Boss 5</strong><span>Crystal Guardian<br>11&times; HP</span></div>
-                            </div>
-                        </div>
-
-                        <!-- ── TAB: Stages ── -->
-                        <div class="info-tab-content" data-info-panel="stages">
-                            <h3 class="info-heading">&#127759; All 10 Stages</h3>
-                            <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Difficulty ramps through faster spawns, tougher bosses, and advanced enemy types. Each stage has 3 Golden Idols and 2 Skunk Powerups.</p>
-                            <div class="info-stages-grid">
-                                <div class="info-stage-card">
-                                    <h4>1 &mdash; Forest Outskirts</h4>
-                                    <p>&#127795; Grunts &amp; Tanks. Boss&nbsp;6&times;&nbsp;HP. Easy intro.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>2 &mdash; Skunk City</h4>
-                                    <p>&#127961; Grunts, Speedsters &amp; Throwers. Boss&nbsp;8&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>3 &mdash; Mountain Dojo</h4>
-                                    <p>&#9968; All 6 enemy types! Boss&nbsp;10&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>4 &mdash; Crystal Caverns</h4>
-                                    <p>&#128142; All types, tighter spawns. Boss&nbsp;11&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>5 &mdash; Cavern Depths</h4>
-                                    <p>&#127754; No Grunts! Advanced foes only. Boss&nbsp;12&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>6 &mdash; Neon Crossroads</h4>
-                                    <p>&#128161; Tanks, Kamikazes, Jumpers, Throwers. Boss&nbsp;13&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>7 &mdash; Crystal Ridge</h4>
-                                    <p>&#9968; Advanced types, high aggression. Boss&nbsp;14&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>8 &mdash; Abyssal Caverns</h4>
-                                    <p>&#128064; Kamikaze, Jumper &amp; Thrower only! Boss&nbsp;15&times;&nbsp;HP.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>9 &mdash; Neon Nexus</h4>
-                                    <p>&#9889; Hardest trio. Boss&nbsp;16&times;&nbsp;HP. Near-max difficulty.</p>
-                                </div>
-                                <div class="info-stage-card">
-                                    <h4>10 &mdash; Final Showdown</h4>
-                                    <p>&#128293; Boss&nbsp;18&times;&nbsp;HP, 1.2&times; speed, 2.3&times; damage. The ultimate test!</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ── TAB: Items ── -->
-                        <div class="info-tab-content" data-info-panel="items">
-                            <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
-                            <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
-                            <div class="info-items-grid">
-                                <div class="info-item-card">
-                                    <h4 style="color:#4dff4d;">&#128154; Health Regen</h4>
-                                    <p>Heals 10 HP/s for 6 seconds. 20% enemy drop chance.</p>
-                                </div>
-                                <div class="info-item-card">
-                                    <h4 style="color:#ff4d4d;">&#10084; Extra Life</h4>
-                                    <p>+1 life instantly. Rare 3% enemy drop chance.</p>
-                                </div>
-                                <div class="info-item-card">
-                                    <h4 style="color:#FFD700;">&#128081; Golden Idol</h4>
-                                    <p>+250 score, +30 HP, 2s invulnerability. Collect all 3 per stage for +25% speed &amp; +30% damage set bonus + 2000 pts!</p>
-                                </div>
-                                <div class="info-item-card">
-                                    <h4 style="color:#00CCFF;">&#9889; Speed Boost</h4>
-                                    <p>1.5&times; movement speed for 8 seconds.</p>
-                                </div>
-                                <div class="info-item-card">
-                                    <h4 style="color:#FF8844;">&#128165; Damage Boost</h4>
-                                    <p>1.75&times; attack damage for 10 seconds.</p>
-                                </div>
-                                <div class="info-item-card">
-                                    <h4 style="color:#00FF77;">&#128163; Skunk Powerup</h4>
-                                    <p>+2 Skunk Shot ammo. 2 placed per level.</p>
-                                </div>
-                            </div>
-
-                            <h3 class="info-heading" style="margin-top:14px;">&#127942; Achievements</h3>
-                            <div class="info-achieve-grid">
-                                <div class="info-achieve-card">
-                                    <span class="achieve-icon">&#129656;</span>
-                                    <div><h4>First Blood</h4><p>Defeat your first enemy</p></div>
-                                </div>
-                                <div class="info-achieve-card">
-                                    <span class="achieve-icon">&#9876;</span>
-                                    <div><h4>Enemy Slayer</h4><p>Defeat 50 enemies total</p></div>
-                                </div>
-                                <div class="info-achieve-card">
-                                    <span class="achieve-icon">&#128293;</span>
-                                    <div><h4>Combo Starter</h4><p>Achieve a 5-hit combo</p></div>
-                                </div>
-                                <div class="info-achieve-card">
-                                    <span class="achieve-icon">&#128142;</span>
-                                    <div><h4>High Scorer</h4><p>Score over 50,000 points</p></div>
-                                </div>
-                                <div class="info-achieve-card">
-                                    <span class="achieve-icon">&#128737;</span>
-                                    <div><h4>Untouchable</h4><p>Complete a level without taking any damage</p></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="pause-divider" style="margin-top:12px;">
-                        <button id="menu-info-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
-                    </div>
-                </div>
-
-                <!-- ══════ SETTINGS SCREEN (from main menu) ══════ -->
-                <div id="menu-settings-overlay" style="display:none;">
-                    <div class="menu-sub-panel">
-                        <h2 class="menu-sub-title">&#9881; SETTINGS</h2>
-                        <hr class="pause-divider">
-                        <div class="pause-volume-controls">
-                            <div class="volume-row">
-                                <label for="menu-sfx-volume">&#128266; SFX</label>
-                                <input type="range" id="menu-sfx-volume" min="0" max="100" value="70">
-                                <span class="volume-value" id="menu-sfx-volume-value">70%</span>
-                            </div>
-                            <div class="volume-row">
-                                <label for="menu-music-volume">&#127925; Music</label>
-                                <input type="range" id="menu-music-volume" min="0" max="100" value="50">
-                                <span class="volume-value" id="menu-music-volume-value">50%</span>
-                            </div>
-                        </div>
-                        <hr class="pause-divider">
-                        <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
-                    </div>
-                </div>
-
-                <!-- Pause Overlay -->
-                <div id="pause-overlay" style="display:none;">
-                    <div class="pause-panel">
-                        <h1 class="pause-title">PAUSED</h1>
-                        <div class="pause-level-info" id="pause-level-info">Stage 1 &mdash; Score: 0</div>
-                        <hr class="pause-divider">
-                        <div class="pause-volume-controls">
-                            <div class="volume-row">
-                                <label for="sfx-volume">&#128266; SFX</label>
-                                <input type="range" id="sfx-volume" min="0" max="100" value="70">
-                                <span class="volume-value" id="sfx-volume-value">70%</span>
-                            </div>
-                            <div class="volume-row">
-                                <label for="music-volume">&#127925; Music</label>
-                                <input type="range" id="music-volume" min="0" max="100" value="50">
-                                <span class="volume-value" id="music-volume-value">50%</span>
-                            </div>
-                        </div>
-                        <hr class="pause-divider">
-                        <div class="pause-actions">
-                            <button id="resume-btn" class="menu-btn menu-btn--primary">&#9654; Resume</button>
-                            <div class="pause-secondary-actions">
-                                <button id="pause-restart-btn" title="Restart Level" class="menu-btn menu-btn--restart">&#8634; Restart</button>
-                                <button id="pause-mainmenu-btn" title="Return to Main Menu" class="menu-btn menu-btn--quit">&#8962; Menu</button>
-                            </div>
-                            <div class="pause-tertiary-actions">
-                                <button id="view-highscores-btn" title="View High Scores" class="menu-btn">&#127942; Scores</button>
-                                <button id="view-achievements-btn" title="View Achievements" class="menu-btn">&#127894;&#65039; Achievements</button>
-                            </div>
-                        </div>
-                        <p class="pause-esc-hint">PRESS ESC TO RESUME</p>
-                    </div>
-                </div>
-
                 <!-- Error overlay (shown when runtime errors occur) -->
-                <div id="error-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4000; padding:20px; overflow:auto;">
+                <div id="error-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4000; padding:20px; overflow:auto;">
                     <h2 style="margin-bottom:8px;">Runtime Error</h2>
                     <pre id="error-content" style="white-space:pre-wrap; font-size:13px; line-height:1.4;"></pre>
                     <div style="margin-top:12px;">
@@ -1804,7 +1444,7 @@
                 </div>
 
                 <!-- Informational overlay shown when running from file:// to explain fetch/CORS issues -->
-                <div id="file-protocol-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4001; padding:20px; overflow:auto;">
+                <div id="file-protocol-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4001; padding:20px; overflow:auto;">
                     <h2 style="margin-bottom:8px;">Serving over HTTP is recommended</h2>
                     <p style="font-size:14px; max-width:800px;">It looks like you opened the game directly from the file system (file://). Modern browsers block some cross-origin resource requests when the page is loaded from file:// which may prevent audio and other assets from loading. To run locally, run <code>python -m http.server 8000</code> in the project root and open <a href="http://localhost:8000" style="color:#9ad;">http://localhost:8000</a>.</p>
                     <div style="margin-top:12px;">
@@ -1815,6 +1455,370 @@
 
                 <!-- legacy mobile restart overlay removed; on-screen touch controls provide restart -->
                 <div id="score-container" style="position:absolute; right:12px; top:88px; z-index:900; max-width:320px; color:#fff; display:none;"></div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════
+                 UI OVERLAYS — placed outside #game-container so they
+                 are never hidden by portrait orientation rules.
+                 All use position:fixed and high z-index.
+                 ══════════════════════════════════════════════════════ -->
+
+            <!-- ══════ START MENU SPLASH PAGE ══════ -->
+            <div id="start-menu-overlay">
+                <div class="start-menu-panel">
+                    <h1 class="start-menu-title">SKUNKED:</h1>
+                    <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
+                    <div class="start-menu-divider"></div>
+                    <p class="start-menu-tagline">NINJA SKUNK</p>
+                    <div class="start-menu-actions">
+                        <button id="menu-play-btn" class="menu-btn menu-btn--play">&#9654; PLAY GAME</button>
+                        <button id="menu-scores-btn" class="menu-btn menu-btn--scores">&#127942; HIGH SCORES</button>
+                        <button id="menu-info-btn" class="menu-btn menu-btn--info">&#9432; INFO</button>
+                        <button id="menu-settings-btn" class="menu-btn menu-btn--settings">&#9881; SETTINGS</button>
+                    </div>
+                    <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
+                    <p class="start-menu-footer">&#169; 2026 Mephitideus Interactive &mdash; skunked.io</p>
+                </div>
+            </div>
+
+            <!-- ══════ HIGH SCORES SCREEN (from main menu) ══════ -->
+            <div id="menu-scores-overlay" style="display:none;">
+                <div class="menu-sub-panel">
+                    <h2 class="menu-sub-title">&#127942; HIGH SCORES</h2>
+                    <hr class="pause-divider">
+                    <div id="menu-scores-board"></div>
+                    <hr class="pause-divider">
+                    <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                </div>
+            </div>
+
+            <!-- ══════ INFO SCREEN (from main menu) — Tabbed ══════ -->
+            <div id="menu-info-overlay" style="display:none;">
+                <div class="menu-sub-panel menu-sub-panel--info">
+                    <h2 class="menu-sub-title">&#9432; GAME INFO</h2>
+                    <hr class="pause-divider">
+
+                    <!-- Tab bar -->
+                    <div class="info-tabs">
+                        <button class="info-tab active" data-info-tab="about">About</button>
+                        <button class="info-tab" data-info-tab="controls">Controls</button>
+                        <button class="info-tab" data-info-tab="enemies">Enemies</button>
+                        <button class="info-tab" data-info-tab="stages">Stages</button>
+                        <button class="info-tab" data-info-tab="items">Items</button>
+                    </div>
+
+                    <!-- ── TAB: About ── -->
+                    <div class="info-tab-content active" data-info-panel="about">
+                        <div class="info-section info-story">
+                            <h3 class="info-heading">&#128220; Story</h3>
+                            <p class="info-lore">You are the last Ninja Skunk. Dark forces have invaded the forest, and only your legendary spray technique can save the woodland realm. Battle through 10 stages of increasingly dangerous foes, defeat powerful bosses, and prove you are the ultimate skunk warrior!</p>
+                        </div>
+
+                        <h3 class="info-heading" style="margin-top:12px;">&#11088; Key Features</h3>
+                        <div class="info-features">
+                            <div class="info-feature"><strong>10 Stages</strong>Forests, caverns, neon cities &amp; more</div>
+                            <div class="info-feature"><strong>6 Enemy Types</strong>Each with unique AI behaviour</div>
+                            <div class="info-feature"><strong>5 Bosses</strong>Massive health, deadly patterns</div>
+                            <div class="info-feature"><strong>Combo System</strong>Chain hits for up to 10&times; score</div>
+                            <div class="info-feature"><strong>3 Attack Types</strong>Melee, Shadow Strike &amp; Skunk Shot</div>
+                            <div class="info-feature"><strong>6 Power-ups</strong>Health, lives, speed &amp; damage boosts</div>
+                            <div class="info-feature"><strong>5 Achievements</strong>Unlock badges for skilled play</div>
+                            <div class="info-feature"><strong>Online Scores</strong>Compete on the global leaderboard</div>
+                        </div>
+
+                        <h3 class="info-heading" style="margin-top:12px;">&#128161; Pro Tips</h3>
+                        <ul class="info-tips">
+                            <li>Chain combos within 2 seconds &mdash; multiplier caps at 10&times;</li>
+                            <li>Collect all 3 Golden Idols per stage for a huge +30% damage &amp; +25% speed set bonus</li>
+                            <li>Shadow Strike grants invincibility frames &mdash; dash through attacks!</li>
+                            <li>Skunk Shot disrupts Kamikaze fuses &mdash; force early detonation on groups</li>
+                            <li>Watch boss wind-up animations before committing to attacks</li>
+                            <li>Double-jump lets you platform over the Jumper enemy&rsquo;s arc</li>
+                        </ul>
+
+                        <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.35);">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
+                    </div>
+
+                    <!-- ── TAB: Controls ── -->
+                    <div class="info-tab-content" data-info-panel="controls">
+                        <div class="info-ctrl-group">
+                            <h4>&#9000; Keyboard</h4>
+                            <table class="info-table">
+                                <tr><td class="info-key">&#8592; &#8594; / A, D</td><td>Move left / right</td></tr>
+                                <tr><td class="info-key">SPACE</td><td>Jump (tap twice for double-jump)</td></tr>
+                                <tr><td class="info-key">X</td><td>Basic Attack</td></tr>
+                                <tr><td class="info-key">Z</td><td>Shadow Strike (dash + i-frames)</td></tr>
+                                <tr><td class="info-key">C</td><td>Skunk Shot (ranged projectile)</td></tr>
+                                <tr><td class="info-key">ESC</td><td>Pause / Resume</td></tr>
+                                <tr><td class="info-key">ENTER</td><td>Start / Restart</td></tr>
+                            </table>
+                        </div>
+
+                        <div class="info-ctrl-group">
+                            <h4>&#128241; Touch / Mobile</h4>
+                            <table class="info-table">
+                                <tr><td class="info-key">&#10094; &#10095;</td><td>Left / Right movement pads</td></tr>
+                                <tr><td class="info-key">&#8679;</td><td>Jump button</td></tr>
+                                <tr><td class="info-key">&#128481;</td><td>Attack button (melee)</td></tr>
+                                <tr><td class="info-key">&#128165;</td><td>Special button (Shadow Strike / Skunk Shot)</td></tr>
+                                <tr><td class="info-key">&#8634;</td><td>Restart (on game-over)</td></tr>
+                            </table>
+                        </div>
+
+                        <div class="info-ctrl-group">
+                            <h4>&#127918; Gamepad (Xbox / PlayStation)</h4>
+                            <table class="info-table">
+                                <tr><td class="info-key">Left Stick</td><td>Move</td></tr>
+                                <tr><td class="info-key">A / Cross</td><td>Jump</td></tr>
+                                <tr><td class="info-key">X / Square</td><td>Basic Attack</td></tr>
+                                <tr><td class="info-key">B / Circle</td><td>Shadow Strike</td></tr>
+                                <tr><td class="info-key">LT / LB</td><td>Skunk Shot</td></tr>
+                                <tr><td class="info-key">LB</td><td>Pause</td></tr>
+                            </table>
+                        </div>
+
+                        <h3 class="info-heading" style="margin-top:10px;">&#9876; Combat Moves</h3>
+                        <div class="info-moves">
+                            <div class="info-move-card">
+                                <h4>&#128481; Basic Attack</h4>
+                                <p>Quick melee strike. Fast cooldown, chain rapidly for combos.</p>
+                                <div class="move-stat">DMG: 15 &bull; Cooldown: 0.3s &bull; Range: 120px</div>
+                            </div>
+                            <div class="info-move-card">
+                                <h4>&#9889; Shadow Strike</h4>
+                                <p>Dashing lunge with invincibility frames. Pass through enemy attacks unscathed.</p>
+                                <div class="move-stat">DMG: 15 &bull; Cooldown: 0.45s &bull; Dash: 380px/s &bull; i-frames!</div>
+                            </div>
+                            <div class="info-move-card">
+                                <h4>&#128163; Skunk Shot</h4>
+                                <p>Ranged spray projectile. Creates an AoE cloud on impact &mdash; &ldquo;Skunks&rdquo; enemies for 5s, disabling movement &amp; attacks.</p>
+                                <div class="move-stat">Ammo-based &bull; Cooldown: 0.5s &bull; Speed: 600px/s</div>
+                            </div>
+                        </div>
+
+                        <h3 class="info-heading" style="margin-top:10px;">&#128293; Combo Tiers</h3>
+                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Hit enemies within 2s windows. Multiplier = 1 + (hits &times; 0.25), max 10&times;</p>
+                        <div class="info-combo-tiers">
+                            <span class="combo-tier" style="color:#FFD93D;">3+ NICE!</span>
+                            <span class="combo-tier" style="color:#FF9500;">5+ GREAT!</span>
+                            <span class="combo-tier" style="color:#FF4500;">10+ AWESOME!</span>
+                            <span class="combo-tier" style="color:#FF00FF;">15+ INCREDIBLE!</span>
+                            <span class="combo-tier" style="color:#00FFFF;">20+ UNSTOPPABLE!</span>
+                            <span class="combo-tier" style="color:#FFD700;">30+ LEGENDARY!</span>
+                            <span class="combo-tier" style="color:#FF0000;">50+ GOD MODE!</span>
+                        </div>
+                    </div>
+
+                    <!-- ── TAB: Enemies ── -->
+                    <div class="info-tab-content" data-info-panel="enemies">
+                        <h3 class="info-heading">&#128126; Enemy Types</h3>
+                        <div class="info-enemies-grid">
+                            <div class="info-enemy-card">
+                                <h4>&#128128; Grunt</h4>
+                                <div class="enemy-stats">HP 50 &bull; SPD 150 &bull; 100 pts</div>
+                                <p>Standard patrol enemy. Chases player within 300px, melee attacks at close range.</p>
+                            </div>
+                            <div class="info-enemy-card">
+                                <h4>&#128168; Speedster</h4>
+                                <div class="enemy-stats">HP 40 &bull; SPD 225 &bull; 120 pts</div>
+                                <p>50% faster but fragile. Quick points if you can catch them before they overwhelm you.</p>
+                            </div>
+                            <div class="info-enemy-card">
+                                <h4>&#128737; Shield Tank</h4>
+                                <div class="enemy-stats">HP 75 &bull; SPD 105 &bull; 150 pts</div>
+                                <p>Slow bruiser with a Shield Bubble (every 2.2s, lasts 1.5s). Time your attacks between shields!</p>
+                            </div>
+                            <div class="info-enemy-card">
+                                <h4>&#128165; Kamikaze</h4>
+                                <div class="enemy-stats">HP 25 &bull; SPD 300 &bull; 200 pts</div>
+                                <p>Closes in, ignites a 1.6s fuse, then dashes and detonates! AoE deals 55 damage. Chain explosions = 500 bonus pts. Skunk Shot disrupts the fuse.</p>
+                            </div>
+                            <div class="info-enemy-card">
+                                <h4>&#128640; Jumper</h4>
+                                <div class="enemy-stats">HP 60 &bull; Stationary &bull; 200 pts</div>
+                                <p>Doesn&rsquo;t walk &mdash; performs up to 5 rapid vertical jumps to reach you. Watch for the green sparks!</p>
+                            </div>
+                            <div class="info-enemy-card">
+                                <h4>&#127919; Thrower</h4>
+                                <div class="enemy-stats">HP 60 &bull; SPD 128 &bull; 250 pts</div>
+                                <p>Ranged attacker throwing purple spray orbs from 400px. Retreats when you close in. Highest points among regular enemies.</p>
+                            </div>
+                        </div>
+
+                        <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
+                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Each stage ends with a boss fight. Boss health scales from 6&times; to 18&times; base enemy HP.</p>
+                        <div class="info-boss-row">
+                            <div class="boss-badge"><strong>Boss 1</strong><span>Forest Chieftain<br>6&times; HP</span></div>
+                            <div class="boss-badge"><strong>Boss 2</strong><span>City Overlord<br>8&times; HP</span></div>
+                            <div class="boss-badge"><strong>Boss 3</strong><span>Dojo Master<br>10&times; HP</span></div>
+                            <div class="boss-badge"><strong>Boss 4</strong><span>Neon Warden<br>13&times; HP</span></div>
+                            <div class="boss-badge"><strong>Boss 5</strong><span>Crystal Guardian<br>11&times; HP</span></div>
+                        </div>
+                    </div>
+
+                    <!-- ── TAB: Stages ── -->
+                    <div class="info-tab-content" data-info-panel="stages">
+                        <h3 class="info-heading">&#127759; All 10 Stages</h3>
+                        <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Difficulty ramps through faster spawns, tougher bosses, and advanced enemy types. Each stage has 3 Golden Idols and 2 Skunk Powerups.</p>
+                        <div class="info-stages-grid">
+                            <div class="info-stage-card">
+                                <h4>1 &mdash; Forest Outskirts</h4>
+                                <p>&#127795; Grunts &amp; Tanks. Boss&nbsp;6&times;&nbsp;HP. Easy intro.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>2 &mdash; Skunk City</h4>
+                                <p>&#127961; Grunts, Speedsters &amp; Throwers. Boss&nbsp;8&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>3 &mdash; Mountain Dojo</h4>
+                                <p>&#9968; All 6 enemy types! Boss&nbsp;10&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>4 &mdash; Crystal Caverns</h4>
+                                <p>&#128142; All types, tighter spawns. Boss&nbsp;11&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>5 &mdash; Cavern Depths</h4>
+                                <p>&#127754; No Grunts! Advanced foes only. Boss&nbsp;12&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>6 &mdash; Neon Crossroads</h4>
+                                <p>&#128161; Tanks, Kamikazes, Jumpers, Throwers. Boss&nbsp;13&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>7 &mdash; Crystal Ridge</h4>
+                                <p>&#9968; Advanced types, high aggression. Boss&nbsp;14&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>8 &mdash; Abyssal Caverns</h4>
+                                <p>&#128064; Kamikaze, Jumper &amp; Thrower only! Boss&nbsp;15&times;&nbsp;HP.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>9 &mdash; Neon Nexus</h4>
+                                <p>&#9889; Hardest trio. Boss&nbsp;16&times;&nbsp;HP. Near-max difficulty.</p>
+                            </div>
+                            <div class="info-stage-card">
+                                <h4>10 &mdash; Final Showdown</h4>
+                                <p>&#128293; Boss&nbsp;18&times;&nbsp;HP, 1.2&times; speed, 2.3&times; damage. The ultimate test!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── TAB: Items ── -->
+                    <div class="info-tab-content" data-info-panel="items">
+                        <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
+                        <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
+                        <div class="info-items-grid">
+                            <div class="info-item-card">
+                                <h4 style="color:#4dff4d;">&#128154; Health Regen</h4>
+                                <p>Heals 10 HP/s for 6 seconds. 20% enemy drop chance.</p>
+                            </div>
+                            <div class="info-item-card">
+                                <h4 style="color:#ff4d4d;">&#10084; Extra Life</h4>
+                                <p>+1 life instantly. Rare 3% enemy drop chance.</p>
+                            </div>
+                            <div class="info-item-card">
+                                <h4 style="color:#FFD700;">&#128081; Golden Idol</h4>
+                                <p>+250 score, +30 HP, 2s invulnerability. Collect all 3 per stage for +25% speed &amp; +30% damage set bonus + 2000 pts!</p>
+                            </div>
+                            <div class="info-item-card">
+                                <h4 style="color:#00CCFF;">&#9889; Speed Boost</h4>
+                                <p>1.5&times; movement speed for 8 seconds.</p>
+                            </div>
+                            <div class="info-item-card">
+                                <h4 style="color:#FF8844;">&#128165; Damage Boost</h4>
+                                <p>1.75&times; attack damage for 10 seconds.</p>
+                            </div>
+                            <div class="info-item-card">
+                                <h4 style="color:#00FF77;">&#128163; Skunk Powerup</h4>
+                                <p>+2 Skunk Shot ammo. 2 placed per level.</p>
+                            </div>
+                        </div>
+
+                        <h3 class="info-heading" style="margin-top:14px;">&#127942; Achievements</h3>
+                        <div class="info-achieve-grid">
+                            <div class="info-achieve-card">
+                                <span class="achieve-icon">&#129656;</span>
+                                <div><h4>First Blood</h4><p>Defeat your first enemy</p></div>
+                            </div>
+                            <div class="info-achieve-card">
+                                <span class="achieve-icon">&#9876;</span>
+                                <div><h4>Enemy Slayer</h4><p>Defeat 50 enemies total</p></div>
+                            </div>
+                            <div class="info-achieve-card">
+                                <span class="achieve-icon">&#128293;</span>
+                                <div><h4>Combo Starter</h4><p>Achieve a 5-hit combo</p></div>
+                            </div>
+                            <div class="info-achieve-card">
+                                <span class="achieve-icon">&#128142;</span>
+                                <div><h4>High Scorer</h4><p>Score over 50,000 points</p></div>
+                            </div>
+                            <div class="info-achieve-card">
+                                <span class="achieve-icon">&#128737;</span>
+                                <div><h4>Untouchable</h4><p>Complete a level without taking any damage</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="pause-divider" style="margin-top:12px;">
+                    <button id="menu-info-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                </div>
+            </div>
+
+            <!-- ══════ SETTINGS SCREEN (from main menu) ══════ -->
+            <div id="menu-settings-overlay" style="display:none;">
+                <div class="menu-sub-panel">
+                    <h2 class="menu-sub-title">&#9881; SETTINGS</h2>
+                    <hr class="pause-divider">
+                    <div class="pause-volume-controls">
+                        <div class="volume-row">
+                            <label for="menu-sfx-volume">&#128266; SFX</label>
+                            <input type="range" id="menu-sfx-volume" min="0" max="100" value="70">
+                            <span class="volume-value" id="menu-sfx-volume-value">70%</span>
+                        </div>
+                        <div class="volume-row">
+                            <label for="menu-music-volume">&#127925; Music</label>
+                            <input type="range" id="menu-music-volume" min="0" max="100" value="50">
+                            <span class="volume-value" id="menu-music-volume-value">50%</span>
+                        </div>
+                    </div>
+                    <hr class="pause-divider">
+                    <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                </div>
+            </div>
+
+            <!-- ══════ PAUSE OVERLAY ══════ -->
+            <div id="pause-overlay" style="display:none;">
+                <div class="pause-panel">
+                    <h1 class="pause-title">PAUSED</h1>
+                    <div class="pause-level-info" id="pause-level-info">Stage 1 &mdash; Score: 0</div>
+                    <hr class="pause-divider">
+                    <div class="pause-volume-controls">
+                        <div class="volume-row">
+                            <label for="sfx-volume">&#128266; SFX</label>
+                            <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                            <span class="volume-value" id="sfx-volume-value">70%</span>
+                        </div>
+                        <div class="volume-row">
+                            <label for="music-volume">&#127925; Music</label>
+                            <input type="range" id="music-volume" min="0" max="100" value="50">
+                            <span class="volume-value" id="music-volume-value">50%</span>
+                        </div>
+                    </div>
+                    <hr class="pause-divider">
+                    <div class="pause-actions">
+                        <button id="resume-btn" class="menu-btn menu-btn--primary">&#9654; Resume</button>
+                        <div class="pause-secondary-actions">
+                            <button id="pause-restart-btn" title="Restart Level" class="menu-btn menu-btn--restart">&#8634; Restart</button>
+                            <button id="pause-mainmenu-btn" title="Return to Main Menu" class="menu-btn menu-btn--quit">&#8962; Menu</button>
+                        </div>
+                        <div class="pause-tertiary-actions">
+                            <button id="view-highscores-btn" title="View High Scores" class="menu-btn">&#127942; Scores</button>
+                            <button id="view-achievements-btn" title="View Achievements" class="menu-btn">&#127894;&#65039; Achievements</button>
+                        </div>
+                    </div>
+                    <p class="pause-esc-hint">PRESS ESC TO RESUME</p>
+                </div>
             </div>
 
             <script src="js/errorHandler.js?v=2026-02-14a"></script>
