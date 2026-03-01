@@ -207,7 +207,7 @@
         #mobile-start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -2017,14 +2017,36 @@
                         // Helper: hide start menu and begin game
                         function startGameFromMenu() {
                             if (!startMenuOverlay) return;
+
+                            // ── Gate: wait for game engine to be ready ──
+                            if (!window.gameReady || !window.game) {
+                                if (playBtn) {
+                                    playBtn.disabled = true;
+                                    const prevText = playBtn.innerHTML;
+                                    playBtn.textContent = '\u23F3 LOADING\u2026';
+                                    const onReady = () => {
+                                        playBtn.disabled = false;
+                                        playBtn.innerHTML = prevText;
+                                        window.removeEventListener('gameReady', onReady);
+                                        startGameFromMenu(); // retry once ready
+                                    };
+                                    window.addEventListener('gameReady', onReady);
+                                }
+                                return;
+                            }
+
                             hideAllMenuOverlays();
+                            // Also dismiss the legacy mobile-start overlay in case it was shown
+                            try { if (typeof hideMobileStartOverlay === 'function') hideMobileStartOverlay(); } catch (e) {}
+
+                            // On mobile, request fullscreen for immersive play
+                            try { if (typeof requestFullscreen === 'function') requestFullscreen(); } catch (e) {}
+
                             // Start the game via the existing Game API
                             try {
-                                if (window.game) {
-                                    window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_confirm');
-                                    window.game.startGame(0);
-                                    window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
-                                }
+                                window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_confirm');
+                                window.game.startGame(0);
+                                window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
                             } catch (e) { console.warn('startGameFromMenu failed', e); }
                         }
 
@@ -2667,7 +2689,7 @@
             }
         }
 
-        if (isMobile() && mobileStartBtn) {
+        if (isMobile() && mobileStartBtn && !document.getElementById('start-menu-overlay')) {
             showMobileStartOverlay();
             const startHandler = (e) => {
                 try { e && e.preventDefault(); } catch (_) {}
