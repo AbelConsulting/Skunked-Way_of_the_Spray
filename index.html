@@ -37,6 +37,7 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
             --safe-right: env(safe-area-inset-right, 0px);
+            --ad-width: 160px;
         }
         /* INLINE STYLES FOR MOBILE OPTIMIZATION */
         body, html {
@@ -57,7 +58,7 @@
         }
 
         #ad-container-left {
-            width: 160px;
+            width: var(--ad-width);
             min-width: 1px;
             height: 100%;
             background-color: #050505;
@@ -83,7 +84,7 @@
 
         /* Ensure canvas respects device safe areas (notches) */
         canvas {
-            max-width: calc(100vw - var(--safe-left) - var(--safe-right) - 160px); /* Account for ad */
+            max-width: calc(100vw - var(--safe-left) - var(--safe-right) - var(--ad-width)); /* Account for ad */
             max-height: calc(100vh - var(--safe-top) - var(--safe-bottom));
             object-fit: contain;
             display: block;
@@ -92,7 +93,7 @@
         /* --- TOUCH CONTROLS UI --- */
         #touch-controls {
             position: fixed;
-            left: 160px; /* Offset for ad container */
+            left: var(--ad-width); /* Offset for ad container */
             right: 0;
             bottom: calc(20px + var(--safe-bottom));
             top: auto;
@@ -246,6 +247,16 @@
             align-items: center;
             z-index: 500;
             pointer-events: auto;
+            background: radial-gradient(ellipse at 30% 20%, rgba(0,60,30,0.4), transparent 60%),
+                        radial-gradient(ellipse at 70% 80%, rgba(40,0,80,0.35), transparent 60%),
+                        linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #050510 100%);
+            background-size: 200% 200%, 200% 200%, 100% 100%;
+            animation: menuBgShift 12s ease-in-out infinite;
+        }
+
+        @keyframes menuBgShift {
+            0%, 100% { background-position: 0% 50%, 100% 50%, 0% 0%; }
+            50%      { background-position: 100% 50%, 0% 50%, 0% 0%; }
         }
 
         #start-menu-overlay.hidden { display: none; }
@@ -312,6 +323,34 @@
             color: #FFD700;
             text-shadow: 0 0 12px rgba(255,215,0,0.5);
             letter-spacing: 0.08em;
+            animation: taglineGlow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes taglineGlow {
+            0%, 100% { text-shadow: 0 0 12px rgba(255,215,0,0.5); filter: brightness(1); }
+            50%      { text-shadow: 0 0 24px rgba(255,215,0,0.85), 0 0 48px rgba(255,160,0,0.3); filter: brightness(1.15); }
+        }
+
+        .start-menu-enter-hint {
+            margin: 4px 0 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(8px, 1.4vw, 11px);
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.06em;
+            animation: hintBlink 2s ease-in-out infinite;
+        }
+
+        @keyframes hintBlink {
+            0%, 100% { opacity: 0.35; }
+            50%      { opacity: 0.7; }
+        }
+
+        .menu-btn--settings {
+            border-color: rgba(180,180,255,0.30) !important;
+            background: linear-gradient(180deg, rgba(180,180,255,0.16), rgba(20,10,50,0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 20px rgba(180,180,255,0.10) !important;
         }
 
         .start-menu-actions {
@@ -370,9 +409,10 @@
             font-family: sans-serif;
         }
 
-        /* Sub-screen overlays (Info / Scores from main menu) */
+        /* Sub-screen overlays (Info / Scores / Settings from main menu) */
         #menu-scores-overlay,
-        #menu-info-overlay {
+        #menu-info-overlay,
+        #menu-settings-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
@@ -876,13 +916,19 @@
             display: none;
             position: fixed;
             top: 0;
-            left: 160px; /* Offset for ad */
-            width: calc(100% - 160px);
+            left: var(--ad-width); /* Offset for ad */
+            width: calc(100% - var(--ad-width));
             height: 100%;
             background: radial-gradient(120% 120% at 50% 20%, rgba(0,0,0,0.65), rgba(0,0,0,0.92));
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 220ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        #pause-overlay.visible {
+            opacity: 1;
         }
 
         .pause-panel {
@@ -897,6 +943,58 @@
             flex-direction: column;
             align-items: center;
             gap: 16px;
+            transform: translateY(12px);
+            transition: transform 220ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        #pause-overlay.visible .pause-panel {
+            transform: translateY(0);
+        }
+
+        .pause-level-info {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(10px, 1.6vw, 13px);
+            letter-spacing: 0.04em;
+        }
+
+        .pause-esc-hint {
+            margin: 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(8px, 1.2vw, 10px);
+            color: rgba(255,255,255,0.25);
+            letter-spacing: 0.06em;
+        }
+
+        .pause-tertiary-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 320px;
+            justify-content: center;
+        }
+
+        .pause-tertiary-actions .menu-btn {
+            flex: 1;
+            padding: 10px 8px;
+            font-size: 13px;
+        }
+
+        .menu-btn--restart {
+            border-color: rgba(255,160,80,0.35) !important;
+            background: linear-gradient(180deg, rgba(255,160,80,0.20), rgba(40,15,0,0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 20px rgba(255,160,80,0.12) !important;
+        }
+
+        .menu-btn--quit {
+            border-color: rgba(255,80,80,0.35) !important;
+            background: linear-gradient(180deg, rgba(255,80,80,0.18), rgba(40,0,0,0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 20px rgba(255,80,80,0.10) !important;
         }
 
         .pause-title {
@@ -1161,6 +1259,8 @@
             canvas { max-width: calc(100vw - var(--safe-left) - var(--safe-right)); }
             #touch-controls { left: 0; }
             #pause-overlay { left: 0; width: 100%; }
+            .start-menu-enter-hint { display: none; } /* Hide keyboard hint on mobile */
+            .pause-esc-hint { display: none; } /* Hide ESC hint on mobile */
         }
 
         /* Allow a 'force portrait->landscape' mode: when body has .force-landscape, treat as landscape */
@@ -1236,7 +1336,9 @@
                             <button id="menu-play-btn" class="menu-btn menu-btn--play">&#9654; PLAY GAME</button>
                             <button id="menu-scores-btn" class="menu-btn menu-btn--scores">&#127942; HIGH SCORES</button>
                             <button id="menu-info-btn" class="menu-btn menu-btn--info">&#9432; INFO</button>
+                            <button id="menu-settings-btn" class="menu-btn menu-btn--settings">&#9881; SETTINGS</button>
                         </div>
+                        <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
                         <p class="start-menu-footer">&#169; 2026 Skunk Squad &mdash; skunked.io</p>
                     </div>
                 </div>
@@ -1525,31 +1627,59 @@
                     </div>
                 </div>
 
+                <!-- ══════ SETTINGS SCREEN (from main menu) ══════ -->
+                <div id="menu-settings-overlay" style="display:none;">
+                    <div class="menu-sub-panel">
+                        <h2 class="menu-sub-title">&#9881; SETTINGS</h2>
+                        <hr class="pause-divider">
+                        <div class="pause-volume-controls">
+                            <div class="volume-row">
+                                <label for="menu-sfx-volume">&#128266; SFX</label>
+                                <input type="range" id="menu-sfx-volume" min="0" max="100" value="70">
+                                <span class="volume-value" id="menu-sfx-volume-value">70%</span>
+                            </div>
+                            <div class="volume-row">
+                                <label for="menu-music-volume">&#127925; Music</label>
+                                <input type="range" id="menu-music-volume" min="0" max="100" value="50">
+                                <span class="volume-value" id="menu-music-volume-value">50%</span>
+                            </div>
+                        </div>
+                        <hr class="pause-divider">
+                        <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                    </div>
+                </div>
+
                 <!-- Pause Overlay -->
                 <div id="pause-overlay" style="display:none;">
                     <div class="pause-panel">
                         <h1 class="pause-title">PAUSED</h1>
+                        <div class="pause-level-info" id="pause-level-info">Stage 1 &mdash; Score: 0</div>
                         <hr class="pause-divider">
                         <div class="pause-volume-controls">
                             <div class="volume-row">
-                                <label for="sfx-volume">🔊 SFX</label>
+                                <label for="sfx-volume">&#128266; SFX</label>
                                 <input type="range" id="sfx-volume" min="0" max="100" value="70">
                                 <span class="volume-value" id="sfx-volume-value">70%</span>
                             </div>
                             <div class="volume-row">
-                                <label for="music-volume">🎵 Music</label>
+                                <label for="music-volume">&#127925; Music</label>
                                 <input type="range" id="music-volume" min="0" max="100" value="50">
                                 <span class="volume-value" id="music-volume-value">50%</span>
                             </div>
                         </div>
                         <hr class="pause-divider">
                         <div class="pause-actions">
-                            <button id="resume-btn" class="menu-btn menu-btn--primary">▶ Resume</button>
+                            <button id="resume-btn" class="menu-btn menu-btn--primary">&#9654; Resume</button>
                             <div class="pause-secondary-actions">
-                                <button id="view-highscores-btn" title="View High Scores" class="menu-btn">🏆 Scores</button>
-                                <button id="view-achievements-btn" title="View Achievements" class="menu-btn">🎖️ Achievements</button>
+                                <button id="pause-restart-btn" title="Restart Level" class="menu-btn menu-btn--restart">&#8634; Restart</button>
+                                <button id="pause-mainmenu-btn" title="Return to Main Menu" class="menu-btn menu-btn--quit">&#8962; Menu</button>
+                            </div>
+                            <div class="pause-tertiary-actions">
+                                <button id="view-highscores-btn" title="View High Scores" class="menu-btn">&#127942; Scores</button>
+                                <button id="view-achievements-btn" title="View Achievements" class="menu-btn">&#127894;&#65039; Achievements</button>
                             </div>
                         </div>
+                        <p class="pause-esc-hint">PRESS ESC TO RESUME</p>
                     </div>
                 </div>
 
@@ -1847,18 +1977,31 @@
                         const startMenuOverlay  = document.getElementById('start-menu-overlay');
                         const scoresOverlay     = document.getElementById('menu-scores-overlay');
                         const infoOverlay       = document.getElementById('menu-info-overlay');
+                        const settingsOverlay   = document.getElementById('menu-settings-overlay');
                         const playBtn           = document.getElementById('menu-play-btn');
                         const scoresBtn         = document.getElementById('menu-scores-btn');
                         const infoBtn           = document.getElementById('menu-info-btn');
+                        const settingsBtn       = document.getElementById('menu-settings-btn');
                         const scoresBackBtn     = document.getElementById('menu-scores-back');
                         const infoBackBtn       = document.getElementById('menu-info-back');
+                        const settingsBackBtn   = document.getElementById('menu-settings-back');
                         const scoresBoardEl     = document.getElementById('menu-scores-board');
+
+                        // ── Shared Helper: hide all menu overlays ──
+                        function hideAllMenuOverlays() {
+                            if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                            if (scoresOverlay) scoresOverlay.style.display = 'none';
+                            if (infoOverlay) infoOverlay.style.display = 'none';
+                            if (settingsOverlay) settingsOverlay.style.display = 'none';
+                            window._startMenuVisible = false;
+                        }
+                        // Expose globally so other code can call it instead of duplicating
+                        window._hideStartMenu = hideAllMenuOverlays;
 
                         // Helper: hide start menu and begin game
                         function startGameFromMenu() {
                             if (!startMenuOverlay) return;
-                            startMenuOverlay.classList.add('hidden');
-                            window._startMenuVisible = false;
+                            hideAllMenuOverlays();
                             // Start the game via the existing Game API
                             try {
                                 if (window.game) {
@@ -1874,6 +2017,7 @@
                             if (startMenuOverlay) { startMenuOverlay.classList.remove('hidden'); startMenuOverlay.style.display = ''; }
                             if (scoresOverlay) scoresOverlay.style.display = 'none';
                             if (infoOverlay) infoOverlay.style.display = 'none';
+                            if (settingsOverlay) settingsOverlay.style.display = 'none';
                             window._startMenuVisible = true;
                         }
 
@@ -1920,6 +2064,50 @@
                             });
                         }
 
+                        // SETTINGS button
+                        if (settingsBtn) {
+                            settingsBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                // Sync sliders with current audio values
+                                try {
+                                    const am = window.game && window.game.audioManager;
+                                    const sfxS = document.getElementById('menu-sfx-volume');
+                                    const musS = document.getElementById('menu-music-volume');
+                                    if (sfxS && am) sfxS.value = Math.round((am._pendingSfxVol != null ? am._pendingSfxVol : 0.7) * 100);
+                                    if (musS && am) musS.value = Math.round((am._pendingMusicVol != null ? am._pendingMusicVol : 0.5) * 100);
+                                    const sfxV = document.getElementById('menu-sfx-volume-value');
+                                    const musV = document.getElementById('menu-music-volume-value');
+                                    if (sfxV && sfxS) sfxV.textContent = sfxS.value + '%';
+                                    if (musV && musS) musV.textContent = musS.value + '%';
+                                } catch (e) {}
+                                if (settingsOverlay) settingsOverlay.style.display = 'flex';
+                            });
+                        }
+
+                        // Settings volume sliders
+                        try {
+                            const menuSfxSlider = document.getElementById('menu-sfx-volume');
+                            const menuMusicSlider = document.getElementById('menu-music-volume');
+                            const menuSfxVal = document.getElementById('menu-sfx-volume-value');
+                            const menuMusicVal = document.getElementById('menu-music-volume-value');
+                            if (menuSfxSlider) {
+                                menuSfxSlider.addEventListener('input', () => {
+                                    const v = menuSfxSlider.value / 100;
+                                    if (menuSfxVal) menuSfxVal.textContent = menuSfxSlider.value + '%';
+                                    try { if (window.game && window.game.audioManager) { window.game.audioManager._pendingSfxVol = v; window.game.audioManager.setSfxVolume && window.game.audioManager.setSfxVolume(v); } } catch (e) {}
+                                });
+                            }
+                            if (menuMusicSlider) {
+                                menuMusicSlider.addEventListener('input', () => {
+                                    const v = menuMusicSlider.value / 100;
+                                    if (menuMusicVal) menuMusicVal.textContent = menuMusicSlider.value + '%';
+                                    try { if (window.game && window.game.audioManager) { window.game.audioManager._pendingMusicVol = v; window.game.audioManager.setMusicVolume && window.game.audioManager.setMusicVolume(v); } } catch (e) {}
+                                });
+                            }
+                        } catch (e) {}
+
                         // Back buttons
                         if (scoresBackBtn) {
                             scoresBackBtn.addEventListener('click', (ev) => {
@@ -1930,6 +2118,13 @@
                         }
                         if (infoBackBtn) {
                             infoBackBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                showStartMenu();
+                            });
+                        }
+                        if (settingsBackBtn) {
+                            settingsBackBtn.addEventListener('click', (ev) => {
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 showStartMenu();
@@ -1955,6 +2150,85 @@
                             });
                         }
 
+                        // ── PAUSE MENU: Restart Level button ──
+                        const pauseRestartBtn = document.getElementById('pause-restart-btn');
+                        if (pauseRestartBtn) {
+                            pauseRestartBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                try {
+                                    if (window.game) {
+                                        const lvl = window.game.currentLevelIndex || 0;
+                                        // Hide pause overlay
+                                        const overlay = document.getElementById('pause-overlay');
+                                        if (overlay) { overlay.classList.remove('visible'); setTimeout(() => { overlay.style.display = 'none'; }, 240); }
+                                        window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_confirm');
+                                        window.game.startGame(lvl);
+                                        window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
+                                    }
+                                } catch (e) { console.warn('Pause restart failed', e); }
+                            });
+                        }
+
+                        // ── PAUSE MENU: Main Menu button ──
+                        const pauseMainMenuBtn = document.getElementById('pause-mainmenu-btn');
+                        if (pauseMainMenuBtn) {
+                            pauseMainMenuBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                try {
+                                    // Hide pause overlay
+                                    const overlay = document.getElementById('pause-overlay');
+                                    if (overlay) { overlay.classList.remove('visible'); setTimeout(() => { overlay.style.display = 'none'; }, 240); }
+                                    if (window.game) {
+                                        window.game.state = 'MENU';
+                                        window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_back');
+                                        window.game.audioManager && window.game.audioManager.stopMusic && window.game.audioManager.stopMusic();
+                                        window.game.audioManager && window.game.audioManager.stopAmbient && window.game.audioManager.stopAmbient();
+                                        window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
+                                    }
+                                    showStartMenu();
+                                } catch (e) { console.warn('Pause main menu failed', e); }
+                            });
+                        }
+
+                        // ── BUTTON HOVER SFX ──
+                        try {
+                            const hoverBtns = document.querySelectorAll('.menu-btn');
+                            hoverBtns.forEach(btn => {
+                                btn.addEventListener('mouseenter', () => {
+                                    try {
+                                        if (window.game && window.game.audioManager && window.game.audioManager.playSound) {
+                                            window.game.audioManager.playSound('ui_hover');
+                                        }
+                                    } catch (e) {}
+                                });
+                            });
+                        } catch (e) {}
+
+                        // ── FOCUS TRAP for overlays ──
+                        try {
+                            function trapFocus(overlayEl) {
+                                if (!overlayEl) return;
+                                overlayEl.addEventListener('keydown', (e) => {
+                                    if (e.key !== 'Tab') return;
+                                    const focusable = overlayEl.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])');
+                                    if (!focusable.length) return;
+                                    const first = focusable[0];
+                                    const last = focusable[focusable.length - 1];
+                                    if (e.shiftKey) {
+                                        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+                                    } else {
+                                        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+                                    }
+                                });
+                            }
+                            trapFocus(document.getElementById('pause-overlay'));
+                            trapFocus(document.getElementById('menu-scores-overlay'));
+                            trapFocus(document.getElementById('menu-info-overlay'));
+                            trapFocus(document.getElementById('menu-settings-overlay'));
+                        } catch (e) {}
+
                         // Show the start menu again when returning to MENU state
                         window.addEventListener('gameStateChange', (ev) => {
                             try {
@@ -1962,11 +2236,7 @@
                                 if (state === 'MENU') {
                                     showStartMenu();
                                 } else {
-                                    // Hide all menu overlays when game is playing
-                                    if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
-                                    if (scoresOverlay) scoresOverlay.style.display = 'none';
-                                    if (infoOverlay) infoOverlay.style.display = 'none';
-                                    window._startMenuVisible = false;
+                                    hideAllMenuOverlays();
                                 }
                             } catch (e) {}
                         });
@@ -2416,7 +2686,7 @@
                                 }
                                 // Dismiss the HTML start-menu overlay so the Enter key isn't blocked
                                 window._startMenuVisible = false;
-                                try { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } catch (e) {}
+                                try { if (window._hideStartMenu) window._hideStartMenu(); else { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } } catch (e) {}
                                 requestFullscreen();
                                 triggerKeyEvent('Enter', 'keydown');
                                 setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
@@ -2749,7 +3019,7 @@
                     }
                     // Dismiss the HTML start-menu overlay so the Enter key isn't blocked
                     window._startMenuVisible = false;
-                    try { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } catch (e) {}
+                    try { if (window._hideStartMenu) window._hideStartMenu(); else { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } } catch (e) {}
                     // Simulate the proceed flow (important to be done in a user-gesture context ideally)
                     requestFullscreen();
                     triggerKeyEvent('Enter', 'keydown');
@@ -2876,7 +3146,7 @@
                 }
                 // Dismiss the HTML start-menu overlay so the Enter key isn't blocked
                 window._startMenuVisible = false;
-                try { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } catch (e) {}
+                try { if (window._hideStartMenu) window._hideStartMenu(); else { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } } catch (e) {}
                 requestFullscreen();
                 triggerKeyEvent('Enter', 'keydown');
                 setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
@@ -2904,7 +3174,7 @@
                 }
                 // Dismiss the HTML start-menu overlay so the Enter key isn't blocked
                 window._startMenuVisible = false;
-                try { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } catch (e) {}
+                try { if (window._hideStartMenu) window._hideStartMenu(); else { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } } catch (e) {}
                 triggerKeyEvent('Enter', 'keydown');
                 setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
                 hideMobileStartOverlay();

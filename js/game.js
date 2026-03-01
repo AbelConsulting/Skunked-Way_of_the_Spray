@@ -780,7 +780,21 @@ class Game {
                 this.audioManager.pauseAmbient && this.audioManager.pauseAmbient();
                 // Show pause overlay when available (keeps gameplay UI clean; hosts pause actions)
                 const overlay = document.getElementById('pause-overlay');
-                if (overlay) overlay.style.display = 'flex';
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                    // Trigger reflow then add visible class for CSS transition
+                    overlay.offsetHeight;
+                    overlay.classList.add('visible');
+                }
+                // Populate level/score info
+                try {
+                    const infoEl = document.getElementById('pause-level-info');
+                    if (infoEl) {
+                        const stageNum = (this.currentLevelIndex || 0) + 1;
+                        const score = this.score || 0;
+                        infoEl.textContent = 'Stage ' + stageNum + ' \u2014 Score: ' + score.toLocaleString();
+                    }
+                } catch (e) { __err('game', e); }
                 // Sync volume sliders with current values
                 try {
                     const sfxSlider = document.getElementById('sfx-volume');
@@ -792,6 +806,14 @@ class Game {
                     if (sfxVal && sfxSlider) sfxVal.textContent = sfxSlider.value + '%';
                     if (musicVal && musicSlider) musicVal.textContent = musicSlider.value + '%';
                 } catch (e) { __err('game', e); }
+                // Trap focus inside pause panel
+                try {
+                    const panel = overlay && overlay.querySelector('.pause-panel');
+                    if (panel) {
+                        const focusable = panel.querySelectorAll('button, input, [tabindex]');
+                        if (focusable.length) focusable[0].focus();
+                    }
+                } catch (e) { __err('game', e); }
                 this.dispatchGameStateChange();
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
@@ -799,9 +821,12 @@ class Game {
                 this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
                 this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient();
-                // Hide pause overlay
+                // Hide pause overlay with transition
                 const overlay = document.getElementById('pause-overlay');
-                if (overlay) overlay.style.display = 'none';
+                if (overlay) {
+                    overlay.classList.remove('visible');
+                    setTimeout(() => { overlay.style.display = 'none'; }, 240);
+                }
                 this.dispatchGameStateChange();
             }
         }
