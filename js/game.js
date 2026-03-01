@@ -2245,6 +2245,20 @@ class Game {
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
+        // Fast path for MENU state: skip expensive world rendering since the
+        // HTML start-menu-overlay covers the canvas and the drawn menu is only
+        // a simple background with particles.  This saves significant GPU/CPU
+        // cycles on mobile devices.
+        if (this.state === 'MENU') {
+            const scaleX = this.ctx.canvas.width / (this.viewWidth || this.width);
+            const scaleY = this.ctx.canvas.height / (this.viewHeight || this.height);
+            this.ctx.save();
+            this.ctx.scale(scaleX, scaleY);
+            this.ui.drawMenu(this.ctx);
+            this.ctx.restore();
+            return;
+        }
+
         // Compute scale so we can render the game in logical coordinates and map
         // them to the (possibly smaller) canvas size used on mobile devices.
             const scaleX = this.ctx.canvas.width / this.viewWidth;
