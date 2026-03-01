@@ -804,6 +804,31 @@
             color: rgba(255,255,255,0.6);
         }
 
+        .info-achieve-card.locked {
+            opacity: 0.45;
+            filter: grayscale(0.6);
+        }
+
+        .info-achieve-card.unlocked {
+            background: rgba(255,215,0,0.14);
+            border-color: rgba(255,215,0,0.45);
+            opacity: 1;
+            filter: none;
+        }
+
+        .info-achieve-card.unlocked h4 { color: #FFD700; }
+
+        .achieve-info { flex: 1; min-width: 0; }
+
+        .achieve-lock {
+            margin-left: auto;
+            font-size: 15px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .info-achieve-card.unlocked .achieve-lock { color: #4dff4d; font-weight: bold; }
+
         /* Control groups */
         .info-ctrl-group {
             margin-bottom: 12px;
@@ -1511,6 +1536,7 @@
                         <button class="info-tab" data-info-tab="enemies">Enemies</button>
                         <button class="info-tab" data-info-tab="stages">Stages</button>
                         <button class="info-tab" data-info-tab="items">Items</button>
+                        <button class="info-tab" data-info-tab="achievements">Achievements</button>
                     </div>
 
                     <!-- ── TAB: About ── -->
@@ -1745,27 +1771,37 @@ You are the last heir to the Stink-Jutsu tradition. As the final Ninja Skunk, yo
                             </div>
                         </div>
 
-                        <h3 class="info-heading" style="margin-top:14px;">&#127942; Achievements</h3>
-                        <div class="info-achieve-grid">
-                            <div class="info-achieve-card">
+                    </div>
+
+                    <!-- ── TAB: Achievements ── -->
+                    <div class="info-tab-content" data-info-panel="achievements">
+                        <h3 class="info-heading">&#127942; Achievements</h3>
+                        <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 10px;">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
+                        <div class="info-achieve-grid" id="info-achieve-grid">
+                            <div class="info-achieve-card locked" data-ach-id="first_kill">
                                 <span class="achieve-icon">&#129656;</span>
-                                <div><h4>First Blood</h4><p>Defeat your first enemy</p></div>
+                                <div class="achieve-info"><h4>First Blood</h4><p>Defeat your first enemy</p></div>
+                                <span class="achieve-lock">&#128274;</span>
                             </div>
-                            <div class="info-achieve-card">
+                            <div class="info-achieve-card locked" data-ach-id="enemy_slayer">
                                 <span class="achieve-icon">&#9876;</span>
-                                <div><h4>Enemy Slayer</h4><p>Defeat 50 enemies total</p></div>
+                                <div class="achieve-info"><h4>Enemy Slayer</h4><p>Defeat 50 enemies total</p></div>
+                                <span class="achieve-lock">&#128274;</span>
                             </div>
-                            <div class="info-achieve-card">
+                            <div class="info-achieve-card locked" data-ach-id="combo_master">
                                 <span class="achieve-icon">&#128293;</span>
-                                <div><h4>Combo Starter</h4><p>Achieve a 5-hit combo</p></div>
+                                <div class="achieve-info"><h4>Combo Starter</h4><p>Achieve a 5-hit combo</p></div>
+                                <span class="achieve-lock">&#128274;</span>
                             </div>
-                            <div class="info-achieve-card">
+                            <div class="info-achieve-card locked" data-ach-id="high_scorer">
                                 <span class="achieve-icon">&#128142;</span>
-                                <div><h4>High Scorer</h4><p>Score over 50,000 points</p></div>
+                                <div class="achieve-info"><h4>High Scorer</h4><p>Score over 50,000 points</p></div>
+                                <span class="achieve-lock">&#128274;</span>
                             </div>
-                            <div class="info-achieve-card">
+                            <div class="info-achieve-card locked" data-ach-id="perfect_level">
                                 <span class="achieve-icon">&#128737;</span>
-                                <div><h4>Untouchable</h4><p>Complete a level without taking any damage</p></div>
+                                <div class="achieve-info"><h4>Untouchable</h4><p>Complete a level without taking any damage</p></div>
+                                <span class="achieve-lock">&#128274;</span>
                             </div>
                         </div>
                     </div>
@@ -2301,6 +2337,19 @@ You are the last heir to the Stink-Jutsu tradition. As the final Ninja Skunk, yo
                                         // Re-trigger the fade animation
                                         if (isActive) { p.style.animation = 'none'; p.offsetHeight; p.style.animation = ''; }
                                     });
+                                    // Refresh achievement unlock status when the achievements tab is shown
+                                    if (id === 'achievements') {
+                                        let unlocked = {};
+                                        try { unlocked = JSON.parse(localStorage.getItem('skunkfu_achievements_v1')) || {}; } catch(e){}
+                                        document.querySelectorAll('#info-achieve-grid .info-achieve-card[data-ach-id]').forEach(card => {
+                                            const achId = card.getAttribute('data-ach-id');
+                                            const isUnlocked = !!unlocked[achId];
+                                            card.classList.toggle('unlocked', isUnlocked);
+                                            card.classList.toggle('locked', !isUnlocked);
+                                            const lockEl = card.querySelector('.achieve-lock');
+                                            if (lockEl) lockEl.textContent = isUnlocked ? '\u2713' : '\uD83D\uDD12';
+                                        });
+                                    }
                                 });
                             });
                         }
