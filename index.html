@@ -63,12 +63,17 @@
             height: 100%;
         }
 
-        #ad-container-left {
+        #ad-container-right {
             width: var(--ad-width);
             min-width: 1px;
             height: 100%;
             background-color: #050505;
             flex-shrink: 0;
+            order: 2; /* Sits to the right of the game */
+        }
+
+        #content-wrapper {
+            order: 1;
         }
 
         #content-wrapper {
@@ -90,7 +95,7 @@
 
         /* Ensure canvas respects device safe areas (notches) */
         canvas {
-            max-width: calc(100vw - var(--safe-left) - var(--safe-right) - var(--ad-width)); /* Account for ad */
+            max-width: calc(100vw - var(--safe-left) - var(--safe-right) - var(--ad-width)); /* Account for right-side ad */
             max-height: calc(100vh - var(--safe-top) - var(--safe-bottom));
             object-fit: contain;
             display: block;
@@ -99,8 +104,8 @@
         /* --- TOUCH CONTROLS UI --- */
         #touch-controls {
             position: fixed;
-            left: var(--ad-width); /* Offset for ad container */
-            right: 0;
+            left: 0;
+            right: var(--ad-width); /* Offset for right-side ad */
             bottom: calc(20px + var(--safe-bottom));
             top: auto;
             height: 240px;
@@ -121,10 +126,13 @@
             position: absolute;
             bottom: 20px;
             pointer-events: auto;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.32) 0%, transparent 75%);
+            border-radius: 20px;
+            padding: 10px 8px 4px;
         }
 
-        #d-pad { left: 20px; }
-        #actions { right: 20px; }
+        #d-pad { left: 12px; }
+        #actions { right: 12px; }
         #game-over-controls { bottom: 100px; left: 50%; transform: translateX(-50%); }
 
         .touch-btn {
@@ -951,8 +959,9 @@
             display: none;
             position: fixed;
             top: 0;
-            left: var(--ad-width); /* Offset for ad */
-            width: calc(100% - var(--ad-width));
+            left: 0;
+            right: var(--ad-width); /* Offset for right-side ad */
+            width: auto;
             height: 100%;
             background: radial-gradient(120% 120% at 50% 20%, rgba(0,0,0,0.65), rgba(0,0,0,0.92));
             z-index: 1000;
@@ -1296,13 +1305,16 @@
             #start-menu-overlay.hidden { display: none !important; }
         }
 
-        /* Hide ad on portrait mobile */
+        /* Hide ad on mobile / small screens */
         @media screen and (max-width: 768px) {
-            #ad-container-left { display: none; }
+            #ad-container-right { display: none; }
             #content-wrapper { width: 100%; }
             canvas { max-width: calc(100vw - var(--safe-left) - var(--safe-right)); }
-            #touch-controls { left: 0; }
-            #pause-overlay { left: 0; width: 100%; }
+            #touch-controls { left: 0; right: 0; }
+            #pause-overlay { left: 0; right: 0; width: 100%; }
+            .start-menu-enter-hint { display: none; } /* Hide keyboard hint on mobile */
+            .pause-esc-hint { display: none; } /* Hide ESC hint on mobile */
+        }
 
         /* ── Compact pause panel for short landscape screens ── */
         @media screen and (max-height: 500px) {
@@ -1332,9 +1344,6 @@
                 padding: 8px 14px 6px;
             }
             .pause-title { font-size: clamp(15px, 3.5vw, 20px) !important; }
-        }
-            .start-menu-enter-hint { display: none; } /* Hide keyboard hint on mobile */
-            .pause-esc-hint { display: none; } /* Hide ESC hint on mobile */
         }
 
         /* â”€â”€ Landscape with limited height (mobile landscape) â”€â”€ */
@@ -1428,7 +1437,7 @@
 </head>
 <body>
     <div id="main-wrapper">
-        <div id="ad-container-left">
+        <div id="ad-container-right">
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-app-pub-8519140628365141"
                  crossorigin="anonymous"></script>
             <!-- SkunkedBanner -->
@@ -1440,11 +1449,11 @@
                  data-full-width-responsive="true"></ins>
             <script>
                  // Only push the ad if the container is visible (has width).
-                 // On mobile the container is display:none â†’ availableWidth=0 â†’ TagError.
+                 // On mobile the container is display:none so skip to avoid TagError.
                  (function() {
                      function tryPushAd() {
                          try {
-                             var container = document.getElementById('ad-container-left');
+                             var container = document.getElementById('ad-container-right');
                              if (container && container.offsetWidth > 0) {
                                  (adsbygoogle = window.adsbygoogle || []).push({});
                              }
@@ -1462,7 +1471,7 @@
             <div id="rotate-message">
                 <div class="rotate-phone-icon">
                     <div class="phone-body"></div>
-                    <div class="rotate-arrow">â†»</div>
+                    <div class="rotate-arrow">&#8635;</div>
                 </div>
                 <h1>Rotate Your Device</h1>
                 <div class="rotate-divider"></div>
