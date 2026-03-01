@@ -1283,7 +1283,23 @@
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
             <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
+                 // Only push the ad if the container is visible (has width).
+                 // On mobile the container is display:none → availableWidth=0 → TagError.
+                 (function() {
+                     function tryPushAd() {
+                         try {
+                             var container = document.getElementById('ad-container-left');
+                             if (container && container.offsetWidth > 0) {
+                                 (adsbygoogle = window.adsbygoogle || []).push({});
+                             }
+                         } catch (e) { /* suppress ad errors */ }
+                     }
+                     if (document.readyState === 'complete') {
+                         tryPushAd();
+                     } else {
+                         window.addEventListener('load', tryPushAd);
+                     }
+                 })();
             </script>
         </div>
         <div id="content-wrapper">
