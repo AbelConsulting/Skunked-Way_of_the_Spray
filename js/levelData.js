@@ -1,3 +1,9 @@
+/*!
+ * Skunked: Way of the Spray
+ * Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
+ * Proprietary and confidential — unauthorized copying, distribution, or use
+ * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
+ */
 /**
  * Level Configurations for Arcade Mode
  * Defines the stage progression: Forest -> City -> Dojo

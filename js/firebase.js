@@ -1,4 +1,10 @@
 
+/*!
+ * Skunked: Way of the Spray
+ * Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
+ * Proprietary and confidential — unauthorized copying, distribution, or use
+ * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
+ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
