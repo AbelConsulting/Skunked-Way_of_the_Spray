@@ -40,7 +40,47 @@ class GameApp {
         this._primeGamepadDeadline = 0;
         this._wireVrControllerHooks();
 
+        // Loading-tip rotation state
+        this._loadingTipTimer = null;
+        this._loadingTipIndex = 0;
+        this._loadingTips = [
+            'Chain combos within 2 seconds for up to 10\u00d7 score!',
+            'Shadow Strike grants invincibility frames \u2014 dash through attacks!',
+            'Skunk Shot disrupts Kamikaze fuses \u2014 force early detonation!',
+            'Collect all 3 Golden Idols per stage for +30% damage \u0026 +25% speed!',
+            'Double-jump to platform over the Jumper enemy\u2019s arc.',
+            'Watch boss wind-up animations before committing to attacks.',
+            'Shield Tank\u2019s bubble drops every 2.2s \u2014 time your strikes!',
+            'Throwers retreat when you close in \u2014 corner them for 250 pts!',
+            'Speed Boost lasts 8 seconds \u2014 use it to dodge Kamikaze rushes!',
+            'Damage Boost stacks with Golden Idol set bonus for massive hits!',
+        ];
+
         this.init();
+    }
+
+    /** Start rotating loading tips every few seconds */
+    _startLoadingTips() {
+        const el = document.getElementById('loading-tip');
+        if (!el) return;
+        // Shuffle tips for variety
+        for (let i = this._loadingTips.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this._loadingTips[i], this._loadingTips[j]] = [this._loadingTips[j], this._loadingTips[i]];
+        }
+        this._loadingTipIndex = 0;
+        const show = () => {
+            el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+            el.textContent = '\uD83D\uDCA1 ' + this._loadingTips[this._loadingTipIndex % this._loadingTips.length];
+            this._loadingTipIndex++;
+        };
+        show();
+        this._loadingTipTimer = setInterval(show, 4000);
+    }
+
+    /** Stop the loading tip rotation */
+    _stopLoadingTips() {
+        if (this._loadingTipTimer) { clearInterval(this._loadingTipTimer); this._loadingTipTimer = null; }
     }
 
     _wireVrControllerHooks() {
@@ -947,9 +987,13 @@ class GameApp {
             }
 
             // Load all assets
+            this._startLoadingTips();
             await this.loadAssets();
 
-            // Hide loading screen
+            // Smooth fade-out instead of abrupt hide
+            this._stopLoadingTips();
+            this.loadingScreen.classList.add('fade-out');
+            await new Promise(r => setTimeout(r, 520));
             this.loadingScreen.classList.add('hidden');
 
             // Detect mobile early and apply mobile-friendly settings

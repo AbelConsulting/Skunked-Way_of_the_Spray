@@ -139,101 +139,159 @@ class UI {
     }
 
     drawGameOver(ctx, score, gameStats = {}, lockoutRemaining = 0) {
-        // Background overlay with gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, 'rgba(20, 0, 0, 0.85)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+        const now = Date.now();
+        const cx = this.width / 2;
+
+        // ── Animated vignette background ──
+        const gradient = ctx.createRadialGradient(cx, this.height * 0.3, 0, cx, this.height * 0.5, this.height);
+        gradient.addColorStop(0, 'rgba(60, 0, 0, 0.75)');
+        gradient.addColorStop(0.5, 'rgba(15, 0, 0, 0.92)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.97)');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, this.width, this.height);
 
-        // Title with shadow
+        // Faint horizontal scan-lines for grit
         ctx.save();
-        ctx.font = 'bold 64px Arial';
-        ctx.fillStyle = '#FF4444';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'black';
-        ctx.shadowBlur = 15;
-        ctx.fillText('GAME OVER', this.width / 2, this.height / 2 - 160);
+        ctx.globalAlpha = 0.04;
+        for (let y = 0; y < this.height; y += 4) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, y, this.width, 2);
+        }
         ctx.restore();
 
-        // Score - Large and prominent
+        // ── Title with pulsing glow ──
+        const titleY = this.height * 0.18;
+        const titlePulse = 12 + Math.sin(now / 300) * 10;
         ctx.save();
-        ctx.font = 'bold 48px Arial';
+        ctx.font = "bold 68px 'Bangers', 'Arial Black', Impact, sans-serif";
+        ctx.fillStyle = '#FF2222';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#FF0000';
+        ctx.shadowBlur = titlePulse;
+        ctx.letterSpacing = '0.06em';
+        ctx.fillText('GAME OVER', cx, titleY);
+        // Double-draw for extra intensity
+        ctx.shadowBlur = titlePulse * 2.5;
+        ctx.globalAlpha = 0.35;
+        ctx.fillText('GAME OVER', cx, titleY);
+        ctx.restore();
+
+        // ── Decorative divider ──
+        const divY = titleY + 42;
+        const divGrad = ctx.createLinearGradient(cx - 200, 0, cx + 200, 0);
+        divGrad.addColorStop(0, 'transparent');
+        divGrad.addColorStop(0.3, 'rgba(255,80,80,0.6)');
+        divGrad.addColorStop(0.7, 'rgba(255,80,80,0.6)');
+        divGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = divGrad;
+        ctx.fillRect(cx - 200, divY, 400, 2);
+
+        // ── Score ──
+        const scoreY = divY + 38;
+        ctx.save();
+        ctx.font = "bold 44px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 10;
-        ctx.fillText(`SCORE: ${score}`, this.width / 2, this.height / 2 - 80);
+        ctx.shadowBlur = 14;
+        ctx.letterSpacing = '0.03em';
+        ctx.fillText(`SCORE: ${score.toLocaleString()}`, cx, scoreY);
         ctx.restore();
 
-        // Stats breakdown in a box
-        const boxW = 500;
-        const boxH = 240;
-        const boxX = this.width / 2 - boxW / 2;
-        const boxY = this.height / 2 - 30;
+        // ── Stats panel ──
+        const boxW = Math.min(520, this.width - 60);
+        const boxH = 220;
+        const boxX = cx - boxW / 2;
+        const boxY = scoreY + 28;
 
-        // Stats box background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillRect(boxX, boxY, boxW, boxH);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(boxX, boxY, boxW, boxH);
+        // Panel background with subtle border
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctx.strokeStyle = 'rgba(255, 80, 80, 0.18)';
+        ctx.lineWidth = 1;
+        const r = 10;
+        // Rounded rect
+        ctx.beginPath();
+        ctx.moveTo(boxX + r, boxY);
+        ctx.lineTo(boxX + boxW - r, boxY); ctx.arcTo(boxX + boxW, boxY, boxX + boxW, boxY + r, r);
+        ctx.lineTo(boxX + boxW, boxY + boxH - r); ctx.arcTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH, r);
+        ctx.lineTo(boxX + r, boxY + boxH); ctx.arcTo(boxX, boxY + boxH, boxX, boxY + boxH - r, r);
+        ctx.lineTo(boxX, boxY + r); ctx.arcTo(boxX, boxY, boxX + r, boxY, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
 
-        // Stats title
-        ctx.font = 'bold 24px Arial';
-        ctx.fillStyle = '#FFFFFF';
+        // Panel header
+        ctx.save();
+        ctx.font = "bold 20px 'Bangers', 'Arial Black', sans-serif";
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
         ctx.textAlign = 'center';
-        ctx.fillText('PERFORMANCE', this.width / 2, boxY + 25);
+        ctx.letterSpacing = '0.08em';
+        ctx.fillText('PERFORMANCE', cx, boxY + 24);
+        ctx.restore();
 
-        // Individual stats with icons and colors
-        const statsStartY = boxY + 60;
-        const lineHeight = 35;
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'left';
+        // Thin separator under header
+        const sepGrad = ctx.createLinearGradient(boxX + 20, 0, boxX + boxW - 20, 0);
+        sepGrad.addColorStop(0, 'transparent');
+        sepGrad.addColorStop(0.3, 'rgba(255,255,255,0.12)');
+        sepGrad.addColorStop(0.7, 'rgba(255,255,255,0.12)');
+        sepGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = sepGrad;
+        ctx.fillRect(boxX + 20, boxY + 34, boxW - 40, 1);
 
+        // Stats
+        const statsStartY = boxY + 55;
+        const lineHeight = 30;
         const stats = [
-            { label: '⚔️  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
-            { label: '⏱️  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
-            { label: '🔥 Max Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
-            { label: '💥 Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
-            { label: '🎯 Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
-            { label: '🏺 Idols Collected', value: gameStats.idolsCollected || 0, color: '#F38181' }
+            { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
+            { label: '\u23F1\uFE0F  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
+            { label: '\uD83D\uDD25 Max Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
+            { label: '\uD83D\uDCA5 Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
+            { label: '\uD83C\uDFAF Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
+            { label: '\uD83C\uDFFA Idols Collected', value: gameStats.idolsCollected || 0, color: '#F38181' }
         ];
 
         stats.forEach((stat, index) => {
             const y = statsStartY + (index * lineHeight);
-            
+
+            ctx.save();
+            ctx.font = "15px 'Press Start 2P', monospace";
+            ctx.textBaseline = 'middle';
+
             // Label
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillText(stat.label, boxX + 30, y);
-            
-            // Value - right aligned with color
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(stat.label, boxX + 24, y);
+
+            // Value
             ctx.textAlign = 'right';
             ctx.fillStyle = stat.color;
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText(String(stat.value), boxX + boxW - 30, y);
-            ctx.textAlign = 'left';
-            ctx.font = '20px Arial';
+            ctx.shadowColor = stat.color;
+            ctx.shadowBlur = 4;
+            ctx.fillText(String(stat.value), boxX + boxW - 24, y);
+            ctx.restore();
         });
 
-        // Instructions area below stats box
+        // ── Continue prompt ──
+        const instructY = boxY + boxH + 36;
         ctx.save();
-        ctx.font = '24px Arial';
-        ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
-        const instructY = boxY + boxH + 50;
+        ctx.textBaseline = 'middle';
 
         if (lockoutRemaining > 0) {
-            // Show countdown during lockout
             const secs = Math.ceil(lockoutRemaining);
-            ctx.globalAlpha = 0.6;
-            ctx.fillText(`${secs}...`, this.width / 2, instructY);
+            ctx.font = "bold 22px 'Press Start 2P', monospace";
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillText(`${secs}...`, cx, instructY);
         } else {
-            // Blinking "Press ENTER" prompt after lockout expires
-            if (Math.floor(Date.now() / 500) % 2 === 0) {
-                ctx.fillText('Press ENTER or Tap to Restart', this.width / 2, instructY);
-            }
+            // Blinking prompt
+            const blink = Math.sin(now / 400) * 0.4 + 0.6;
+            ctx.globalAlpha = blink;
+            ctx.font = "16px 'Press Start 2P', monospace";
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('PRESS ENTER OR TAP TO RESTART', cx, instructY);
         }
         ctx.restore();
     }
@@ -245,37 +303,67 @@ class UI {
     }
 
     drawLevelComplete(ctx, levelNum) {
-        // Background overlay
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const now = Date.now();
+
+        // Dark overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
         ctx.fillRect(0, 0, this.width, this.height);
 
-        ctx.font = 'bold 64px Arial';
-        ctx.fillStyle = '#44FF44'; // Green for success
+        // Title with green neon glow
+        const glow = 14 + Math.sin(now / 250) * 8;
+        ctx.save();
+        ctx.font = "bold 62px 'Bangers', 'Arial Black', Impact, sans-serif";
+        ctx.fillStyle = '#00FF77';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('STAGE CLEAR!', this.width / 2, this.height / 2 - 40);
+        ctx.shadowColor = '#00FF77';
+        ctx.shadowBlur = glow;
+        ctx.letterSpacing = '0.04em';
+        ctx.fillText('STAGE CLEAR!', cx, cy - 32);
+        ctx.restore();
 
-        ctx.font = '32px Arial';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(`Proceeding to Stage ${levelNum + 1}...`, this.width / 2, this.height / 2 + 30);
+        // Decorative divider
+        const divGrad = ctx.createLinearGradient(cx - 160, 0, cx + 160, 0);
+        divGrad.addColorStop(0, 'transparent');
+        divGrad.addColorStop(0.3, 'rgba(0,255,120,0.5)');
+        divGrad.addColorStop(0.7, 'rgba(0,255,120,0.5)');
+        divGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = divGrad;
+        ctx.fillRect(cx - 160, cy + 6, 320, 2);
+
+        // Subtitle
+        ctx.save();
+        ctx.font = "28px 'Bangers', 'Arial Black', sans-serif";
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.letterSpacing = '0.03em';
+        ctx.fillText(`Proceeding to Stage ${levelNum + 1}...`, cx, cy + 40);
+        ctx.restore();
     }
 
     drawVictory(ctx, score, gameStats = {}) {
-        // Background overlay with golden gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, 'rgba(40, 30, 0, 0.90)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+        const now = Date.now();
+        const cx = this.width / 2;
+
+        // ── Golden radial background ──
+        const gradient = ctx.createRadialGradient(cx, this.height * 0.25, 0, cx, this.height * 0.5, this.height);
+        gradient.addColorStop(0, 'rgba(60, 45, 0, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(10, 8, 0, 0.93)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.97)');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, this.width, this.height);
 
-        // Enhanced animated particles - more impressive for victory
-        const time = Date.now() / 1000;
+        // ── Golden particle field ──
         ctx.save();
+        const time = now / 1000;
         for (let i = 0; i < 50; i++) {
             const x = (Math.sin(time * 0.5 + i * 0.3) * 0.4 + 0.5) * this.width;
             const y = ((time * 30 + i * 50) % this.height);
-            const size = Math.sin(time * 2 + i) * 3 + 4;
-            const alpha = 0.2 + Math.sin(time * 2 + i) * 0.3;
+            const size = Math.sin(time * 2 + i) * 2.5 + 3.5;
+            const alpha = 0.15 + Math.sin(time * 2 + i) * 0.25;
             ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
             ctx.beginPath();
             ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -283,194 +371,232 @@ class UI {
         }
         ctx.restore();
 
-        // Special recognition banners
-        const achievements = [];
+        // ── Achievement calculations (same logic) ──
         const completionTime = gameStats.completionTime || 0;
         const damageTaken = gameStats.damageTaken || 0;
         const perfectLevels = gameStats.perfectLevels || 0;
-        
-        if (damageTaken === 0) achievements.push({ text: '🥷 FLAWLESS VICTORY', color: '#00FFFF' });
-        if (completionTime > 0 && completionTime <= 600) achievements.push({ text: '⚡ SPEEDRUN MASTER', color: '#FFD700' });
-        else if (completionTime > 0 && completionTime <= 900) achievements.push({ text: '💨 SPEED DEMON', color: '#FF9500' });
-        if ((gameStats.idolSetsCompleted || 0) >= 10) achievements.push({ text: '👑 MASTER COLLECTOR', color: '#FFD700' });
-        if (perfectLevels >= 5) achievements.push({ text: '🛡️ UNTOUCHABLE', color: '#00FF00' });
+        const achievements = [];
+        if (damageTaken === 0) achievements.push({ text: '\uD83E\uDD77 FLAWLESS VICTORY', color: '#00FFFF' });
+        if (completionTime > 0 && completionTime <= 600) achievements.push({ text: '\u26A1 SPEEDRUN MASTER', color: '#FFD700' });
+        else if (completionTime > 0 && completionTime <= 900) achievements.push({ text: '\uD83D\uDCA8 SPEED DEMON', color: '#FF9500' });
+        if ((gameStats.idolSetsCompleted || 0) >= 10) achievements.push({ text: '\uD83D\uDC51 MASTER COLLECTOR', color: '#FFD700' });
+        if (perfectLevels >= 5) achievements.push({ text: '\uD83D\uDEE1\uFE0F UNTOUCHABLE', color: '#00FF00' });
 
-        // Title with pulsing glow
+        // ── Title with pulsing golden glow ──
+        const titleY = 80;
+        const titlePulse = 18 + Math.sin(now / 200) * 12;
         ctx.save();
-        ctx.font = 'bold 80px Arial';
+        ctx.font = "bold 72px 'Bangers', 'Arial Black', Impact, sans-serif";
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 25 + Math.sin(Date.now() / 200) * 15;
-        ctx.fillText('MISSION ACCOMPLISHED!', this.width / 2, 120);
+        ctx.shadowBlur = titlePulse;
+        ctx.letterSpacing = '0.04em';
+        ctx.fillText('MISSION ACCOMPLISHED!', cx, titleY);
+        ctx.shadowBlur = titlePulse * 2;
+        ctx.globalAlpha = 0.25;
+        ctx.fillText('MISSION ACCOMPLISHED!', cx, titleY);
         ctx.restore();
 
-        // Show achievement banners if any
+        // ── Achievement banners ──
+        let nextY = titleY + 50;
         if (achievements.length > 0) {
             ctx.save();
             achievements.forEach((ach, idx) => {
-                const y = 190 + idx * 35;
-                ctx.font = 'bold 24px Arial';
+                const y = nextY + idx * 32;
+                ctx.font = "bold 20px 'Press Start 2P', monospace";
                 ctx.fillStyle = ach.color;
                 ctx.textAlign = 'center';
                 ctx.shadowColor = ach.color;
-                ctx.shadowBlur = 15;
-                ctx.fillText(ach.text, this.width / 2, y);
+                ctx.shadowBlur = 12;
+                ctx.fillText(ach.text, cx, y);
             });
             ctx.restore();
+            nextY += achievements.length * 32 + 10;
         }
 
-        // Final Score - Large and prominent
-        const scoreY = achievements.length > 0 ? 260 : 210;
+        // ── Divider ──
+        const divGrad = ctx.createLinearGradient(cx - 250, 0, cx + 250, 0);
+        divGrad.addColorStop(0, 'transparent');
+        divGrad.addColorStop(0.25, 'rgba(255,215,0,0.5)');
+        divGrad.addColorStop(0.75, 'rgba(255,215,0,0.5)');
+        divGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = divGrad;
+        ctx.fillRect(cx - 250, nextY, 500, 2);
+        nextY += 12;
+
+        // ── Final Score ──
         ctx.save();
-        ctx.font = 'bold 56px Arial';
+        ctx.font = "bold 50px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 20;
-        ctx.fillText(`FINAL SCORE: ${score.toLocaleString()}`, this.width / 2, scoreY);
+        ctx.shadowBlur = 16;
+        ctx.letterSpacing = '0.03em';
+        ctx.fillText(`FINAL SCORE: ${score.toLocaleString()}`, cx, nextY + 14);
         ctx.restore();
+        nextY += 36;
 
-        // Completion time with rank
+        // ── Completion time + rank ──
         if (completionTime > 0) {
+            nextY += 10;
             const minutes = Math.floor(completionTime / 60);
             const seconds = Math.floor(completionTime % 60);
             const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             let rank = 'D', rankColor = '#808080';
-            
             if (completionTime <= 600) { rank = 'S'; rankColor = '#FFD700'; }
             else if (completionTime <= 900) { rank = 'A'; rankColor = '#00FFFF'; }
             else if (completionTime <= 1200) { rank = 'B'; rankColor = '#00FF00'; }
             else if (completionTime <= 1800) { rank = 'C'; rankColor = '#FFFF00'; }
-            
+
             ctx.save();
-            ctx.font = 'bold 32px Arial';
+            ctx.font = "bold 26px 'Bangers', 'Arial Black', sans-serif";
             ctx.fillStyle = '#FFFFFF';
             ctx.textAlign = 'center';
-            ctx.fillText(`Completion Time: ${timeText}`, this.width / 2 - 60, scoreY + 50);
-            
+            ctx.fillText(`Completion Time: ${timeText}`, cx - 50, nextY);
             // Rank badge
-            ctx.font = 'bold 48px Arial';
+            ctx.font = "bold 42px 'Bangers', 'Arial Black', sans-serif";
             ctx.fillStyle = rankColor;
             ctx.shadowColor = rankColor;
-            ctx.shadowBlur = 20;
-            ctx.fillText(rank, this.width / 2 + 120, scoreY + 50);
+            ctx.shadowBlur = 16;
+            ctx.fillText(rank, cx + 110, nextY);
             ctx.restore();
-            
-            // Show "NEW RECORD!" if player beat their best
+            nextY += 14;
+
+            // NEW RECORD
             try {
                 const prevBest = parseFloat(localStorage.getItem('fastestCompletion')) || Infinity;
                 if (completionTime < prevBest || (prevBest === Infinity && completionTime > 0)) {
+                    const pulse = Math.sin(now / 150) * 0.18 + 1;
                     ctx.save();
-                    ctx.font = 'bold 22px Arial';
+                    ctx.translate(cx, nextY + 18);
+                    ctx.scale(pulse, pulse);
+                    ctx.font = "bold 18px 'Press Start 2P', monospace";
                     ctx.fillStyle = '#FFD700';
                     ctx.textAlign = 'center';
                     ctx.shadowColor = '#FFD700';
-                    ctx.shadowBlur = 15;
-                    const pulse = Math.sin(Date.now() / 150) * 0.2 + 1;
-                    ctx.save();
-                    ctx.translate(this.width / 2, scoreY + 85);
-                    ctx.scale(pulse, pulse);
-                    ctx.fillText('⭐ NEW BEST TIME! ⭐', 0, 0);
+                    ctx.shadowBlur = 12;
+                    ctx.fillText('\u2B50 NEW BEST TIME! \u2B50', 0, 0);
                     ctx.restore();
-                    ctx.restore();
+                    nextY += 26;
                 }
             } catch (e) { __err('ui', e); }
         }
 
-        // Stats box - larger for more info
-        const boxW = 700;
-        const boxH = 280;
-        const boxX = this.width / 2 - boxW / 2;
-        const boxY = scoreY + 110;
+        // ── Stats panel ──
+        nextY += 16;
+        const boxW = Math.min(700, this.width - 40);
+        const boxH = 230;
+        const boxX = cx - boxW / 2;
+        const boxY = nextY;
+        const r = 12;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.fillRect(boxX, boxY, boxW, boxH);
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(boxX, boxY, boxW, boxH);
+        // Rounded rect background
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(boxX + r, boxY);
+        ctx.lineTo(boxX + boxW - r, boxY); ctx.arcTo(boxX + boxW, boxY, boxX + boxW, boxY + r, r);
+        ctx.lineTo(boxX + boxW, boxY + boxH - r); ctx.arcTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH, r);
+        ctx.lineTo(boxX + r, boxY + boxH); ctx.arcTo(boxX, boxY + boxH, boxX, boxY + boxH - r, r);
+        ctx.lineTo(boxX, boxY + r); ctx.arcTo(boxX, boxY, boxX + r, boxY, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
 
-        // Victory stats header
-        ctx.font = 'bold 26px Arial';
+        // Panel header
+        ctx.save();
+        ctx.font = "bold 22px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
-        ctx.fillText('FINAL STATISTICS', this.width / 2, boxY + 30);
+        ctx.letterSpacing = '0.06em';
+        ctx.fillText('FINAL STATISTICS', cx, boxY + 26);
+        ctx.restore();
 
-        const statsY = boxY + 70;
-        const col1X = boxX + 180;
-        const col2X = boxX + 520;
-        const lineH = 32;
-        
-        ctx.font = '19px Arial';
-        ctx.textAlign = 'left';
-        
-        // Left column - Combat stats
+        // Separator
+        const sepGrad = ctx.createLinearGradient(boxX + 20, 0, boxX + boxW - 20, 0);
+        sepGrad.addColorStop(0, 'transparent');
+        sepGrad.addColorStop(0.3, 'rgba(255,215,0,0.15)');
+        sepGrad.addColorStop(0.7, 'rgba(255,215,0,0.15)');
+        sepGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = sepGrad;
+        ctx.fillRect(boxX + 20, boxY + 36, boxW - 40, 1);
+
+        const statsY = boxY + 56;
+        const halfW = boxW / 2;
+        const col1X = boxX + 20;
+        const col2X = boxX + halfW + 10;
+        const lineH = 28;
+
+        const drawStatCol = (stats, startX, colW) => {
+            stats.forEach((stat, i) => {
+                const y = statsY + i * lineH;
+                ctx.save();
+                ctx.font = "13px 'Press Start 2P', monospace";
+                ctx.textBaseline = 'middle';
+                // Label
+                ctx.textAlign = 'left';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillText(stat.label, startX, y);
+                // Value
+                ctx.textAlign = 'right';
+                ctx.fillStyle = stat.color;
+                ctx.shadowColor = stat.color;
+                ctx.shadowBlur = 4;
+                ctx.fillText(String(stat.value), startX + colW - 10, y);
+                ctx.restore();
+            });
+        };
+
+        // Left column
         const leftStats = [
-            { label: '⚔️  Enemies Defeated', value: (gameStats.enemiesDefeated || 0).toLocaleString(), color: '#FF6B6B' },
-            { label: '💥 Damage Dealt', value: (gameStats.totalDamage || 0).toLocaleString(), color: '#FF4500' },
-            { label: '🔥 Best Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
-            { label: '⚡ Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
-            { label: '💀 Damage Taken', value: damageTaken === 0 ? 'NONE! 🥷' : damageTaken, color: damageTaken === 0 ? '#00FFFF' : '#FF6B6B' },
-            { label: '🏁 Levels Completed', value: `${gameStats.levelsCompleted || 0}/10`, color: '#A8E6CF' }
+            { label: '\u2694\uFE0F  Enemies', value: (gameStats.enemiesDefeated || 0).toLocaleString(), color: '#FF6B6B' },
+            { label: '\uD83D\uDCA5 Damage Dealt', value: (gameStats.totalDamage || 0).toLocaleString(), color: '#FF4500' },
+            { label: '\uD83D\uDD25 Best Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
+            { label: '\u26A1 Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
+            { label: '\uD83D\uDC80 Dmg Taken', value: damageTaken === 0 ? 'NONE!' : damageTaken, color: damageTaken === 0 ? '#00FFFF' : '#FF6B6B' },
+            { label: '\uD83C\uDFC1 Levels', value: `${gameStats.levelsCompleted || 0}/10`, color: '#A8E6CF' }
         ];
-        
-        leftStats.forEach((stat, i) => {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillText(stat.label, col1X - 160, statsY + i * lineH);
-            ctx.fillStyle = stat.color;
-            ctx.font = 'bold 19px Arial';
-            ctx.fillText(String(stat.value), col1X + 10, statsY + i * lineH);
-            ctx.font = '19px Arial';
-        });
-        
-        // Right column - Precision stats
-        const rightStats = [
-            { label: '🎯 Hit Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
-            { label: '🗿 Golden Idols', value: `${gameStats.idolsCollected || 0}/30`, color: '#F38181' },
-            { label: '💎 Complete Sets', value: `${gameStats.idolSetsCompleted || 0}/10`, color: '#A8E6CF' },
-            { label: '✨ Perfect Levels', value: perfectLevels, color: perfectLevels > 0 ? '#FFD700' : '#808080' },
-            { label: '🎲 Multi-Kills', value: gameStats.multiKills || 0, color: '#FF6B9D' }
-        ];
-        
-        rightStats.forEach((stat, i) => {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillText(stat.label, col2X - 160, statsY + i * lineH);
-            ctx.fillStyle = stat.color;
-            ctx.font = 'bold 19px Arial';
-            ctx.fillText(String(stat.value), col2X + 10, statsY + i * lineH);
-            ctx.font = '19px Arial';
-        });
+        drawStatCol(leftStats, col1X, halfW - 10);
 
-        // Footer messages with flavor text
-        ctx.save();
+        // Right column
+        const rightStats = [
+            { label: '\uD83C\uDFAF Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
+            { label: '\uD83D\uDDFF Idols', value: `${gameStats.idolsCollected || 0}/30`, color: '#F38181' },
+            { label: '\uD83D\uDC8E Sets', value: `${gameStats.idolSetsCompleted || 0}/10`, color: '#A8E6CF' },
+            { label: '\u2728 Perfect Lvls', value: perfectLevels, color: perfectLevels > 0 ? '#FFD700' : '#808080' },
+            { label: '\uD83C\uDFB2 Multi-Kills', value: gameStats.multiKills || 0, color: '#FF6B9D' }
+        ];
+        drawStatCol(rightStats, col2X, halfW - 20);
+
+        // ── Flavor text ──
         let flavorText = 'The Skunk Squad is safe... for now.';
-        if (damageTaken === 0 && completionTime <= 900) {
-            flavorText = 'A LEGENDARY performance! You are truly The One! 🐉';
-        } else if (damageTaken === 0) {
-            flavorText = 'FLAWLESS! A shadow master walks among us! 🥷';
-        } else if (completionTime <= 600) {
-            flavorText = 'INCREDIBLE SPEED! A true speedrunner! ⚡';
-        } else if ((gameStats.idolSetsCompleted || 0) >= 10) {
-            flavorText = 'Every relic recovered! A true collector! 👑';
-        }
-        
-        ctx.font = '22px Arial';
+        if (damageTaken === 0 && completionTime <= 900) flavorText = 'A LEGENDARY performance! You are truly The One!';
+        else if (damageTaken === 0) flavorText = 'FLAWLESS! A shadow master walks among us!';
+        else if (completionTime <= 600) flavorText = 'INCREDIBLE SPEED! A true speedrunner!';
+        else if ((gameStats.idolSetsCompleted || 0) >= 10) flavorText = 'Every relic recovered! A true collector!';
+
+        ctx.save();
+        ctx.font = "italic 18px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 10;
-        ctx.fillText(flavorText, this.width / 2, boxY + boxH + 45);
+        ctx.shadowBlur = 8;
+        ctx.fillText(flavorText, cx, boxY + boxH + 30);
         ctx.restore();
-        
-        // Blinking continue prompt
+
+        // ── Blinking continue prompt ──
+        const blink = Math.sin(now / 400) * 0.4 + 0.6;
         ctx.save();
-        ctx.font = '26px Arial';
+        ctx.globalAlpha = blink;
+        ctx.font = "16px 'Press Start 2P', monospace";
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
-        if (Math.floor(Date.now() / 500) % 2 === 0) {
-            ctx.fillText('Press ENTER to Continue', this.width / 2, boxY + boxH + 85);
-        }
+        ctx.fillText('PRESS ENTER TO CONTINUE', cx, boxY + boxH + 65);
         ctx.restore();
     }
 
