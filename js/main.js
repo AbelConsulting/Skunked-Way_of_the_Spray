@@ -260,7 +260,8 @@ class GameApp {
                 try {
                     if (this.game) {
                         const st = this.game.state;
-                        if (st === 'MENU' || st === 'VICTORY') {
+                        if (st === 'MENU' && window._startMenuVisible) { /* blocked by start menu overlay */ }
+                        else if (st === 'MENU' || st === 'VICTORY') {
                             try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                             this.game.startGame(0);
                             try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
@@ -785,7 +786,8 @@ class GameApp {
             try {
                 if (this.game) {
                     const st = this.game.state;
-                    if (st === 'MENU' || st === 'VICTORY') {
+                    if (st === 'MENU' && window._startMenuVisible) { /* blocked by start menu overlay */ }
+                    else if (st === 'MENU' || st === 'VICTORY') {
                         try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                         this.game.startGame(0);
                         try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }

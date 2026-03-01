@@ -109,90 +109,10 @@ class UI {
         ctx.globalAlpha = 1;
         ctx.restore();
 
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // ── "SKUNKED:" ──────────────────────────────────────────────
-        const bangersTitle = `bold 84px Bangers, 'Arial Black', Impact, sans-serif`;
-        ctx.font = bangersTitle;
-        // Fiery orange-red glow
-        ctx.shadowColor = '#FF5500';
-        ctx.shadowBlur = 36;
-        const titleGrad1 = ctx.createLinearGradient(cx - 220, cy - 120, cx + 220, cy - 75);
-        titleGrad1.addColorStop(0,   '#FFA040');
-        titleGrad1.addColorStop(0.45, '#FF2200');
-        titleGrad1.addColorStop(1,   '#FFA040');
-        ctx.fillStyle = titleGrad1;
-        ctx.fillText('SKUNKED:', cx, cy - 102);
-        // Sharp outline to make it pop
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(255, 230, 0, 0.75)';
-        ctx.lineWidth = 1.5;
-        ctx.strokeText('SKUNKED:', cx, cy - 102);
-
-        // ── "WAY OF THE SPRAY" ──────────────────────────────────────
-        ctx.font = `bold 64px Bangers, 'Arial Black', Impact, sans-serif`;
-        ctx.shadowColor = '#00FF77';
-        ctx.shadowBlur = 28;
-        const titleGrad2 = ctx.createLinearGradient(cx - 300, cy - 48, cx + 300, cy - 8);
-        titleGrad2.addColorStop(0,   '#00FF55');
-        titleGrad2.addColorStop(0.5, '#AAFFCC');
-        titleGrad2.addColorStop(1,   '#00CC44');
-        ctx.fillStyle = titleGrad2;
-        ctx.fillText('WAY OF THE SPRAY', cx, cy - 30);
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(0, 80, 20, 0.7)';
-        ctx.lineWidth = 1;
-        ctx.strokeText('WAY OF THE SPRAY', cx, cy - 30);
-
-        // ── Gold divider ────────────────────────────────────────────
-        const divW = 220;
-        const divGrad = ctx.createLinearGradient(cx - divW, cy + 4, cx + divW, cy + 4);
-        divGrad.addColorStop(0,   'rgba(255,200,0,0)');
-        divGrad.addColorStop(0.2, 'rgba(255,200,0,0.8)');
-        divGrad.addColorStop(0.8, 'rgba(255,200,0,0.8)');
-        divGrad.addColorStop(1,   'rgba(255,200,0,0)');
-        ctx.strokeStyle = divGrad;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(cx - divW, cy + 8);
-        ctx.lineTo(cx + divW, cy + 8);
-        ctx.stroke();
-
-        // ── "NINJA SKUNK" subtitle ──────────────────────────────────
-        ctx.font = `18px 'Press Start 2P', monospace`;
-        ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 14;
-        ctx.fillStyle = '#FFD700';
-        ctx.fillText('NINJA SKUNK', cx, cy + 34);
-
-        // ── Pulsing "PRESS ENTER" ───────────────────────────────────
-        const pulse = 0.55 + 0.45 * Math.sin(now / 480);
-        ctx.globalAlpha = pulse;
-        ctx.font = `10px 'Press Start 2P', monospace`;
-        ctx.shadowColor = '#FFFFFF';
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText('PRESS ENTER OR TAP TO START', cx, cy + 70);
-        ctx.globalAlpha = 1;
-
-        // ── Controls ────────────────────────────────────────────────
-        ctx.shadowBlur = 0;
-        ctx.textAlign = 'left';
-        ctx.font = `12px 'Press Start 2P', monospace`;
-        ctx.fillStyle = 'rgba(160, 220, 170, 0.80)';
-        const ctrlX = cx - 230;
-        const ctrlY = cy + 104;
-        const lineHeight = 20;
-        const labels = [
-            '\u2190\u2192 / A,D  Move     Space  Jump',
-            'X  Attack     Z  Shadow Strike',
-            'C  Skunk Shot (powerup)     ESC  Pause',
-        ];
-        labels.forEach((line, i) => ctx.fillText(line, ctrlX, ctrlY + lineHeight * i));
-
-        ctx.restore();
+        // Title text and controls are rendered by the HTML #start-menu-overlay.
+        // Only draw them on the canvas if the HTML overlay has been dismissed
+        // (e.g. on GAME_OVER→MENU transition where overlay may re-appear, the
+        // canvas background still looks nice).
     }
 
     drawPauseMenu(ctx) {

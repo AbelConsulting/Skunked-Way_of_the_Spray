@@ -331,6 +331,8 @@ class Game {
                     // Enter or Space can start/restart the game (Space
                     // enables A-button on gamepads to initiate gameplay
                     // without requiring a keyboard or touch input).
+                    // Block if the HTML start-menu overlay is active
+                    if (this.state === 'MENU' && window._startMenuVisible) return;
                     if (this.state === 'MENU' || this.state === 'VICTORY') {
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0);
@@ -445,6 +447,8 @@ class Game {
                 ev.preventDefault();
                 
                 // Allow tapping to start/restart in non-playing states
+                // Block if the HTML start-menu overlay is active
+                if (this.state === 'MENU' && window._startMenuVisible) return;
                 if (this.state === 'MENU' || this.state === 'VICTORY') {
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                     this.startGame(0);
@@ -526,6 +530,8 @@ class Game {
             // does nothing in MENU / GAME_OVER states.
             const onCanvasClick = (ev) => {
                 if (!ev) return;
+                // Block if the HTML start-menu overlay is active
+                if (this.state === 'MENU' && window._startMenuVisible) return;
                 // Start / restart in non-playing states
                 if (this.state === 'MENU' || this.state === 'VICTORY') {
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');

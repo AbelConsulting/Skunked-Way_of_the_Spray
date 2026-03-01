@@ -235,6 +235,244 @@
             transform: translateY(0);
         }
 
+        /* ═══════════════════════════════════════════════════════
+           START MENU SPLASH PAGE
+           ═══════════════════════════════════════════════════════ */
+        #start-menu-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+            pointer-events: auto;
+        }
+
+        #start-menu-overlay.hidden { display: none; }
+
+        .start-menu-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 28px 38px 22px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: radial-gradient(ellipse at 50% 20%, rgba(20,0,40,0.82), rgba(0,0,0,0.75));
+            backdrop-filter: blur(16px);
+            box-shadow:
+                0 0 80px rgba(0,255,120,0.08),
+                0 20px 60px rgba(0,0,0,0.5);
+            min-width: min(440px, 88vw);
+            animation: menuFadeIn 0.6s cubic-bezier(.2,.9,.2,1) both;
+        }
+
+        @keyframes menuFadeIn {
+            from { opacity: 0; transform: translateY(18px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .start-menu-title {
+            margin: 0;
+            font-family: 'Bangers', 'Arial Black', Impact, sans-serif;
+            font-size: clamp(42px, 8vw, 72px);
+            letter-spacing: 0.04em;
+            background: linear-gradient(180deg, #FFA040 0%, #FF2200 60%, #FFA040 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 18px rgba(255,85,0,0.55));
+            line-height: 1.1;
+        }
+
+        .start-menu-subtitle {
+            margin: 0;
+            font-family: 'Bangers', 'Arial Black', Impact, sans-serif;
+            font-size: clamp(28px, 5.5vw, 52px);
+            letter-spacing: 0.03em;
+            background: linear-gradient(180deg, #00FF55 0%, #AAFFCC 50%, #00CC44 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 14px rgba(0,255,60,0.45));
+            line-height: 1.1;
+        }
+
+        .start-menu-divider {
+            width: 65%;
+            height: 1.5px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,200,0,0.7) 30%, rgba(255,200,0,0.7) 70%, transparent 100%);
+            margin: 6px 0;
+        }
+
+        .start-menu-tagline {
+            margin: 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(10px, 2vw, 16px);
+            color: #FFD700;
+            text-shadow: 0 0 12px rgba(255,215,0,0.5);
+            letter-spacing: 0.08em;
+        }
+
+        .start-menu-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .start-menu-actions .menu-btn {
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: clamp(14px, 2.5vw, 18px);
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: transform 140ms ease, filter 180ms ease, box-shadow 180ms ease;
+        }
+
+        .menu-btn--play {
+            border-color: rgba(0,255,120,0.4) !important;
+            background: linear-gradient(180deg, rgba(0,255,120,0.22), rgba(0,60,20,0.65)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 28px rgba(0,255,120,0.18) !important;
+            font-size: clamp(16px, 3vw, 22px) !important;
+            padding: 16px 20px !important;
+        }
+
+        .menu-btn--play:hover { filter: brightness(1.18); transform: scale(1.03); }
+
+        .menu-btn--scores {
+            border-color: rgba(255,215,0,0.35) !important;
+            background: linear-gradient(180deg, rgba(255,215,0,0.18), rgba(60,40,0,0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 20px rgba(255,215,0,0.12) !important;
+        }
+
+        .menu-btn--info {
+            border-color: rgba(120,180,255,0.35) !important;
+            background: linear-gradient(180deg, rgba(120,180,255,0.18), rgba(0,20,60,0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 20px rgba(120,180,255,0.12) !important;
+        }
+
+        .start-menu-footer {
+            margin: 12px 0 0;
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            font-family: sans-serif;
+        }
+
+        /* Sub-screen overlays (Info / Scores from main menu) */
+        #menu-scores-overlay,
+        #menu-info-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 510;
+            background: radial-gradient(ellipse at 50% 30%, rgba(0,0,22,0.92), rgba(0,0,0,0.96));
+            animation: menuFadeIn 0.35s cubic-bezier(.2,.9,.2,1) both;
+        }
+
+        .menu-sub-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 24px 28px 20px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(180deg, rgba(10,12,16,0.94), rgba(0,0,0,0.82));
+            box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+            backdrop-filter: blur(12px);
+            width: min(440px, 90vw);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .menu-sub-panel--wide { width: min(600px, 92vw); }
+
+        .menu-sub-title {
+            margin: 0;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: clamp(22px, 4vw, 34px);
+            color: #FFD700;
+            text-shadow: 0 0 14px rgba(255,215,0,0.4);
+            letter-spacing: 0.04em;
+        }
+
+        /* Info screen layout */
+        .info-columns {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+        }
+
+        @media (max-width: 520px) {
+            .info-columns { flex-direction: column; gap: 14px; }
+        }
+
+        .info-section {
+            flex: 1;
+        }
+
+        .info-heading {
+            margin: 0 0 8px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 20px;
+            color: #88CCFF;
+            letter-spacing: 0.03em;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+        }
+
+        .info-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .info-key {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: #00FF77;
+            white-space: nowrap;
+            width: 110px;
+        }
+
+        .info-tips {
+            margin: 0;
+            padding: 0 0 0 18px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+        }
+
+        .info-tips li { margin-bottom: 4px; }
+
+        .info-story { margin-top: 4px; }
+
+        .info-lore {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
         /* Pause button (top-right) */
         #pause-btn {
             position: fixed;
@@ -669,6 +907,70 @@
                     <button id="mobile-start-btn">Tap to Start</button>
                 </div>
 
+                <!-- ══════ START MENU SPLASH PAGE ══════ -->
+                <div id="start-menu-overlay">
+                    <div class="start-menu-panel">
+                        <h1 class="start-menu-title">SKUNKED:</h1>
+                        <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
+                        <div class="start-menu-divider"></div>
+                        <p class="start-menu-tagline">NINJA SKUNK</p>
+                        <div class="start-menu-actions">
+                            <button id="menu-play-btn" class="menu-btn menu-btn--play">&#9654; PLAY GAME</button>
+                            <button id="menu-scores-btn" class="menu-btn menu-btn--scores">&#127942; HIGH SCORES</button>
+                            <button id="menu-info-btn" class="menu-btn menu-btn--info">&#9432; INFO</button>
+                        </div>
+                        <p class="start-menu-footer">&#169; 2026 Skunk Squad &mdash; skunked.io</p>
+                    </div>
+                </div>
+
+                <!-- ══════ HIGH SCORES SCREEN (from main menu) ══════ -->
+                <div id="menu-scores-overlay" style="display:none;">
+                    <div class="menu-sub-panel">
+                        <h2 class="menu-sub-title">&#127942; HIGH SCORES</h2>
+                        <hr class="pause-divider">
+                        <div id="menu-scores-board"></div>
+                        <hr class="pause-divider">
+                        <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                    </div>
+                </div>
+
+                <!-- ══════ INFO SCREEN (from main menu) ══════ -->
+                <div id="menu-info-overlay" style="display:none;">
+                    <div class="menu-sub-panel menu-sub-panel--wide">
+                        <h2 class="menu-sub-title">&#9432; HOW TO PLAY</h2>
+                        <hr class="pause-divider">
+                        <div class="info-columns">
+                            <div class="info-section">
+                                <h3 class="info-heading">&#127918; Controls</h3>
+                                <table class="info-table">
+                                    <tr><td class="info-key">&#8592; &#8594; / A, D</td><td>Move</td></tr>
+                                    <tr><td class="info-key">SPACE</td><td>Jump</td></tr>
+                                    <tr><td class="info-key">X</td><td>Attack</td></tr>
+                                    <tr><td class="info-key">Z</td><td>Shadow Strike</td></tr>
+                                    <tr><td class="info-key">C</td><td>Skunk Shot</td></tr>
+                                    <tr><td class="info-key">ESC</td><td>Pause</td></tr>
+                                </table>
+                            </div>
+                            <div class="info-section">
+                                <h3 class="info-heading">&#128161; Tips</h3>
+                                <ul class="info-tips">
+                                    <li>Chain combos for score multipliers</li>
+                                    <li>Collect idols for bonus points</li>
+                                    <li>Shadow Strike costs energy &mdash; use wisely!</li>
+                                    <li>Watch for boss patterns before attacking</li>
+                                    <li>Skunk Shot is a limited powerup &mdash; save it!</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="info-section info-story">
+                            <h3 class="info-heading">&#128220; Story</h3>
+                            <p class="info-lore">You are the last Ninja Skunk. Dark forces have invaded the forest, and only your legendary spray technique can save the woodland realm. Battle through waves of enemies, defeat powerful bosses, and prove you are the ultimate skunk warrior!</p>
+                        </div>
+                        <hr class="pause-divider">
+                        <button id="menu-info-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                    </div>
+                </div>
+
                 <!-- Pause Overlay -->
                 <div id="pause-overlay" style="display:none;">
                     <div class="pause-panel">
@@ -982,6 +1284,121 @@
                             });
                         }
                     } catch (e) { console.warn('Highscores button attach failed', e); }
+
+                    // ══════ START MENU SPLASH PAGE WIRING ══════
+                    try {
+                        // Track whether the start menu overlay is visible
+                        window._startMenuVisible = true;
+
+                        const startMenuOverlay  = document.getElementById('start-menu-overlay');
+                        const scoresOverlay     = document.getElementById('menu-scores-overlay');
+                        const infoOverlay       = document.getElementById('menu-info-overlay');
+                        const playBtn           = document.getElementById('menu-play-btn');
+                        const scoresBtn         = document.getElementById('menu-scores-btn');
+                        const infoBtn           = document.getElementById('menu-info-btn');
+                        const scoresBackBtn     = document.getElementById('menu-scores-back');
+                        const infoBackBtn       = document.getElementById('menu-info-back');
+                        const scoresBoardEl     = document.getElementById('menu-scores-board');
+
+                        // Helper: hide start menu and begin game
+                        function startGameFromMenu() {
+                            if (!startMenuOverlay) return;
+                            startMenuOverlay.classList.add('hidden');
+                            window._startMenuVisible = false;
+                            // Start the game via the existing Game API
+                            try {
+                                if (window.game) {
+                                    window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_confirm');
+                                    window.game.startGame(0);
+                                    window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
+                                }
+                            } catch (e) { console.warn('startGameFromMenu failed', e); }
+                        }
+
+                        // Helper: show the main start menu (used by back buttons)
+                        function showStartMenu() {
+                            if (startMenuOverlay) { startMenuOverlay.classList.remove('hidden'); startMenuOverlay.style.display = ''; }
+                            if (scoresOverlay) scoresOverlay.style.display = 'none';
+                            if (infoOverlay) infoOverlay.style.display = 'none';
+                            window._startMenuVisible = true;
+                        }
+
+                        // PLAY button
+                        if (playBtn) {
+                            playBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                startGameFromMenu();
+                            });
+                        }
+
+                        // HIGH SCORES button
+                        if (scoresBtn) {
+                            scoresBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                // Populate scoreboard
+                                if (scoresBoardEl) {
+                                    scoresBoardEl.innerHTML = '';
+                                    try {
+                                        if (window.Highscores) {
+                                            const board = Highscores.renderScoreboard(null, true);
+                                            scoresBoardEl.appendChild(board);
+                                        } else {
+                                            scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Scores not yet available</p>';
+                                        }
+                                    } catch (e) {
+                                        scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Could not load scores</p>';
+                                    }
+                                }
+                                if (scoresOverlay) scoresOverlay.style.display = 'flex';
+                            });
+                        }
+
+                        // INFO button
+                        if (infoBtn) {
+                            infoBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                if (infoOverlay) infoOverlay.style.display = 'flex';
+                            });
+                        }
+
+                        // Back buttons
+                        if (scoresBackBtn) {
+                            scoresBackBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                showStartMenu();
+                            });
+                        }
+                        if (infoBackBtn) {
+                            infoBackBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                showStartMenu();
+                            });
+                        }
+
+                        // Show the start menu again when returning to MENU state
+                        window.addEventListener('gameStateChange', (ev) => {
+                            try {
+                                const state = ev.detail && ev.detail.state;
+                                if (state === 'MENU') {
+                                    showStartMenu();
+                                } else {
+                                    // Hide all menu overlays when game is playing
+                                    if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                    if (scoresOverlay) scoresOverlay.style.display = 'none';
+                                    if (infoOverlay) infoOverlay.style.display = 'none';
+                                    window._startMenuVisible = false;
+                                }
+                            } catch (e) {}
+                        });
+
+                    } catch (e) { console.warn('Start menu wiring failed', e); }
                 });
 
                 b.appendChild(send);
