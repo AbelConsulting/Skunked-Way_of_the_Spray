@@ -2068,6 +2068,15 @@
                             });
                         }
 
+                        // Keyboard shortcut: Enter starts game from start menu
+                        window.addEventListener('keydown', (ev) => {
+                            if (!window._startMenuVisible) return;
+                            if (ev.key === 'Enter' || ev.key === ' ') {
+                                ev.preventDefault();
+                                startGameFromMenu();
+                            }
+                        });
+
                         // HIGH SCORES button
                         if (scoresBtn) {
                             scoresBtn.addEventListener('click', (ev) => {
