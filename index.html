@@ -473,6 +473,324 @@
             font-style: italic;
         }
 
+        /* ═══════════════════════════════════════════════════════
+           TABBED INFO PAGE
+           ═══════════════════════════════════════════════════════ */
+        .info-tabs {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .info-tab {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.55);
+            padding: 8px 14px;
+            border-radius: 8px 8px 0 0;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: clamp(12px, 2vw, 15px);
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .info-tab:hover { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.8); }
+        .info-tab.active {
+            background: rgba(80,255,244,0.12);
+            color: #50FFF4;
+            border-color: rgba(80,255,244,0.35);
+            border-bottom-color: transparent;
+        }
+
+        .info-tab-content {
+            display: none;
+            width: 100%;
+            animation: infoTabFade 0.25s ease both;
+        }
+
+        .info-tab-content.active { display: block; }
+
+        @keyframes infoTabFade {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Feature list */
+        .info-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .info-feature {
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+        }
+
+        .info-feature strong {
+            display: block;
+            color: #FFD700;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        /* Move cards (attack types) */
+        .info-moves {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .info-move-card {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .info-move-card h4 {
+            margin: 0 0 4px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 16px;
+            color: #00FF77;
+        }
+
+        .info-move-card p {
+            margin: 0;
+            font-size: 12px;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.5;
+        }
+
+        .info-move-card .move-stat {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+
+        /* Combo tiers */
+        .info-combo-tiers {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 6px 0;
+        }
+
+        .combo-tier {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        /* Enemy cards */
+        .info-enemies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .info-enemy-card {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .info-enemy-card h4 {
+            margin: 0 0 2px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 15px;
+            color: #FF8844;
+        }
+
+        .info-enemy-card .enemy-stats {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 4px;
+        }
+
+        .info-enemy-card p {
+            margin: 0;
+            font-size: 12px;
+            color: rgba(255,255,255,0.72);
+            line-height: 1.45;
+        }
+
+        /* Boss badges */
+        .info-boss-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+
+        .boss-badge {
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(255,0,0,0.12), rgba(60,0,0,0.3));
+            border: 1px solid rgba(255,80,80,0.2);
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .boss-badge strong {
+            display: block;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 14px;
+            color: #FF4444;
+        }
+
+        .boss-badge span {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Stage cards */
+        .info-stages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .info-stage-card {
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .info-stage-card h4 {
+            margin: 0 0 2px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 14px;
+            color: #88CCFF;
+        }
+
+        .info-stage-card p {
+            margin: 0;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.4;
+        }
+
+        /* Item cards */
+        .info-items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .info-item-card {
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .info-item-card h4 {
+            margin: 0 0 2px;
+            font-size: 14px;
+        }
+
+        .info-item-card p {
+            margin: 0;
+            font-size: 11px;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.4;
+        }
+
+        /* Achievement grid */
+        .info-achieve-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .info-achieve-card {
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255,215,0,0.05);
+            border: 1px solid rgba(255,215,0,0.12);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .info-achieve-card .achieve-icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .info-achieve-card h4 {
+            margin: 0 0 2px;
+            font-size: 13px;
+            color: #FFD700;
+        }
+
+        .info-achieve-card p {
+            margin: 0;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Control groups */
+        .info-ctrl-group {
+            margin-bottom: 12px;
+        }
+
+        .info-ctrl-group h4 {
+            margin: 0 0 6px;
+            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-size: 16px;
+            color: #88CCFF;
+        }
+
+        /* Scrollable panel override for wide info */
+        .menu-sub-panel--info {
+            width: min(680px, 94vw);
+            max-height: 88vh;
+        }
+
+        @media (max-width: 520px) {
+            .info-enemies-grid,
+            .info-moves,
+            .info-stages-grid,
+            .info-items-grid,
+            .info-achieve-grid {
+                grid-template-columns: 1fr;
+            }
+            .info-features {
+                grid-template-columns: 1fr 1fr;
+            }
+            .info-boss-row {
+                justify-content: center;
+            }
+            .menu-sub-panel--info {
+                padding: 16px 12px;
+            }
+        }
+
         /* Pause button (top-right) */
         #pause-btn {
             position: fixed;
@@ -934,39 +1252,275 @@
                     </div>
                 </div>
 
-                <!-- ══════ INFO SCREEN (from main menu) ══════ -->
+                <!-- ══════ INFO SCREEN (from main menu) — Tabbed ══════ -->
                 <div id="menu-info-overlay" style="display:none;">
-                    <div class="menu-sub-panel menu-sub-panel--wide">
-                        <h2 class="menu-sub-title">&#9432; HOW TO PLAY</h2>
+                    <div class="menu-sub-panel menu-sub-panel--info">
+                        <h2 class="menu-sub-title">&#9432; GAME INFO</h2>
                         <hr class="pause-divider">
-                        <div class="info-columns">
-                            <div class="info-section">
-                                <h3 class="info-heading">&#127918; Controls</h3>
+
+                        <!-- Tab bar -->
+                        <div class="info-tabs">
+                            <button class="info-tab active" data-info-tab="about">About</button>
+                            <button class="info-tab" data-info-tab="controls">Controls</button>
+                            <button class="info-tab" data-info-tab="enemies">Enemies</button>
+                            <button class="info-tab" data-info-tab="stages">Stages</button>
+                            <button class="info-tab" data-info-tab="items">Items</button>
+                        </div>
+
+                        <!-- ── TAB: About ── -->
+                        <div class="info-tab-content active" data-info-panel="about">
+                            <div class="info-section info-story">
+                                <h3 class="info-heading">&#128220; Story</h3>
+                                <p class="info-lore">You are the last Ninja Skunk. Dark forces have invaded the forest, and only your legendary spray technique can save the woodland realm. Battle through 10 stages of increasingly dangerous foes, defeat powerful bosses, and prove you are the ultimate skunk warrior!</p>
+                            </div>
+
+                            <h3 class="info-heading" style="margin-top:12px;">&#11088; Key Features</h3>
+                            <div class="info-features">
+                                <div class="info-feature"><strong>10 Stages</strong>Forests, caverns, neon cities &amp; more</div>
+                                <div class="info-feature"><strong>6 Enemy Types</strong>Each with unique AI behaviour</div>
+                                <div class="info-feature"><strong>5 Bosses</strong>Massive health, deadly patterns</div>
+                                <div class="info-feature"><strong>Combo System</strong>Chain hits for up to 10&times; score</div>
+                                <div class="info-feature"><strong>3 Attack Types</strong>Melee, Shadow Strike &amp; Skunk Shot</div>
+                                <div class="info-feature"><strong>6 Power-ups</strong>Health, lives, speed &amp; damage boosts</div>
+                                <div class="info-feature"><strong>5 Achievements</strong>Unlock badges for skilled play</div>
+                                <div class="info-feature"><strong>Online Scores</strong>Compete on the global leaderboard</div>
+                            </div>
+
+                            <h3 class="info-heading" style="margin-top:12px;">&#128161; Pro Tips</h3>
+                            <ul class="info-tips">
+                                <li>Chain combos within 2 seconds &mdash; multiplier caps at 10&times;</li>
+                                <li>Collect all 3 Golden Idols per stage for a huge +30% damage &amp; +25% speed set bonus</li>
+                                <li>Shadow Strike grants invincibility frames &mdash; dash through attacks!</li>
+                                <li>Skunk Shot disrupts Kamikaze fuses &mdash; force early detonation on groups</li>
+                                <li>Watch boss wind-up animations before committing to attacks</li>
+                                <li>Double-jump lets you platform over the Jumper enemy&rsquo;s arc</li>
+                            </ul>
+
+                            <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.35);">&copy; 2026 Skunk Squad &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
+                        </div>
+
+                        <!-- ── TAB: Controls ── -->
+                        <div class="info-tab-content" data-info-panel="controls">
+                            <div class="info-ctrl-group">
+                                <h4>&#9000; Keyboard</h4>
                                 <table class="info-table">
-                                    <tr><td class="info-key">&#8592; &#8594; / A, D</td><td>Move</td></tr>
-                                    <tr><td class="info-key">SPACE</td><td>Jump</td></tr>
-                                    <tr><td class="info-key">X</td><td>Attack</td></tr>
-                                    <tr><td class="info-key">Z</td><td>Shadow Strike</td></tr>
-                                    <tr><td class="info-key">C</td><td>Skunk Shot</td></tr>
-                                    <tr><td class="info-key">ESC</td><td>Pause</td></tr>
+                                    <tr><td class="info-key">&#8592; &#8594; / A, D</td><td>Move left / right</td></tr>
+                                    <tr><td class="info-key">SPACE</td><td>Jump (tap twice for double-jump)</td></tr>
+                                    <tr><td class="info-key">X</td><td>Basic Attack</td></tr>
+                                    <tr><td class="info-key">Z</td><td>Shadow Strike (dash + i-frames)</td></tr>
+                                    <tr><td class="info-key">C</td><td>Skunk Shot (ranged projectile)</td></tr>
+                                    <tr><td class="info-key">ESC</td><td>Pause / Resume</td></tr>
+                                    <tr><td class="info-key">ENTER</td><td>Start / Restart</td></tr>
                                 </table>
                             </div>
-                            <div class="info-section">
-                                <h3 class="info-heading">&#128161; Tips</h3>
-                                <ul class="info-tips">
-                                    <li>Chain combos for score multipliers</li>
-                                    <li>Collect idols for bonus points</li>
-                                    <li>Shadow Strike costs energy &mdash; use wisely!</li>
-                                    <li>Watch for boss patterns before attacking</li>
-                                    <li>Skunk Shot is a limited powerup &mdash; save it!</li>
-                                </ul>
+
+                            <div class="info-ctrl-group">
+                                <h4>&#128241; Touch / Mobile</h4>
+                                <table class="info-table">
+                                    <tr><td class="info-key">&#10094; &#10095;</td><td>Left / Right movement pads</td></tr>
+                                    <tr><td class="info-key">&#8679;</td><td>Jump button</td></tr>
+                                    <tr><td class="info-key">&#128481;</td><td>Attack button (melee)</td></tr>
+                                    <tr><td class="info-key">&#128165;</td><td>Special button (Shadow Strike / Skunk Shot)</td></tr>
+                                    <tr><td class="info-key">&#8634;</td><td>Restart (on game-over)</td></tr>
+                                </table>
+                            </div>
+
+                            <div class="info-ctrl-group">
+                                <h4>&#127918; Gamepad (Xbox / PlayStation)</h4>
+                                <table class="info-table">
+                                    <tr><td class="info-key">Left Stick</td><td>Move</td></tr>
+                                    <tr><td class="info-key">A / Cross</td><td>Jump</td></tr>
+                                    <tr><td class="info-key">X / Square</td><td>Basic Attack</td></tr>
+                                    <tr><td class="info-key">B / Circle</td><td>Shadow Strike</td></tr>
+                                    <tr><td class="info-key">LT / LB</td><td>Skunk Shot</td></tr>
+                                    <tr><td class="info-key">LB</td><td>Pause</td></tr>
+                                </table>
+                            </div>
+
+                            <h3 class="info-heading" style="margin-top:10px;">&#9876; Combat Moves</h3>
+                            <div class="info-moves">
+                                <div class="info-move-card">
+                                    <h4>&#128481; Basic Attack</h4>
+                                    <p>Quick melee strike. Fast cooldown, chain rapidly for combos.</p>
+                                    <div class="move-stat">DMG: 15 &bull; Cooldown: 0.3s &bull; Range: 120px</div>
+                                </div>
+                                <div class="info-move-card">
+                                    <h4>&#9889; Shadow Strike</h4>
+                                    <p>Dashing lunge with invincibility frames. Pass through enemy attacks unscathed.</p>
+                                    <div class="move-stat">DMG: 15 &bull; Cooldown: 0.45s &bull; Dash: 380px/s &bull; i-frames!</div>
+                                </div>
+                                <div class="info-move-card">
+                                    <h4>&#128163; Skunk Shot</h4>
+                                    <p>Ranged spray projectile. Creates an AoE cloud on impact &mdash; &ldquo;Skunks&rdquo; enemies for 5s, disabling movement &amp; attacks.</p>
+                                    <div class="move-stat">Ammo-based &bull; Cooldown: 0.5s &bull; Speed: 600px/s</div>
+                                </div>
+                            </div>
+
+                            <h3 class="info-heading" style="margin-top:10px;">&#128293; Combo Tiers</h3>
+                            <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Hit enemies within 2s windows. Multiplier = 1 + (hits &times; 0.25), max 10&times;</p>
+                            <div class="info-combo-tiers">
+                                <span class="combo-tier" style="color:#FFD93D;">3+ NICE!</span>
+                                <span class="combo-tier" style="color:#FF9500;">5+ GREAT!</span>
+                                <span class="combo-tier" style="color:#FF4500;">10+ AWESOME!</span>
+                                <span class="combo-tier" style="color:#FF00FF;">15+ INCREDIBLE!</span>
+                                <span class="combo-tier" style="color:#00FFFF;">20+ UNSTOPPABLE!</span>
+                                <span class="combo-tier" style="color:#FFD700;">30+ LEGENDARY!</span>
+                                <span class="combo-tier" style="color:#FF0000;">50+ GOD MODE!</span>
                             </div>
                         </div>
-                        <div class="info-section info-story">
-                            <h3 class="info-heading">&#128220; Story</h3>
-                            <p class="info-lore">You are the last Ninja Skunk. Dark forces have invaded the forest, and only your legendary spray technique can save the woodland realm. Battle through waves of enemies, defeat powerful bosses, and prove you are the ultimate skunk warrior!</p>
+
+                        <!-- ── TAB: Enemies ── -->
+                        <div class="info-tab-content" data-info-panel="enemies">
+                            <h3 class="info-heading">&#128126; Enemy Types</h3>
+                            <div class="info-enemies-grid">
+                                <div class="info-enemy-card">
+                                    <h4>&#128128; Grunt</h4>
+                                    <div class="enemy-stats">HP 50 &bull; SPD 150 &bull; 100 pts</div>
+                                    <p>Standard patrol enemy. Chases player within 300px, melee attacks at close range.</p>
+                                </div>
+                                <div class="info-enemy-card">
+                                    <h4>&#128168; Speedster</h4>
+                                    <div class="enemy-stats">HP 40 &bull; SPD 225 &bull; 120 pts</div>
+                                    <p>50% faster but fragile. Quick points if you can catch them before they overwhelm you.</p>
+                                </div>
+                                <div class="info-enemy-card">
+                                    <h4>&#128737; Shield Tank</h4>
+                                    <div class="enemy-stats">HP 75 &bull; SPD 105 &bull; 150 pts</div>
+                                    <p>Slow bruiser with a Shield Bubble (every 2.2s, lasts 1.5s). Time your attacks between shields!</p>
+                                </div>
+                                <div class="info-enemy-card">
+                                    <h4>&#128165; Kamikaze</h4>
+                                    <div class="enemy-stats">HP 25 &bull; SPD 300 &bull; 200 pts</div>
+                                    <p>Closes in, ignites a 1.6s fuse, then dashes and detonates! AoE deals 55 damage. Chain explosions = 500 bonus pts. Skunk Shot disrupts the fuse.</p>
+                                </div>
+                                <div class="info-enemy-card">
+                                    <h4>&#128640; Jumper</h4>
+                                    <div class="enemy-stats">HP 60 &bull; Stationary &bull; 200 pts</div>
+                                    <p>Doesn&rsquo;t walk &mdash; performs up to 5 rapid vertical jumps to reach you. Watch for the green sparks!</p>
+                                </div>
+                                <div class="info-enemy-card">
+                                    <h4>&#127919; Thrower</h4>
+                                    <div class="enemy-stats">HP 60 &bull; SPD 128 &bull; 250 pts</div>
+                                    <p>Ranged attacker throwing purple spray orbs from 400px. Retreats when you close in. Highest points among regular enemies.</p>
+                                </div>
+                            </div>
+
+                            <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
+                            <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Each stage ends with a boss fight. Boss health scales from 6&times; to 18&times; base enemy HP.</p>
+                            <div class="info-boss-row">
+                                <div class="boss-badge"><strong>Boss 1</strong><span>Forest Chieftain<br>6&times; HP</span></div>
+                                <div class="boss-badge"><strong>Boss 2</strong><span>City Overlord<br>8&times; HP</span></div>
+                                <div class="boss-badge"><strong>Boss 3</strong><span>Dojo Master<br>10&times; HP</span></div>
+                                <div class="boss-badge"><strong>Boss 4</strong><span>Neon Warden<br>13&times; HP</span></div>
+                                <div class="boss-badge"><strong>Boss 5</strong><span>Crystal Guardian<br>11&times; HP</span></div>
+                            </div>
                         </div>
-                        <hr class="pause-divider">
+
+                        <!-- ── TAB: Stages ── -->
+                        <div class="info-tab-content" data-info-panel="stages">
+                            <h3 class="info-heading">&#127759; All 10 Stages</h3>
+                            <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Difficulty ramps through faster spawns, tougher bosses, and advanced enemy types. Each stage has 3 Golden Idols and 2 Skunk Powerups.</p>
+                            <div class="info-stages-grid">
+                                <div class="info-stage-card">
+                                    <h4>1 &mdash; Forest Outskirts</h4>
+                                    <p>&#127795; Grunts &amp; Tanks. Boss&nbsp;6&times;&nbsp;HP. Easy intro.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>2 &mdash; Skunk City</h4>
+                                    <p>&#127961; Grunts, Speedsters &amp; Throwers. Boss&nbsp;8&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>3 &mdash; Mountain Dojo</h4>
+                                    <p>&#9968; All 6 enemy types! Boss&nbsp;10&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>4 &mdash; Crystal Caverns</h4>
+                                    <p>&#128142; All types, tighter spawns. Boss&nbsp;11&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>5 &mdash; Cavern Depths</h4>
+                                    <p>&#127754; No Grunts! Advanced foes only. Boss&nbsp;12&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>6 &mdash; Neon Crossroads</h4>
+                                    <p>&#128161; Tanks, Kamikazes, Jumpers, Throwers. Boss&nbsp;13&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>7 &mdash; Crystal Ridge</h4>
+                                    <p>&#9968; Advanced types, high aggression. Boss&nbsp;14&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>8 &mdash; Abyssal Caverns</h4>
+                                    <p>&#128064; Kamikaze, Jumper &amp; Thrower only! Boss&nbsp;15&times;&nbsp;HP.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>9 &mdash; Neon Nexus</h4>
+                                    <p>&#9889; Hardest trio. Boss&nbsp;16&times;&nbsp;HP. Near-max difficulty.</p>
+                                </div>
+                                <div class="info-stage-card">
+                                    <h4>10 &mdash; Final Showdown</h4>
+                                    <p>&#128293; Boss&nbsp;18&times;&nbsp;HP, 1.2&times; speed, 2.3&times; damage. The ultimate test!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── TAB: Items ── -->
+                        <div class="info-tab-content" data-info-panel="items">
+                            <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
+                            <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
+                            <div class="info-items-grid">
+                                <div class="info-item-card">
+                                    <h4 style="color:#4dff4d;">&#128154; Health Regen</h4>
+                                    <p>Heals 10 HP/s for 6 seconds. 20% enemy drop chance.</p>
+                                </div>
+                                <div class="info-item-card">
+                                    <h4 style="color:#ff4d4d;">&#10084; Extra Life</h4>
+                                    <p>+1 life instantly. Rare 3% enemy drop chance.</p>
+                                </div>
+                                <div class="info-item-card">
+                                    <h4 style="color:#FFD700;">&#128081; Golden Idol</h4>
+                                    <p>+250 score, +30 HP, 2s invulnerability. Collect all 3 per stage for +25% speed &amp; +30% damage set bonus + 2000 pts!</p>
+                                </div>
+                                <div class="info-item-card">
+                                    <h4 style="color:#00CCFF;">&#9889; Speed Boost</h4>
+                                    <p>1.5&times; movement speed for 8 seconds.</p>
+                                </div>
+                                <div class="info-item-card">
+                                    <h4 style="color:#FF8844;">&#128165; Damage Boost</h4>
+                                    <p>1.75&times; attack damage for 10 seconds.</p>
+                                </div>
+                                <div class="info-item-card">
+                                    <h4 style="color:#00FF77;">&#128163; Skunk Powerup</h4>
+                                    <p>+2 Skunk Shot ammo. 2 placed per level.</p>
+                                </div>
+                            </div>
+
+                            <h3 class="info-heading" style="margin-top:14px;">&#127942; Achievements</h3>
+                            <div class="info-achieve-grid">
+                                <div class="info-achieve-card">
+                                    <span class="achieve-icon">&#129656;</span>
+                                    <div><h4>First Blood</h4><p>Defeat your first enemy</p></div>
+                                </div>
+                                <div class="info-achieve-card">
+                                    <span class="achieve-icon">&#9876;</span>
+                                    <div><h4>Enemy Slayer</h4><p>Defeat 50 enemies total</p></div>
+                                </div>
+                                <div class="info-achieve-card">
+                                    <span class="achieve-icon">&#128293;</span>
+                                    <div><h4>Combo Starter</h4><p>Achieve a 5-hit combo</p></div>
+                                </div>
+                                <div class="info-achieve-card">
+                                    <span class="achieve-icon">&#128142;</span>
+                                    <div><h4>High Scorer</h4><p>Score over 50,000 points</p></div>
+                                </div>
+                                <div class="info-achieve-card">
+                                    <span class="achieve-icon">&#128737;</span>
+                                    <div><h4>Untouchable</h4><p>Complete a level without taking any damage</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="pause-divider" style="margin-top:12px;">
                         <button id="menu-info-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                     </div>
                 </div>
@@ -1379,6 +1933,25 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 showStartMenu();
+                            });
+                        }
+
+                        // ── INFO TABS wiring ──
+                        {
+                            const tabs = document.querySelectorAll('.info-tab[data-info-tab]');
+                            const panels = document.querySelectorAll('.info-tab-content[data-info-panel]');
+                            tabs.forEach(tab => {
+                                tab.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    const id = tab.getAttribute('data-info-tab');
+                                    tabs.forEach(t => t.classList.toggle('active', t === tab));
+                                    panels.forEach(p => {
+                                        const isActive = p.getAttribute('data-info-panel') === id;
+                                        p.classList.toggle('active', isActive);
+                                        // Re-trigger the fade animation
+                                        if (isActive) { p.style.animation = 'none'; p.offsetHeight; p.style.animation = ''; }
+                                    });
+                                });
                             });
                         }
 
