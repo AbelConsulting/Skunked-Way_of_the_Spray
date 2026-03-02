@@ -5,50 +5,74 @@
  * Proprietary and confidential — unauthorized copying, distribution, or use
  * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
  */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+// js/firebase.js
+// Global leaderboard integration via the skunked.io REST API.
+// Replaces direct Firebase access with API calls to the centralised
+// skunkedscores service so every game instance shares one leaderboard.
 
-// Your web app's Firebase configuration
-const firebaseConfig = Config.FIREBASE_CONFIG;
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const SCOREBOARD_COLLECTION = 'scores';
+const API_BASE = (typeof Config !== 'undefined' && Config.SCORES_API_BASE)
+  ? Config.SCORES_API_BASE
+  : 'https://skunked.io';
 
 /**
- * Submits a score to the Firebase Firestore database.
- * @param {string} name The name of the player.
- * @param {number} score The score of the player.
+ * Submits a score to the skunked.io global leaderboard.
+ * @param {string} name  The player name / gamer tag.
+ * @param {number} score The score achieved.
+ * @param {string[]} [achievements] Optional unlocked achievement names.
  * @returns {Promise<void>}
  */
-export async function submitScore(name, score) {
+export async function submitScore(name, score, achievements) {
   try {
-    await addDoc(collection(db, SCOREBOARD_COLLECTION), {
-      name: name,
+    const body = {
+      playerName: name,
       score: score,
-      timestamp: new Date()
+    };
+    if (achievements && achievements.length > 0) {
+      body.achievements = achievements;
+    }
+
+    const res = await fetch(`${API_BASE}/api/submit-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('Score submission failed:', res.status, err);
+    }
   } catch (e) {
-    console.error("Error adding document: ", e);
+    console.error('Error submitting score:', e);
   }
 }
 
 /**
- * Fetches the top 10 scores from the Firebase Firestore database.
- * @returns {Promise<Array<{name: string, score: number}>>} A promise that resolves to an array of the top 10 scores.
+ * Fetches the top scores from the skunked.io global leaderboard.
+ * @param {number} [count=10] How many top scores to retrieve.
+ * @returns {Promise<Array<{name: string, score: number, timestamp?: object}>>}
+ *   Returns objects whose shape matches what highscores.js expects
+ *   (name, score, optional timestamp).
  */
-export async function getHighScores() {
-  const scores = [];
+export async function getHighScores(count = 10) {
   try {
-    const q = query(collection(db, SCOREBOARD_COLLECTION), orderBy("score", "desc"), limit(10));
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
-      scores.push(doc.data());
-    });
+    const res = await fetch(`${API_BASE}/api/scores?limit=${count}`);
+    if (!res.ok) {
+      console.error('Failed to fetch scores:', res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    // The API returns { scores: [...] } with objects shaped as:
+    //   { id, playerName, score, achievements?, createdAt? }
+    // Map to the shape highscores.js expects.
+    return (data.scores || data || []).map(s => ({
+      name: s.playerName || s.name,
+      score: s.score,
+      timestamp: s.createdAt ? new Date(s.createdAt) : null,
+      achievements: s.achievements || [],
+    }));
   } catch (e) {
-    console.error("Error getting documents: ", e);
+    console.error('Error fetching scores:', e);
+    return [];
   }
-  return scores;
 }

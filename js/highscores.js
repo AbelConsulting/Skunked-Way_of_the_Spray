@@ -5,10 +5,10 @@
  * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
  */
 // js/highscores.js
-// Global high-score manager using Firebase.
+// Global high-score manager using the skunked.io leaderboard API.
 
-// Import the core Firebase functions we need
-import { submitScore as submitFirebaseScore, getHighScores as getFirebaseHighScores } from './firebase.js';
+// Import the REST API functions for the global leaderboard
+import { submitScore as submitAPIScore, getHighScores as getAPIHighScores } from './firebase.js';
 
 (function(window){
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
@@ -104,10 +104,10 @@ import { submitScore as submitFirebaseScore, getHighScores as getFirebaseHighSco
    */
   async function loadScores(){
     try {
-      const scores = await getFirebaseHighScores();
+      const scores = await getAPIHighScores(MAX_SCORES);
       return scores || [];
     } catch(e){ 
-      console.warn('Failed to load highscores from Firebase', e);
+      console.warn('Failed to load highscores from skunked.io', e);
       return []; 
     }
   }
@@ -129,15 +129,21 @@ import { submitScore as submitFirebaseScore, getHighScores as getFirebaseHighSco
    * @param {number} score The player's score.
    * @param {string} name The player's name/initials.
    */
-  async function addScore(score, name) {
+  async function addScore(score, name, gameStats) {
     if (!validateScore(score)) {
       console.warn('Invalid score rejected', score);
       return;
     }
     try {
-      await submitFirebaseScore(name, score);
+      // Collect unlocked achievement names to send alongside the score
+      const achievements = [];
+      if (gameStats) {
+        const checked = checkAchievements(gameStats);
+        for (const a of checked) achievements.push(a.name);
+      }
+      await submitAPIScore(name, score, achievements);
     } catch (e) {
-      console.error("Failed to submit score to Firebase", e);
+      console.error("Failed to submit score to skunked.io", e);
     }
   }
 
@@ -289,8 +295,10 @@ import { submitScore as submitFirebaseScore, getHighScores as getFirebaseHighSco
             const date = document.createElement('div');
             date.className = 'scoreboard-date';
             if (scoreData.timestamp) {
-              // Firestore timestamp objects have a toDate() method.
-              const d = scoreData.timestamp.toDate ? scoreData.timestamp.toDate() : new Date(scoreData.timestamp);
+              // API returns plain Date objects or ISO strings
+              const d = (scoreData.timestamp instanceof Date)
+                ? scoreData.timestamp
+                : new Date(scoreData.timestamp);
               date.textContent = d.toLocaleDateString();
             }
             

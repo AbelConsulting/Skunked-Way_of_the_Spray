@@ -201,5 +201,9 @@ const Config = {
         messagingSenderId: "72220609934",
         appId: "1:72220609934:web:56b63a07ffe4614c7968df",
         measurementId: "G-VRQ7KZKFW0"
-    }
+    },
+
+    // Global leaderboard API (skunkedscores service)
+    // All score reads/writes go through this endpoint.
+    SCORES_API_BASE: 'https://skunked.io'
 };
