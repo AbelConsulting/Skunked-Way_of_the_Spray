@@ -701,6 +701,28 @@
             border-radius: 10px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .enemy-sprite-preview {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            background-size: 400% 100%;
+            background-position: 0 0;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            border-radius: 6px;
+            background-color: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .enemy-card-text {
+            flex: 1;
+            min-width: 0;
         }
 
         .info-enemy-card h4 {
@@ -738,6 +760,23 @@
             border: 1px solid rgba(255,80,80,0.2);
             text-align: center;
             min-width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .boss-sprite-preview {
+            width: 64px;
+            height: 64px;
+            background-size: 400% 100%;
+            background-position: 0 0;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            border-radius: 6px;
+            background-color: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,80,80,0.15);
+            margin-bottom: 6px;
         }
 
         .boss-badge strong {
@@ -1769,45 +1808,78 @@
                         <h3 class="info-heading">&#128126; Enemy Types</h3>
                         <div class="info-enemies-grid">
                             <div class="info-enemy-card">
-                                <h4>&#128128; Grunt</h4>
-                                <div class="enemy-stats">HP 50 &bull; SPD 150 &bull; 100 pts</div>
-                                <p>Standard patrol enemy. Chases player within 300px, melee attacks at close range.</p>
+                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/basic_idle.png');"></div>
+                                <div class="enemy-card-text">
+                                    <h4>&#128128; Grunt</h4>
+                                    <div class="enemy-stats">HP 50 &bull; SPD 150 &bull; 100 pts</div>
+                                    <p>Standard patrol enemy. Chases player within 300px, melee attacks at close range.</p>
+                                </div>
                             </div>
                             <div class="info-enemy-card">
-                                <h4>&#128168; Speedster</h4>
-                                <div class="enemy-stats">HP 40 &bull; SPD 225 &bull; 120 pts</div>
-                                <p>50% faster but fragile. Quick points if you can catch them before they overwhelm you.</p>
+                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/basic_idle.png');"></div>
+                                <div class="enemy-card-text">
+                                    <h4>&#128168; Speedster</h4>
+                                    <div class="enemy-stats">HP 40 &bull; SPD 225 &bull; 120 pts</div>
+                                    <p>50% faster but fragile. Quick points if you can catch them before they overwhelm you.</p>
+                                </div>
                             </div>
                             <div class="info-enemy-card">
-                                <h4>&#128737; Shield Tank</h4>
-                                <div class="enemy-stats">HP 75 &bull; SPD 105 &bull; 150 pts</div>
-                                <p>Slow bruiser with a Shield Bubble (every 2.2s, lasts 1.5s). Time your attacks between shields!</p>
+                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/second_idle.png');"></div>
+                                <div class="enemy-card-text">
+                                    <h4>&#128737; Shield Tank</h4>
+                                    <div class="enemy-stats">HP 75 &bull; SPD 105 &bull; 150 pts</div>
+                                    <p>Slow bruiser with a Shield Bubble (every 2.2s, lasts 1.5s). Time your attacks between shields!</p>
+                                </div>
                             </div>
                             <div class="info-enemy-card">
-                                <h4>&#128165; Kamikaze</h4>
-                                <div class="enemy-stats">HP 25 &bull; SPD 300 &bull; 200 pts</div>
-                                <p>Closes in, ignites a 1.6s fuse, then dashes and detonates! AoE deals 55 damage. Chain explosions = 500 bonus pts. Skunk Shot disrupts the fuse.</p>
+                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/third_idle.png');"></div>
+                                <div class="enemy-card-text">
+                                    <h4>&#128165; Kamikaze</h4>
+                                    <div class="enemy-stats">HP 25 &bull; SPD 300 &bull; 200 pts</div>
+                                    <p>Closes in, ignites a 1.6s fuse, then dashes and detonates! AoE deals 55 damage. Chain explosions = 500 bonus pts. Skunk Shot disrupts the fuse.</p>
+                                </div>
                             </div>
                             <div class="info-enemy-card">
-                                <h4>&#128640; Jumper</h4>
-                                <div class="enemy-stats">HP 60 &bull; Stationary &bull; 200 pts</div>
-                                <p>Doesn&rsquo;t walk &mdash; performs up to 5 rapid vertical jumps to reach you. Watch for the green sparks!</p>
+                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/fourth_idle.png');"></div>
+                                <div class="enemy-card-text">
+                                    <h4>&#128640; Jumper</h4>
+                                    <div class="enemy-stats">HP 60 &bull; Stationary &bull; 200 pts</div>
+                                    <p>Doesn&rsquo;t walk &mdash; performs up to 5 rapid vertical jumps to reach you. Watch for the green sparks!</p>
+                                </div>
                             </div>
                             <div class="info-enemy-card">
-                                <h4>&#127919; Thrower</h4>
-                                <div class="enemy-stats">HP 60 &bull; SPD 128 &bull; 250 pts</div>
-                                <p>Ranged attacker throwing purple spray orbs from 400px. Retreats when you close in. Highest points among regular enemies.</p>
+                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/fifth_idle.png');"></div>
+                                <div class="enemy-card-text">
+                                    <h4>&#127919; Thrower</h4>
+                                    <div class="enemy-stats">HP 60 &bull; SPD 128 &bull; 250 pts</div>
+                                    <p>Ranged attacker throwing purple spray orbs from 400px. Retreats when you close in. Highest points among regular enemies.</p>
+                                </div>
                             </div>
                         </div>
 
                         <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
                         <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Each stage ends with a boss fight. Boss health scales from 6&times; to 18&times; base enemy HP.</p>
                         <div class="info-boss-row">
-                            <div class="boss-badge"><strong>Boss 1</strong><span>Forest Chieftain<br>6&times; HP</span></div>
-                            <div class="boss-badge"><strong>Boss 2</strong><span>City Overlord<br>8&times; HP</span></div>
-                            <div class="boss-badge"><strong>Boss 3</strong><span>Dojo Master<br>10&times; HP</span></div>
-                            <div class="boss-badge"><strong>Boss 4</strong><span>Neon Warden<br>13&times; HP</span></div>
-                            <div class="boss-badge"><strong>Boss 5</strong><span>Crystal Guardian<br>11&times; HP</span></div>
+                            <div class="boss-badge">
+                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss_idle.png');"></div>
+                                <strong>Boss 1</strong><span>Forest Chieftain<br>6&times; HP</span>
+                            </div>
+                            <div class="boss-badge">
+                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss2_idle.png');"></div>
+                                <strong>Boss 2</strong><span>City Overlord<br>8&times; HP</span>
+                            </div>
+                            <div class="boss-badge">
+                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss3_idle.png');"></div>
+                                <strong>Boss 3</strong><span>Dojo Master<br>10&times; HP</span>
+                            </div>
+                            <div class="boss-badge">
+                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss4_idle.png');"></div>
+                                <strong>Boss 4</strong><span>Neon Warden<br>13&times; HP</span>
+                            </div>
+                            <div class="boss-badge">
+                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss5_idle.png');"></div>
+                                <strong>Boss 5</strong><span>Crystal Guardian<br>11&times; HP</span>
+                            </div>
                         </div>
                     </div>
 
