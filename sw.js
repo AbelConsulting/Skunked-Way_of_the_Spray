@@ -106,6 +106,14 @@ const CORE_ASSETS_RELATIVE = [
   'assets/sprites/enemies/boss4_hurt.png',
   'assets/sprites/enemies/boss4_idle.png',
   'assets/sprites/enemies/boss4_walk.png',
+  'assets/sprites/enemies/boss5_attack.png',
+  'assets/sprites/enemies/boss5_hurt.png',
+  'assets/sprites/enemies/boss5_idle.png',
+  'assets/sprites/enemies/boss5_walk.png',
+  'assets/sprites/enemies/boss6_attack.png',
+  'assets/sprites/enemies/boss6_hurt.png',
+  'assets/sprites/enemies/boss6_idle.png',
+  'assets/sprites/enemies/boss6_walk.png',
 
   // Sprites — items
   'assets/sprites/items/extra_life.svg',

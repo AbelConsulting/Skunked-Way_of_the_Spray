@@ -21,7 +21,8 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS2': { prefix: 'boss2', size: { width: 128, height: 128 }, fallback: 'boss', attackAnim: 'boss2_attack' },
     'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack' },
     'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack' },
-    'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack' }
+    'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack' },
+    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack' }
 };
 
 class Enemy {
@@ -179,7 +180,7 @@ class Enemy {
     isBossType() {
         return this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || 
                this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4' ||
-               this.enemyType === 'BOSS5';
+               this.enemyType === 'BOSS5' || this.enemyType === 'BOSS6';
     }
 
     /**
@@ -1030,7 +1031,7 @@ class Enemy {
             if (this.audioManager) {
                 if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_attack', 0.7);
-                } else if (this.enemyType === 'BOSS5') {
+                } else if (this.enemyType === 'BOSS5' || this.enemyType === 'BOSS6') {
                     this.audioManager.playSound('boss5_attack', 0.7);
                 } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4') {
                     this.audioManager.playSound('boss2_attack', 0.7);
