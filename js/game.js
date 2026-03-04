@@ -1323,8 +1323,26 @@ class Game {
                             try {
                                 const cc = this.level && this.level.completionConfig;
                                 const portalX = cc && typeof cc.exitX === 'number' ? cc.exitX : (this.level.width - 100);
-                                // Place portal on the ground (typical ground y ~640) centered vertically
-                                const portalY = 620;
+                                // Find the ground platform at the exit X to place portal on top
+                                const portalRadius = 50;
+                                let portalY = 620; // fallback
+                                if (this.level && Array.isArray(this.level.platforms)) {
+                                    let bestPlatform = null;
+                                    for (const p of this.level.platforms) {
+                                        if (!p || typeof p.x !== 'number') continue;
+                                        // Platform must overlap the portal X position
+                                        if (portalX >= p.x && portalX <= p.x + p.width) {
+                                            // Pick the highest ground-like platform (largest Y that isn't too high up)
+                                            if (!bestPlatform || p.y > bestPlatform.y) {
+                                                bestPlatform = p;
+                                            }
+                                        }
+                                    }
+                                    if (bestPlatform) {
+                                        // Center the portal so its bottom edge sits on the platform surface
+                                        portalY = bestPlatform.y - portalRadius;
+                                    }
+                                }
                                 this.exitPortal = new ExitPortal(portalX, portalY);
                             } catch (e) { __err('game', e); }
 
