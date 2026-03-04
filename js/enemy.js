@@ -17,12 +17,12 @@ const ENEMY_TYPE_CONFIG = {
     'FOURTH_BASIC': { prefix: 'fourth', size: { width: 48, height: 48 }, fallback: 'third' },
     'FIFTH_BASIC': { prefix: 'fifth', size: { width: 48, height: 48 }, fallback: 'fourth' },
     'FLYING': { prefix: 'fly', size: { width: 40, height: 40 }, fallback: null },
-    'BOSS': { prefix: 'boss', size: { width: 128, height: 128 }, fallback: null, attackAnim: 'boss_attack1' },
-    'BOSS2': { prefix: 'boss2', size: { width: 128, height: 128 }, fallback: 'boss', attackAnim: 'boss2_attack' },
-    'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack' },
-    'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack' },
-    'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack' },
-    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack' }
+    'BOSS': { prefix: 'boss', size: { width: 128, height: 128 }, fallback: null, attackAnim: 'boss_attack1', bossName: 'SHADOW FANG', bossTitle: 'Guardian of the Forest', ability: 'charge' },
+    'BOSS2': { prefix: 'boss2', size: { width: 128, height: 128 }, fallback: 'boss', attackAnim: 'boss2_attack', bossName: 'IRON CLAW', bossTitle: 'Enforcer of Skunk City', ability: 'groundSlam' },
+    'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack', bossName: 'STEEL FURY', bossTitle: 'Master of the Dojo', ability: 'rapidStrike' },
+    'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'NEON VIPER', bossTitle: 'Crossroads Kingpin', ability: 'projectile' },
+    'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'CRYSTAL WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
+    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'OBSIDIAN SHADE', bossTitle: 'Cavern Sentinel', ability: 'summon' }
 };
 
 class Enemy {
@@ -109,6 +109,23 @@ class Enemy {
             this.attackCooldown = 1.6;
             this.attackHitbox = { x: 0, y: 0, width: 120, height: 80 };
         }
+
+        // Boss phase / enrage system
+        this.bossPhase = 1;            // 1 = normal, 2 = enraged (below 50%), 3 = desperate (below 25%)
+        this.bossEnraged = false;       // Currently in enrage state
+        this.bossDesparate = false;     // Below 25% HP
+        this.bossAuraTimer = 0;         // Timer for aura pulse visual
+        this.bossSpecialCooldown = 0;   // Cooldown for special attack
+        this.bossSpecialActive = false; // Currently performing special attack
+        this.bossSpecialTimer = 0;      // Duration of current special
+        this.bossChargeSpeed = 0;       // Speed during charge attack
+        this.bossChargeDirX = 0;        // Direction of charge
+        this.bossEntranceTimer = 0;     // Entrance animation countdown
+        this.bossEntranceDone = false;  // Has entrance animation played
+        this.bossAbility = (config && config.ability) || null; // Unique ability type
+        this.bossName = (config && config.bossName) || 'BOSS'; // Display name
+        this.bossTitle = (config && config.bossTitle) || '';    // Sub-title
+        this.bossDefeatParticles = [];  // Defeat celebration particles
 
         // Hit feedback
         this.hitStunTimer = 0;
@@ -292,6 +309,11 @@ class Enemy {
             return false; // damage fully absorbed — enemy does NOT die
         }
 
+        // Boss summon shield: halved damage while active
+        if (this.isBossType() && this._bossSummonShield && this.bossSpecialActive) {
+            damage = Math.max(1, Math.floor(damage * 0.5));
+        }
+
         this.health -= damage;
 
         // Backwards compatible signature:
@@ -427,6 +449,62 @@ class Enemy {
                 p.vy *= 0.87;
                 p.age += dt;
                 if (p.age >= p.life) this.shieldParticles.splice(i, 1);
+            }
+        }
+
+        // Boss phase system: enrage at 50% HP, desperate at 25% HP
+        if (this.isBossType()) {
+            this.bossAuraTimer += dt;
+            const hpPct = this.health / this.maxHealth;
+
+            // Phase transitions
+            if (hpPct <= 0.25 && this.bossPhase < 3) {
+                this.bossPhase = 3;
+                this.bossDesparate = true;
+                this.bossEnraged = true;
+                // Desperate phase: even faster, shorter cooldowns
+                this.attackCooldown = Math.max(0.4, this.attackCooldown * 0.6);
+                this.speed *= 1.3;
+                this.attackDamage = Math.floor(this.attackDamage * 1.2);
+            } else if (hpPct <= 0.5 && this.bossPhase < 2) {
+                this.bossPhase = 2;
+                this.bossEnraged = true;
+                // Enraged phase: faster attacks, more aggressive
+                this.attackCooldown = Math.max(0.6, this.attackCooldown * 0.75);
+                this.speed *= 1.15;
+                this.detectionRange = Math.max(this.detectionRange, 700);
+            }
+
+            // Boss entrance animation (freeze boss briefly when first spawned)
+            if (!this.bossEntranceDone) {
+                this.bossEntranceTimer += dt;
+                if (this.bossEntranceTimer < 1.5) {
+                    // During entrance: don't move, play landing effect
+                    this.velocityX = 0;
+                    this.state = 'PATROL'; // idle
+                    return; // Skip all AI
+                }
+                this.bossEntranceDone = true;
+            }
+
+            // Special ability cooldown
+            if (this.bossSpecialCooldown > 0) {
+                this.bossSpecialCooldown -= dt;
+            }
+
+            // Special ability execution
+            if (this.bossSpecialActive) {
+                this.bossSpecialTimer -= dt;
+                this._updateBossSpecial(dt, player, level);
+                if (this.bossSpecialTimer <= 0) {
+                    this.bossSpecialActive = false;
+                    this.bossSpecialCooldown = this.bossEnraged ? 3.0 : 5.0;
+                }
+            }
+
+            // Trigger special ability when off cooldown and chasing
+            if (!this.bossSpecialActive && this.bossSpecialCooldown <= 0 && this.state === 'CHASE' && player) {
+                this._startBossSpecial(player);
             }
         }
 
@@ -574,6 +652,11 @@ class Enemy {
                 }
 
                 // Update thrown projectiles
+                this._updateThrownProjectiles(dt, level);
+            }
+
+            // Boss projectile update (BOSS4 spread shot)
+            if (this.isBossType() && this.thrownProjectiles && this.thrownProjectiles.length > 0) {
                 this._updateThrownProjectiles(dt, level);
             }
         } // end if (!hitStunTimer && !isSkunked)
@@ -1045,6 +1128,233 @@ class Enemy {
                 this.animations.attack.reset();
             }
         }
+    }
+
+    /**
+     * Start a boss-specific special attack based on ability type.
+     */
+    _startBossSpecial(player) {
+        if (!this.isBossType() || !this.bossAbility) return;
+
+        const ecx = this.x + this.width / 2;
+        const pcx = player.x + (player.width || 0) / 2;
+
+        switch (this.bossAbility) {
+            case 'charge':
+                // BOSS: Charge attack — telegraph then rush across the arena
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 1.8; // total duration: 0.6s windup + 1.2s charge
+                this.bossChargeDirX = ecx < pcx ? 1 : -1;
+                this.bossChargeSpeed = 0; // starts at 0, builds up after windup
+                this._bossChargeWindup = 0.6;
+                if (this.audioManager) this.audioManager.playSound('boss_attack', { volume: 0.8, rate: 0.7 });
+                break;
+
+            case 'groundSlam':
+                // BOSS2: Jump up then slam down creating a shockwave
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 1.5;
+                this.velocityY = -(Config.CHARACTER ? Config.CHARACTER.jump_force : 550) * 1.2;
+                this._bossSlamPhase = 'jump'; // jump -> fall -> impact
+                if (this.audioManager) this.audioManager.playSound('boss2_attack', { volume: 0.8, rate: 0.8 });
+                break;
+
+            case 'rapidStrike':
+                // BOSS3: Rapid 3-hit combo with short delays
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 1.6;
+                this._bossRapidHits = 0;
+                this._bossRapidDelay = 0;
+                this.facingRight = ecx < pcx;
+                if (this.audioManager) this.audioManager.playSound('boss2_attack', { volume: 0.8, rate: 1.2 });
+                break;
+
+            case 'projectile':
+                // BOSS4: Fire a spread of 3 projectiles
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 1.0;
+                this._fireProjectileSpread(player);
+                break;
+
+            case 'teleport':
+                // BOSS5: Vanish and reappear behind the player
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 1.2;
+                this._bossTeleportPhase = 'vanish'; // vanish -> reappear
+                this._bossTeleportTarget = { x: pcx + (ecx < pcx ? 100 : -100), y: player.y };
+                if (this.audioManager) this.audioManager.playSound('boss2_attack', { volume: 0.6, rate: 1.5 });
+                break;
+
+            case 'summon':
+                // BOSS6: Defensive stance (reduced damage taken briefly)
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 2.0;
+                this._bossSummonShield = true;
+                break;
+        }
+    }
+
+    /**
+     * Update boss special attack each frame.
+     */
+    _updateBossSpecial(dt, player, level) {
+        if (!this.bossAbility) return;
+
+        switch (this.bossAbility) {
+            case 'charge': {
+                if (this._bossChargeWindup > 0) {
+                    // Windup: shake in place
+                    this._bossChargeWindup -= dt;
+                    this.velocityX = (Math.random() - 0.5) * 40; // tremor
+                } else {
+                    // Rush forward at high speed
+                    this.bossChargeSpeed = this.speed * 3.5;
+                    this.velocityX = this.bossChargeDirX * this.bossChargeSpeed;
+                    this.facingRight = this.bossChargeDirX > 0;
+                    this.x += this.velocityX * dt;
+                    // Set attack hitbox active during charge
+                    this.isAttacking = true;
+                    this.attackTimer = 0.1;
+                    const offsetX = this.facingRight ? this.width : -this.attackHitbox.width;
+                    this.attackHitbox.x = this.x + offsetX;
+                    this.attackHitbox.y = this.y + (this.height - this.attackHitbox.height) / 2;
+                }
+                break;
+            }
+
+            case 'groundSlam': {
+                if (this._bossSlamPhase === 'jump') {
+                    // Wait until falling
+                    if (this.velocityY > 0) {
+                        this._bossSlamPhase = 'fall';
+                        this.velocityY = 800; // Slam down fast
+                    }
+                } else if (this._bossSlamPhase === 'fall') {
+                    // When landing (velocityY resets to 0 from collision)
+                    if (this.velocityY <= 0 || (level && this.y >= level.height - this.height - 50)) {
+                        this._bossSlamPhase = 'impact';
+                        // Create shockwave hitbox (wider than normal attack)
+                        this.isAttacking = true;
+                        this.attackTimer = 0.3;
+                        this.attackHitbox = {
+                            x: this.x - 80,
+                            y: this.y + this.height - 40,
+                            width: this.width + 160,
+                            height: 60
+                        };
+                        this.attackDamage = Math.floor(this.attackDamage * 1.5);
+                        // Restore normal hitbox after slam
+                        setTimeout(() => {
+                            this.attackHitbox = { x: 0, y: 0, width: 120, height: 80 };
+                            this.attackDamage = Math.floor(this.attackDamage / 1.5);
+                        }, 400);
+                        if (this.audioManager) this.audioManager.playSound('boss_attack', { volume: 1.0, rate: 0.5 });
+                    }
+                }
+                break;
+            }
+
+            case 'rapidStrike': {
+                this._bossRapidDelay -= dt;
+                if (this._bossRapidDelay <= 0 && this._bossRapidHits < 3) {
+                    // Execute a quick strike
+                    this.isAttacking = true;
+                    this.attackTimer = 0.2;
+                    this._bossRapidHits++;
+                    this._bossRapidDelay = 0.35;
+                    // Update hitbox
+                    const offsetX = this.facingRight ? this.width : -this.attackHitbox.width;
+                    this.attackHitbox.x = this.x + offsetX;
+                    this.attackHitbox.y = this.y + (this.height - this.attackHitbox.height) / 2;
+                    if (this.audioManager) {
+                        this.audioManager.playSound('boss2_attack', { volume: 0.6, rate: 1.0 + this._bossRapidHits * 0.15 });
+                    }
+                    if (this.animations.attack) this.animations.attack.reset();
+                }
+                this.velocityX = 0;
+                break;
+            }
+
+            case 'projectile': {
+                // Projectiles already fired in _startBossSpecial, just wait
+                this.velocityX = 0;
+                break;
+            }
+
+            case 'teleport': {
+                if (this._bossTeleportPhase === 'vanish') {
+                    // Make enemy "vanish" — move offscreen briefly
+                    this._bossTeleportOldX = this.x;
+                    this._bossTeleportOldY = this.y;
+                    this.x = -999;
+                    this.y = -999;
+                    this._bossTeleportPhase = 'wait';
+                    this._bossTeleportWait = 0.5;
+                } else if (this._bossTeleportPhase === 'wait') {
+                    this._bossTeleportWait -= dt;
+                    if (this._bossTeleportWait <= 0) {
+                        // Reappear behind/near player
+                        const target = this._bossTeleportTarget;
+                        this.x = (target && typeof target.x === 'number') ? target.x : this._bossTeleportOldX;
+                        this.y = (target && typeof target.y === 'number') ? target.y : this._bossTeleportOldY;
+                        // Snap to valid level bounds
+                        if (level) {
+                            this.x = Utils.clamp(this.x, 0, level.width - this.width);
+                        }
+                        this._bossTeleportPhase = 'strike';
+                        // Immediate attack on reappear
+                        this.isAttacking = true;
+                        this.attackTimer = 0.4;
+                        this.attackCooldownTimer = 0;
+                        if (player) this.facingRight = this.x < player.x;
+                        const offsetX = this.facingRight ? this.width : -this.attackHitbox.width;
+                        this.attackHitbox.x = this.x + offsetX;
+                        this.attackHitbox.y = this.y + (this.height - this.attackHitbox.height) / 2;
+                        if (this.audioManager) this.audioManager.playSound('boss2_attack', { volume: 0.9, rate: 1.3 });
+                    }
+                }
+                break;
+            }
+
+            case 'summon': {
+                // Defensive stance: halved damage taken while active
+                this.velocityX = 0;
+                // Visual only — the actual damage reduction is handled in takeDamage
+                break;
+            }
+        }
+    }
+
+    /**
+     * Fire a spread of 3 projectiles (BOSS4 special).
+     */
+    _fireProjectileSpread(player) {
+        if (!player) return;
+        const ecx = this.x + this.width / 2;
+        const ecy = this.y + this.height / 2;
+        const pcx = player.x + (player.width || 0) / 2;
+        const pcy = player.y + (player.height || 0) / 2;
+        const baseAngle = Math.atan2(pcy - ecy, pcx - ecx);
+        const spread = 0.25; // radians spread
+        const speed = 350;
+
+        for (let i = -1; i <= 1; i++) {
+            const angle = baseAngle + i * spread;
+            this.thrownProjectiles = this.thrownProjectiles || [];
+            this.thrownProjectiles.push({
+                x: ecx,
+                y: ecy,
+                width: 18,
+                height: 18,
+                velocityX: Math.cos(angle) * speed,
+                velocityY: Math.sin(angle) * speed,
+                damage: Math.floor(this.attackDamage * 0.6),
+                lifetime: 2.5,
+                age: 0
+            });
+        }
+        this.facingRight = pcx > ecx;
+        if (this.audioManager) this.audioManager.playSound('boss2_attack', { volume: 0.7, rate: 1.1 });
     }
 
     /**
@@ -1709,21 +2019,127 @@ class Enemy {
         }
 
         // Draw health bar (kamikaze gets distinct orange/red bar)
-        const barWidth = this.width;
-        const barHeight = 4;
-        const barY = this.y - 10;
+        // Bosses get their health displayed in the dedicated UI bar — skip the small overhead bar
+        if (this.isBossType()) {
+            // Boss aura glow effect
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            const hpPct = this.health / this.maxHealth;
+            const pulseSpeed = this.bossEnraged ? 0.012 : 0.006;
+            const pulse = 0.3 + Math.sin(this.bossAuraTimer * Math.PI * 2 * (pulseSpeed * 1000)) * 0.15;
+            const auraRadius = this.width * 0.85;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(this.x, barY, barWidth, barHeight);
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = pulse;
 
-        const healthPercent = this.health / this.maxHealth;
-        if (this.enemyType === 'THIRD_BASIC') {
-            // Kamikaze: orange → red bar (always looks dangerous)
-            ctx.fillStyle = healthPercent > 0.5 ? '#FF8800' : '#FF2200';
+            let auraColor1, auraColor2;
+            if (this.bossDesparate) {
+                auraColor1 = 'rgba(255, 0, 0, 0.4)';
+                auraColor2 = 'rgba(255, 80, 0, 0)';
+            } else if (this.bossEnraged) {
+                auraColor1 = 'rgba(255, 120, 0, 0.3)';
+                auraColor2 = 'rgba(255, 60, 0, 0)';
+            } else {
+                auraColor1 = 'rgba(100, 200, 255, 0.15)';
+                auraColor2 = 'rgba(60, 120, 200, 0)';
+            }
+
+            const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, auraRadius);
+            auraGrad.addColorStop(0, auraColor1);
+            auraGrad.addColorStop(1, auraColor2);
+            ctx.fillStyle = auraGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, auraRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Boss entrance effect: bright flash that fades
+            if (!this.bossEntranceDone && this.bossEntranceTimer < 1.5) {
+                const entranceAlpha = Math.max(0, 1 - this.bossEntranceTimer / 1.5) * 0.7;
+                ctx.globalAlpha = entranceAlpha;
+                const entranceGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, auraRadius * 2);
+                entranceGrad.addColorStop(0, '#FFFFFF');
+                entranceGrad.addColorStop(0.5, '#FFD700');
+                entranceGrad.addColorStop(1, 'rgba(255, 200, 0, 0)');
+                ctx.fillStyle = entranceGrad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, auraRadius * 2 * (this.bossEntranceTimer / 1.5), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Teleport vanish effect (boss5)
+            if (this.bossAbility === 'teleport' && this.bossSpecialActive && this._bossTeleportPhase === 'wait') {
+                // Boss has vanished — draw a shimmer at old position
+                ctx.save();
+                ctx.globalAlpha = 0.3 + Math.sin(Date.now() * 0.02) * 0.2;
+                ctx.strokeStyle = '#88CCFF';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.strokeRect(this._bossTeleportOldX || this.x, this._bossTeleportOldY || this.y, this.width, this.height);
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
+            // Charge windup visual telegraph (boss1)
+            if (this.bossAbility === 'charge' && this.bossSpecialActive && this._bossChargeWindup > 0) {
+                ctx.save();
+                ctx.globalAlpha = 0.5;
+                ctx.fillStyle = '#FFAA00';
+                const arrowDir = this.bossChargeDirX || 1;
+                const arrowX = arrowDir > 0 ? this.x + this.width + 10 : this.x - 30;
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(arrowDir > 0 ? '▶▶' : '◀◀', arrowX, this.y + this.height / 2);
+                ctx.restore();
+            }
+
+            // Ground slam impact visual (boss2)
+            if (this.bossAbility === 'groundSlam' && this._bossSlamPhase === 'impact') {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.6;
+                const impactGrad = ctx.createRadialGradient(cx, this.y + this.height, 0, cx, this.y + this.height, 160);
+                impactGrad.addColorStop(0, '#FFFFFF');
+                impactGrad.addColorStop(0.3, '#FFD700');
+                impactGrad.addColorStop(1, 'rgba(255, 200, 0, 0)');
+                ctx.fillStyle = impactGrad;
+                ctx.beginPath();
+                ctx.arc(cx, this.y + this.height, 160, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Summon shield visual (boss6)
+            if (this._bossSummonShield && this.bossSpecialActive) {
+                ctx.save();
+                const shieldPulse = 0.3 + Math.sin(Date.now() * 0.008) * 0.15;
+                ctx.globalAlpha = shieldPulse;
+                ctx.strokeStyle = '#88FF88';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(cx, cy, this.width * 0.8, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
         } else {
-            ctx.fillStyle = healthPercent > 0.5 ? '#00FF00' : healthPercent > 0.25 ? '#FFFF00' : '#FF0000';
+            // Non-boss enemies: draw the small overhead health bar
+            const barWidth = this.width;
+            const barHeight = 4;
+            const barY = this.y - 10;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(this.x, barY, barWidth, barHeight);
+
+            const healthPercent = this.health / this.maxHealth;
+            if (this.enemyType === 'THIRD_BASIC') {
+                // Kamikaze: orange → red bar (always looks dangerous)
+                ctx.fillStyle = healthPercent > 0.5 ? '#FF8800' : '#FF2200';
+            } else {
+                ctx.fillStyle = healthPercent > 0.5 ? '#00FF00' : healthPercent > 0.25 ? '#FFFF00' : '#FF0000';
+            }
+            ctx.fillRect(this.x, barY, barWidth * healthPercent, barHeight);
         }
-        ctx.fillRect(this.x, barY, barWidth * healthPercent, barHeight);
 
         // Debug: draw collision boxes
         if (typeof Config !== 'undefined' && (Config.DEBUG || Config.SHOW_HITBOXES)) {

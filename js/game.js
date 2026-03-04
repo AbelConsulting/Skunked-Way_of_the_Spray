@@ -1211,6 +1211,12 @@ class Game {
                 return;
             }
 
+            // Boss defeat slowdown effect
+            if (this._bossDefeatSlowdown && this._bossDefeatSlowdown > 0) {
+                this._bossDefeatSlowdown -= dt;
+                dt *= 0.3; // Slow everything to 30% speed briefly
+            }
+
             // Boss Trigger Logic
             if (!this.bossEncountered && this.level.bossConfig && this.level.completionConfig) {
                 const triggerX = this.level.completionConfig.bossTriggerX;
@@ -1225,7 +1231,14 @@ class Game {
                     
                     // Visual/Audio cue
                     try {
-                        if (this.ui.showBossWarning) this.ui.showBossWarning();
+                        // Pass boss name to warning overlay
+                        const bossInst = this.enemyManager && this.enemyManager.bossInstance;
+                        if (this.ui.showBossWarning) {
+                            this.ui.showBossWarning(
+                                bossInst ? bossInst.bossName : null,
+                                bossInst ? bossInst.bossTitle : null
+                            );
+                        }
                         // Boss spawn sound
                         if (this.audioManager && this.audioManager.playSound) {
                             const bossType = (this.enemyManager && this.enemyManager.bossInstance && this.enemyManager.bossInstance.enemyType)
@@ -1234,6 +1247,8 @@ class Game {
                             const spawnSound = (bossType === 'BOSS2' || bossType === 'BOSS3' || bossType === 'BOSS4' || bossType === 'BOSS5' || bossType === 'BOSS6') ? 'boss2_spawn' : 'boss_spawn';
                             this.audioManager.playSound(spawnSound, 0.8);
                         }
+                        // Boss entrance screen shake
+                        this.screenShake = new ScreenShake(0.8, 12);
                         // Switch to boss battle music
                         if (this.audioManager) {
                             (async () => {
@@ -1268,6 +1283,40 @@ class Game {
                         const defeatSound = (bossType === 'BOSS2' || bossType === 'BOSS3' || bossType === 'BOSS4' || bossType === 'BOSS5' || bossType === 'BOSS6') ? 'boss2_defeat' : 'boss_defeat';
                          this.audioManager.playSound(defeatSound, 0.9);
                      }
+
+                            // Boss defeat celebration: screen shake + particles + banner
+                            try {
+                                this.screenShake = new ScreenShake(1.0, 20);
+
+                                // Spawn explosion particles at boss position
+                                const bx = this.enemyManager.bossInstance ? this.enemyManager.bossInstance.x + 64 : this.player.x + 200;
+                                const by = this.enemyManager.bossInstance ? this.enemyManager.bossInstance.y + 64 : this.player.y;
+                                const defeatColors = ['#FFD700', '#FF4444', '#FFFFFF', '#FF8800', '#00FF88'];
+                                for (let i = 0; i < 30; i++) {
+                                    const angle = (Math.PI * 2 * i) / 30;
+                                    const speed = 150 + Math.random() * 300;
+                                    const spark = new HitSpark(bx, by, {
+                                        particleCount: 3,
+                                        speedMin: speed * 0.5,
+                                        speedMax: speed
+                                    });
+                                    for (const p of spark.particles) {
+                                        p.color = defeatColors[Math.floor(Math.random() * defeatColors.length)];
+                                        p.size = 3 + Math.random() * 5;
+                                    }
+                                    this.hitSparks.push(spark);
+                                }
+
+                                // Show "BOSS DEFEATED" banner
+                                if (this.ui) {
+                                    this.ui._bossDefeatedUntil = Date.now() + 3000;
+                                    this.ui._bossDefeatedName = (this.enemyManager.bossInstance && this.enemyManager.bossInstance.bossName) || 'BOSS';
+                                }
+
+                                // Brief slowdown effect for dramatic impact
+                                this._bossDefeatSlowdown = 0.6; // seconds of slowdown remaining
+                            } catch (e) { __err('game', e); }
+
                             if (this.enemyManager) {
                                 this.enemyManager.spawningEnabled = true;
                                 this.enemyManager.bossInstance = null;
@@ -1733,14 +1782,24 @@ class Game {
                 this.gameStats.damageTaken += playerHit.damage;
                 this.gameStats.levelDamageTaken += playerHit.damage;
             } catch (e) { __err('game', e); }
+
+            // Screen shake when boss hits player (stronger than normal enemy)
+            try {
+                if (this.bossEncountered && !this.bossDefeated && this.enemyManager.bossInstance) {
+                    const boss = this.enemyManager.bossInstance;
+                    const shakeIntensity = boss.bossDesparate ? 18 : boss.bossEnraged ? 14 : 10;
+                    const shakeDur = boss.bossSpecialActive ? 0.5 : 0.35;
+                    this.screenShake = new ScreenShake(shakeDur, shakeIntensity);
+                }
+            } catch (e) { __err('game', e); }
         }
         
-        // Check FIFTH_BASIC thrown projectile collisions with player
+        // Check FIFTH_BASIC and Boss thrown projectile collisions with player
         if (this.player && this.enemyManager) {
             const playerRect = this.player.getRect ? this.player.getRect() :
                 { x: this.player.x, y: this.player.y, width: this.player.width, height: this.player.height };
             for (const enemy of this.enemyManager.getEnemies()) {
-                if (enemy.enemyType !== 'FIFTH_BASIC') continue;
+                if (enemy.enemyType !== 'FIFTH_BASIC' && !enemy.isBossType()) continue;
                 if (!enemy.thrownProjectiles || enemy.thrownProjectiles.length === 0) continue;
                 for (let i = enemy.thrownProjectiles.length - 1; i >= 0; i--) {
                     const proj = enemy.thrownProjectiles[i];
@@ -2284,9 +2343,9 @@ class Game {
         this.level.draw(this.ctx, this.cameraX, this.cameraY, this.viewWidth, this.viewHeight);
         this.enemyManager.draw(this.ctx, this.cameraX, this.cameraY);
 
-        // Draw FIFTH_BASIC thrown projectiles
+        // Draw FIFTH_BASIC and Boss thrown projectiles
         for (const enemy of this.enemyManager.getEnemies()) {
-            if (enemy.enemyType === 'FIFTH_BASIC' && typeof enemy.drawProjectiles === 'function') {
+            if ((enemy.enemyType === 'FIFTH_BASIC' || enemy.isBossType()) && typeof enemy.drawProjectiles === 'function') {
                 enemy.drawProjectiles(this.ctx, this.cameraX, this.cameraY);
             }
         }
@@ -2428,7 +2487,29 @@ class Game {
             }
 
             const idolStatus = (this.currentLevelId && this.idolProgress[this.currentLevelId]) ? this.idolProgress[this.currentLevelId] : null;
-            this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime);
+
+            // Gather boss info for the dedicated boss health bar UI
+            let bossInfo = null;
+            try {
+                if (this.bossEncountered && !this.bossDefeated) {
+                    const b = this.enemyManager && this.enemyManager.bossInstance ? this.enemyManager.bossInstance : null;
+                    if (b && typeof b.health === 'number' && typeof b.maxHealth === 'number' && b.maxHealth > 0) {
+                        bossInfo = {
+                            hpPct: Math.max(0, Math.min(1, b.health / b.maxHealth)),
+                            name: b.bossName || 'BOSS',
+                            title: b.bossTitle || '',
+                            phase: b.bossPhase || 1
+                        };
+                    }
+                }
+            } catch (e) { __err('game', e); }
+
+            this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime, bossInfo);
+
+            // Draw dedicated boss health bar at bottom of screen
+            if (bossInfo && this.ui.drawBossBar) {
+                this.ui.drawBossBar(this.ctx, bossInfo);
+            }
 
             // ── Offscreen kamikaze warning arrows ──
             // Show a pulsing warning arrow at the screen edge when a kamikaze in FUSE or DASH

@@ -600,7 +600,7 @@ class UI {
         ctx.restore();
     }
 
-    drawHUD(ctx, player, score, combo, pulse, levelNumber = 1, objectiveInfo = null, lives = 1, idolStatus = null, levelTime = 0) {
+    drawHUD(ctx, player, score, combo, pulse, levelNumber = 1, objectiveInfo = null, lives = 1, idolStatus = null, levelTime = 0, bossInfo = null) {
         // Refresh safe-area insets (cheap — just reads cached CSS vars)
         this._refreshSafeAreaInsets();
 
@@ -1058,6 +1058,69 @@ class UI {
             ctx.font = 'bold 40px Arial';
             ctx.shadowBlur = 0;
             ctx.fillText('BOSS APPROACHING', this.width / 2, this.height / 2 + 50);
+
+            // Show boss name if available
+            if (this._bossWarningName) {
+                ctx.fillStyle = '#FF4444';
+                ctx.font = 'bold 32px Arial';
+                ctx.shadowColor = '#FF0000';
+                ctx.shadowBlur = 15;
+                ctx.fillText(this._bossWarningName, this.width / 2, this.height / 2 + 100);
+                if (this._bossWarningTitle) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.font = '18px Arial';
+                    ctx.shadowBlur = 0;
+                    ctx.fillText(this._bossWarningTitle, this.width / 2, this.height / 2 + 130);
+                }
+            }
+            ctx.restore();
+        }
+
+        // Boss Defeated celebration banner
+        if (this._bossDefeatedUntil && this._bossDefeatedUntil > Date.now()) {
+            const remaining = this._bossDefeatedUntil - Date.now();
+            const fadeAlpha = remaining < 500 ? remaining / 500 : 1.0;
+            const bossName = this._bossDefeatedName || 'BOSS';
+
+            ctx.save();
+            ctx.globalAlpha = fadeAlpha;
+
+            // Dimmed background strip
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(0, this.height / 2 - 80, this.width, 160);
+
+            // Gold border lines
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, this.height / 2 - 80);
+            ctx.lineTo(this.width, this.height / 2 - 80);
+            ctx.moveTo(0, this.height / 2 + 80);
+            ctx.lineTo(this.width, this.height / 2 + 80);
+            ctx.stroke();
+
+            // Main text with glow
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 56px Arial';
+            ctx.fillText('BOSS DEFEATED', this.width / 2, this.height / 2 - 20);
+
+            // Boss name
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 28px Arial';
+            ctx.fillText(bossName + ' ELIMINATED', this.width / 2, this.height / 2 + 30);
+
+            // Pulsing glow on the text
+            const pulse = 0.6 + Math.sin(Date.now() * 0.005) * 0.4;
+            ctx.globalAlpha = fadeAlpha * pulse * 0.3;
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 60px Arial';
+            ctx.fillText('BOSS DEFEATED', this.width / 2, this.height / 2 - 20);
+
             ctx.restore();
         }
 
@@ -1280,7 +1343,110 @@ class UI {
         }
     }
 
-    showBossWarning() {
+    showBossWarning(bossName = null, bossTitle = null) {
         this.bossWarningTime = Date.now() + 3000;
+        this._bossWarningName = bossName || null;
+        this._bossWarningTitle = bossTitle || null;
+    }
+
+    /**
+     * Draw a large boss health bar at the bottom of the screen with name + phase indicator.
+     */
+    drawBossBar(ctx, bossInfo) {
+        if (!bossInfo || typeof bossInfo.hpPct !== 'number') return;
+
+        const barW = Math.min(Math.floor(this.width * 0.6), 600);
+        const barH = 14;
+        const barX = Math.floor((this.width - barW) / 2);
+        const barY = this.height - 55 - this.safeBottom;
+        const hpPct = Math.max(0, Math.min(1, bossInfo.hpPct));
+        const name = bossInfo.name || 'BOSS';
+        const title = bossInfo.title || '';
+        const phase = bossInfo.phase || 1;
+
+        ctx.save();
+
+        // Background panel
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(barX - 10, barY - 30, barW + 20, barH + 44);
+        ctx.strokeStyle = phase >= 3 ? '#FF2200' : phase >= 2 ? '#FF8800' : '#888888';
+        ctx.lineWidth = phase >= 2 ? 2 : 1;
+        ctx.strokeRect(barX - 10, barY - 30, barW + 20, barH + 44);
+
+        // Boss name
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = phase >= 3 ? '#FF4444' : phase >= 2 ? '#FFaa44' : '#FFFFFF';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(name, this.width / 2, barY - 26);
+
+        // Boss title (smaller, underneath name)
+        if (title) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.font = '10px Arial';
+            ctx.fillText(title, this.width / 2, barY - 12);
+        }
+
+        // Health bar background
+        ctx.fillStyle = 'rgba(80, 0, 0, 0.8)';
+        ctx.fillRect(barX, barY, barW, barH);
+
+        // Health bar fill with gradient
+        if (hpPct > 0) {
+            let fillGrad;
+            if (phase >= 3) {
+                // Desperate: red pulsing
+                const pulse = 0.8 + Math.sin(Date.now() * 0.008) * 0.2;
+                fillGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
+                fillGrad.addColorStop(0, `rgba(255, ${Math.floor(40 * pulse)}, 0, 1)`);
+                fillGrad.addColorStop(1, '#FF0000');
+            } else if (phase >= 2) {
+                // Enraged: orange-red
+                fillGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
+                fillGrad.addColorStop(0, '#FF6600');
+                fillGrad.addColorStop(1, '#FF2200');
+            } else {
+                // Normal: red gradient
+                fillGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
+                fillGrad.addColorStop(0, '#FF4444');
+                fillGrad.addColorStop(0.5, '#CC2222');
+                fillGrad.addColorStop(1, '#AA0000');
+            }
+            ctx.fillStyle = fillGrad;
+            ctx.fillRect(barX, barY, Math.max(0, barW * hpPct), barH);
+        }
+
+        // Phase notches at 50% and 25%
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fillRect(barX + Math.floor(barW * 0.5), barY, 2, barH);
+        ctx.fillRect(barX + Math.floor(barW * 0.25), barY, 2, barH);
+
+        // Bar border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, barH);
+
+        // HP percentage text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText(`${Math.ceil(hpPct * 100)}%`, barX + barW - 4, barY + 1);
+
+        // Phase label
+        if (phase >= 3) {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#FF4444';
+            ctx.font = 'bold 10px Arial';
+            const desperateFlash = Math.floor(Date.now() / 300) % 2 === 0;
+            ctx.fillText(desperateFlash ? '⚡ DESPERATE' : '💀 DESPERATE', barX + 4, barY + 1);
+        } else if (phase >= 2) {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#FF8844';
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('🔥 ENRAGED', barX + 4, barY + 1);
+        }
+
+        ctx.restore();
     }
 }
