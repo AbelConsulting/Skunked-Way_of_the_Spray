@@ -81,18 +81,25 @@ class EnemyManager {
             if (level && Array.isArray(level.platforms) && level.platforms.length > 0) {
                 const bx = boss.x;
                 const bw = boss.width || 128;
+                const bh = boss.height || 128;
+                const spawnBottom = y + bh;
                 const candidates = level.platforms.filter(p => {
                     if (!p || typeof p.x !== 'number' || typeof p.width !== 'number' || typeof p.y !== 'number') return false;
+                    // Must overlap horizontally
                     const overlap = (bx + bw) > p.x && bx < (p.x + p.width);
-                    return overlap;
+                    // Must be at or below the boss bottom (so boss stands on it)
+                    return overlap && p.y >= spawnBottom - 200;
                 });
                 if (candidates.length > 0) {
-                    // Prefer the highest platform below current spawn
+                    // Pick the closest platform below the spawn point
                     const target = candidates.reduce((best, p) => {
                         if (!best) return p;
-                        return (p.y > best.y) ? p : best;
+                        // Prefer platform closest to (but not too far above) spawn bottom
+                        const bestDist = Math.abs(best.y - spawnBottom);
+                        const pDist = Math.abs(p.y - spawnBottom);
+                        return pDist < bestDist ? p : best;
                     }, null);
-                    if (target) boss.y = target.y - (boss.height || 128);
+                    if (target) boss.y = target.y - bh;
                 }
             }
         } catch (e) { __err('enemy', e); }
@@ -236,7 +243,7 @@ class EnemyManager {
                 this.enemiesDefeated++;
             }
             // Remove enemies that fell off the map
-            else if (enemy.y > level.height + 100) {
+            else if (enemy.y > level.height + 500) {
                 this.enemies.splice(i, 1);
             }
         }

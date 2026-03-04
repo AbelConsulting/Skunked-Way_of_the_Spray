@@ -479,9 +479,12 @@ class Enemy {
             if (!this.bossEntranceDone) {
                 this.bossEntranceTimer += dt;
                 if (this.bossEntranceTimer < 1.5) {
-                    // During entrance: don't move, play landing effect
+                    // During entrance: don't move horizontally, but still
+                    // apply gravity+collision so boss doesn't float or tunnel
                     this.velocityX = 0;
                     this.state = 'PATROL'; // idle
+                    this._applyGravityAndCollision(dt, level);
+                    this.updateAnimation(dt);
                     return; // Skip all AI
                 }
                 this.bossEntranceDone = true;
@@ -662,26 +665,7 @@ class Enemy {
         } // end if (!hitStunTimer && !isSkunked)
 
         // Apply gravity
-        this.velocityY += Config.GRAVITY * dt;
-        if (this.velocityY > Config.MAX_FALL_SPEED) {
-            this.velocityY = Config.MAX_FALL_SPEED;
-        }
-
-
-        // Store previous rect before moving
-        const prevRect = { x: this.x, y: this.y, width: this.width, height: this.height };
-
-        // Update vertical position
-        this.y += this.velocityY * dt;
-
-        // Check platform collisions (pass prevRect)
-        const rect = { x: this.x, y: this.y, width: this.width, height: this.height };
-        const collision = level.checkPlatformCollision(rect, prevRect, this.velocityY);
-
-        if (collision.collided) {
-            this.y = collision.landingY;
-            this.velocityY = 0;
-        }
+        this._applyGravityAndCollision(dt, level);
 
         // Update attack hitbox
         if (this.isAttacking) {
@@ -1131,6 +1115,61 @@ class Enemy {
     }
 
     /**
+     * Apply gravity, move vertically, and resolve platform collisions.
+     * Extracted so it can be reused during boss entrance and normal frames.
+     */
+    _applyGravityAndCollision(dt, level) {
+        this.velocityY += Config.GRAVITY * dt;
+        if (this.velocityY > Config.MAX_FALL_SPEED) {
+            this.velocityY = Config.MAX_FALL_SPEED;
+        }
+
+        const prevRect = { x: this.x, y: this.y, width: this.width, height: this.height };
+        this.y += this.velocityY * dt;
+
+        const rect = { x: this.x, y: this.y, width: this.width, height: this.height };
+        const collision = level.checkPlatformCollision(rect, prevRect, this.velocityY);
+
+        if (collision.collided) {
+            this.y = collision.landingY;
+            this.velocityY = 0;
+        }
+
+        // Safety clamp: prevent bosses from falling through the world entirely.
+        // If the enemy is below all known platforms, snap them onto the nearest one.
+        if (this.isBossType() && this.y + this.height > level.height + 40) {
+            this._snapToNearestPlatform(level);
+            this.velocityY = 0;
+        }
+    }
+
+    /**
+     * Snap this enemy onto the nearest platform that overlaps horizontally.
+     * Used as a safety net after teleport, ground-slam, or falling too far.
+     */
+    _snapToNearestPlatform(level) {
+        if (!level || !Array.isArray(level.platforms)) return;
+        const bx = this.x;
+        const bw = this.width || 128;
+        const bh = this.height || 128;
+        let bestPlatform = null;
+        let bestDist = Infinity;
+        for (const p of level.platforms) {
+            if (!p || typeof p.x !== 'number') continue;
+            // Must overlap horizontally
+            if (bx + bw <= p.x || bx >= p.x + p.width) continue;
+            const dist = Math.abs((this.y + bh) - p.y);
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestPlatform = p;
+            }
+        }
+        if (bestPlatform) {
+            this.y = bestPlatform.y - bh;
+        }
+    }
+
+    /**
      * Start a boss-specific special attack based on ability type.
      */
     _startBossSpecial(player) {
@@ -1212,6 +1251,10 @@ class Enemy {
                     this.velocityX = this.bossChargeDirX * this.bossChargeSpeed;
                     this.facingRight = this.bossChargeDirX > 0;
                     this.x += this.velocityX * dt;
+                    // Clamp to level bounds so boss doesn't charge off-screen
+                    if (level) {
+                        this.x = Utils.clamp(this.x, 0, level.width - this.width);
+                    }
                     // Set attack hitbox active during charge
                     this.isAttacking = true;
                     this.attackTimer = 0.1;
@@ -1230,9 +1273,11 @@ class Enemy {
                         this.velocityY = 800; // Slam down fast
                     }
                 } else if (this._bossSlamPhase === 'fall') {
-                    // When landing (velocityY resets to 0 from collision)
-                    if (this.velocityY <= 0 || (level && this.y >= level.height - this.height - 50)) {
+                    // When landing (velocityY resets to 0 from collision, or clamped to floor)
+                    if (this.velocityY === 0 || (level && this.y + this.height >= level.height - 10)) {
                         this._bossSlamPhase = 'impact';
+                        // Snap to ground if we overshot
+                        if (level) this._snapToNearestPlatform(level);
                         // Create shockwave hitbox (wider than normal attack)
                         this.isAttacking = true;
                         this.attackTimer = 0.3;
@@ -1300,6 +1345,8 @@ class Enemy {
                         // Snap to valid level bounds
                         if (level) {
                             this.x = Utils.clamp(this.x, 0, level.width - this.width);
+                            // Snap to nearest platform below teleport target
+                            this._snapToNearestPlatform(level);
                         }
                         this._bossTeleportPhase = 'strike';
                         // Immediate attack on reappear
