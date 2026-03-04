@@ -789,3 +789,135 @@ class DamageBoostEffect {
         this.particles = [];
     }
 }
+
+/**
+ * ExitPortal: A swirling vortex that appears at the exit position after boss defeat.
+ * Draws a glowing, rotating portal with orbiting particles the player walks into
+ * to complete the level.
+ */
+class ExitPortal {
+    constructor(x, y, opts = {}) {
+        this.x = x;
+        this.y = y;
+        this.radius = opts.radius || 50;
+        this.age = 0;
+        this.spawnDuration = 0.8; // seconds to grow from 0 to full size
+        this.active = true;
+
+        // Swirl particles orbiting the vortex
+        this.orbiters = [];
+        const count = opts.orbiterCount || 18;
+        const colors = ['#00FFCC', '#44FFDD', '#88EEFF', '#FFFFFF', '#00FF88', '#AAFFEE'];
+        for (let i = 0; i < count; i++) {
+            this.orbiters.push({
+                angle: (Math.PI * 2 * i) / count,
+                dist: 0.4 + Math.random() * 0.6,   // fraction of radius
+                speed: 1.8 + Math.random() * 1.5,   // radians/sec
+                size:  2 + Math.random() * 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                phase: Math.random() * Math.PI * 2
+            });
+        }
+    }
+
+    update(dt) {
+        this.age += dt;
+        for (const o of this.orbiters) {
+            o.angle += o.speed * dt;
+        }
+    }
+
+    /** Returns the current visual scale (0→1 during spawn, then 1). */
+    _scale() {
+        return Math.min(1, this.age / this.spawnDuration);
+    }
+
+    /** Check if a rect (player) overlaps the portal circle. */
+    overlaps(px, py, pw, ph) {
+        const cx = px + pw / 2;
+        const cy = py + ph / 2;
+        const dx = cx - this.x;
+        const dy = cy - this.y;
+        return Math.sqrt(dx * dx + dy * dy) < this.radius * 0.7;
+    }
+
+    draw(ctx, cameraX, cameraY) {
+        const sx = this.x - cameraX;
+        const sy = this.y - cameraY;
+        const scale = this._scale();
+        const r = this.radius * scale;
+        if (r < 2) return;
+
+        const now = Date.now() / 1000;
+
+        ctx.save();
+
+        // Outer glow
+        ctx.globalCompositeOperation = 'lighter';
+        const glowPulse = 0.6 + 0.4 * Math.sin(now * 3);
+        const outerGlow = ctx.createRadialGradient(sx, sy, r * 0.2, sx, sy, r * 1.5);
+        outerGlow.addColorStop(0, `rgba(0, 255, 200, ${0.25 * glowPulse})`);
+        outerGlow.addColorStop(0.5, `rgba(0, 200, 180, ${0.12 * glowPulse})`);
+        outerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = outerGlow;
+        ctx.beginPath();
+        ctx.arc(sx, sy, r * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rotating swirl rings
+        ctx.globalCompositeOperation = 'source-over';
+        for (let ring = 0; ring < 3; ring++) {
+            const ringAngle = now * (1.5 + ring * 0.7) + ring * 1.2;
+            const ringR = r * (0.35 + ring * 0.25);
+            const alpha = 0.35 - ring * 0.08;
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(ringAngle * (ring % 2 === 0 ? 1 : -1));
+            ctx.beginPath();
+            ctx.ellipse(0, 0, ringR, ringR * 0.55, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(0, 255, 210, ${alpha})`;
+            ctx.lineWidth = 2 - ring * 0.4;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Dark vortex center
+        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 0.45);
+        coreGrad.addColorStop(0, 'rgba(0, 10, 20, 0.85)');
+        coreGrad.addColorStop(0.6, 'rgba(0, 40, 50, 0.5)');
+        coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Orbiting particles
+        ctx.globalCompositeOperation = 'lighter';
+        for (const o of this.orbiters) {
+            const dist = r * o.dist;
+            const px = sx + Math.cos(o.angle) * dist;
+            const py = sy + Math.sin(o.angle) * dist * 0.6; // elliptical
+            const particleAlpha = 0.5 + 0.5 * Math.sin(now * 4 + o.phase);
+            const s = o.size * scale;
+            const grad = ctx.createRadialGradient(px, py, 0, px, py, s * 1.5);
+            grad.addColorStop(0, o.color);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalAlpha = particleAlpha;
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(px, py, s * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // "EXIT" prompt text (pulsing)
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 0.6 + 0.3 * Math.sin(now * 2.5);
+        ctx.fillStyle = '#AAFFDD';
+        ctx.font = `bold ${Math.floor(12 * scale)}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('EXIT', sx, sy + r + 8);
+
+        ctx.restore();
+    }
+}

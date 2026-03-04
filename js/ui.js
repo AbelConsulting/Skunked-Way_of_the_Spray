@@ -1355,37 +1355,36 @@ class UI {
     drawBossBar(ctx, bossInfo) {
         if (!bossInfo || typeof bossInfo.hpPct !== 'number') return;
 
-        const barW = Math.min(Math.floor(this.width * 0.6), 600);
-        const barH = 14;
+        const barW = Math.min(Math.floor(this.width * 0.45), 420);
+        const barH = 10;
         const barX = Math.floor((this.width - barW) / 2);
-        const barY = this.height - 55 - this.safeBottom;
+        const barY = 22 + this.safeTop;
         const hpPct = Math.max(0, Math.min(1, bossInfo.hpPct));
         const name = bossInfo.name || 'BOSS';
-        const title = bossInfo.title || '';
         const phase = bossInfo.phase || 1;
 
         ctx.save();
 
-        // Background panel
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(barX - 10, barY - 30, barW + 20, barH + 44);
-        ctx.strokeStyle = phase >= 3 ? '#FF2200' : phase >= 2 ? '#FF8800' : '#888888';
-        ctx.lineWidth = phase >= 2 ? 2 : 1;
-        ctx.strokeRect(barX - 10, barY - 30, barW + 20, barH + 44);
+        // Compact background panel
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(barX - 8, barY - 14, barW + 16, barH + 18);
+        ctx.strokeStyle = phase >= 3 ? '#FF2200' : phase >= 2 ? '#FF8800' : '#666666';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX - 8, barY - 14, barW + 16, barH + 18);
 
-        // Boss name
+        // Boss name + phase label inline
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = 'bottom';
         ctx.fillStyle = phase >= 3 ? '#FF4444' : phase >= 2 ? '#FFaa44' : '#FFFFFF';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText(name, this.width / 2, barY - 26);
-
-        // Boss title (smaller, underneath name)
-        if (title) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.font = '10px Arial';
-            ctx.fillText(title, this.width / 2, barY - 12);
+        ctx.font = 'bold 10px Arial';
+        let label = name;
+        if (phase >= 3) {
+            const desperateFlash = Math.floor(Date.now() / 300) % 2 === 0;
+            label += desperateFlash ? ' ⚡ DESPERATE' : ' 💀 DESPERATE';
+        } else if (phase >= 2) {
+            label += ' 🔥 ENRAGED';
         }
+        ctx.fillText(label, this.width / 2, barY - 2);
 
         // Health bar background
         ctx.fillStyle = 'rgba(80, 0, 0, 0.8)';
@@ -1395,18 +1394,15 @@ class UI {
         if (hpPct > 0) {
             let fillGrad;
             if (phase >= 3) {
-                // Desperate: red pulsing
                 const pulse = 0.8 + Math.sin(Date.now() * 0.008) * 0.2;
                 fillGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
                 fillGrad.addColorStop(0, `rgba(255, ${Math.floor(40 * pulse)}, 0, 1)`);
                 fillGrad.addColorStop(1, '#FF0000');
             } else if (phase >= 2) {
-                // Enraged: orange-red
                 fillGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
                 fillGrad.addColorStop(0, '#FF6600');
                 fillGrad.addColorStop(1, '#FF2200');
             } else {
-                // Normal: red gradient
                 fillGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
                 fillGrad.addColorStop(0, '#FF4444');
                 fillGrad.addColorStop(0.5, '#CC2222');
@@ -1418,8 +1414,8 @@ class UI {
 
         // Phase notches at 50% and 25%
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillRect(barX + Math.floor(barW * 0.5), barY, 2, barH);
-        ctx.fillRect(barX + Math.floor(barW * 0.25), barY, 2, barH);
+        ctx.fillRect(barX + Math.floor(barW * 0.5), barY, 1, barH);
+        ctx.fillRect(barX + Math.floor(barW * 0.25), barY, 1, barH);
 
         // Bar border
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -1428,24 +1424,10 @@ class UI {
 
         // HP percentage text
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 10px Arial';
+        ctx.font = 'bold 9px Arial';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
-        ctx.fillText(`${Math.ceil(hpPct * 100)}%`, barX + barW - 4, barY + 1);
-
-        // Phase label
-        if (phase >= 3) {
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#FF4444';
-            ctx.font = 'bold 10px Arial';
-            const desperateFlash = Math.floor(Date.now() / 300) % 2 === 0;
-            ctx.fillText(desperateFlash ? '⚡ DESPERATE' : '💀 DESPERATE', barX + 4, barY + 1);
-        } else if (phase >= 2) {
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#FF8844';
-            ctx.font = 'bold 10px Arial';
-            ctx.fillText('🔥 ENRAGED', barX + 4, barY + 1);
-        }
+        ctx.fillText(`${Math.ceil(hpPct * 100)}%`, barX + barW - 3, barY + 1);
 
         ctx.restore();
     }

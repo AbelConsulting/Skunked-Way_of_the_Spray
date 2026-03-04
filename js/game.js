@@ -610,6 +610,7 @@ class Game {
             // Boss state
             this.bossEncountered = false;
             this.bossDefeated = false;
+            this.exitPortal = null;
             this.isRespawning = false;
             this.respawnTimer = 0;
             this._pendingRespawn = null;
@@ -1001,6 +1002,7 @@ class Game {
             // Boss state is per-level; always reset when loading a new level.
             this.bossEncountered = false;
             this.bossDefeated = false;
+            this.exitPortal = null;
             if (this.enemyManager) this.enemyManager.bossInstance = null;
             this.isRespawning = false;
             this.respawnTimer = 0;
@@ -1317,6 +1319,15 @@ class Game {
                                 this._bossDefeatSlowdown = 0.6; // seconds of slowdown remaining
                             } catch (e) { __err('game', e); }
 
+                            // Spawn exit portal at the level exit position
+                            try {
+                                const cc = this.level && this.level.completionConfig;
+                                const portalX = cc && typeof cc.exitX === 'number' ? cc.exitX : (this.level.width - 100);
+                                // Place portal on the ground (typical ground y ~640) centered vertically
+                                const portalY = 620;
+                                this.exitPortal = new ExitPortal(portalX, portalY);
+                            } catch (e) { __err('game', e); }
+
                             if (this.enemyManager) {
                                 this.enemyManager.spawningEnabled = true;
                                 this.enemyManager.bossInstance = null;
@@ -1339,10 +1350,21 @@ class Game {
             }
 
             // Check Level Completion
+            // Update exit portal if active
+            if (this.exitPortal) {
+                this.exitPortal.update(dt);
+                // Player walks into the portal to complete the level
+                if (this.exitPortal.overlaps(this.player.x, this.player.y, this.player.width || 64, this.player.height || 64)) {
+                    this.completeLevel();
+                    return;
+                }
+            }
+
             let exitX = this.level.width - 100;
             if (this.level.completionConfig) exitX = this.level.completionConfig.exitX;
 
-            if (this.player.x > exitX) {
+            // For non-boss levels (no portal), use the classic X boundary
+            if (!this.exitPortal && this.player.x > exitX) {
                 // Double check boss (redundant with clamp, but safe)
                 if (this.level.bossConfig && !this.bossDefeated) {
                     // Blocked
@@ -2353,6 +2375,11 @@ class Game {
         // Draw items
         if (this.itemManager) {
             this.itemManager.draw(this.ctx, this.cameraX, this.cameraY);
+        }
+
+        // Draw exit portal (behind player, in world coords)
+        if (this.exitPortal) {
+            this.exitPortal.draw(this.ctx, this.cameraX, this.cameraY);
         }
 
         this.player.draw(this.ctx, this.cameraX, this.cameraY);
