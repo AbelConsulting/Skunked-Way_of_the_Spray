@@ -2024,6 +2024,8 @@
                         </div>
                     </div>
                     <hr class="pause-divider">
+                    <button id="reset-tutorial-btn" class="menu-btn" style="font-size:13px;padding:10px 16px;">&#128161; Reset Tutorial Hints</button>
+                    <hr class="pause-divider">
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
@@ -2082,6 +2084,7 @@
             <script src="js/touchControls.js?v=2026-02-14a"></script>
             <script src="js/ui.js?v=2026-02-14a"></script>
             <script src="js/achievements.js?v=2026-02-14a"></script>
+            <script src="js/tutorialHints.js?v=2026-02-14a"></script>
             <script src="js/game.js?v=2026-02-14a"></script>
             <script src="js/main.js?v=2026-02-14a" type="module"></script>
             <script nonce="%CSP_NONCE%">
@@ -2514,6 +2517,24 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 showStartMenu();
+                            });
+                        }
+
+                        // Reset Tutorial Hints button
+                        const resetTutorialBtn = document.getElementById('reset-tutorial-btn');
+                        if (resetTutorialBtn) {
+                            resetTutorialBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                try {
+                                    if (window.game && window.game.tutorialHints) {
+                                        window.game.tutorialHints.resetAll();
+                                    } else {
+                                        localStorage.removeItem('skunkfu_tutorial_seen_v1');
+                                    }
+                                } catch (e) {}
+                                resetTutorialBtn.textContent = '\u2705 Hints Reset!';
+                                setTimeout(() => { resetTutorialBtn.innerHTML = '&#128161; Reset Tutorial Hints'; }, 1500);
                             });
                         }
 

@@ -160,6 +160,14 @@ class Game {
         if (this.enemyManager) this.enemyManager.itemManager = this.itemManager;
         this.ui = new UI(this.width, this.height);
 
+        // Tutorial hints system (contextual, non-blocking)
+        this.tutorialHints = null;
+        try {
+            if (typeof TutorialHints !== 'undefined') {
+                this.tutorialHints = new TutorialHints(this.isMobile);
+            }
+        } catch (e) { __err('game', e); }
+
         // Golden idol collection tracking (per-run)
         this.idolProgress = {};
         this.currentLevelId = null;
@@ -357,6 +365,8 @@ class Game {
                 // Gameplay controls
                 if (this.state === 'PLAYING') {
                     this.player.handleInput(key, true);
+                    // Dismiss tutorial hint on any gameplay key press
+                    if (this.tutorialHints) this.tutorialHints.dismiss();
                 }
 
                 // Debug shortcuts (always active)
@@ -396,6 +406,8 @@ class Game {
             window.addEventListener('touchcontrol', (ev) => {
                 if (!ev || !ev.detail) return;
                 const { action, down } = ev.detail;
+                // Dismiss tutorial hint on any touch control press
+                if (down && this.state === 'PLAYING' && this.tutorialHints) this.tutorialHints.dismiss();
                 // Map actions to expected keys handled by Player
                 if (action === 'left') {
                     this.player.handleInput('arrowleft', down);
@@ -752,6 +764,12 @@ class Game {
             try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) { __err('game', e); }
             // Pre-render static layer (platform tiles) so visuals are ready
             try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { __err('game', e); }
+
+            // Trigger tutorial hints on first playthrough of Level 1
+            if (this.tutorialHints && levelIndex === 0) {
+                this.tutorialHints.trigger('move_jump');
+                this.tutorialHints.trigger('objective');
+            }
         }
 
         // Key up handler
@@ -1230,6 +1248,8 @@ class Game {
                         this.enemyManager.clearNonBossEnemies && this.enemyManager.clearNonBossEnemies();
                         this.enemyManager.spawnBoss(this.level.bossConfig, this.level);
                     }
+                    // Tutorial hint for boss encounter
+                    if (this.tutorialHints) this.tutorialHints.trigger('boss_encounter');
                     
                     // Visual/Audio cue
                     try {
@@ -1344,6 +1364,8 @@ class Game {
                                     }
                                 }
                                 this.exitPortal = new ExitPortal(portalX, portalY);
+                                // Tutorial hint for exit portal
+                                if (this.tutorialHints) this.tutorialHints.trigger('exit_portal');
                             } catch (e) { __err('game', e); }
 
                             if (this.enemyManager) {
@@ -1548,7 +1570,12 @@ class Game {
                 // Grant extra life if applicable
                 if (result && result.type === 'EXTRA_LIFE' && result.success) {
                     this.lives = Math.min(this.lives + (result.lives || 1), 9);
+                } else if (result && result.type === 'SKUNK_POWERUP' && result.success) {
+                    // Tutorial hint for skunk shot pickup
+                    if (this.tutorialHints) this.tutorialHints.trigger('skunk_shot');
                 } else if (result && result.type === 'GOLDEN_IDOL' && result.success) {
+                    // Tutorial hint for first golden idol
+                    if (this.tutorialHints) this.tutorialHints.trigger('golden_idol');
                     if (!this.idolProgress) this.idolProgress = {};
                     const levelId = result.levelId || this.currentLevelId || 'level_unknown';
                     if (!this.idolProgress[levelId]) this.idolProgress[levelId] = [false, false, false];
@@ -2075,6 +2102,20 @@ class Game {
         this.updateCamera();
         // decay score pulse over time
         try { this._scorePulse = Math.max(0, (this._scorePulse || 0) - dt * 2.5); } catch (e) { __err('game', e); }
+
+        // Update tutorial hints
+        if (this.tutorialHints) {
+            this.tutorialHints.update(dt);
+
+            // Trigger attack hint when first enemy appears on Level 1
+            if (this.currentLevelIndex === 0 && !this.tutorialHints.hasSeen('attack')) {
+                const enemies = this.enemyManager ? this.enemyManager.getEnemies() : [];
+                if (enemies.length > 0) {
+                    this.tutorialHints.trigger('attack');
+                    this.tutorialHints.trigger('shadow_strike');
+                }
+            }
+        }
     }
 
     _handlePlayerDeath() {
@@ -2550,6 +2591,11 @@ class Game {
             } catch (e) { __err('game', e); }
 
             this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime, bossInfo);
+
+            // Draw tutorial hints overlay (above HUD, below transitions)
+            if (this.tutorialHints) {
+                this.tutorialHints.draw(this.ctx, this.viewWidth || this.width, this.viewHeight || this.height);
+            }
 
             // Draw dedicated boss health bar at bottom of screen
             if (bossInfo && this.ui.drawBossBar) {
