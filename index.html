@@ -2531,6 +2531,8 @@
                                         window.game.tutorialHints.resetAll();
                                     } else {
                                         localStorage.removeItem('skunkfu_tutorial_seen_v1');
+                                        localStorage.removeItem('skunkfu_tutorial_done');
+                                        localStorage.removeItem('skunkfu_run_count');
                                     }
                                 } catch (e) {}
                                 resetTutorialBtn.textContent = '\u2705 Hints Reset!';

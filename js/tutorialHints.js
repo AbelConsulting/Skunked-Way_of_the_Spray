@@ -17,6 +17,8 @@ class TutorialHints {
     constructor(isMobile = false) {
         this.isMobile = isMobile;
         this.STORAGE_KEY = 'skunkfu_tutorial_seen_v1';
+        this.DONE_KEY = 'skunkfu_tutorial_done';
+        this.RUNS_KEY = 'skunkfu_run_count';
 
         // Load seen hints from localStorage
         this._seen = {};
@@ -25,10 +27,25 @@ class TutorialHints {
             if (raw) this._seen = JSON.parse(raw);
         } catch (e) { this._seen = {}; }
 
+        // Track whether the tutorial is permanently complete.
+        // Once the player finishes the game or plays enough runs,
+        // all future hints are suppressed until manually reset.
+        this._done = false;
+        try { this._done = localStorage.getItem(this.DONE_KEY) === '1'; } catch (e) {}
+
+        // Track number of game starts — after a few runs we consider the
+        // player experienced enough to suppress remaining hints.
+        this._runCount = 0;
+        try { this._runCount = parseInt(localStorage.getItem(this.RUNS_KEY) || '0', 10); } catch (e) {}
+
         // Currently displayed hint
         this._active = null;   // { id, lines, timer, duration, alpha, dismissed }
         // Queue of pending hints (so two events don't stomp each other)
         this._queue = [];
+        // Initial delay gate — suppress hints for the first N seconds of a run
+        this._initialDelay = 0;
+        // One-shot flag: enemy attack hint already checked this run
+        this._enemyHintFired = false;
 
         // ── Hint definitions ──
         // Each hint has a unique id, display lines, and duration in seconds.
@@ -104,9 +121,9 @@ class TutorialHints {
         };
     }
 
-    /** Check if a hint has already been seen */
+    /** Check if a hint has already been seen (or tutorial is done) */
     hasSeen(id) {
-        return !!this._seen[id];
+        return this._done || !!this._seen[id];
     }
 
     /** Mark a hint as seen and persist */
@@ -115,20 +132,64 @@ class TutorialHints {
         try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this._seen)); } catch (e) { /* quota */ }
     }
 
-    /** Reset all seen hints (called from Settings) */
-    resetAll() {
-        this._seen = {};
-        try { localStorage.removeItem(this.STORAGE_KEY); } catch (e) { /* ignore */ }
+    /**
+     * Mark the entire tutorial as permanently complete.
+     * Called when the player finishes the game or accumulates enough runs.
+     */
+    markDone() {
+        if (this._done) return;
+        this._done = true;
+        try { localStorage.setItem(this.DONE_KEY, '1'); } catch (e) {}
     }
 
     /**
-     * Trigger a hint by id. Ignored if already seen or if a higher-priority
-     * hint is already showing.
+     * Increment the run counter.  After 3 game starts the tutorial is
+     * considered done — the player has had enough exposure to the controls.
+     */
+    trackRun() {
+        this._runCount++;
+        try { localStorage.setItem(this.RUNS_KEY, String(this._runCount)); } catch (e) {}
+        if (this._runCount >= 3) {
+            this.markDone();
+        }
+    }
+
+    /** Reset all seen hints and the "done" flag (called from Settings) */
+    resetAll() {
+        this._seen = {};
+        this._done = false;
+        this._runCount = 0;
+        this._active = null;
+        this._queue = [];
+        this._enemyHintFired = false;
+        try {
+            localStorage.removeItem(this.STORAGE_KEY);
+            localStorage.removeItem(this.DONE_KEY);
+            localStorage.removeItem(this.RUNS_KEY);
+        } catch (e) { /* ignore */ }
+    }
+
+    /**
+     * Begin a new run — sets the initial delay gate so hints don't
+     * flash before the player has oriented themselves.
+     */
+    startRun() {
+        this._initialDelay = 2.0; // seconds before first hint can appear
+        this._enemyHintFired = false;
+        this._active = null;
+        this._queue = [];
+        this.trackRun();
+    }
+
+    /**
+     * Trigger a hint by id. Ignored if tutorial is done, already seen,
+     * or still within the initial delay window.
      */
     trigger(id) {
+        if (this._done) return;
         const def = this.HINTS[id];
         if (!def) return;
-        if (this.hasSeen(id)) return;
+        if (this._seen[id]) return;
 
         // If a hint is already active, queue this one
         if (this._active && !this._active.dismissed) {
@@ -136,6 +197,14 @@ class TutorialHints {
             if (this._active.id === id) return;
             if (this._queue.some(q => q === id)) return;
             this._queue.push(id);
+            return;
+        }
+
+        // Respect initial delay — queue instead of showing immediately
+        if (this._initialDelay > 0) {
+            if (!this._queue.some(q => q === id)) {
+                this._queue.push(id);
+            }
             return;
         }
 
@@ -167,8 +236,18 @@ class TutorialHints {
      * Update hint timer. Call every frame with delta-time in seconds.
      */
     update(dt) {
+        // Tick down the initial delay gate
+        if (this._initialDelay > 0) {
+            this._initialDelay -= dt;
+            if (this._initialDelay <= 0) {
+                this._initialDelay = 0;
+                // Now try to show any queued hints that were waiting
+                this._dequeue();
+            }
+            return;
+        }
+
         if (!this._active) {
-            // Try to show next queued hint
             this._dequeue();
             return;
         }
@@ -206,9 +285,10 @@ class TutorialHints {
 
     /** Pull next hint from queue */
     _dequeue() {
+        if (this._done) { this._queue = []; return; }
         while (this._queue.length > 0) {
             const nextId = this._queue.shift();
-            if (!this.hasSeen(nextId) && this.HINTS[nextId]) {
+            if (!this._seen[nextId] && this.HINTS[nextId]) {
                 this._show(this.HINTS[nextId]);
                 return;
             }

@@ -766,9 +766,12 @@ class Game {
             try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { __err('game', e); }
 
             // Trigger tutorial hints on first playthrough of Level 1
-            if (this.tutorialHints && levelIndex === 0) {
-                this.tutorialHints.trigger('move_jump');
-                this.tutorialHints.trigger('objective');
+            if (this.tutorialHints) {
+                this.tutorialHints.startRun();
+                if (levelIndex === 0) {
+                    this.tutorialHints.trigger('move_jump');
+                    this.tutorialHints.trigger('objective');
+                }
             }
         }
 
@@ -1107,6 +1110,9 @@ class Game {
         victory() {
             this.state = 'VICTORY'; // Handle this in draw
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('GAME VICTORY!');
+
+            // Tutorial complete — suppress hints on future playthroughs
+            if (this.tutorialHints) this.tutorialHints.markDone();
 
             // Mark completion for achievements
             try {
@@ -2104,17 +2110,38 @@ class Game {
         try { this._scorePulse = Math.max(0, (this._scorePulse || 0) - dt * 2.5); } catch (e) { __err('game', e); }
 
         // Update tutorial hints
-        if (this.tutorialHints) {
+        if (this.tutorialHints && !this.tutorialHints._done) {
             this.tutorialHints.update(dt);
 
-            // Trigger attack hint when first enemy appears on Level 1
-            if (this.currentLevelIndex === 0 && !this.tutorialHints.hasSeen('attack')) {
+            // Trigger attack hint once when first enemy appears on Level 1
+            if (!this.tutorialHints._enemyHintFired && this.currentLevelIndex === 0) {
                 const enemies = this.enemyManager ? this.enemyManager.getEnemies() : [];
                 if (enemies.length > 0) {
+                    this.tutorialHints._enemyHintFired = true;
                     this.tutorialHints.trigger('attack');
                     this.tutorialHints.trigger('shadow_strike');
                 }
             }
+
+            // Trigger golden idol hint when player is near an idol (within 200px)
+            if (!this.tutorialHints._seen['golden_idol'] && this.itemManager && this.player) {
+                const items = this.itemManager.items || [];
+                const px = this.player.x + (this.player.width || 0) / 2;
+                const py = this.player.y + (this.player.height || 0) / 2;
+                for (const item of items) {
+                    if (item && item.type === 'GOLDEN_IDOL') {
+                        const dx = (item.x + (item.width || 0) / 2) - px;
+                        const dy = (item.y + (item.height || 0) / 2) - py;
+                        if (Math.sqrt(dx * dx + dy * dy) < 200) {
+                            this.tutorialHints.trigger('golden_idol');
+                            break;
+                        }
+                    }
+                }
+            }
+        } else if (this.tutorialHints) {
+            // Still need to tick active hints to completion even when done
+            this.tutorialHints.update(dt);
         }
     }
 
