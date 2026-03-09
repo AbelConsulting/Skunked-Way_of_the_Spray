@@ -26,7 +26,9 @@
             Content-Security-Policy: script-src 'self' 'nonce-<random>' https://pagead2.googlesyndication.com; object-src 'none'; base-uri 'self';
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890123456" crossorigin="anonymous"></script>
+    <script>
+        window.SKUNK_WEB_AD_CLIENT = 'ca-app-pub-8519140628365141';
+    </script>
     <!-- Arcade / ninja title fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1551,8 +1553,6 @@
 <body>
     <div id="main-wrapper">
         <div id="ad-container-right">
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-app-pub-8519140628365141"
-                 crossorigin="anonymous"></script>
             <!-- SkunkedBanner -->
             <ins class="adsbygoogle"
                  style="display:inline-block;width:160px;height:600px"
@@ -1561,14 +1561,52 @@
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
             <script>
-                 // Only push the ad if the container is visible (has width).
-                 // On mobile the container is display:none so skip to avoid TagError.
                  (function() {
+                     function isNativePlatform() {
+                         return !!(
+                             typeof window !== 'undefined' &&
+                             window.Capacitor &&
+                             typeof window.Capacitor.isNativePlatform === 'function' &&
+                             window.Capacitor.isNativePlatform()
+                         );
+                     }
+
+                     function collapseAdRail() {
+                         document.documentElement.style.setProperty('--ad-width', '0px');
+                     }
+
+                     function loadAdSenseScript(clientId) {
+                         if (!clientId || document.querySelector('script[data-skunk-web-ads="true"]')) {
+                             return;
+                         }
+                         var script = document.createElement('script');
+                         script.async = true;
+                         script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(clientId);
+                         script.crossOrigin = 'anonymous';
+                         script.setAttribute('data-skunk-web-ads', 'true');
+                         document.head.appendChild(script);
+                     }
+
                      function tryPushAd() {
+                         var container = document.getElementById('ad-container-right');
+                         if (!container) {
+                             collapseAdRail();
+                             return;
+                         }
+
+                         if (isNativePlatform()) {
+                             container.style.display = 'none';
+                             container.setAttribute('aria-hidden', 'true');
+                             collapseAdRail();
+                             return;
+                         }
+
                          try {
-                             var container = document.getElementById('ad-container-right');
                              if (container && container.offsetWidth > 0) {
+                                 loadAdSenseScript(window.SKUNK_WEB_AD_CLIENT);
                                  (adsbygoogle = window.adsbygoogle || []).push({});
+                             } else {
+                                 collapseAdRail();
                              }
                          } catch (e) { /* suppress ad errors */ }
                      }
