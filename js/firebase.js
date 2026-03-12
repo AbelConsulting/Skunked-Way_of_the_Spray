@@ -14,6 +14,33 @@ const API_BASE = (typeof Config !== 'undefined' && Config.SCORES_API_BASE)
   ? Config.SCORES_API_BASE
   : 'https://skunked.io';
 
+const API_KEY = (typeof Config !== 'undefined' && Config.SCORES_API_KEY)
+  ? Config.SCORES_API_KEY
+  : '';
+
+function authHeaders() {
+  const headers = {};
+  if (API_KEY) {
+    headers['Authorization'] = `Bearer ${API_KEY}`;
+  }
+  return headers;
+}
+
+/**
+ * Checks if the leaderboard service is online.
+ * @returns {Promise<boolean>} true if the service responds with { status: 'ok' }.
+ */
+export async function checkHealth() {
+  try {
+    const res = await fetch(`${API_BASE}/api/health`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.status === 'ok';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Submits a score to the skunked.io global leaderboard.
  * @param {string} name  The player name / gamer tag.
@@ -33,7 +60,7 @@ export async function submitScore(name, score, achievements) {
 
     const res = await fetch(`${API_BASE}/api/submit-score`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(body),
     });
 
@@ -55,7 +82,9 @@ export async function submitScore(name, score, achievements) {
  */
 export async function getHighScores(count = 10) {
   try {
-    const res = await fetch(`${API_BASE}/api/scores?limit=${count}`);
+    const res = await fetch(`${API_BASE}/api/scores?limit=${count}`, {
+      headers: authHeaders(),
+    });
     if (!res.ok) {
       console.error('Failed to fetch scores:', res.status);
       return [];

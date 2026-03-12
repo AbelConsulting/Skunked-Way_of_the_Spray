@@ -8,7 +8,7 @@
 // Global high-score manager using the skunked.io leaderboard API.
 
 // Import the REST API functions for the global leaderboard
-import { submitScore as submitAPIScore, getHighScores as getAPIHighScores } from './firebase.js';
+import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth } from './firebase.js';
 
 (function(window){
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
@@ -312,6 +312,14 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores } from
     return container;
   }
 
+  /**
+   * Pings the leaderboard service to confirm it is online.
+   * @returns {Promise<boolean>}
+   */
+  async function checkServiceHealth() {
+    return checkAPIHealth();
+  }
+
   // Expose the public API
   window.Highscores = {
     // New async functions for global scores
@@ -319,6 +327,7 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores } from
     isHighScore,
     addScore,
     renderScoreboard,
+    checkServiceHealth,
     // ---
     promptForInitials,
     // Local achievements

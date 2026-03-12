@@ -194,5 +194,8 @@ const Config = {
 
     // Global leaderboard API (skunkedscores service)
     // All score reads/writes go through this endpoint.
-    SCORES_API_BASE: 'https://skunked.io'
+    SCORES_API_BASE: 'https://skunked.io',
+    // Secret key for authenticating with the leaderboard API.
+    // Must match the API_SECRET_KEY set in the service's .env file.
+    SCORES_API_KEY: '0ycrI4LL3Jqflz778Zz0e9IuWh3DSS2eGIRmZO14m-A'
 };
