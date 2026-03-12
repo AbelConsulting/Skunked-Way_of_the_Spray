@@ -14,6 +14,8 @@ class SpriteLoader {
         this.loadQueue = [];
         this.loadedCount = 0;
         this.totalAssets = 0;
+        this._ready = false;
+        this._readyCallbacks = [];
         // Enable cache-busting in development when Config.DEBUG is true to avoid stale browser cache
         // Enable cache-busting in development when Config.DEBUG is true
         // or when the URL includes ?devcache=1 (useful for local debugging without changing Config)
@@ -258,6 +260,7 @@ class SpriteLoader {
         // Reset counters for a fresh progress run
         this.loadedCount = 0;
         this.totalAssets = 0;
+        this._ready = false;
 
         const baseList = [
             // Player sprites
@@ -414,6 +417,14 @@ class SpriteLoader {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('SpriteLoader: missing assets', this._missing.map(m => m.path));
         }
 
+        // Mark ready and flush deferred callbacks
+        this._ready = true;
+        const cbs = this._readyCallbacks;
+        this._readyCallbacks = [];
+        for (let i = 0; i < cbs.length; i++) {
+            try { cbs[i](); } catch (e) { __err('sprite', e); }
+        }
+
         return this.sprites;
     }
 
@@ -422,6 +433,17 @@ class SpriteLoader {
      */
     getSprite(name) {
         return this.sprites[name] || null;
+    }
+
+    /**
+     * Call fn immediately if sprites are loaded, otherwise defer until ready.
+     */
+    whenReady(fn) {
+        if (this._ready) {
+            fn();
+        } else {
+            this._readyCallbacks.push(fn);
+        }
     }
 
     /**

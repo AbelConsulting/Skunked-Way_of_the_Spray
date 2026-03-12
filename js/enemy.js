@@ -213,6 +213,10 @@ class Enemy {
         // Validate spriteLoader is ready
         if (!spriteLoader || !spriteLoader.sprites) {
             if (Config.DEBUG) console.warn('Enemy.loadSprites: spriteLoader not ready for', this.enemyType);
+            // Defer: retry once spriteLoader finishes loading
+            if (spriteLoader && typeof spriteLoader.whenReady === 'function') {
+                spriteLoader.whenReady(() => this.loadSprites());
+            }
             return;
         }
 
@@ -277,8 +281,11 @@ class Enemy {
         
         // Check if sprites actually loaded successfully
         if (this.currentAnimation && this.currentAnimation.spriteSheet) {
-            // Sprites loaded successfully, reset attempt counter to prevent unnecessary checks
+            // Sprites loaded successfully, no further retries needed
             this._spriteLoadAttempts = this._maxSpriteLoadAttempts;
+        } else if (spriteLoader && typeof spriteLoader.whenReady === 'function' && !spriteLoader._ready) {
+            // Sprites not loaded yet — defer retry until spriteLoader finishes
+            spriteLoader.whenReady(() => this.loadSprites());
         }
     }
 
@@ -1679,7 +1686,8 @@ class Enemy {
             }
 
             // Draw sprite or colored rectangle
-            // If animation exists but has no sprite sheet, keep trying to reload (handles late-loading assets)
+            // If animation exists but has no sprite sheet, attempt a synchronous reload
+            // (sprites may have become available since construction via whenReady callback)
             if (this.currentAnimation && !this.currentAnimation.spriteSheet) {
                 if (this._spriteLoadAttempts < this._maxSpriteLoadAttempts) {
                     this._spriteLoadAttempts++;
@@ -1696,14 +1704,7 @@ class Enemy {
                         if (this.animations && this.animations[this.animationState]) {
                             this.currentAnimation = this.animations[this.animationState];
                         }
-                        if (Config.DEBUG) {
-                            console.log(`Enemy ${this.enemyType} at (${Math.round(this.x)},${Math.round(this.y)}) sprites loaded after ${this._spriteLoadAttempts} attempts`);
-                        }
                     }
-                } else if (this._spriteLoadAttempts === this._maxSpriteLoadAttempts) {
-                    // Log warning once when max attempts reached
-                    this._spriteLoadAttempts++;
-                    console.warn(`Enemy ${this.enemyType} failed to load sprites after ${this._maxSpriteLoadAttempts} attempts. Sprites may be missing.`);
                 }
             }
             

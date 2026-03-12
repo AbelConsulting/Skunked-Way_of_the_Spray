@@ -183,6 +183,12 @@ class Player {
         }
 
         this.currentAnimation = this.animations.idle;
+
+        // If sprites aren't loaded yet, defer retry until spriteLoader finishes
+        if ((!this.currentAnimation || !this.currentAnimation.spriteSheet) &&
+            spriteLoader && typeof spriteLoader.whenReady === 'function' && !spriteLoader._ready) {
+            spriteLoader.whenReady(() => this.loadSprites());
+        }
     }
 
     handleInput(key, isDown) {
