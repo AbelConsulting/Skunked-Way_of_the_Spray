@@ -10,9 +10,9 @@
 // Replaces direct Firebase access with API calls to the centralised
 // skunkedscores service so every game instance shares one leaderboard.
 
-const API_BASE = (typeof Config !== 'undefined' && Config.SCORES_API_BASE)
+const API_BASE = (typeof Config !== 'undefined' && typeof Config.SCORES_API_BASE === 'string')
   ? Config.SCORES_API_BASE
-  : 'https://skunked.io';
+  : '';
 
 const API_KEY = (typeof Config !== 'undefined' && Config.SCORES_API_KEY)
   ? Config.SCORES_API_KEY
