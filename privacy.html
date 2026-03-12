@@ -31,8 +31,16 @@
         h2 {
             color: #ffffff;
             font-size: 1.25rem;
-            margin-top: 28px;
+            margin-top: 32px;
             margin-bottom: 8px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 6px;
+        }
+        h3 {
+            color: #dddddd;
+            font-size: 1rem;
+            margin-top: 20px;
+            margin-bottom: 6px;
         }
         p, li {
             color: #ccc;
@@ -63,47 +71,191 @@
             background: #222244;
             text-decoration: none;
         }
+        .notice-box {
+            background: #1a1a2e;
+            border-left: 4px solid #ffcc33;
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .notice-box p {
+            margin-bottom: 0;
+        }
+        .toc {
+            background: #111126;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+        }
+        .toc li {
+            margin-bottom: 4px;
+        }
+        .policy-footer {
+            margin-top: 48px;
+            padding-top: 20px;
+            border-top: 1px solid #222;
+            color: #666;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Privacy Policy</h1>
-        <p class="subtitle">Skunked: Way of the Spray &mdash; Last updated: March 9, 2026</p>
+        <p class="subtitle">
+            Skunked: Way of the Spray &mdash;
+            Effective: March 1, 2026 &mdash; Last updated: March 12, 2026
+        </p>
 
-        <h2>Summary</h2>
-        <p><strong>We do not operate our own analytics or user-account system, but the game may display advertising.</strong> Skunked: Way of the Spray runs on your device and stores gameplay progress locally. When ads are shown, Google advertising services may collect or process device, browser, app, and ad-interaction data subject to their own policies.</p>
+        <div class="notice-box">
+            <p><strong>Summary:</strong> We do not run our own user-account system or collect personal data on our own servers. Game progress is saved locally on your device. The Game uses Google advertising services (AdSense / AdMob), which may collect device and usage data under Google's own privacy policies. This Game is intended for users <strong>13 years of age and older</strong>.</p>
+        </div>
 
-        <h2>What Data We Collect</h2>
-        <p>We do not directly collect personal information, gameplay telemetry, or account data on our own servers through the game client.</p>
+        <nav class="toc">
+            <strong style="color:#fff;">Contents</strong>
+            <ol style="margin-top:8px;padding-left:20px;">
+                <li><a href="#who-we-are">Who We Are</a></li>
+                <li><a href="#data-we-collect">Information We Collect</a></li>
+                <li><a href="#local-storage">Local Storage</a></li>
+                <li><a href="#advertising">Third-Party Advertising &amp; Cookies</a></li>
+                <li><a href="#hosting">Hosting Providers</a></li>
+                <li><a href="#coppa">Age Requirements &amp; Children's Privacy (COPPA)</a></li>
+                <li><a href="#gdpr">Your Rights — European Users (GDPR)</a></li>
+                <li><a href="#ccpa">Your Rights — California Residents (CCPA)</a></li>
+                <li><a href="#retention">Data Retention</a></li>
+                <li><a href="#security">Security</a></li>
+                <li><a href="#international">International Data Transfers</a></li>
+                <li><a href="#changes">Changes to This Policy</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ol>
+        </nav>
 
-        <h2>Local Storage</h2>
-        <p>The game uses your browser's <code>localStorage</code> to save:</p>
+        <!-- 1 -->
+        <h2 id="who-we-are">1. Who We Are</h2>
+        <p>
+            <em>Skunked: Way of the Spray</em> ("Game") is developed and published by
+            <strong>Mephitideus Interactive</strong> ("we", "us", "our"). The Game is available
+            as a web application at <a href="https://skunked.io">skunked.io</a> and as an Android
+            application via Google Play. This Privacy Policy applies to all versions of the Game.
+        </p>
+        <p>For privacy matters, the data controller is Mephitideus Interactive. Contact details are in <a href="#contact">Section 13</a>.</p>
+
+        <!-- 2 -->
+        <h2 id="data-we-collect">2. Information We Collect</h2>
+        <p>Mephitideus Interactive does <strong>not</strong> directly collect, transmit, or store personal information, gameplay telemetry, or account data on our own servers through the Game client.</p>
+        <p>We do not use our own analytics tracking, advertising identifiers, login systems, or crash-reporting pipelines. Any data described in this policy is either stored exclusively on your device (<a href="#local-storage">Section 3</a>) or processed by third-party services (<a href="#advertising">Section 4</a>, <a href="#hosting">Section 5</a>) under their own policies.</p>
+
+        <!-- 3 -->
+        <h2 id="local-storage">3. Local Storage</h2>
+        <p>The Game stores the following data locally in your browser's <code>localStorage</code> or the mobile app's local storage:</p>
         <ul>
             <li>High scores</li>
             <li>Achievement progress</li>
-            <li>Display and performance preferences (e.g., mobile performance mode)</li>
+            <li>Display and performance preferences (e.g., performance mode, volume settings)</li>
         </ul>
-        <p>This data never leaves your device. It is not transmitted to any server. You can clear it at any time through your browser settings.</p>
+        <p>This data is stored entirely on your device. It is never transmitted to Mephitideus Interactive or any third party. You can delete this data at any time by clearing your browser's site data or app storage via your device settings.</p>
 
-        <h2>Advertising</h2>
-        <p>The web version may display Google AdSense ads, and the Android app may display Google AdMob ads. Those services may use cookies, mobile identifiers, IP address, approximate location, diagnostic data, and ad interaction data to serve, limit, and measure ads.</p>
-        <p>If you use the game through a browser or mobile app store build, Google may process data under its own privacy terms. You can learn more at <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and <a href="https://policies.google.com/technologies/ads">How Google uses information from sites or apps that use its services</a>.</p>
+        <!-- 4 -->
+        <h2 id="advertising">4. Third-Party Advertising &amp; Cookies</h2>
+        <p>The Game displays advertisements served by Google. On the web version, Google AdSense is used; on the Android version, Google AdMob is used.</p>
 
-        <h2>Cookies</h2>
-        <p>We do not set our own advertising cookies, but third-party ad providers may set cookies or use equivalent technologies when ads are displayed in the web version.</p>
+        <h3>Data Google may collect</h3>
+        <p>When an ad is displayed, Google's advertising SDK may collect or process:</p>
+        <ul>
+            <li>IP address and approximate location (country / region)</li>
+            <li>Device identifiers (Android Advertising ID or equivalent browser identifiers)</li>
+            <li>Browser or app type, version, and language</li>
+            <li>Ad interaction data (impressions, clicks)</li>
+            <li>Diagnostic and performance data</li>
+        </ul>
 
-        <h2>Third-Party Services</h2>
-        <p>The game may integrate Google advertising services to display ads. If the game is hosted on a platform such as Netlify or Vercel, those providers may also collect standard web server logs (IP address, request URL, user agent) as part of their hosting infrastructure. Refer to the relevant provider privacy policies for details.</p>
+        <h3>Cookies and similar technologies</h3>
+        <p>Mephitideus Interactive does not set its own advertising cookies. However, Google's advertising services may set cookies or use equivalent technologies (e.g., pixel tags, mobile SDK identifiers) when ads are displayed in the web version. You can opt-out of personalized advertising via <a href="https://adssettings.google.com" rel="noopener">Google Ad Settings</a> or by visiting <a href="https://optout.aboutads.info" rel="noopener">optout.aboutads.info</a>.</p>
 
-        <h2>Children's Privacy</h2>
-        <p>Because we do not collect any data, the game is safe for users of all ages. We do not knowingly collect information from children under 13 (or any other age).</p>
+        <h3>Google's policies</h3>
+        <p>Google's handling of data is governed by the <a href="https://policies.google.com/privacy" rel="noopener">Google Privacy Policy</a> and <a href="https://policies.google.com/technologies/ads" rel="noopener">How Google uses information from sites or apps that use its services</a>.</p>
 
-        <h2>Changes to This Policy</h2>
-        <p>If we change how ads, storage, or data handling work, we will update this page with a new "Last updated" date.</p>
+        <!-- 5 -->
+        <h2 id="hosting">5. Hosting Providers</h2>
+        <p>The web version of the Game is hosted on third-party infrastructure (such as Netlify or Cloudflare). These providers collect standard web server logs as part of normal operations, which may include IP addresses, HTTP request paths, timestamps, and user-agent strings. This data is handled under the respective provider's privacy policy and is not shared with Mephitideus Interactive for user-level analysis.</p>
+        <ul>
+            <li><a href="https://www.netlify.com/privacy/" rel="noopener">Netlify Privacy Policy</a></li>
+            <li><a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare Privacy Policy</a></li>
+        </ul>
 
-        <h2>Contact</h2>
-        <p>If you have questions about this privacy policy, you can reach us at:</p>
-        <p><a href="https://github.com/AbelConsulting/Skunked-Way_of_the_Spray/issues">GitHub Issues</a></p>
+        <!-- 6 -->
+        <h2 id="coppa">6. Age Requirements &amp; Children's Privacy (COPPA)</h2>
+        <div class="notice-box">
+            <p><strong>The Game is intended for users aged 13 and older.</strong> If you are under 13, please do not play the Game.</p>
+        </div>
+        <p>Mephitideus Interactive does not knowingly permit children under 13 years of age to use the Game, and we do not knowingly collect personal information from children under 13. The Game uses third-party advertising (Google AdSense / AdMob), which involves automated data collection that is not appropriate for children under 13 without verifiable parental consent.</p>
+        <p>If you are a parent or guardian and you believe your child under 13 has accessed the Game, please contact us at <a href="mailto:legal@mephitideusinteractive.com">legal@mephitideusinteractive.com</a>. We will take prompt steps to ensure no data associated with that usage is retained by applicable third-party services to the extent we are able.</p>
+
+        <!-- 7 -->
+        <h2 id="gdpr">7. Your Rights — European Users (GDPR)</h2>
+        <p>If you are located in the European Economic Area (EEA), United Kingdom, or Switzerland, you have the following rights under the General Data Protection Regulation (GDPR) and applicable local law:</p>
+        <ul>
+            <li><strong>Right of access</strong> — Request a copy of any personal data we hold about you.</li>
+            <li><strong>Right to rectification</strong> — Request correction of inaccurate personal data.</li>
+            <li><strong>Right to erasure</strong> — Request deletion of your personal data ("right to be forgotten").</li>
+            <li><strong>Right to restriction</strong> — Request that we restrict the processing of your data.</li>
+            <li><strong>Right to data portability</strong> — Request a machine-readable copy of your data.</li>
+            <li><strong>Right to object</strong> — Object to processing based on legitimate interests or for direct marketing.</li>
+            <li><strong>Right to withdraw consent</strong> — Where processing is based on consent, withdraw it at any time.</li>
+        </ul>
+        <p>Because Mephitideus Interactive does not collect personal data on its own servers, most of these rights are most effectively exercised directly with Google for advertising data. To exercise rights over Google-held data, visit the <a href="https://myaccount.google.com/data-and-privacy" rel="noopener">Google Data &amp; Privacy</a> portal.</p>
+        <p>For any data requests directed to us, contact <a href="mailto:legal@mephitideusinteractive.com">legal@mephitideusinteractive.com</a>. We will respond within 30 days.</p>
+
+        <h3>Lawful basis for processing</h3>
+        <p>To the extent Mephitideus Interactive processes any personal data (e.g., contact details provided voluntarily via email), the lawful basis is <strong>legitimate interest</strong> (operating and supporting the Game) or <strong>performance of a contract</strong>. Third-party advertising services rely on their own lawful bases as described in their policies.</p>
+
+        <!-- 8 -->
+        <h2 id="ccpa">8. Your Rights — California Residents (CCPA / CPRA)</h2>
+        <p>Under the California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA), California residents have the right to:</p>
+        <ul>
+            <li><strong>Know</strong> what personal information is collected, used, shared, or sold.</li>
+            <li><strong>Delete</strong> personal information we hold (subject to certain exceptions).</li>
+            <li><strong>Opt-out of the sale or sharing</strong> of personal information.</li>
+            <li><strong>Non-discrimination</strong> for exercising your privacy rights.</li>
+            <li><strong>Correct</strong> inaccurate personal information.</li>
+            <li><strong>Limit use of sensitive personal information</strong>.</li>
+        </ul>
+        <p>Mephitideus Interactive does not sell personal information. We do share device/ad identifiers with Google's advertising services for the purpose of displaying ads, which may constitute "sharing" under the CPRA. To opt out of Google's ad personalization, visit <a href="https://adssettings.google.com" rel="noopener">Google Ad Settings</a>.</p>
+        <p>To submit a California privacy request, contact us at <a href="mailto:legal@mephitideusinteractive.com">legal@mephitideusinteractive.com</a>.</p>
+
+        <!-- 9 -->
+        <h2 id="retention">9. Data Retention</h2>
+        <p>Local game data (high scores, achievements, preferences) is stored on your device indefinitely until you manually clear it via browser or app storage settings.</p>
+        <p>Data collected by Google's advertising services is subject to <a href="https://policies.google.com/technologies/retention" rel="noopener">Google's data retention policy</a>.</p>
+        <p>If you contact us by email, we retain correspondence for up to 2 years or as long as necessary to resolve the matter.</p>
+
+        <!-- 10 -->
+        <h2 id="security">10. Security</h2>
+        <p>Because Mephitideus Interactive does not transmit or server-store player data, the primary attack surface is the device itself. We recommend users keep their browsers and operating systems up to date. The web version is served over HTTPS and uses a Content Security Policy (CSP) to mitigate script injection risks.</p>
+        <p>No method of electronic storage or transmission is 100% secure. We cannot guarantee absolute security of third-party services such as Google Ads.</p>
+
+        <!-- 11 -->
+        <h2 id="international">11. International Data Transfers</h2>
+        <p>Mephitideus Interactive does not transfer your personal data internationally on its own systems. Google's advertising services operate globally and may transfer data to servers outside your country of residence. Google participates in frameworks designed to ensure adequate protection for international data transfers. Refer to <a href="https://policies.google.com/privacy" rel="noopener">Google's Privacy Policy</a> for details.</p>
+
+        <!-- 12 -->
+        <h2 id="changes">12. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy when we change how ads, storage, or data handling work, or to comply with applicable law. Material changes will be reflected by an updated "Last updated" date at the top of this page. Your continued use of the Game after any update constitutes acceptance of the revised policy.</p>
+
+        <!-- 13 -->
+        <h2 id="contact">13. Contact</h2>
+        <p>If you have questions, privacy concerns, or data requests related to this policy, contact:</p>
+        <ul>
+            <li><strong>Email:</strong> <a href="mailto:legal@mephitideusinteractive.com">legal@mephitideusinteractive.com</a></li>
+            <li><strong>GitHub:</strong> <a href="https://github.com/AbelConsulting/Skunked-Way_of_the_Spray/issues" rel="noopener">Open an issue</a> (for non-sensitive inquiries)</li>
+        </ul>
+        <p>We aim to respond to all privacy inquiries within <strong>30 days</strong>.</p>
+
+        <div class="policy-footer">
+            <p>&copy; 2026 Mephitideus Interactive. All rights reserved. &mdash;
+            <a href="/terms">Terms of Service</a> &bull; <a href="/privacy">Privacy Policy</a></p>
+        </div>
 
         <a class="back-link" href="/">&larr; Back to Game</a>
     </div>
