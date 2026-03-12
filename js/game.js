@@ -770,7 +770,10 @@ class Game {
                 this.tutorialHints.startRun();
                 if (levelIndex === 0) {
                     this.tutorialHints.trigger('move_jump');
-                    this.tutorialHints.trigger('objective');
+                    // Delay objective hint so it doesn't pile on move_jump
+                    setTimeout(() => {
+                        if (this.tutorialHints) this.tutorialHints.trigger('objective');
+                    }, 10000);
                 }
             }
         }
@@ -2119,7 +2122,10 @@ class Game {
                 if (enemies.length > 0) {
                     this.tutorialHints._enemyHintFired = true;
                     this.tutorialHints.trigger('attack');
-                    this.tutorialHints.trigger('shadow_strike');
+                    // Delay shadow_strike so it doesn't pile on attack hint
+                    setTimeout(() => {
+                        if (this.tutorialHints) this.tutorialHints.trigger('shadow_strike');
+                    }, 9000);
                 }
             }
 
