@@ -48,7 +48,7 @@ const LEVEL_CONFIGS = [
             
             // --- SECTION 1: THE TALL OAK (Vertical Challenge) ---
             // Stepping stones leading up to a high branch
-            { x: 50, y: 150, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 50, y: 150, width: 50, height: 24, type: 'static', tile: 'platform6_tile' },
             { x: 50, y: 250, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 50, y: 350, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
             { x: 50, y: 450, width: 50, height: 24, type: 'static', tile: 'platform3_tile' },
@@ -71,11 +71,11 @@ const LEVEL_CONFIGS = [
             
             // --- SECTION 4: THE GREAT RAVINE (Deep traversal) ---
             // Platforms inside a dip in the ground height
-            { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform3_tile' },
-            { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform3_tile' },
-            { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform3_tile' }, // Peak of Section 4
+            { x: 5200, y: 520, width: 400, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 5800, y: 420, width: 300, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 6300, y: 320, width: 200, height: 24, type: 'static', tile: 'platform4_tile' }, // Peak of Section 4
              { x: 6300, y: 220, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
-            { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 6700, y: 450, width: 500, height: 24, type: 'static', tile: 'platform5_tile' },
             
             // --- SECTION 5: APPROACHING THE CHIEFTAIN (Zig-Zag) ---
             { x: 7600, y: 550, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
