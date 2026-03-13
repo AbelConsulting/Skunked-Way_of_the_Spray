@@ -327,6 +327,8 @@ class SpriteLoader {
             ['platform_tile', 'assets/sprites/backgrounds/tiles/platform_tile.png'],
             ['platform2_tile', 'assets/sprites/backgrounds/tiles/platform2_tile.png'],
             ['platform3_tile', 'assets/sprites/backgrounds/tiles/platform3_tile.png'],
+            ['platform4_tile', 'assets/sprites/backgrounds/tiles/platform4_tile.png'],
+            ['platform5_tile', 'assets/sprites/backgrounds/tiles/platform5_tile.png'],    
             ['wall_tile', 'assets/sprites/backgrounds/tiles/wall_tile.png'],
 
             // Items / pickups
