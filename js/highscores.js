@@ -13,6 +13,31 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
 (function(window){
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
   const MAX_SCORES = 10; // The number of scores to show on the leaderboard.
+  const ACHIEVEMENT_DEFINITIONS = Object.freeze([
+    { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', icon: '🩸', check: (stats) => statNumber(stats.enemiesDefeated) >= 1 },
+    { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 50 enemies in a run', icon: '⚔️', check: (stats) => statNumber(stats.enemiesDefeated) >= 50 },
+    { id: 'exterminator', name: 'Exterminator', desc: 'Defeat 150 enemies in a run', icon: '☠️', check: (stats) => statNumber(stats.enemiesDefeated) >= 150 },
+    { id: 'combo_master', name: 'Combo Starter', desc: 'Reach a 5-hit combo', icon: '🔥', check: (stats) => statNumber(stats.maxCombo) >= 5 },
+    { id: 'combo_legend', name: 'Combo Legend', desc: 'Reach a 20-hit combo', icon: '🌪️', check: (stats) => statNumber(stats.maxCombo) >= 20 },
+    { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 50,000 points', icon: '💎', check: (stats) => statNumber(stats.score) >= 50000 },
+    { id: 'score_attack', name: 'Score Attack', desc: 'Score over 150,000 points', icon: '👑', check: (stats) => statNumber(stats.score) >= 150000 },
+    { id: 'perfect_level', name: 'Untouchable', desc: 'Complete a level without taking damage', icon: '🛡️', check: (stats) => statNumber(stats.perfectLevels) >= 1 },
+    { id: 'iron_fur', name: 'Iron Fur', desc: 'Finish 3 perfect levels in one run', icon: '🦾', check: (stats) => statNumber(stats.perfectLevels) >= 3 },
+    { id: 'relic_hunter', name: 'Relic Hunter', desc: 'Collect 10 Golden Idols across all runs', icon: '🗿', check: (stats) => statNumber(stats.totalIdolsCollected) >= 10 },
+    { id: 'master_collector', name: 'Master Collector', desc: 'Complete 3 idol sets in one run', icon: '🏅', check: (stats) => statNumber(stats.idolSetsCompleted) >= 3 },
+    { id: 'precision_striker', name: 'Precision Striker', desc: 'Finish with 75% accuracy after 20 attacks', icon: '🎯', check: (stats) => statNumber(stats.attacksAttempted) >= 20 && statNumber(stats.accuracy) >= 0.75 },
+    { id: 'speed_demon', name: 'Speed Demon', desc: 'Beat the game in 15 minutes or less', icon: '⚡', check: (stats) => !!stats.gameCompleted && statNumber(stats.completionTime) > 0 && statNumber(stats.completionTime) <= 900 },
+    { id: 'world_saver', name: 'World Saver', desc: 'Complete the campaign', icon: '🌟', check: (stats) => !!stats.gameCompleted },
+  ]);
+
+  function statNumber(value, fallback = 0) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+  }
+
+  function getAchievementDefinitions() {
+    return ACHIEVEMENT_DEFINITIONS.map(({ check, ...achievement }) => ({ ...achievement }));
+  }
 
   // Score validation to prevent obviously tampered scores
   function validateScore(score) {
@@ -33,20 +58,16 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     try { localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(achievements)); }
     catch(e){ console.warn('Failed to save achievements', e); }
   }
+
   function checkAchievements(gameStats) {
     const achievements = loadAchievements();
     const newAchievements = [];
-    const checks = [
-      { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', check: () => gameStats.enemiesDefeated >= 1 },
-      { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 50 enemies', check: () => gameStats.enemiesDefeated >= 50 },
-      { id: 'combo_master', name: 'Combo Starter', desc: 'Achieve a 5-hit combo', check: () => gameStats.maxCombo >= 5 },
-      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 50,000 points', check: () => gameStats.score >= 50000 },
-      { id: 'perfect_level', name: 'Untouchable', desc: 'Complete a level without taking damage', check: () => (gameStats.perfectLevels || 0) >= 1 },
-    ];
-    for (const achievement of checks) {
-      if (!achievements[achievement.id] && achievement.check()) {
+    const stats = gameStats || {};
+    for (const achievement of ACHIEVEMENT_DEFINITIONS) {
+      if (!achievements[achievement.id] && achievement.check(stats)) {
         achievements[achievement.id] = { unlocked: true, date: Date.now() };
-        newAchievements.push(achievement);
+        const { check, ...meta } = achievement;
+        newAchievements.push(meta);
       }
     }
     if (newAchievements.length > 0) {
@@ -55,21 +76,59 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     return newAchievements;
   }
 
-  function renderAchievements(target){
+  function renderAchievements(target, options = {}){
     const achievements = loadAchievements();
     const container = target || document.createElement('div');
+    const settings = {
+      includeTitle: true,
+      variant: 'list',
+      ...options
+    };
+    const achievementList = getAchievementDefinitions();
+
     container.innerHTML = '';
+    if (settings.variant === 'cards') {
+      container.className = 'info-achieve-grid';
+      for (const ach of achievementList) {
+        const isUnlocked = !!achievements[ach.id];
+        const entry = document.createElement('div');
+        entry.className = `info-achieve-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+        entry.setAttribute('data-ach-id', ach.id);
+
+        const icon = document.createElement('span');
+        icon.className = 'achieve-icon';
+        icon.textContent = ach.icon;
+
+        const info = document.createElement('div');
+        info.className = 'achieve-info';
+
+        const name = document.createElement('h4');
+        name.textContent = ach.name;
+
+        const desc = document.createElement('p');
+        desc.textContent = ach.desc;
+
+        const status = document.createElement('span');
+        status.className = 'achieve-lock';
+        status.textContent = isUnlocked ? '✓' : '🔒';
+
+        info.appendChild(name);
+        info.appendChild(desc);
+        entry.appendChild(icon);
+        entry.appendChild(info);
+        entry.appendChild(status);
+        container.appendChild(entry);
+      }
+      return container;
+    }
+
     container.className = 'achievements-container';
-    const title = document.createElement('h3');
-    title.textContent = '🏆 ACHIEVEMENTS';
-    container.appendChild(title);
-    const achievementList = [
-      { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', icon: '🩸' },
-      { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 50 enemies', icon: '⚔️' },
-      { id: 'combo_master', name: 'Combo Starter', desc: 'Achieve a 5-hit combo', icon: '🔥' },
-      { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 50,000 points', icon: '💎' },
-      { id: 'perfect_level', name: 'Untouchable', desc: 'Complete a level without taking damage', icon: '🛡️' },
-    ];
+    if (settings.includeTitle) {
+      const title = document.createElement('h3');
+      title.textContent = '🏆 ACHIEVEMENTS';
+      container.appendChild(title);
+    }
+
     for (const ach of achievementList) {
       const entry = document.createElement('div');
       entry.className = 'achievement-entry' + (achievements[ach.id] ? ' unlocked' : '');
@@ -331,6 +390,7 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     // ---
     promptForInitials,
     // Local achievements
+    getAchievementDefinitions,
     loadAchievements,
     saveAchievements,
     checkAchievements,

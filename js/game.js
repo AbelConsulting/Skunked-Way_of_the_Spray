@@ -1680,6 +1680,7 @@ class Game {
                         // Check achievements mid-run
                         try {
                             if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
+                                this.gameStats.score = this.score;
                                 Highscores.checkAchievements(this.gameStats);
                             }
                         } catch (e) { __err('game', e); }

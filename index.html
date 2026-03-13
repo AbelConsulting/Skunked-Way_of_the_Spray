@@ -453,6 +453,14 @@
                 0 0 20px rgba(120,180,255,0.12) !important;
         }
 
+        .menu-btn--achievements {
+            border-color: rgba(255,180,70,0.35) !important;
+            background: linear-gradient(180deg, rgba(255,180,70,0.20), rgba(60,24,0,0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 20px rgba(255,180,70,0.14) !important;
+        }
+
         .start-menu-footer {
             margin: 12px 0 0;
             font-size: 11px;
@@ -1703,6 +1711,7 @@
                         <button id="menu-play-btn" class="menu-btn menu-btn--play">&#9654; PLAY GAME</button>
                         <button id="menu-scores-btn" class="menu-btn menu-btn--scores">&#127942; HIGH SCORES</button>
                         <button id="menu-info-btn" class="menu-btn menu-btn--info">&#9432; INFO</button>
+                        <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements">&#127942; ACHIEVEMENTS</button>
                         <button id="menu-settings-btn" class="menu-btn menu-btn--settings">&#9881; SETTINGS</button>
                     </div>
                     <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
@@ -1750,11 +1759,11 @@
                         <div class="info-features">
                             <div class="info-feature"><strong>10 Stages</strong>Forests, caverns, neon cities &amp; more</div>
                             <div class="info-feature"><strong>6 Enemy Types</strong>Each with unique AI behaviour</div>
-                            <div class="info-feature"><strong>5 Bosses</strong>Massive health, deadly patterns</div>
+                            <div class="info-feature"><strong>6 Bosses</strong>Named rivals with unique special attacks</div>
                             <div class="info-feature"><strong>Combo System</strong>Chain hits for up to 10&times; score</div>
                             <div class="info-feature"><strong>3 Attack Types</strong>Melee, Shadow Strike &amp; Skunk Shot</div>
                             <div class="info-feature"><strong>6 Power-ups</strong>Health, lives, speed &amp; damage boosts</div>
-                            <div class="info-feature"><strong>5 Achievements</strong>Unlock badges for skilled play</div>
+                            <div class="info-feature"><strong>14 Achievements</strong>Unlock badges for skilled play</div>
                             <div class="info-feature"><strong>Online Scores</strong>Compete on the global leaderboard</div>
                         </div>
 
@@ -1896,31 +1905,31 @@
                         </div>
 
                         <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
-                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Each stage ends with a boss fight. Boss health scales from 6&times; to 18&times; base enemy HP.</p>
+                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">The campaign rotates through 6 boss archetypes. Boss health scales from 6&times; to 18&times; base enemy HP, with later stages remixing the named rivals.</p>
                         <div class="info-boss-row">
                             <div class="boss-badge">
                                 <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss_idle.png');"></div>
-                                <strong>Boss 1</strong><span>Forest Chieftain<br>6&times; HP</span>
+                                <strong>SHADOW FANG</strong><span>Guardian of the Forest<br>6&times; HP</span>
                             </div>
                             <div class="boss-badge">
                                 <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss2_idle.png');"></div>
-                                <strong>Boss 2</strong><span>City Overlord<br>8&times; HP</span>
+                                <strong>IRON CLAW</strong><span>Enforcer of Skunk City<br>8&times; HP</span>
                             </div>
                             <div class="boss-badge">
                                 <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss3_idle.png');"></div>
-                                <strong>Boss 3</strong><span>Dojo Master<br>10&times; HP</span>
+                                <strong>STEEL FURY</strong><span>Master of the Dojo<br>10&times; HP</span>
                             </div>
                             <div class="boss-badge">
                                 <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss4_idle.png');"></div>
-                                <strong>Boss 4</strong><span>Neon Warden<br>13&times; HP</span>
+                                <strong>NEON VIPER</strong><span>Crossroads Kingpin<br>13&times; HP</span>
                             </div>
                             <div class="boss-badge">
                                 <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss5_idle.png');"></div>
-                                <strong>Boss 5</strong><span>Cavern Depths<br>12&times; HP</span>
+                                <strong>CRYSTAL WRAITH</strong><span>Depths Dweller<br>12&times; HP</span>
                             </div>
                             <div class="boss-badge">
                                 <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss6_idle.png');"></div>
-                                <strong>Boss 6</strong><span>Crystal Guardian<br>11&times; HP</span>
+                                <strong>OBSIDIAN SHADE</strong><span>Cavern Sentinel<br>11&times; HP</span>
                             </div>
                         </div>
                     </div>
@@ -2010,33 +2019,7 @@
                     <div class="info-tab-content" data-info-panel="achievements">
                         <h3 class="info-heading">&#127942; Achievements</h3>
                         <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 10px;">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
-                        <div class="info-achieve-grid" id="info-achieve-grid">
-                            <div class="info-achieve-card locked" data-ach-id="first_kill">
-                                <span class="achieve-icon">&#129656;</span>
-                                <div class="achieve-info"><h4>First Blood</h4><p>Defeat your first enemy</p></div>
-                                <span class="achieve-lock">&#128274;</span>
-                            </div>
-                            <div class="info-achieve-card locked" data-ach-id="enemy_slayer">
-                                <span class="achieve-icon">&#9876;</span>
-                                <div class="achieve-info"><h4>Enemy Slayer</h4><p>Defeat 50 enemies total</p></div>
-                                <span class="achieve-lock">&#128274;</span>
-                            </div>
-                            <div class="info-achieve-card locked" data-ach-id="combo_master">
-                                <span class="achieve-icon">&#128293;</span>
-                                <div class="achieve-info"><h4>Combo Starter</h4><p>Achieve a 5-hit combo</p></div>
-                                <span class="achieve-lock">&#128274;</span>
-                            </div>
-                            <div class="info-achieve-card locked" data-ach-id="high_scorer">
-                                <span class="achieve-icon">&#128142;</span>
-                                <div class="achieve-info"><h4>High Scorer</h4><p>Score over 50,000 points</p></div>
-                                <span class="achieve-lock">&#128274;</span>
-                            </div>
-                            <div class="info-achieve-card locked" data-ach-id="perfect_level">
-                                <span class="achieve-icon">&#128737;</span>
-                                <div class="achieve-info"><h4>Untouchable</h4><p>Complete a level without taking any damage</p></div>
-                                <span class="achieve-lock">&#128274;</span>
-                            </div>
-                        </div>
+                        <div class="info-achieve-grid" id="info-achieve-grid"></div>
                     </div>
 
                     <hr class="pause-divider" style="margin-top:12px;">
@@ -2375,11 +2358,36 @@
                         const playBtn           = document.getElementById('menu-play-btn');
                         const scoresBtn         = document.getElementById('menu-scores-btn');
                         const infoBtn           = document.getElementById('menu-info-btn');
+                        const achievementsBtn   = document.getElementById('menu-achievements-btn');
                         const settingsBtn       = document.getElementById('menu-settings-btn');
                         const scoresBackBtn     = document.getElementById('menu-scores-back');
                         const infoBackBtn       = document.getElementById('menu-info-back');
                         const settingsBackBtn   = document.getElementById('menu-settings-back');
                         const scoresBoardEl     = document.getElementById('menu-scores-board');
+                        const infoAchievementsGrid = document.getElementById('info-achieve-grid');
+                        const infoTabs = Array.from(document.querySelectorAll('.info-tab[data-info-tab]'));
+                        const infoPanels = Array.from(document.querySelectorAll('.info-tab-content[data-info-panel]'));
+
+                        function renderInfoAchievements() {
+                            if (!infoAchievementsGrid || !window.Highscores || typeof window.Highscores.renderAchievements !== 'function') return;
+                            window.Highscores.renderAchievements(infoAchievementsGrid, { variant: 'cards', includeTitle: false });
+                        }
+
+                        function activateInfoTab(id) {
+                            infoTabs.forEach(tab => tab.classList.toggle('active', tab.getAttribute('data-info-tab') === id));
+                            infoPanels.forEach(panel => {
+                                const isActive = panel.getAttribute('data-info-panel') === id;
+                                panel.classList.toggle('active', isActive);
+                                if (isActive) {
+                                    panel.style.animation = 'none';
+                                    panel.offsetHeight;
+                                    panel.style.animation = '';
+                                }
+                            });
+                            if (id === 'achievements') renderInfoAchievements();
+                        }
+
+                        renderInfoAchievements();
 
                         // â”€â”€ Shared Helper: hide all menu overlays â”€â”€
                         function hideAllMenuOverlays() {
@@ -2485,6 +2493,18 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                activateInfoTab('about');
+                                if (infoOverlay) infoOverlay.style.display = 'flex';
+                            });
+                        }
+
+                        // ACHIEVEMENTS button
+                        if (achievementsBtn) {
+                            achievementsBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                activateInfoTab('achievements');
                                 if (infoOverlay) infoOverlay.style.display = 'flex';
                             });
                         }
@@ -2578,32 +2598,10 @@
 
                         // â”€â”€ INFO TABS wiring â”€â”€
                         {
-                            const tabs = document.querySelectorAll('.info-tab[data-info-tab]');
-                            const panels = document.querySelectorAll('.info-tab-content[data-info-panel]');
-                            tabs.forEach(tab => {
+                            infoTabs.forEach(tab => {
                                 tab.addEventListener('click', (ev) => {
                                     ev.preventDefault();
-                                    const id = tab.getAttribute('data-info-tab');
-                                    tabs.forEach(t => t.classList.toggle('active', t === tab));
-                                    panels.forEach(p => {
-                                        const isActive = p.getAttribute('data-info-panel') === id;
-                                        p.classList.toggle('active', isActive);
-                                        // Re-trigger the fade animation
-                                        if (isActive) { p.style.animation = 'none'; p.offsetHeight; p.style.animation = ''; }
-                                    });
-                                    // Refresh achievement unlock status when the achievements tab is shown
-                                    if (id === 'achievements') {
-                                        let unlocked = {};
-                                        try { unlocked = JSON.parse(localStorage.getItem('skunkfu_achievements_v1')) || {}; } catch(e){}
-                                        document.querySelectorAll('#info-achieve-grid .info-achieve-card[data-ach-id]').forEach(card => {
-                                            const achId = card.getAttribute('data-ach-id');
-                                            const isUnlocked = !!unlocked[achId];
-                                            card.classList.toggle('unlocked', isUnlocked);
-                                            card.classList.toggle('locked', !isUnlocked);
-                                            const lockEl = card.querySelector('.achieve-lock');
-                                            if (lockEl) lockEl.textContent = isUnlocked ? '\u2713' : '\uD83D\uDD12';
-                                        });
-                                    }
+                                    activateInfoTab(tab.getAttribute('data-info-tab'));
                                 });
                             });
                         }
