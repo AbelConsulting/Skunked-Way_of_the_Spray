@@ -19,10 +19,10 @@ const ENEMY_TYPE_CONFIG = {
     'FLYING': { prefix: 'fly', size: { width: 40, height: 40 }, fallback: null },
     'BOSS': { prefix: 'boss', size: { width: 128, height: 128 }, fallback: null, attackAnim: 'boss_attack1', bossName: 'SHADOW FANG', bossTitle: 'Guardian of the Forest', ability: 'charge' },
     'BOSS2': { prefix: 'boss2', size: { width: 128, height: 128 }, fallback: 'boss', attackAnim: 'boss2_attack', bossName: 'IRON CLAW', bossTitle: 'Enforcer of Skunk City', ability: 'groundSlam' },
-    'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack', bossName: 'STEEL FURY', bossTitle: 'Master of the Dojo', ability: 'rapidStrike' },
-    'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'MALODOR', bossTitle: 'Crossroads Kingpin', ability: 'projectile' },
-    'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'CRYSTAL WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
-    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'OBSIDIAN SHADE', bossTitle: 'Cavern Sentinel', ability: 'summon' }
+    'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack', bossName: 'BURGER FURY', bossTitle: 'Master of the Dojo', ability: 'rapidStrike' },
+    'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'MALODOR', bossTitle: 'Enemy Kingpin', ability: 'projectile' },
+    'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'STEAMPUNK WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
+    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' }
 };
 
 const BOSS_TYPE_INFO = Object.freeze(
