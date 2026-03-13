@@ -1905,81 +1905,15 @@
                         </div>
 
                         <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
-                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">The campaign rotates through 6 boss archetypes. Boss health scales from 6&times; to 18&times; base enemy HP, with later stages remixing the named rivals.</p>
-                        <div class="info-boss-row">
-                            <div class="boss-badge">
-                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss_idle.png');"></div>
-                                <strong>SHADOW FANG</strong><span>Guardian of the Forest<br>6&times; HP</span>
-                            </div>
-                            <div class="boss-badge">
-                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss2_idle.png');"></div>
-                                <strong>IRON CLAW</strong><span>Enforcer of Skunk City<br>8&times; HP</span>
-                            </div>
-                            <div class="boss-badge">
-                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss3_idle.png');"></div>
-                                <strong>STEEL FURY</strong><span>Master of the Dojo<br>10&times; HP</span>
-                            </div>
-                            <div class="boss-badge">
-                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss4_idle.png');"></div>
-                                <strong>NEON VIPER</strong><span>Crossroads Kingpin<br>13&times; HP</span>
-                            </div>
-                            <div class="boss-badge">
-                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss5_idle.png');"></div>
-                                <strong>CRYSTAL WRAITH</strong><span>Depths Dweller<br>12&times; HP</span>
-                            </div>
-                            <div class="boss-badge">
-                                <div class="boss-sprite-preview" style="background-image:url('assets/sprites/enemies/boss6_idle.png');"></div>
-                                <strong>OBSIDIAN SHADE</strong><span>Cavern Sentinel<br>11&times; HP</span>
-                            </div>
-                        </div>
+                        <p id="info-boss-summary" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">The campaign rotates through named boss archetypes with escalating health and rematches later in the run.</p>
+                        <div class="info-boss-row" id="info-boss-row"></div>
                     </div>
 
                     <!-- â”€â”€ TAB: Stages â”€â”€ -->
                     <div class="info-tab-content" data-info-panel="stages">
                         <h3 class="info-heading">&#127759; All 10 Stages</h3>
-                        <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Difficulty ramps through faster spawns, tougher boss rematches, and advanced enemy mixes. Every stage includes 3 Golden Idols, while the 6 named bosses rotate back in with stronger stats later in the campaign.</p>
-                        <div class="info-stages-grid">
-                            <div class="info-stage-card">
-                                <h4>1 &mdash; Forest Outskirts</h4>
-                                <p>&#127795; Grunts &amp; Tanks. SHADOW FANG opens the campaign at 6&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>2 &mdash; Skunk City</h4>
-                                <p>&#127961; Grunts, Speedsters &amp; Throwers. IRON CLAW guards the skyline at 8&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>3 &mdash; Mountain Dojo</h4>
-                                <p>&#9968; All 6 enemy types appear. STEEL FURY waits at 10&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>4 &mdash; Crystal Caverns</h4>
-                                <p>&#128142; Tight crystal routes and mixed enemy waves. OBSIDIAN SHADE rules at 11&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>5 &mdash; Crystal Caverns Depths</h4>
-                                <p>&#127754; No Grunts, only advanced foes. CRYSTAL WRAITH stalks the depths at 12&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>6 &mdash; Neon Crossroads</h4>
-                                <p>&#128161; Tanks, Kamikazes, Jumpers, and Throwers. NEON VIPER hits at 13&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>7 &mdash; Crystal Ridge</h4>
-                                <p>&#9968; High aggression rematch. SHADOW FANG returns powered up to 14&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>8 &mdash; Abyssal Caverns</h4>
-                                <p>&#128064; Kamikaze, Jumper, and Thrower only. IRON CLAW returns at 15&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>9 &mdash; Neon Nexus</h4>
-                                <p>&#9889; The hardest enemy trio. STEEL FURY rematches you at 16&times; HP.</p>
-                            </div>
-                            <div class="info-stage-card">
-                                <h4>10 &mdash; Final Showdown</h4>
-                                <p>&#128293; Final duel with NEON VIPER at 18&times; HP, 1.2&times; speed, and 2.3&times; damage.</p>
-                            </div>
-                        </div>
+                        <p id="info-stages-summary" style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">The campaign escalates through 10 stages with remixed bosses and increasingly punishing enemy rosters.</p>
+                        <div class="info-stages-grid" id="info-stages-grid"></div>
                     </div>
 
                     <!-- â”€â”€ TAB: Items â”€â”€ -->
@@ -2365,8 +2299,136 @@
                         const settingsBackBtn   = document.getElementById('menu-settings-back');
                         const scoresBoardEl     = document.getElementById('menu-scores-board');
                         const infoAchievementsGrid = document.getElementById('info-achieve-grid');
+                        const infoBossSummary = document.getElementById('info-boss-summary');
+                        const infoBossRow = document.getElementById('info-boss-row');
+                        const infoStagesSummary = document.getElementById('info-stages-summary');
+                        const infoStagesGrid = document.getElementById('info-stages-grid');
                         const infoTabs = Array.from(document.querySelectorAll('.info-tab[data-info-tab]'));
                         const infoPanels = Array.from(document.querySelectorAll('.info-tab-content[data-info-panel]'));
+
+                        function formatMultiplier(value) {
+                            const numeric = Number(value);
+                            if (!Number.isFinite(numeric)) return '1';
+                            return Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1).replace(/\.0$/, '');
+                        }
+
+                        function formatList(items) {
+                            if (!items.length) return '';
+                            if (items.length === 1) return items[0];
+                            if (items.length === 2) return items[0] + ' & ' + items[1];
+                            return items.slice(0, -1).join(', ') + ' & ' + items[items.length - 1];
+                        }
+
+                        function getBossInfoMap() {
+                            return (typeof window.SKUNKFU_BOSS_INFO === 'object' && window.SKUNKFU_BOSS_INFO) || {};
+                        }
+
+                        function renderInfoBosses() {
+                            if (!infoBossRow || typeof LEVEL_CONFIGS === 'undefined' || !Array.isArray(LEVEL_CONFIGS)) return;
+                            const bossInfoMap = getBossInfoMap();
+                            const seen = new Set();
+                            const bossEntries = [];
+
+                            LEVEL_CONFIGS.forEach((stageConfig, stageIndex) => {
+                                const bossType = stageConfig && stageConfig.boss && stageConfig.boss.type;
+                                if (!bossType || seen.has(bossType)) return;
+                                seen.add(bossType);
+                                const meta = bossInfoMap[bossType] || { type: bossType, prefix: String(bossType).toLowerCase(), bossName: bossType, bossTitle: 'Boss encounter' };
+                                bossEntries.push({
+                                    stageIndex,
+                                    healthMultiplier: stageConfig.boss.healthMultiplier,
+                                    ...meta
+                                });
+                            });
+
+                            infoBossRow.innerHTML = '';
+                            bossEntries.forEach((boss) => {
+                                const badge = document.createElement('div');
+                                badge.className = 'boss-badge';
+
+                                const preview = document.createElement('div');
+                                preview.className = 'boss-sprite-preview';
+                                preview.style.backgroundImage = `url('assets/sprites/enemies/${boss.prefix}_idle.png')`;
+
+                                const name = document.createElement('strong');
+                                name.textContent = boss.bossName || boss.type;
+
+                                const subtitle = document.createElement('span');
+                                subtitle.innerHTML = `${boss.bossTitle || 'Boss encounter'}<br>First seen Stage ${boss.stageIndex + 1} &bull; ${formatMultiplier(boss.healthMultiplier)}&times; HP`;
+
+                                badge.appendChild(preview);
+                                badge.appendChild(name);
+                                badge.appendChild(subtitle);
+                                infoBossRow.appendChild(badge);
+                            });
+
+                            if (infoBossSummary && bossEntries.length > 0) {
+                                const multipliers = LEVEL_CONFIGS
+                                    .map((stageConfig) => Number(stageConfig && stageConfig.boss && stageConfig.boss.healthMultiplier))
+                                    .filter((value) => Number.isFinite(value));
+                                const minHp = Math.min(...multipliers);
+                                const maxHp = Math.max(...multipliers);
+                                infoBossSummary.textContent = `The campaign rotates through ${bossEntries.length} named boss archetypes. Boss health scales from ${formatMultiplier(minHp)}x to ${formatMultiplier(maxHp)}x base enemy HP, with later stages remixing the same rivals.`;
+                            }
+                        }
+
+                        function renderInfoStages() {
+                            if (!infoStagesGrid || typeof LEVEL_CONFIGS === 'undefined' || !Array.isArray(LEVEL_CONFIGS)) return;
+                            const bossInfoMap = getBossInfoMap();
+                            const enemyTypeLabels = {
+                                BASIC: 'Grunts',
+                                FAST_BASIC: 'Speedsters',
+                                SECOND_BASIC: 'Shield Tanks',
+                                THIRD_BASIC: 'Kamikazes',
+                                FOURTH_BASIC: 'Jumpers',
+                                FIFTH_BASIC: 'Throwers'
+                            };
+
+                            const describeRoster = (allowedTypes) => {
+                                const labels = (Array.isArray(allowedTypes) ? allowedTypes : [])
+                                    .map((type) => enemyTypeLabels[type])
+                                    .filter(Boolean);
+                                if (labels.length === 0) return 'Mixed enemy roster';
+                                if (labels.length === Object.keys(enemyTypeLabels).length) return 'All 6 enemy types';
+                                if (labels.length === 1) return labels[0] + ' only';
+                                return formatList(labels);
+                            };
+
+                            infoStagesGrid.innerHTML = '';
+                            LEVEL_CONFIGS.forEach((stageConfig, stageIndex) => {
+                                const bossMeta = bossInfoMap[stageConfig && stageConfig.boss && stageConfig.boss.type] || {};
+                                const card = document.createElement('div');
+                                card.className = 'info-stage-card';
+
+                                const heading = document.createElement('h4');
+                                heading.textContent = `${stageIndex + 1} — ${stageConfig.name}`;
+
+                                const body = document.createElement('p');
+                                const bossBits = [];
+                                if (stageConfig.boss && Number(stageConfig.boss.speedMultiplier) > 1) {
+                                    bossBits.push(`${formatMultiplier(stageConfig.boss.speedMultiplier)}x speed`);
+                                }
+                                if (stageConfig.boss && Number(stageConfig.boss.attackDamageMultiplier) > 1) {
+                                    bossBits.push(`${formatMultiplier(stageConfig.boss.attackDamageMultiplier)}x damage`);
+                                }
+                                const bossName = bossMeta.bossName || (stageConfig.boss && stageConfig.boss.type) || 'Boss';
+                                const roster = describeRoster(stageConfig && stageConfig.enemyConfig && stageConfig.enemyConfig.allowedTypes);
+                                body.textContent = `${roster}. ${bossName} at ${formatMultiplier(stageConfig.boss.healthMultiplier)}x HP${bossBits.length ? ', ' + bossBits.join(', ') : ''}.`;
+
+                                card.appendChild(heading);
+                                card.appendChild(body);
+                                infoStagesGrid.appendChild(card);
+                            });
+
+                            if (infoStagesSummary) {
+                                const uniqueBossCount = new Set(
+                                    LEVEL_CONFIGS
+                                        .map((stageConfig) => stageConfig && stageConfig.boss && stageConfig.boss.type)
+                                        .filter(Boolean)
+                                ).size;
+                                infoStagesSummary.textContent = `The campaign escalates through ${LEVEL_CONFIGS.length} stages with tougher boss rematches and sharper enemy mixes. Every stage includes 3 Golden Idols, while ${uniqueBossCount} named bosses rotate back in with stronger stats later in the run.`;
+                            }
+                        }
 
                         function renderInfoAchievements() {
                             if (!infoAchievementsGrid || !window.Highscores || typeof window.Highscores.renderAchievements !== 'function') return;
@@ -2387,6 +2449,8 @@
                             if (id === 'achievements') renderInfoAchievements();
                         }
 
+                        renderInfoBosses();
+                        renderInfoStages();
                         renderInfoAchievements();
 
                         // â”€â”€ Shared Helper: hide all menu overlays â”€â”€

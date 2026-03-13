@@ -25,6 +25,24 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'OBSIDIAN SHADE', bossTitle: 'Cavern Sentinel', ability: 'summon' }
 };
 
+const BOSS_TYPE_INFO = Object.freeze(
+    Object.fromEntries(
+        Object.entries(ENEMY_TYPE_CONFIG)
+            .filter(([type]) => /^BOSS\d*$/.test(type))
+            .map(([type, config]) => [type, {
+                type,
+                prefix: config.prefix,
+                bossName: config.bossName,
+                bossTitle: config.bossTitle,
+                ability: config.ability
+            }])
+    )
+);
+
+if (typeof window !== 'undefined') {
+    window.SKUNKFU_BOSS_INFO = BOSS_TYPE_INFO;
+}
+
 class Enemy {
     constructor(x, y, enemyType = "BASIC", audioManager = null) {
         this.x = x;
