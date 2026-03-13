@@ -2413,7 +2413,7 @@
                                 }
                                 const bossName = bossMeta.bossName || (stageConfig.boss && stageConfig.boss.type) || 'Boss';
                                 const roster = describeRoster(stageConfig && stageConfig.enemyConfig && stageConfig.enemyConfig.allowedTypes);
-                                body.textContent = `${roster}. ${bossName} at ${formatMultiplier(stageConfig.boss.healthMultiplier)}x HP${bossBits.length ? ', ' + bossBits.join(', ') : ''}.`;
+                                body.textContent = `${roster}. Boss encounter: ${bossName}${bossBits.length ? ' with ' + bossBits.join(' and ') : ''}.`;
 
                                 card.appendChild(heading);
                                 card.appendChild(body);
