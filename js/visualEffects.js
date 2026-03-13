@@ -59,12 +59,20 @@ class FloatingText {
         this.velocityY = -60;
         this.alpha = 1.0;
         this.font = 'bold 20px Arial';
+        this.strokeStyle = 'rgba(0, 0, 0, 0.65)';
+        this.lineWidth = 3;
+        this.shadowColor = null;
+        this.shadowBlur = 0;
 
         if (opts && typeof opts === 'object') {
             if (typeof opts.color === 'string') this.color = opts.color;
             if (typeof opts.lifetime === 'number') this.lifetime = opts.lifetime;
             if (typeof opts.velocityY === 'number') this.velocityY = opts.velocityY;
             if (typeof opts.font === 'string') this.font = opts.font;
+            if (typeof opts.strokeStyle === 'string') this.strokeStyle = opts.strokeStyle;
+            if (typeof opts.lineWidth === 'number') this.lineWidth = opts.lineWidth;
+            if (typeof opts.shadowColor === 'string') this.shadowColor = opts.shadowColor;
+            if (typeof opts.shadowBlur === 'number') this.shadowBlur = opts.shadowBlur;
         }
     }
 
@@ -83,14 +91,18 @@ class FloatingText {
         ctx.globalAlpha = Math.max(0, this.alpha);
         ctx.font = this.font;
         ctx.fillStyle = this.color;
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.lineWidth = this.lineWidth;
 
         const text = this.text.toString();
         const metrics = ctx.measureText(text);
         const textX = this.x - metrics.width / 2;
 
         ctx.strokeText(text, textX, this.y);
+        if (this.shadowColor && this.shadowBlur > 0) {
+            ctx.shadowColor = this.shadowColor;
+            ctx.shadowBlur = this.shadowBlur;
+        }
         ctx.fillText(text, textX, this.y);
         ctx.restore();
     }

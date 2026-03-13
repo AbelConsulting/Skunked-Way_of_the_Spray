@@ -802,6 +802,33 @@ class Game {
             } catch (e) { /* ignore */ }
         }
 
+        _spawnComboToast(x, y, text, opts = null) {
+            try {
+                const options = opts || {};
+                const color = (typeof options.color === 'string') ? options.color : '#FFD93D';
+                const yOffset = (typeof options.yOffset === 'number') ? options.yOffset : -72;
+                const size = (typeof options.size === 'number') ? options.size : 26;
+                const lifetime = (typeof options.lifetime === 'number') ? options.lifetime : 1.15;
+                const velocityY = (typeof options.velocityY === 'number') ? options.velocityY : -105;
+
+                this.damageNumbers.push(new FloatingText(
+                    x,
+                    y + yOffset,
+                    text,
+                    {
+                        color,
+                        lifetime,
+                        velocityY,
+                        font: `bold ${size}px 'Bangers', 'Arial Black', sans-serif`,
+                        strokeStyle: options.strokeStyle || 'rgba(20, 8, 0, 0.92)',
+                        lineWidth: (typeof options.lineWidth === 'number') ? options.lineWidth : 4,
+                        shadowColor: options.shadowColor || color,
+                        shadowBlur: (typeof options.shadowBlur === 'number') ? options.shadowBlur : 16
+                    }
+                ));
+            } catch (e) { __err('game', e); }
+        }
+
         togglePause() {
             if (this.state === 'PLAYING') {
                 this.state = 'PAUSED';
@@ -1714,7 +1741,7 @@ class Game {
             } catch (e) { __err('game', e); }
             this.gameStats.totalDamage += attackResult.totalDamage;
 
-            // â”€â”€ Multi-enemy hit bonus â”€â”€
+            // Multi-enemy hit bonus
             // Grants extra combo stacks + bonus score for cleaving 2+ enemies
             if (attackResult.enemiesHit > 1 && typeof this.player.registerMultiHit === 'function') {
                 this.player.registerMultiHit(attackResult.enemiesHit);
@@ -1726,17 +1753,17 @@ class Game {
                 try {
                     const firstEnemy = this.enemyManager.getEnemies().find(e => this.player.hitEnemies.has(e));
                     if (firstEnemy) {
-                        this.damageNumbers.push(new FloatingText(
+                        this._spawnComboToast(
                             firstEnemy.x + (firstEnemy.width || 48) / 2,
-                            firstEnemy.y - 40,
-                            `MULTI x${attackResult.enemiesHit}! +${bonusPts}`,
-                            { color: '#00FFFF', lifetime: 1.5, velocityY: -120, font: 'bold 22px Arial' }
-                        ));
+                            firstEnemy.y,
+                            `MULTI HIT x${attackResult.enemiesHit} +${bonusPts}`,
+                            { color: '#5DF6FF', yOffset: -56, lifetime: 1.35, velocityY: -118, size: 24, shadowColor: '#00E5FF' }
+                        );
                     }
                 } catch (e) { __err('game', e); }
             }
 
-            // â”€â”€ Combo score multiplier â”€â”€
+            // Combo score multiplier
             const comboMult = (typeof this.player.getComboMultiplier === 'function')
                 ? this.player.getComboMultiplier() : 1.0;
             const baseScore = attackResult.totalDamage * 10;
@@ -1751,12 +1778,12 @@ class Game {
                 try {
                     const firstEnemy = this.enemyManager.getEnemies().find(e => this.player.hitEnemies.has(e));
                     if (firstEnemy && (!this.isMobile || this.damageNumbers.length < ((Config.MOBILE_MAX_DAMAGE_NUMBERS || 1) + 2))) {
-                        this.damageNumbers.push(new FloatingText(
+                        this._spawnComboToast(
                             firstEnemy.x + (firstEnemy.width || 48) / 2,
-                            firstEnemy.y - 70,
-                            `x${comboMult.toFixed(1)}`,
-                            { color: '#FFD700', lifetime: 0.8, velocityY: -80, font: 'bold 18px Arial' }
-                        ));
+                            firstEnemy.y,
+                            `${comboMult.toFixed(1)}x COMBO BONUS`,
+                            { color: '#FFD54A', yOffset: -92, lifetime: 0.95, velocityY: -88, size: 22, shadowColor: '#FFB300', shadowBlur: 14 }
+                        );
                     }
                 } catch (e) { __err('game', e); }
             }
@@ -1799,19 +1826,19 @@ class Game {
                 }
             }
 
-            // â”€â”€ Combo tier milestones â”€â”€
+            // Combo tier milestones
             // Show milestone text and screen shake when hitting a new tier threshold
             try {
                 const tier = (typeof this.player.getComboTier === 'function') ? this.player.getComboTier() : null;
                 if (tier && tier.threshold > (this.player._lastComboTier || 0)) {
                     this.player._lastComboTier = tier.threshold;
                     // Milestone floating text
-                    this.damageNumbers.push(new FloatingText(
+                    this._spawnComboToast(
                         this.player.x + (this.player.width || 48) / 2,
-                        this.player.y - 60,
-                        `ðŸ”¥ ${tier.label} x${this.player.comboCount}`,
-                        { color: tier.color, lifetime: 2.0, velocityY: -130, font: 'bold 26px Arial' }
-                    ));
+                        this.player.y,
+                        `${tier.label} ${this.player.comboCount} HIT STREAK`,
+                        { color: tier.color, yOffset: -84, lifetime: 1.85, velocityY: -132, size: 30, shadowBlur: 22 }
+                    );
                     // Tier screen shake
                     const shakeDur = (Config.COMBO && Config.COMBO.SHAKE_DURATION) || 0.12;
                     this.screenShake = new ScreenShake(shakeDur, tier.shake || 5);
@@ -2038,7 +2065,7 @@ class Game {
                         try {
                             this.damageNumbers.push(new FloatingText(
                                 pcx, playerRect.y - 20,
-                                'ðŸ’¥ BOOM! -' + damage,
+                                'BOOM! -' + damage,
                                 { color: '#FF2200', lifetime: 2.0, velocityY: -100, font: 'bold 24px Arial' }
                             ));
                         } catch (e) { __err('game', e); }
@@ -2175,7 +2202,7 @@ class Game {
         }
         
         // Prevent death during initial spawn invulnerability window
-        // BUT if health is already <= 0 the player IS dead â€” don't block it.
+        // BUT if health is already <= 0 the player IS dead - don't block it.
         if (!alreadyDead && this.player.invulnerableTimer > 0) {
             console.log('=== DEATH BLOCKED - INVULNERABLE ===');
             console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
@@ -2360,7 +2387,7 @@ class Game {
     }
 
     updateCamera() {
-        // Centered horizontal follow â€” snap camera to keep player centered.
+        // Centered horizontal follow - snap camera to keep player centered.
         // Snapping avoids the player running off-screen on narrow/mobile viewports.
         const viewW = this.viewWidth || this.width;
         const playerCenterX = this.player.x + (this.player.width || 0) * 0.5;
@@ -2413,7 +2440,7 @@ class Game {
     }
 
     panCamera(deltaX) {
-        // Simple pan helper â€” moves camera by delta and clamps to level bounds
+        // Simple pan helper - moves camera by delta and clamps to level bounds
         const cur = this.cameraX || 0;
         const maxX = Math.max(0, this.level.width - (this.viewWidth || this.width));
         const next = Utils.clamp(cur + (deltaX || 0), 0, maxX);
@@ -2521,7 +2548,7 @@ class Game {
 
                 // Hazards removed: nothing to draw here.
 
-                // Editor overlays (selection / hover) â€” draw in world coordinates
+                // Editor overlays (selection / hover) - draw in world coordinates
                 // Only draw if editor panel is actually visible
                 const editorPanel = document.getElementById('level-editor-panel');
                 const editorVisible = editorPanel && editorPanel.style.display !== 'none';
