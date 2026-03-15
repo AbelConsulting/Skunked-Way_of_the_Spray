@@ -636,13 +636,16 @@
         .menu-sub-panel {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            padding: 24px 28px 20px;
-            border-radius: 18px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: linear-gradient(180deg, rgba(10,12,16,0.94), rgba(0,0,0,0.82));
-            box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+            align-items: stretch;
+            gap: 16px;
+            padding: 26px 28px 22px;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
+                radial-gradient(circle at top left, rgba(63, 143, 255, 0.12), rgba(10, 14, 24, 0) 38%),
+                linear-gradient(180deg, rgba(9,12,18,0.96), rgba(3,5,10,0.90));
+            box-shadow: 0 26px 80px rgba(0,0,0,0.6);
             backdrop-filter: blur(12px);
             width: min(440px, 90vw);
             max-height: 85vh;
@@ -651,13 +654,62 @@
 
         .menu-sub-panel--wide { width: min(600px, 92vw); }
 
+        .menu-sub-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .menu-sub-eyebrow {
+            margin: 0;
+            color: rgba(120, 229, 255, 0.88);
+            font: 700 12px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+        }
+
         .menu-sub-title {
             margin: 0;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
-            font-size: clamp(22px, 4vw, 34px);
-            color: #FFD700;
-            text-shadow: 0 0 14px rgba(255,215,0,0.4);
-            letter-spacing: 0.04em;
+            font: 700 clamp(28px, 4vw, 38px) 'Space Grotesk', 'Segoe UI', sans-serif;
+            color: #F7FBFF;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.35);
+            letter-spacing: -0.03em;
+        }
+
+        .menu-sub-lede {
+            margin: 0;
+            color: rgba(220, 231, 240, 0.68);
+            font: 500 14px/1.6 'Space Grotesk', 'Segoe UI', sans-serif;
+            max-width: 64ch;
+        }
+
+        .menu-sub-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.07);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+
+        .menu-sub-section-title {
+            margin: 0;
+            color: #F4F8FB;
+            font: 700 16px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .menu-sub-section-copy {
+            margin: 0;
+            color: rgba(216, 228, 238, 0.64);
+            font: 500 12px/1.55 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+
+        #menu-scores-board {
+            width: 100%;
+            padding: 10px 0 2px;
         }
 
         /* Info screen layout */
@@ -677,38 +729,50 @@
 
         .info-heading {
             margin: 0 0 8px;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-size: 20px;
-            color: #88CCFF;
-            letter-spacing: 0.03em;
+            font-weight: 700;
+            color: #CFE8FF;
+            letter-spacing: -0.02em;
         }
 
         .info-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 13px;
             color: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
         }
 
         .info-table td {
-            padding: 5px 8px;
+            padding: 8px 10px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
+        .info-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .info-key {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 10px;
-            color: #00FF77;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #86FFD8;
             white-space: nowrap;
             width: 110px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
         }
 
         .info-tips {
             margin: 0;
             padding: 0 0 0 18px;
-            font-size: 13px;
+            font: 500 13px/1.7 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.8);
-            line-height: 1.7;
         }
 
         .info-tips li { margin-bottom: 4px; }
@@ -717,9 +781,8 @@
 
         .info-lore {
             margin: 0;
-            font-size: 13px;
+            font: 500 13px/1.75 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.7);
-            line-height: 1.6;
             font-style: italic;
         }
 
@@ -728,39 +791,41 @@
            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         .info-tabs {
             display: flex;
-            gap: 4px;
+            gap: 8px;
             width: 100%;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: flex-start;
         }
 
         .info-tab {
             appearance: none;
             border: 1px solid rgba(255,255,255,0.10);
             background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.55);
-            padding: 8px 14px;
-            border-radius: 8px 8px 0 0;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
-            font-size: clamp(12px, 2vw, 15px);
-            letter-spacing: 0.04em;
+            color: rgba(255,255,255,0.58);
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: clamp(12px, 2vw, 14px);
+            font-weight: 700;
+            letter-spacing: 0.02em;
             cursor: pointer;
-            transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+            transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 150ms ease;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .info-tab:hover { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.8); }
+        .info-tab:hover { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.84); transform: translateY(-1px); }
         .info-tab.active {
-            background: rgba(80,255,244,0.12);
-            color: #50FFF4;
-            border-color: rgba(80,255,244,0.35);
-            border-bottom-color: transparent;
+            background: linear-gradient(180deg, rgba(89, 228, 255, 0.20), rgba(41, 97, 143, 0.22));
+            color: #DFFBFF;
+            border-color: rgba(80,255,244,0.32);
+            box-shadow: 0 8px 18px rgba(80,255,244,0.12);
         }
 
         .info-tab-content {
             display: none;
             width: 100%;
             animation: infoTabFade 0.25s ease both;
+            padding-top: 2px;
         }
 
         .info-tab-content.active { display: block; }
@@ -779,20 +844,21 @@
         }
 
         .info-feature {
-            padding: 8px 10px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            font-size: 12px;
+            padding: 12px 12px 10px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            font: 500 12px/1.55 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.8);
-            text-align: center;
+            text-align: left;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .info-feature strong {
             display: block;
-            color: #FFD700;
-            font-size: 14px;
-            margin-bottom: 2px;
+            color: #F6D770;
+            font: 700 15px 'Space Grotesk', 'Segoe UI', sans-serif;
+            margin-bottom: 4px;
         }
 
         /* Move cards (attack types) */
@@ -804,30 +870,33 @@
         }
 
         .info-move-card {
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.045);
             border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .info-move-card h4 {
             margin: 0 0 4px;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-size: 16px;
+            font-weight: 700;
             color: #00FF77;
         }
 
         .info-move-card p {
             margin: 0;
-            font-size: 12px;
+            font: 500 12px/1.55 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.75);
-            line-height: 1.5;
         }
 
         .info-move-card .move-stat {
-            font-size: 11px;
+            font: 600 11px 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.5);
-            margin-top: 4px;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         /* Combo tiers */
@@ -839,13 +908,14 @@
         }
 
         .combo-tier {
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.02em;
-            background: rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.08);
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
         }
 
         /* Enemy cards */
@@ -857,13 +927,14 @@
         }
 
         .info-enemy-card {
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.045);
             border: 1px solid rgba(255,255,255,0.08);
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: flex-start;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .enemy-sprite-preview {
@@ -887,22 +958,24 @@
 
         .info-enemy-card h4 {
             margin: 0 0 2px;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-size: 15px;
+            font-weight: 700;
             color: #FF8844;
         }
 
         .info-enemy-card .enemy-stats {
-            font-size: 11px;
+            font: 600 11px 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.5);
             margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .info-enemy-card p {
             margin: 0;
-            font-size: 12px;
+            font: 500 12px/1.5 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.72);
-            line-height: 1.45;
         }
 
         /* Boss badges */
@@ -914,15 +987,17 @@
         }
 
         .boss-badge {
-            padding: 8px 14px;
-            border-radius: 10px;
-            background: linear-gradient(180deg, rgba(255,0,0,0.12), rgba(60,0,0,0.3));
-            border: 1px solid rgba(255,80,80,0.2);
-            text-align: center;
-            min-width: 80px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(255,76,76,0.14), rgba(44,12,18,0.45));
+            border: 1px solid rgba(255,80,80,0.18);
+            text-align: left;
+            min-width: 110px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
+            gap: 2px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .boss-sprite-preview {
@@ -941,14 +1016,15 @@
 
         .boss-badge strong {
             display: block;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-size: 14px;
-            color: #FF4444;
+            font-weight: 700;
+            color: #FFD5D9;
         }
 
         .boss-badge span {
-            font-size: 11px;
-            color: rgba(255,255,255,0.5);
+            font: 500 11px/1.45 'Space Grotesk', 'Segoe UI', sans-serif;
+            color: rgba(255,255,255,0.62);
         }
 
         /* Stage cards */
@@ -960,24 +1036,25 @@
         }
 
         .info-stage-card {
-            padding: 8px 10px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 12px 10px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.07);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .info-stage-card h4 {
             margin: 0 0 2px;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-size: 14px;
+            font-weight: 700;
             color: #88CCFF;
         }
 
         .info-stage-card p {
             margin: 0;
-            font-size: 11px;
+            font: 500 11px/1.5 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.6);
-            line-height: 1.4;
         }
 
         /* Item cards */
@@ -989,22 +1066,22 @@
         }
 
         .info-item-card {
-            padding: 8px 10px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 12px 10px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.07);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .info-item-card h4 {
             margin: 0 0 2px;
-            font-size: 14px;
+            font: 700 14px 'Space Grotesk', 'Segoe UI', sans-serif;
         }
 
         .info-item-card p {
             margin: 0;
-            font-size: 11px;
+            font: 500 11px/1.5 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.65);
-            line-height: 1.4;
         }
 
         /* Achievement grid */
@@ -1016,13 +1093,14 @@
         }
 
         .info-achieve-card {
-            padding: 8px 10px;
-            border-radius: 10px;
+            padding: 12px 12px 10px;
+            border-radius: 16px;
             background: rgba(255,215,0,0.05);
             border: 1px solid rgba(255,215,0,0.12);
             display: flex;
             align-items: flex-start;
-            gap: 8px;
+            gap: 10px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .info-achieve-card .achieve-icon {
@@ -1033,13 +1111,13 @@
 
         .info-achieve-card h4 {
             margin: 0 0 2px;
-            font-size: 13px;
+            font: 700 13px 'Space Grotesk', 'Segoe UI', sans-serif;
             color: #FFD700;
         }
 
         .info-achieve-card p {
             margin: 0;
-            font-size: 11px;
+            font: 500 11px/1.45 'Space Grotesk', 'Segoe UI', sans-serif;
             color: rgba(255,255,255,0.6);
         }
 
@@ -1070,20 +1148,56 @@
 
         /* Control groups */
         .info-ctrl-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            padding: 14px 14px 12px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .info-ctrl-group h4 {
             margin: 0 0 6px;
-            font-family: 'Bangers', 'Arial Black', sans-serif;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             font-size: 16px;
+            font-weight: 700;
             color: #88CCFF;
         }
 
         /* Scrollable panel override for wide info */
         .menu-sub-panel--info {
-            width: min(680px, 94vw);
+            width: min(760px, 94vw);
             max-height: 88vh;
+        }
+
+        .menu-settings-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .menu-settings-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+
+        .menu-settings-card h3 {
+            margin: 0;
+            color: #F4F8FB;
+            font: 700 17px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .menu-settings-card p {
+            margin: 0;
+            color: rgba(218, 228, 236, 0.62);
+            font: 500 12px/1.6 'Space Grotesk', 'Segoe UI', sans-serif;
         }
 
         @media (max-width: 520px) {
@@ -1102,6 +1216,9 @@
             }
             .menu-sub-panel--info {
                 padding: 16px 12px;
+            }
+            .info-tabs {
+                justify-content: center;
             }
         }
 
@@ -1887,10 +2004,17 @@
             <!-- â•â•â•â•â•â• HIGH SCORES SCREEN (from main menu) â•â•â•â•â•â• -->
             <div id="menu-scores-overlay" style="display:none;">
                 <div class="menu-sub-panel">
-                    <h2 class="menu-sub-title">&#127942; HIGH SCORES</h2>
+                    <div class="menu-sub-header">
+                        <p class="menu-sub-eyebrow">Leaderboard Hub</p>
+                        <h2 class="menu-sub-title">&#127942; High Scores</h2>
+                        <p class="menu-sub-lede">Compare your best runs, spot the next score to beat, and use the main hub to jump right back into another attempt.</p>
+                    </div>
                     <hr class="pause-divider">
-                    <div id="menu-scores-board"></div>
-                    <hr class="pause-divider">
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">Current Board</h3>
+                        <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
+                        <div id="menu-scores-board"></div>
+                    </div>
                     <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
@@ -1898,7 +2022,11 @@
             <!-- â•â•â•â•â•â• INFO SCREEN (from main menu) â€” Tabbed â•â•â•â•â•â• -->
             <div id="menu-info-overlay" style="display:none;">
                 <div class="menu-sub-panel menu-sub-panel--info">
-                    <h2 class="menu-sub-title">&#9432; GAME INFO</h2>
+                    <div class="menu-sub-header">
+                        <p class="menu-sub-eyebrow">Run Intel</p>
+                        <h2 class="menu-sub-title">&#9432; Game Info</h2>
+                        <p class="menu-sub-lede">Everything you need before a run: controls, combat tools, enemy behavior, stage progression, items, and completion goals.</p>
+                    </div>
                     <hr class="pause-divider">
 
                     <!-- Tab bar -->
@@ -2129,23 +2257,35 @@
             <!-- â•â•â•â•â•â• SETTINGS SCREEN (from main menu) â•â•â•â•â•â• -->
             <div id="menu-settings-overlay" style="display:none;">
                 <div class="menu-sub-panel">
-                    <h2 class="menu-sub-title">&#9881; SETTINGS</h2>
-                    <hr class="pause-divider">
-                    <div class="pause-volume-controls">
-                        <div class="volume-row">
-                            <label for="menu-sfx-volume">&#128266; SFX</label>
-                            <input type="range" id="menu-sfx-volume" min="0" max="100" value="70">
-                            <span class="volume-value" id="menu-sfx-volume-value">70%</span>
-                        </div>
-                        <div class="volume-row">
-                            <label for="menu-music-volume">&#127925; Music</label>
-                            <input type="range" id="menu-music-volume" min="0" max="100" value="50">
-                            <span class="volume-value" id="menu-music-volume-value">50%</span>
-                        </div>
+                    <div class="menu-sub-header">
+                        <p class="menu-sub-eyebrow">Loadout Tuning</p>
+                        <h2 class="menu-sub-title">&#9881; Settings</h2>
+                        <p class="menu-sub-lede">Keep all persistent run setup here so the pause menu can stay focused on getting you back into the action fast.</p>
                     </div>
                     <hr class="pause-divider">
-                    <button id="reset-tutorial-btn" class="menu-btn" style="font-size:13px;padding:10px 16px;">&#128161; Reset Tutorial Hints</button>
-                    <hr class="pause-divider">
+                    <div class="menu-settings-stack">
+                        <div class="menu-settings-card">
+                            <h3>Audio Mix</h3>
+                            <p>Dial in your SFX and music balance before you launch the next run.</p>
+                            <div class="pause-volume-controls">
+                                <div class="volume-row">
+                                    <label for="menu-sfx-volume">&#128266; SFX</label>
+                                    <input type="range" id="menu-sfx-volume" min="0" max="100" value="70">
+                                    <span class="volume-value" id="menu-sfx-volume-value">70%</span>
+                                </div>
+                                <div class="volume-row">
+                                    <label for="menu-music-volume">&#127925; Music</label>
+                                    <input type="range" id="menu-music-volume" min="0" max="100" value="50">
+                                    <span class="volume-value" id="menu-music-volume-value">50%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="menu-settings-card">
+                            <h3>Tutorial Flow</h3>
+                            <p>Replay onboarding hints from scratch if you want another guided first-stage pass.</p>
+                            <button id="reset-tutorial-btn" class="menu-btn" style="font-size:13px;padding:10px 16px;">&#128161; Reset Tutorial Hints</button>
+                        </div>
+                    </div>
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
