@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Scores collection: anyone can read, only server (Cloud Functions) can write
+    match /scores/{scoreId} {
+      allow read: if true;
+      allow write: if false;  // Writes go through Cloud Functions only
+    }
+
+    // Default: deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

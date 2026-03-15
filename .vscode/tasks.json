@@ -101,6 +101,82 @@
 			"command": "npx",
 			"args": ["cap", "open", "android"],
 			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Start Emulators",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "firebase:emulators"],
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Local Serve (build + serve)",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "firebase:serve"],
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Deploy All",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "firebase:deploy"],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Deploy Hosting Only",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "firebase:deploy:hosting"],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Deploy Functions Only",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "firebase:deploy:functions"],
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Deploy Firestore Rules",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "firebase:deploy:rules"],
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: View Logs",
+			"type": "shell",
+			"command": "firebase",
+			"args": ["functions:log", "--only", "submitScore,getLeaderboard,health"],
+			"problemMatcher": []
+		},
+		{
+			"label": "Firebase: Open Console in Browser",
+			"type": "shell",
+			"command": "cmd",
+			"args": ["/c", "start", "https://console.firebase.google.com/project/studio-3829586481-2a2cf/overview"],
+			"windows": {
+				"command": "cmd",
+				"args": ["/c", "start", "https://console.firebase.google.com/project/studio-3829586481-2a2cf/overview"]
+			},
+			"problemMatcher": []
 		}
 	]
 }
