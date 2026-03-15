@@ -23,7 +23,7 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'MALODOR', bossTitle: 'Enemy Kingpin', ability: 'projectile' },
     'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'STEAMPUNK WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
     'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' },
-    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'BOSS 7', bossTitle: 'Crystal Ridge Warden', ability: 'crystalBarrage' }
+    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Ridge Warden', ability: 'crystalBarrage' }
 };
 
 const HEAVY_BOSS_ATTACK_TYPES = new Set(['BOSS5', 'BOSS6', 'BOSS7']);
@@ -1423,6 +1423,12 @@ class Enemy {
                         width: 20,
                         height: 20,
                         lifetime: 2.8,
+                        trailRgb: '60, 220, 255',
+                        glowInner: 'rgba(80, 255, 180, 0.62)',
+                        glowMid: 'rgba(40, 160, 255, 0.30)',
+                        glowOuter: 'rgba(0, 80, 180, 0)',
+                        coreColor: '#6BFFD8',
+                        strokeColor: '#1C8CFF',
                         soundVolume: 0.78,
                         soundRate: 1.2
                     });
@@ -1454,6 +1460,12 @@ class Enemy {
         const projectileHeight = (typeof options.height === 'number') ? options.height : 18;
         const lifetime = (typeof options.lifetime === 'number') ? options.lifetime : 2.5;
         const centerIndex = (count - 1) / 2;
+        const trailRgb = (typeof options.trailRgb === 'string') ? options.trailRgb : '160, 60, 255';
+        const glowInner = (typeof options.glowInner === 'string') ? options.glowInner : 'rgba(200, 80, 255, 0.55)';
+        const glowMid = (typeof options.glowMid === 'string') ? options.glowMid : 'rgba(150, 40, 255, 0.25)';
+        const glowOuter = (typeof options.glowOuter === 'string') ? options.glowOuter : 'rgba(120, 0, 255, 0)';
+        const coreColor = (typeof options.coreColor === 'string') ? options.coreColor : '#CC44FF';
+        const strokeColor = (typeof options.strokeColor === 'string') ? options.strokeColor : '#8800CC';
 
         for (let i = 0; i < count; i++) {
             const angle = baseAngle + (i - centerIndex) * spread;
@@ -1467,7 +1479,13 @@ class Enemy {
                 velocityY: Math.sin(angle) * speed,
                 damage: Math.floor(this.attackDamage * damageScale),
                 lifetime,
-                age: 0
+                age: 0,
+                trailRgb,
+                glowInner,
+                glowMid,
+                glowOuter,
+                coreColor,
+                strokeColor
             });
         }
         this.facingRight = pcx > ecx;
@@ -1497,7 +1515,7 @@ class Enemy {
     }
 
     /**
-     * Draw purple spray projectiles for FIFTH_BASIC.
+     * Draw active projectiles for ranged enemies and bosses.
      */
     drawProjectiles(ctx, cameraX, cameraY) {
         if (!this.thrownProjectiles || this.thrownProjectiles.length === 0) return;
@@ -1513,7 +1531,8 @@ class Enemy {
             const ny = proj.velocityY / mag;
             for (let j = 1; j <= 3; j++) {
                 const a = ((3 - j) / 3) * 0.28;
-                ctx.fillStyle = `rgba(160, 60, 255, ${a})`;
+                const trailRgb = (typeof proj.trailRgb === 'string') ? proj.trailRgb : '160, 60, 255';
+                ctx.fillStyle = `rgba(${trailRgb}, ${a})`;
                 ctx.beginPath();
                 ctx.arc(-nx * j * 8, -ny * j * 8, proj.width * (1 - j / 3 * 0.5) / 2, 0, Math.PI * 2);
                 ctx.fill();
@@ -1521,17 +1540,17 @@ class Enemy {
 
             // Outer glow
             const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, proj.width * 1.4);
-            glow.addColorStop(0, 'rgba(200, 80, 255, 0.55)');
-            glow.addColorStop(0.5, 'rgba(150, 40, 255, 0.25)');
-            glow.addColorStop(1, 'rgba(120, 0, 255, 0)');
+            glow.addColorStop(0, proj.glowInner || 'rgba(200, 80, 255, 0.55)');
+            glow.addColorStop(0.5, proj.glowMid || 'rgba(150, 40, 255, 0.25)');
+            glow.addColorStop(1, proj.glowOuter || 'rgba(120, 0, 255, 0)');
             ctx.fillStyle = glow;
             ctx.beginPath();
             ctx.arc(0, 0, proj.width * 1.4, 0, Math.PI * 2);
             ctx.fill();
 
             // Core orb
-            ctx.fillStyle = '#CC44FF';
-            ctx.strokeStyle = '#8800CC';
+            ctx.fillStyle = proj.coreColor || '#CC44FF';
+            ctx.strokeStyle = proj.strokeColor || '#8800CC';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(0, 0, proj.width / 2, 0, Math.PI * 2);
