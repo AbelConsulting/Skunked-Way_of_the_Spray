@@ -300,6 +300,29 @@
                         linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #050510 100%);
             background-size: 200% 200%, 200% 200%, 100% 100%;
             animation: menuBgShift 12s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        #start-menu-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 5% auto auto 8%;
+            width: min(42vw, 480px);
+            height: min(42vw, 480px);
+            background: radial-gradient(circle, rgba(73, 255, 185, 0.18), rgba(73, 255, 185, 0));
+            filter: blur(20px);
+            pointer-events: none;
+        }
+
+        #start-menu-overlay::after {
+            content: '';
+            position: absolute;
+            inset: auto 6% 10% auto;
+            width: min(38vw, 420px);
+            height: min(38vw, 420px);
+            background: radial-gradient(circle, rgba(255, 125, 74, 0.18), rgba(255, 125, 74, 0));
+            filter: blur(24px);
+            pointer-events: none;
         }
 
         @keyframes menuBgShift {
@@ -310,23 +333,49 @@
         #start-menu-overlay.hidden { display: none; }
 
         .start-menu-panel {
+            position: relative;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 28px 38px 22px;
-            border-radius: 22px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: radial-gradient(ellipse at 50% 20%, rgba(20,0,40,0.82), rgba(0,0,0,0.75));
+            align-items: stretch;
+            gap: 18px;
+            padding: 30px 34px 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background:
+                linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01)),
+                radial-gradient(circle at top left, rgba(20, 61, 54, 0.45), rgba(10, 12, 18, 0) 42%),
+                linear-gradient(180deg, rgba(7, 10, 17, 0.96), rgba(4, 6, 12, 0.88));
             backdrop-filter: blur(16px);
             box-shadow:
-                0 0 80px rgba(0,255,120,0.08),
-                0 20px 60px rgba(0,0,0,0.5);
-            min-width: min(440px, 88vw);
+                0 0 100px rgba(0,255,120,0.10),
+                0 30px 80px rgba(0,0,0,0.6);
+            width: min(980px, 92vw);
             max-height: 90vh;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             animation: menuFadeIn 0.6s cubic-bezier(.2,.9,.2,1) both;
+        }
+
+        .start-menu-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+            gap: 26px;
+            align-items: stretch;
+        }
+
+        .start-menu-hero {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .start-menu-eyebrow {
+            margin: 0;
+            color: rgba(122, 255, 219, 0.9);
+            font: 700 12px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
         }
 
         @keyframes menuFadeIn {
@@ -360,20 +409,58 @@
             line-height: 1.1;
         }
 
+        .start-menu-copy {
+            margin: 0;
+            max-width: 42ch;
+            color: rgba(234, 241, 248, 0.82);
+            font: 500 clamp(14px, 1.8vw, 18px)/1.65 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+
+        .start-menu-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .start-menu-stat {
+            padding: 14px 14px 12px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .start-menu-stat strong {
+            display: block;
+            color: #fff;
+            font: 700 clamp(20px, 2.8vw, 28px) 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+
+        .start-menu-stat span {
+            display: block;
+            margin-top: 2px;
+            color: rgba(219, 230, 240, 0.7);
+            font: 500 12px/1.4 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.02em;
+        }
+
         .start-menu-divider {
-            width: 65%;
-            height: 1.5px;
+            width: min(65%, 340px);
+            height: 2px;
             background: linear-gradient(90deg, transparent 0%, rgba(255,200,0,0.7) 30%, rgba(255,200,0,0.7) 70%, transparent 100%);
-            margin: 6px 0;
+            margin: 2px 0 4px;
         }
 
         .start-menu-tagline {
             margin: 0;
-            font-family: 'Press Start 2P', monospace;
-            font-size: clamp(10px, 2vw, 16px);
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: clamp(11px, 1.5vw, 14px);
+            font-weight: 700;
+            text-transform: uppercase;
             color: #FFD700;
             text-shadow: 0 0 12px rgba(255,215,0,0.5);
-            letter-spacing: 0.08em;
+            letter-spacing: 0.22em;
             animation: taglineGlow 2.5s ease-in-out infinite;
         }
 
@@ -383,11 +470,13 @@
         }
 
         .start-menu-enter-hint {
-            margin: 4px 0 0;
-            font-family: 'Press Start 2P', monospace;
-            font-size: clamp(8px, 1.4vw, 11px);
-            color: rgba(255,255,255,0.35);
-            letter-spacing: 0.06em;
+            margin: 2px 0 0;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: clamp(10px, 1.3vw, 12px);
+            font-weight: 500;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
             animation: hintBlink 2s ease-in-out infinite;
         }
 
@@ -404,38 +493,98 @@
                 0 0 20px rgba(180,180,255,0.10) !important;
         }
 
-        .start-menu-actions {
+        .start-menu-hub {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .start-menu-hub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 14px;
+        }
+
+        .start-menu-hub-title {
+            margin: 0;
+            color: #F4F8FB;
+            font: 700 clamp(24px, 3vw, 32px) 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        .start-menu-hub-note {
+            margin: 0;
+            color: rgba(210, 223, 234, 0.6);
+            font: 500 12px/1.5 'Space Grotesk', 'Segoe UI', sans-serif;
+            text-align: right;
+        }
+
+        .start-menu-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
             width: 100%;
-            align-items: center;
-            margin-top: 10px;
         }
 
         .start-menu-actions .menu-btn {
             width: 100%;
-            max-width: 300px;
-            text-align: center;
-            padding: 14px 20px;
-            font-size: clamp(14px, 2.5vw, 18px);
-            font-family: 'Bangers', 'Arial Black', sans-serif;
-            letter-spacing: 0.06em;
+            min-height: 88px;
+            text-align: left;
+            padding: 16px 18px;
+            font-size: clamp(14px, 2.1vw, 18px);
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0;
             cursor: pointer;
             transition: transform 140ms ease, filter 180ms ease, box-shadow 180ms ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .start-menu-actions .menu-btn .menu-btn-label {
+            display: block;
+            color: #fff;
+            font: 700 clamp(15px, 2vw, 19px) 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .start-menu-actions .menu-btn .menu-btn-meta {
+            display: block;
+            color: rgba(226, 236, 244, 0.72);
+            font: 500 12px/1.45 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+
+        .start-menu-actions .menu-btn:focus-visible {
+            outline: 2px solid rgba(255,255,255,0.85);
+            outline-offset: 2px;
+        }
+
+        .start-menu-actions .menu-btn:hover {
+            filter: brightness(1.12);
+            transform: translateY(-2px);
         }
 
         .menu-btn--play {
+            grid-column: 1 / -1;
             border-color: rgba(0,255,120,0.4) !important;
             background: linear-gradient(180deg, rgba(0,255,120,0.22), rgba(0,60,20,0.65)) !important;
             box-shadow:
                 0 14px 28px rgba(0,0,0,0.35),
                 0 0 28px rgba(0,255,120,0.18) !important;
-            font-size: clamp(16px, 3vw, 22px) !important;
-            padding: 16px 20px !important;
+            min-height: 108px !important;
+            padding: 20px 22px !important;
         }
 
-        .menu-btn--play:hover { filter: brightness(1.18); transform: scale(1.03); }
+        .menu-btn--play .menu-btn-label {
+            font-size: clamp(20px, 2.8vw, 26px) !important;
+        }
+
+        .menu-btn--play:hover { filter: brightness(1.18); transform: translateY(-2px) scale(1.01); }
 
         .menu-btn--scores {
             border-color: rgba(255,215,0,0.35) !important;
@@ -462,11 +611,12 @@
         }
 
         .start-menu-footer {
-            margin: 12px 0 0;
+            margin: 2px 0 0;
             font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            font-family: sans-serif;
+            color: rgba(255,255,255,0.34);
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             flex-shrink: 0;
+            text-align: center;
         }
 
         /* Sub-screen overlays (Info / Scores / Settings from main menu) */
@@ -1058,16 +1208,16 @@
 
         .pause-panel {
             width: min(420px, 90vw);
-            padding: 24px 24px 20px;
-            border-radius: 18px;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: linear-gradient(180deg, rgba(10,12,16,0.92), rgba(0,0,0,0.78));
-            box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+            padding: 26px 26px 22px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: linear-gradient(180deg, rgba(9,12,18,0.96), rgba(3,6,12,0.88));
+            box-shadow: 0 22px 64px rgba(0,0,0,0.58);
             backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 16px;
+            align-items: stretch;
+            gap: 14px;
             transform: translateY(12px);
             transition: transform 220ms cubic-bezier(.2,.9,.2,1);
             max-height: 90vh;
@@ -1080,61 +1230,43 @@
         }
 
         .pause-level-info {
-            text-align: center;
-            color: rgba(255,255,255,0.6);
-            font-family: 'Press Start 2P', monospace;
-            font-size: clamp(10px, 1.6vw, 13px);
-            letter-spacing: 0.04em;
+            text-align: left;
+            color: rgba(221,232,241,0.72);
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: clamp(13px, 1.6vw, 15px);
+            font-weight: 500;
+            letter-spacing: 0.01em;
         }
 
         .pause-esc-hint {
             margin: 0;
-            font-family: 'Press Start 2P', monospace;
-            font-size: clamp(8px, 1.2vw, 10px);
-            color: rgba(255,255,255,0.25);
-            letter-spacing: 0.06em;
-        }
-
-        .pause-tertiary-actions {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 320px;
-            justify-content: center;
-        }
-
-        .pause-tertiary-actions .menu-btn {
-            flex: 1;
-            padding: 10px 8px;
-            font-size: 13px;
-        }
-
-        .menu-btn--restart {
-            border-color: rgba(255,160,80,0.35) !important;
-            background: linear-gradient(180deg, rgba(255,160,80,0.20), rgba(40,15,0,0.6)) !important;
-            box-shadow:
-                0 14px 28px rgba(0,0,0,0.35),
-                0 0 20px rgba(255,160,80,0.12) !important;
-        }
-
-        .menu-btn--quit {
-            border-color: rgba(255,80,80,0.35) !important;
-            background: linear-gradient(180deg, rgba(255,80,80,0.18), rgba(40,0,0,0.6)) !important;
-            box-shadow:
-                0 14px 28px rgba(0,0,0,0.35),
-                0 0 20px rgba(255,80,80,0.10) !important;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-align: center;
         }
 
         .pause-title {
-            margin: 0 0 4px;
+            margin: 0;
             color: #fff;
-            font-size: 38px;
-            letter-spacing: 0.06em;
+            font: 700 clamp(32px, 5vw, 40px) 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: -0.03em;
             text-shadow: 0 10px 30px rgba(0,0,0,0.55);
         }
 
+        .pause-subtitle {
+            margin: -8px 0 0;
+            color: rgba(112, 246, 221, 0.86);
+            font: 700 12px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
         .pause-divider {
-            width: 80%;
+            width: 100%;
             height: 1px;
             background: rgba(255,255,255,0.08);
             margin: 0;
@@ -1144,45 +1276,52 @@
         .pause-actions {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
             align-items: center;
         }
 
         .pause-actions .menu-btn {
             width: 100%;
-            max-width: 320px;
+            max-width: 100%;
             text-align: center;
-            padding: 14px 18px;
+            padding: 16px 18px;
             font-size: 16px;
         }
 
         .pause-actions .menu-btn--primary {
-            padding: 16px 18px;
-            font-size: 18px;
-        }
-
-        .pause-secondary-actions {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 320px;
-            justify-content: center;
-        }
-
-        .pause-secondary-actions .menu-btn {
-            flex: 1;
-            padding: 12px 10px;
-            font-size: 14px;
+            padding: 18px 18px;
+            font-size: 19px;
         }
 
         .pause-volume-controls {
             width: 100%;
-            max-width: 380px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding: 8px 0;
+            gap: 12px;
+            padding: 2px 0 0;
+        }
+
+        .pause-volume-card {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .pause-volume-kicker {
+            margin: 0 0 10px;
+            color: rgba(236, 244, 248, 0.92);
+            font: 700 14px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .pause-helper {
+            margin: 0;
+            color: rgba(220,230,238,0.56);
+            font: 500 12px/1.55 'Space Grotesk', 'Segoe UI', sans-serif;
+            text-align: left;
         }
 
         .volume-row {
@@ -1429,12 +1568,12 @@
             .pause-panel {
                 max-height: calc(100vh - 16px);
                 gap: 8px;
-                padding: 12px 18px 10px;
+                padding: 14px 18px 12px;
                 border-radius: 12px;
                 width: min(420px, 92vw);
             }
             .pause-title { font-size: clamp(18px, 4vw, 26px) !important; }
-            .pause-level-info { font-size: 9px !important; }
+            .pause-level-info { font-size: 11px !important; }
             .pause-divider { margin: 2px 0 !important; }
             .pause-volume-controls { gap: 4px; }
             .volume-row { gap: 6px; }
@@ -1452,10 +1591,11 @@
         /* â”€â”€ Landscape with limited height (mobile landscape) â”€â”€ */
         @media screen and (max-height: 500px) {
             .start-menu-panel {
-                gap: 2px;
-                padding: 10px 20px 8px;
+                gap: 12px;
+                padding: 12px 18px 12px;
                 max-height: 96vh;
             }
+            .start-menu-layout { grid-template-columns: 1fr; gap: 14px; }
             .start-menu-title {
                 font-size: clamp(24px, 6vw, 40px);
             }
@@ -1468,18 +1608,20 @@
             .start-menu-tagline {
                 font-size: clamp(8px, 1.6vw, 12px);
             }
+            .start-menu-copy { font-size: 13px; }
+            .start-menu-meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .start-menu-actions {
                 gap: 6px;
-                margin-top: 4px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
             .start-menu-actions .menu-btn {
-                padding: 8px 14px;
+                min-height: 72px;
+                padding: 10px 14px;
                 font-size: clamp(12px, 2vw, 15px);
-                max-width: 260px;
             }
             .menu-btn--play {
-                font-size: clamp(13px, 2.4vw, 17px) !important;
-                padding: 10px 16px !important;
+                min-height: 88px !important;
+                padding: 12px 16px !important;
             }
             .start-menu-footer {
                 margin: 4px 0 0;
@@ -1494,8 +1636,8 @@
         /* â”€â”€ Very short landscape (e.g. phone landscape with keyboard/nav bar) â”€â”€ */
         @media screen and (max-height: 380px) {
             .start-menu-panel {
-                gap: 1px;
-                padding: 6px 14px 4px;
+                gap: 8px;
+                padding: 8px 14px 8px;
                 border-radius: 14px;
             }
             .start-menu-title {
@@ -1511,19 +1653,25 @@
             .start-menu-tagline {
                 font-size: clamp(7px, 1.4vw, 10px);
             }
+            .start-menu-copy,
+            .start-menu-hub-note,
+            .start-menu-enter-hint { display: none; }
+            .start-menu-meta { gap: 6px; }
+            .start-menu-stat { padding: 10px 10px 8px; border-radius: 12px; }
+            .start-menu-stat strong { font-size: 18px; }
+            .start-menu-stat span { font-size: 10px; }
             .start-menu-actions {
                 gap: 4px;
-                margin-top: 2px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
             .start-menu-actions .menu-btn {
-                padding: 6px 10px;
-                font-size: clamp(10px, 1.8vw, 13px);
-                max-width: 220px;
+                min-height: 58px;
+                padding: 8px 10px;
                 border-radius: 8px;
             }
             .menu-btn--play {
-                font-size: clamp(11px, 2vw, 14px) !important;
-                padding: 7px 12px !important;
+                min-height: 68px !important;
+                padding: 9px 12px !important;
             }
             .start-menu-footer {
                 margin: 2px 0 0;
@@ -1703,16 +1851,33 @@
             <!-- â•â•â•â•â•â• START MENU SPLASH PAGE â•â•â•â•â•â• -->
             <div id="start-menu-overlay">
                 <div class="start-menu-panel">
-                    <h1 class="start-menu-title">SKUNKED:</h1>
-                    <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
-                    <div class="start-menu-divider"></div>
-                    <p class="start-menu-tagline">NINJA SKUNK</p>
-                    <div class="start-menu-actions">
-                        <button id="menu-play-btn" class="menu-btn menu-btn--play">&#9654; PLAY GAME</button>
-                        <button id="menu-scores-btn" class="menu-btn menu-btn--scores">&#127942; HIGH SCORES</button>
-                        <button id="menu-info-btn" class="menu-btn menu-btn--info">&#9432; INFO</button>
-                        <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements">&#127942; ACHIEVEMENTS</button>
-                        <button id="menu-settings-btn" class="menu-btn menu-btn--settings">&#9881; SETTINGS</button>
+                    <div class="start-menu-layout">
+                        <div class="start-menu-hero">
+                            <p class="start-menu-eyebrow">Main Hub</p>
+                            <h1 class="start-menu-title">SKUNKED:</h1>
+                            <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
+                            <div class="start-menu-divider"></div>
+                            <p class="start-menu-tagline">Ninja Skunk Campaign</p>
+                            <p class="start-menu-copy">Storm the city, study every boss, chase leaderboard runs, and tune your loadout from one clean hub instead of burying navigation inside gameplay.</p>
+                            <div class="start-menu-meta">
+                                <div class="start-menu-stat"><strong>10</strong><span>Stages in the run</span></div>
+                                <div class="start-menu-stat"><strong>7</strong><span>Named boss encounters</span></div>
+                                <div class="start-menu-stat"><strong>3</strong><span>Golden Idols per stage</span></div>
+                            </div>
+                        </div>
+                        <div class="start-menu-hub">
+                            <div class="start-menu-hub-header">
+                                <h3 class="start-menu-hub-title">Choose Your Route</h3>
+                                <p class="start-menu-hub-note">Play is instant. Everything else lives here.</p>
+                            </div>
+                            <div class="start-menu-actions">
+                                <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label">&#9654; Launch Run</span><span class="menu-btn-meta">Drop straight into Stage 1 and keep momentum.</span></button>
+                                <button id="menu-scores-btn" class="menu-btn menu-btn--scores"><span class="menu-btn-label">&#127942; High Scores</span><span class="menu-btn-meta">Check the board and chase the next target score.</span></button>
+                                <button id="menu-info-btn" class="menu-btn menu-btn--info"><span class="menu-btn-label">&#9432; Intel</span><span class="menu-btn-meta">Review controls, stages, enemies, and boss info.</span></button>
+                                <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements"><span class="menu-btn-label">&#127894;&#65039; Achievements</span><span class="menu-btn-meta">Track mastery goals and completion progress.</span></button>
+                                <button id="menu-settings-btn" class="menu-btn menu-btn--settings"><span class="menu-btn-label">&#9881; Settings</span><span class="menu-btn-meta">Tune SFX, music, and tutorial resets from the hub.</span></button>
+                            </div>
+                        </div>
                     </div>
                     <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
                     <p class="start-menu-footer">&#169; 2026 Mephitideus Interactive &mdash; skunked.io &mdash; <a href="/privacy" style="color:#666;text-decoration:none;font-size:0.8em;" target="_blank">Privacy</a> &bull; <a href="/terms" style="color:#666;text-decoration:none;font-size:0.8em;" target="_blank">Terms</a></p>
@@ -1989,31 +2154,22 @@
             <div id="pause-overlay" style="display:none;">
                 <div class="pause-panel">
                     <h1 class="pause-title">PAUSED</h1>
+                    <p class="pause-subtitle">Quick Pause</p>
                     <div class="pause-level-info" id="pause-level-info">Stage 1 &mdash; Score: 0</div>
                     <hr class="pause-divider">
                     <div class="pause-volume-controls">
-                        <div class="volume-row">
-                            <label for="sfx-volume">&#128266; SFX</label>
-                            <input type="range" id="sfx-volume" min="0" max="100" value="70">
-                            <span class="volume-value" id="sfx-volume-value">70%</span>
-                        </div>
-                        <div class="volume-row">
-                            <label for="music-volume">&#127925; Music</label>
-                            <input type="range" id="music-volume" min="0" max="100" value="50">
-                            <span class="volume-value" id="music-volume-value">50%</span>
+                        <div class="pause-volume-card">
+                            <p class="pause-volume-kicker">&#128266; SFX Mix</p>
+                            <div class="volume-row">
+                                <label for="sfx-volume">SFX</label>
+                                <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                                <span class="volume-value" id="sfx-volume-value">70%</span>
+                            </div>
                         </div>
                     </div>
-                    <hr class="pause-divider">
                     <div class="pause-actions">
                         <button id="resume-btn" class="menu-btn menu-btn--primary">&#9654; Resume</button>
-                        <div class="pause-secondary-actions">
-                            <button id="pause-restart-btn" title="Restart Level" class="menu-btn menu-btn--restart">&#8634; Restart</button>
-                            <button id="pause-mainmenu-btn" title="Return to Main Menu" class="menu-btn menu-btn--quit">&#8962; Menu</button>
-                        </div>
-                        <div class="pause-tertiary-actions">
-                            <button id="view-highscores-btn" title="View High Scores" class="menu-btn">&#127942; Scores</button>
-                            <button id="view-achievements-btn" title="View Achievements" class="menu-btn">&#127894;&#65039; Achievements</button>
-                        </div>
+                        <p class="pause-helper">Hub features stay on the main menu so pause stays fast, stable, and easy to exit.</p>
                     </div>
                     <p class="pause-esc-hint">PRESS ESC TO RESUME</p>
                 </div>
@@ -2263,23 +2419,6 @@
 
                 // Attach handler to the new button once DOM is ready
                 document.addEventListener('DOMContentLoaded', () => {
-                    try {
-                        const b = document.getElementById('view-highscores-btn');
-                        if (b) {
-                            b.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                showHighscoresOverlay();
-                            });
-                        }
-                        const ab = document.getElementById('view-achievements-btn');
-                        if (ab) {
-                            ab.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                showAchievementsOverlay();
-                            });
-                        }
-                    } catch (e) { console.warn('Highscores button attach failed', e); }
-
                     // â•â•â•â•â•â• START MENU SPLASH PAGE WIRING â•â•â•â•â•â•
                     try {
                         // Track whether the start menu overlay is visible
@@ -2667,48 +2806,6 @@
                                     ev.preventDefault();
                                     activateInfoTab(tab.getAttribute('data-info-tab'));
                                 });
-                            });
-                        }
-
-                        // â”€â”€ PAUSE MENU: Restart Level button â”€â”€
-                        const pauseRestartBtn = document.getElementById('pause-restart-btn');
-                        if (pauseRestartBtn) {
-                            pauseRestartBtn.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                try {
-                                    if (window.game) {
-                                        const lvl = window.game.currentLevelIndex || 0;
-                                        // Hide pause overlay
-                                        const overlay = document.getElementById('pause-overlay');
-                                        if (overlay) { overlay.classList.remove('visible'); setTimeout(() => { overlay.style.display = 'none'; }, 240); }
-                                        window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_confirm');
-                                        window.game.startGame(lvl);
-                                        window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
-                                    }
-                                } catch (e) { console.warn('Pause restart failed', e); }
-                            });
-                        }
-
-                        // â”€â”€ PAUSE MENU: Main Menu button â”€â”€
-                        const pauseMainMenuBtn = document.getElementById('pause-mainmenu-btn');
-                        if (pauseMainMenuBtn) {
-                            pauseMainMenuBtn.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                try {
-                                    // Hide pause overlay
-                                    const overlay = document.getElementById('pause-overlay');
-                                    if (overlay) { overlay.classList.remove('visible'); setTimeout(() => { overlay.style.display = 'none'; }, 240); }
-                                    if (window.game) {
-                                        window.game.state = 'MENU';
-                                        window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_back');
-                                        window.game.audioManager && window.game.audioManager.stopMusic && window.game.audioManager.stopMusic();
-                                        window.game.audioManager && window.game.audioManager.stopAmbient && window.game.audioManager.stopAmbient();
-                                        window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
-                                    }
-                                    showStartMenu();
-                                } catch (e) { console.warn('Pause main menu failed', e); }
                             });
                         }
 

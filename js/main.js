@@ -1079,28 +1079,17 @@ class GameApp {
             // --- Wire up Volume Sliders in Pause Menu ---
             try {
                 const sfxSlider = document.getElementById('sfx-volume');
-                const musicSlider = document.getElementById('music-volume');
                 const sfxValSpan = document.getElementById('sfx-volume-value');
-                const musicValSpan = document.getElementById('music-volume-value');
                 const am = this.audioManager;
 
                 // Restore persisted volume preferences
                 const savedSfx = localStorage.getItem('sfxVolume');
-                const savedMusic = localStorage.getItem('musicVolume');
                 if (savedSfx !== null) {
                     const v = parseInt(savedSfx, 10);
                     if (!isNaN(v)) {
                         if (sfxSlider) sfxSlider.value = v;
                         if (sfxValSpan) sfxValSpan.textContent = v + '%';
                         am.setSoundVolume && am.setSoundVolume(v / 100);
-                    }
-                }
-                if (savedMusic !== null) {
-                    const v = parseInt(savedMusic, 10);
-                    if (!isNaN(v)) {
-                        if (musicSlider) musicSlider.value = v;
-                        if (musicValSpan) musicValSpan.textContent = v + '%';
-                        am.setMusicVolume && am.setMusicVolume(v / 100);
                     }
                 }
 

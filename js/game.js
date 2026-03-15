@@ -839,6 +839,10 @@ class Game {
                 // Show pause overlay when available (keeps gameplay UI clean; hosts pause actions)
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) {
+                    if (overlay._hideTimer) {
+                        clearTimeout(overlay._hideTimer);
+                        overlay._hideTimer = null;
+                    }
                     overlay.style.display = 'flex';
                     // Trigger reflow then add visible class for CSS transition
                     overlay.offsetHeight;
@@ -856,13 +860,9 @@ class Game {
                 // Sync volume sliders with current values
                 try {
                     const sfxSlider = document.getElementById('sfx-volume');
-                    const musicSlider = document.getElementById('music-volume');
                     if (sfxSlider) sfxSlider.value = Math.round((this.audioManager._pendingSfxVol != null ? this.audioManager._pendingSfxVol : 0.7) * 100);
-                    if (musicSlider) musicSlider.value = Math.round((this.audioManager._pendingMusicVol != null ? this.audioManager._pendingMusicVol : 0.5) * 100);
                     const sfxVal = document.getElementById('sfx-volume-value');
-                    const musicVal = document.getElementById('music-volume-value');
                     if (sfxVal && sfxSlider) sfxVal.textContent = sfxSlider.value + '%';
-                    if (musicVal && musicSlider) musicVal.textContent = musicSlider.value + '%';
                 } catch (e) { __err('game', e); }
                 // Trap focus inside pause panel
                 try {
@@ -883,7 +883,11 @@ class Game {
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) {
                     overlay.classList.remove('visible');
-                    setTimeout(() => { overlay.style.display = 'none'; }, 240);
+                    if (overlay._hideTimer) clearTimeout(overlay._hideTimer);
+                    overlay._hideTimer = setTimeout(() => {
+                        overlay.style.display = 'none';
+                        overlay._hideTimer = null;
+                    }, 240);
                 }
                 this.dispatchGameStateChange();
             }
@@ -2736,12 +2740,6 @@ class Game {
              }
         } else if (this.state === "MENU") {
             this.ui.drawMenu(this.ctx);
-        } else if (this.state === "PAUSED" && !this.isMobile) {
-            // Only show drawn pause menu on desktop when no touch controls
-            const hasTouchControls = document.getElementById('touch-controls') || document.getElementById('btn-pause');
-            if (!hasTouchControls) {
-                this.ui.drawPauseMenu(this.ctx);
-            }
         } else if (this.state === "GAME_OVER") {
             this.ui.drawGameOver(this.ctx, this.score, this.gameStats, this._gameOverLockoutRemaining());
         }
