@@ -1302,7 +1302,7 @@ class Game {
                             const bossType = (this.enemyManager && this.enemyManager.bossInstance && this.enemyManager.bossInstance.enemyType)
                                 || (this.level && this.level.bossConfig && this.level.bossConfig.type)
                                 || 'BOSS';
-                            const spawnSound = (bossType === 'BOSS2' || bossType === 'BOSS3' || bossType === 'BOSS4' || bossType === 'BOSS5' || bossType === 'BOSS6') ? 'boss2_spawn' : 'boss_spawn';
+                            const spawnSound = (bossType !== 'BOSS' && /^BOSS\d+$/.test(bossType)) ? 'boss2_spawn' : 'boss_spawn';
                             this.audioManager.playSound(spawnSound, 0.8);
                         }
                         // Boss entrance screen shake
@@ -1338,7 +1338,7 @@ class Game {
                          const bossType = (this.enemyManager && this.enemyManager.bossInstance && this.enemyManager.bossInstance.enemyType)
                              || (this.level && this.level.bossConfig && this.level.bossConfig.type)
                              || 'BOSS';
-                        const defeatSound = (bossType === 'BOSS2' || bossType === 'BOSS3' || bossType === 'BOSS4' || bossType === 'BOSS5' || bossType === 'BOSS6') ? 'boss2_defeat' : 'boss_defeat';
+                        const defeatSound = (bossType !== 'BOSS' && /^BOSS\d+$/.test(bossType)) ? 'boss2_defeat' : 'boss_defeat';
                          this.audioManager.playSound(defeatSound, 0.9);
                      }
 

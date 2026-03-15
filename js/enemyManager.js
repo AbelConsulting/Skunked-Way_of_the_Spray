@@ -36,7 +36,7 @@ class EnemyManager {
     }
 
     isBossType(enemyType) {
-        return enemyType === 'BOSS' || enemyType === 'BOSS2' || enemyType === 'BOSS3' || enemyType === 'BOSS4' || enemyType === 'BOSS5' || enemyType === 'BOSS6';
+        return typeof enemyType === 'string' && /^BOSS\d*$/.test(enemyType);
     }
 
     getBoss() {

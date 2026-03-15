@@ -22,8 +22,12 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS3': { prefix: 'boss3', size: { width: 128, height: 128 }, fallback: 'boss2', attackAnim: 'boss3_attack', bossName: 'BURGER FURY', bossTitle: 'Master of the Dojo', ability: 'rapidStrike' },
     'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'MALODOR', bossTitle: 'Enemy Kingpin', ability: 'projectile' },
     'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'STEAMPUNK WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
-    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' }
+    'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' },
+    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'BOSS 7', bossTitle: 'Crystal Ridge Warden', ability: 'crystalBarrage' }
 };
+
+const HEAVY_BOSS_ATTACK_TYPES = new Set(['BOSS5', 'BOSS6', 'BOSS7']);
+const ALT_BOSS_SOUND_TYPES = new Set(['BOSS2', 'BOSS3', 'BOSS4', 'BOSS5', 'BOSS6', 'BOSS7']);
 
 const BOSS_TYPE_INFO = Object.freeze(
     Object.fromEntries(
@@ -213,9 +217,7 @@ class Enemy {
      * Check if this enemy is a boss type
      */
     isBossType() {
-        return this.enemyType === 'BOSS' || this.enemyType === 'BOSS2' || 
-               this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4' ||
-               this.enemyType === 'BOSS5' || this.enemyType === 'BOSS6';
+        return typeof this.enemyType === 'string' && /^BOSS\d*$/.test(this.enemyType) && !!ENEMY_TYPE_CONFIG[this.enemyType];
     }
 
     /**
@@ -1123,9 +1125,9 @@ class Enemy {
             if (this.audioManager) {
                 if (this.enemyType === 'BOSS') {
                     this.audioManager.playSound('boss_attack', 0.7);
-                } else if (this.enemyType === 'BOSS5' || this.enemyType === 'BOSS6') {
+                } else if (HEAVY_BOSS_ATTACK_TYPES.has(this.enemyType)) {
                     this.audioManager.playSound('boss5_attack', 0.7);
-                } else if (this.enemyType === 'BOSS2' || this.enemyType === 'BOSS3' || this.enemyType === 'BOSS4') {
+                } else if (ALT_BOSS_SOUND_TYPES.has(this.enemyType)) {
                     this.audioManager.playSound('boss2_attack', 0.7);
                 } else {
                      this.audioManager.playSound('enemy_attack', 0.5);
@@ -1254,6 +1256,15 @@ class Enemy {
                 this.bossSpecialActive = true;
                 this.bossSpecialTimer = 2.0;
                 this._bossSummonShield = true;
+                break;
+
+            case 'crystalBarrage':
+                // BOSS7: two quick crystal volleys with a wider spread than BOSS4.
+                this.bossSpecialActive = true;
+                this.bossSpecialTimer = 1.4;
+                this._bossBarrageShotsRemaining = 2;
+                this._bossBarrageShotDelay = 0;
+                this.facingRight = ecx < pcx;
                 break;
         }
     }
@@ -1394,39 +1405,78 @@ class Enemy {
                 // Visual only — the actual damage reduction is handled in takeDamage
                 break;
             }
+
+            case 'crystalBarrage': {
+                this.velocityX = 0;
+                if (player) {
+                    const ecx = this.x + this.width / 2;
+                    const pcx = player.x + (player.width || 0) / 2;
+                    this.facingRight = ecx < pcx;
+                }
+                this._bossBarrageShotDelay -= dt;
+                if (this._bossBarrageShotsRemaining > 0 && this._bossBarrageShotDelay <= 0) {
+                    this._fireProjectileSpread(player, {
+                        count: 5,
+                        spread: 0.18,
+                        speed: 420,
+                        damageScale: 0.75,
+                        width: 20,
+                        height: 20,
+                        lifetime: 2.8,
+                        soundVolume: 0.78,
+                        soundRate: 1.2
+                    });
+                    if (this.animations.attack) this.animations.attack.reset();
+                    this._bossBarrageShotsRemaining--;
+                    this._bossBarrageShotDelay = 0.32;
+                }
+                break;
+            }
         }
     }
 
     /**
      * Fire a spread of 3 projectiles (BOSS4 special).
      */
-    _fireProjectileSpread(player) {
+    _fireProjectileSpread(player, opts = null) {
         if (!player) return;
+        const options = opts || {};
         const ecx = this.x + this.width / 2;
         const ecy = this.y + this.height / 2;
         const pcx = player.x + (player.width || 0) / 2;
         const pcy = player.y + (player.height || 0) / 2;
         const baseAngle = Math.atan2(pcy - ecy, pcx - ecx);
-        const spread = 0.25; // radians spread
-        const speed = 350;
+        const count = Math.max(1, Math.floor(typeof options.count === 'number' ? options.count : 3));
+        const spread = (typeof options.spread === 'number') ? options.spread : 0.25;
+        const speed = (typeof options.speed === 'number') ? options.speed : 350;
+        const damageScale = (typeof options.damageScale === 'number') ? options.damageScale : 0.6;
+        const projectileWidth = (typeof options.width === 'number') ? options.width : 18;
+        const projectileHeight = (typeof options.height === 'number') ? options.height : 18;
+        const lifetime = (typeof options.lifetime === 'number') ? options.lifetime : 2.5;
+        const centerIndex = (count - 1) / 2;
 
-        for (let i = -1; i <= 1; i++) {
-            const angle = baseAngle + i * spread;
+        for (let i = 0; i < count; i++) {
+            const angle = baseAngle + (i - centerIndex) * spread;
             this.thrownProjectiles = this.thrownProjectiles || [];
             this.thrownProjectiles.push({
                 x: ecx,
                 y: ecy,
-                width: 18,
-                height: 18,
+                width: projectileWidth,
+                height: projectileHeight,
                 velocityX: Math.cos(angle) * speed,
                 velocityY: Math.sin(angle) * speed,
-                damage: Math.floor(this.attackDamage * 0.6),
-                lifetime: 2.5,
+                damage: Math.floor(this.attackDamage * damageScale),
+                lifetime,
                 age: 0
             });
         }
         this.facingRight = pcx > ecx;
-        if (this.audioManager) this.audioManager.playSound('boss2_attack', { volume: 0.7, rate: 1.1 });
+        if (this.audioManager) {
+            this.audioManager.playSound('boss2_attack', {
+                volume: (typeof options.soundVolume === 'number') ? options.soundVolume : 0.7,
+                rate: (typeof options.soundRate === 'number') ? options.soundRate : 1.1
+            });
+        }
     }
 
     /**
