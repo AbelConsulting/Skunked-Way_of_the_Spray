@@ -311,6 +311,69 @@ class TutorialHints {
         }
     }
 
+    _drawRoundedRect(ctx, x, y, width, height, radius) {
+        const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+        if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, r);
+            return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.arcTo(x + width, y, x + width, y + r, r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
+        ctx.lineTo(x + r, y + height);
+        ctx.arcTo(x, y + height, x, y + height - r, r);
+        ctx.lineTo(x, y + r);
+        ctx.arcTo(x, y, x + r, y, r);
+        ctx.closePath();
+    }
+
+    _wrapHintLine(ctx, text, maxWidth) {
+        if (!text) return [''];
+        const words = text.split(' ');
+        const lines = [];
+        let current = words[0] || '';
+
+        for (let i = 1; i < words.length; i++) {
+            const next = `${current} ${words[i]}`;
+            if (ctx.measureText(next).width <= maxWidth) {
+                current = next;
+            } else {
+                lines.push(current);
+                current = words[i];
+            }
+        }
+
+        if (current) lines.push(current);
+        return lines;
+    }
+
+    _getHintTheme(id) {
+        switch (id) {
+            case 'move_jump':
+                return { label: 'MOVEMENT', accent: '#58F3FF', accentSoft: 'rgba(88, 243, 255, 0.18)', accentGlow: 'rgba(88, 243, 255, 0.35)' };
+            case 'attack':
+                return { label: 'COMBAT', accent: '#FF8F6B', accentSoft: 'rgba(255, 143, 107, 0.18)', accentGlow: 'rgba(255, 143, 107, 0.34)' };
+            case 'shadow_strike':
+                return { label: 'ABILITY', accent: '#B98BFF', accentSoft: 'rgba(185, 139, 255, 0.18)', accentGlow: 'rgba(185, 139, 255, 0.34)' };
+            case 'skunk_shot':
+                return { label: 'RANGED', accent: '#75F0A8', accentSoft: 'rgba(117, 240, 168, 0.18)', accentGlow: 'rgba(117, 240, 168, 0.34)' };
+            case 'golden_idol':
+                return { label: 'LOOT', accent: '#FFD36A', accentSoft: 'rgba(255, 211, 106, 0.20)', accentGlow: 'rgba(255, 211, 106, 0.34)' };
+            case 'boss_encounter':
+                return { label: 'DANGER', accent: '#FF6E88', accentSoft: 'rgba(255, 110, 136, 0.18)', accentGlow: 'rgba(255, 110, 136, 0.34)' };
+            case 'exit_portal':
+                return { label: 'OBJECTIVE', accent: '#78B8FF', accentSoft: 'rgba(120, 184, 255, 0.18)', accentGlow: 'rgba(120, 184, 255, 0.34)' };
+            case 'objective':
+                return { label: 'MISSION', accent: '#7BC9FF', accentSoft: 'rgba(123, 201, 255, 0.18)', accentGlow: 'rgba(123, 201, 255, 0.34)' };
+            default:
+                return { label: 'TUTORIAL', accent: '#50FFF4', accentSoft: 'rgba(80, 255, 244, 0.18)', accentGlow: 'rgba(80, 255, 244, 0.34)' };
+        }
+    }
+
     /**
      * Draw the active hint on the canvas.
      * Call after drawHUD so hints appear on top.
@@ -322,67 +385,134 @@ class TutorialHints {
         if (!this._active || this._active.alpha <= 0) return;
 
         const h = this._active;
-        const lineCount = h.lines.length;
-        // Scale text for smaller viewports
+        const theme = this._getHintTheme(h.id);
+        const tutorialFont = "'Space Grotesk', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
         const scale = Math.max(0.75, Math.min(1, viewWidth / 600));
-        const titleSize = Math.round(17 * scale);
-        const bodySize = Math.round(14 * scale);
+        const titleSize = Math.round(20 * scale);
+        const bodySize = Math.round(15 * scale);
+        const eyebrowSize = Math.round(11 * scale);
         const dismissSize = Math.round(11 * scale);
-        const lineHeight = Math.round(26 * scale);
-        const padding = Math.round(18 * scale);
-        const boxHeight = lineCount * lineHeight + padding * 2;
-        const boxWidth = Math.min(viewWidth - 30, 560);
-        // Position: upper-center, below HUD but not blocking action
-        const boxX = (viewWidth - boxWidth) / 2;
-        const boxY = Math.round(65 * scale);
+        const titleLineHeight = Math.round(26 * scale);
+        const bodyLineHeight = Math.round(22 * scale);
+        const horizontalPadding = Math.round(22 * scale);
+        const topPadding = Math.round(18 * scale);
+        const bottomPadding = Math.round(16 * scale);
+        const badgeHeight = Math.round(24 * scale);
+        const dismissHeight = Math.round(22 * scale);
+        const sectionGap = Math.round(12 * scale);
+        const cardMaxWidth = Math.min(viewWidth - Math.round(26 * scale), Math.round(520 * scale));
+        const textMaxWidth = cardMaxWidth - horizontalPadding * 2;
+        const enterOffset = Math.round((1 - h.alpha) * 10);
 
         ctx.save();
-        ctx.globalAlpha = h.alpha * 0.95;
+        ctx.font = `700 ${titleSize}px ${tutorialFont}`;
+        const titleLines = this._wrapHintLine(ctx, h.lines[0], textMaxWidth);
+        ctx.font = `500 ${bodySize}px ${tutorialFont}`;
+        const bodyLines = h.lines.slice(1).flatMap(line => this._wrapHintLine(ctx, line, textMaxWidth));
+        ctx.font = `700 ${eyebrowSize}px ${tutorialFont}`;
+        const badgeText = theme.label;
+        const badgeWidth = Math.ceil(ctx.measureText(badgeText).width) + Math.round(20 * scale);
+        ctx.font = `500 ${dismissSize}px ${tutorialFont}`;
+        const dismissText = this.isMobile ? 'Tap anywhere to close' : 'Press any key to close';
+        const dismissWidth = Math.ceil(ctx.measureText(dismissText).width) + Math.round(18 * scale);
 
-        // Background pill
-        const r = 14;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
-        ctx.beginPath();
-        ctx.moveTo(boxX + r, boxY);
-        ctx.lineTo(boxX + boxWidth - r, boxY);
-        ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + r);
-        ctx.lineTo(boxX + boxWidth, boxY + boxHeight - r);
-        ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - r, boxY + boxHeight);
-        ctx.lineTo(boxX + r, boxY + boxHeight);
-        ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - r);
-        ctx.lineTo(boxX, boxY + r);
-        ctx.quadraticCurveTo(boxX, boxY, boxX + r, boxY);
-        ctx.closePath();
+        ctx.font = `700 ${titleSize}px ${tutorialFont}`;
+        const titleWidth = titleLines.reduce((max, line) => Math.max(max, ctx.measureText(line).width), 0);
+        ctx.font = `500 ${bodySize}px ${tutorialFont}`;
+        const bodyWidth = bodyLines.reduce((max, line) => Math.max(max, ctx.measureText(line).width), 0);
+        const contentWidth = Math.max(titleWidth, bodyWidth, badgeWidth, dismissWidth);
+        const boxWidth = Math.min(cardMaxWidth, Math.ceil(contentWidth) + horizontalPadding * 2);
+        const titleHeight = titleLines.length * titleLineHeight;
+        const bodyHeight = bodyLines.length * bodyLineHeight;
+        const boxHeight = topPadding + badgeHeight + sectionGap + titleHeight + (bodyLines.length ? Math.round(8 * scale) + bodyHeight : 0) + sectionGap + dismissHeight + bottomPadding;
+        const boxX = Math.round((viewWidth - boxWidth) / 2);
+        const boxY = Math.round(Math.max(58 * scale, Math.min(viewHeight * 0.18, 96 * scale)) + enterOffset);
+        const progress = Math.max(0, 1 - (h.timer / Math.max(h.duration, 0.001)));
+
+        ctx.globalAlpha = h.alpha * 0.98;
+
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.34)';
+        ctx.shadowBlur = Math.round(28 * scale);
+        ctx.shadowOffsetY = Math.round(10 * scale);
+        this._drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, Math.round(20 * scale));
+        ctx.fillStyle = 'rgba(8, 12, 18, 0.84)';
         ctx.fill();
 
-        // Pulsing cyan border to draw attention
-        const pulse = 0.35 + 0.25 * Math.sin(h.timer * 3.5);
-        ctx.strokeStyle = `rgba(80, 255, 244, ${pulse.toFixed(2)})`;
-        ctx.lineWidth = 2;
+        ctx.shadowColor = 'transparent';
+        this._drawRoundedRect(ctx, boxX + 1, boxY + 1, boxWidth - 2, boxHeight - 2, Math.round(19 * scale));
+        const bgGradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight);
+        bgGradient.addColorStop(0, 'rgba(255, 255, 255, 0.065)');
+        bgGradient.addColorStop(1, 'rgba(255, 255, 255, 0.015)');
+        ctx.fillStyle = bgGradient;
+        ctx.fill();
+
+        this._drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, Math.round(20 * scale));
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Text
-        ctx.globalAlpha = h.alpha;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.fillStyle = theme.accentSoft;
+        this._drawRoundedRect(ctx, boxX + Math.round(14 * scale), boxY + Math.round(14 * scale), Math.round(6 * scale), boxHeight - Math.round(28 * scale), Math.round(6 * scale));
+        ctx.fill();
 
-        for (let i = 0; i < lineCount; i++) {
-            const y = boxY + padding + lineHeight * i + lineHeight / 2;
-            if (i === 0) {
-                ctx.font = `bold ${titleSize}px 'Press Start 2P', 'Courier New', monospace`;
-                ctx.fillStyle = '#50FFF4';
-            } else {
-                ctx.font = `${bodySize}px 'Press Start 2P', 'Courier New', monospace`;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            }
-            ctx.fillText(h.lines[i], viewWidth / 2, y);
+        const pulse = 0.65 + 0.2 * Math.sin(h.timer * 3.5);
+        ctx.fillStyle = theme.accentGlow.replace(/0\.\d+\)$/, `${pulse.toFixed(2)})`);
+        this._drawRoundedRect(ctx, boxX + Math.round(30 * scale), boxY + Math.round(16 * scale), badgeWidth, badgeHeight, Math.round(999 * scale));
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        this._drawRoundedRect(ctx, boxX + boxWidth - dismissWidth - Math.round(18 * scale), boxY + boxHeight - dismissHeight - Math.round(14 * scale), dismissWidth, dismissHeight, Math.round(999 * scale));
+        ctx.fill();
+
+        const progressTrackX = boxX + Math.round(30 * scale);
+        const progressTrackY = boxY + boxHeight - Math.round(9 * scale);
+        const progressTrackW = boxWidth - Math.round(60 * scale);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        this._drawRoundedRect(ctx, progressTrackX, progressTrackY, progressTrackW, Math.max(3, Math.round(4 * scale)), Math.round(999 * scale));
+        ctx.fill();
+        if (progress > 0) {
+            const progressGradient = ctx.createLinearGradient(progressTrackX, 0, progressTrackX + progressTrackW, 0);
+            progressGradient.addColorStop(0, theme.accent);
+            progressGradient.addColorStop(1, 'rgba(255, 255, 255, 0.9)');
+            this._drawRoundedRect(ctx, progressTrackX, progressTrackY, Math.max(Math.round(10 * scale), progressTrackW * progress), Math.max(3, Math.round(4 * scale)), Math.round(999 * scale));
+            ctx.fillStyle = progressGradient;
+            ctx.fill();
         }
 
-        // Dismiss hint — brighter and larger
-        ctx.font = `${dismissSize}px 'Press Start 2P', 'Courier New', monospace`;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-        const dismissText = this.isMobile ? 'TAP TO DISMISS' : 'PRESS ANY KEY TO DISMISS';
-        ctx.fillText(dismissText, viewWidth / 2, boxY + boxHeight + Math.round(18 * scale));
+        ctx.globalAlpha = h.alpha;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.letterSpacing = '0.08em';
+        ctx.font = `700 ${eyebrowSize}px ${tutorialFont}`;
+        ctx.fillStyle = theme.accent;
+        ctx.fillText(badgeText, boxX + Math.round(46 * scale), boxY + Math.round(28 * scale));
+
+        ctx.letterSpacing = '0';
+        let textY = boxY + topPadding + badgeHeight + sectionGap;
+
+        ctx.font = `700 ${titleSize}px ${tutorialFont}`;
+        ctx.fillStyle = '#F7FBFF';
+        for (let i = 0; i < titleLines.length; i++) {
+            const y = textY + titleLineHeight * i + titleLineHeight / 2;
+            ctx.fillText(titleLines[i], boxX + Math.round(30 * scale), y);
+        }
+        textY += titleHeight;
+
+        if (bodyLines.length) {
+            textY += Math.round(8 * scale);
+            ctx.font = `500 ${bodySize}px ${tutorialFont}`;
+            ctx.fillStyle = 'rgba(226, 236, 245, 0.88)';
+            for (let i = 0; i < bodyLines.length; i++) {
+                const y = textY + bodyLineHeight * i + bodyLineHeight / 2;
+                ctx.fillText(bodyLines[i], boxX + Math.round(30 * scale), y);
+            }
+        }
+
+        ctx.font = `500 ${dismissSize}px ${tutorialFont}`;
+        ctx.fillStyle = 'rgba(236, 242, 248, 0.72)';
+        ctx.fillText(dismissText, boxX + boxWidth - dismissWidth, boxY + boxHeight - dismissHeight / 2 - Math.round(14 * scale));
+
+        ctx.letterSpacing = '0';
 
         ctx.restore();
     }
