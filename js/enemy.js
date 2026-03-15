@@ -1423,12 +1423,27 @@ class Enemy {
                         width: 20,
                         height: 20,
                         lifetime: 2.8,
-                        trailRgb: '60, 220, 255',
-                        glowInner: 'rgba(80, 255, 180, 0.62)',
-                        glowMid: 'rgba(40, 160, 255, 0.30)',
-                        glowOuter: 'rgba(0, 80, 180, 0)',
-                        coreColor: '#6BFFD8',
-                        strokeColor: '#1C8CFF',
+                        palette: [
+                            {
+                                trailRgb: '70, 255, 190',
+                                glowInner: 'rgba(120, 255, 210, 0.70)',
+                                glowMid: 'rgba(30, 210, 150, 0.34)',
+                                glowOuter: 'rgba(0, 90, 60, 0)',
+                                coreColor: '#7FFFE1',
+                                strokeColor: '#18C58D',
+                                shardColor: 'rgba(210, 255, 240, 0.95)'
+                            },
+                            {
+                                trailRgb: '60, 185, 255',
+                                glowInner: 'rgba(120, 220, 255, 0.74)',
+                                glowMid: 'rgba(40, 150, 255, 0.34)',
+                                glowOuter: 'rgba(0, 70, 170, 0)',
+                                coreColor: '#78D8FF',
+                                strokeColor: '#1B7FFF',
+                                shardColor: 'rgba(225, 247, 255, 0.95)'
+                            }
+                        ],
+                        projectileShape: 'crystal',
                         soundVolume: 0.78,
                         soundRate: 1.2
                     });
@@ -1466,9 +1481,13 @@ class Enemy {
         const glowOuter = (typeof options.glowOuter === 'string') ? options.glowOuter : 'rgba(120, 0, 255, 0)';
         const coreColor = (typeof options.coreColor === 'string') ? options.coreColor : '#CC44FF';
         const strokeColor = (typeof options.strokeColor === 'string') ? options.strokeColor : '#8800CC';
+        const shardColor = (typeof options.shardColor === 'string') ? options.shardColor : 'rgba(255, 255, 255, 0.92)';
+        const projectileShape = (typeof options.projectileShape === 'string') ? options.projectileShape : 'orb';
+        const palette = Array.isArray(options.palette) ? options.palette.filter((entry) => entry && typeof entry === 'object') : null;
 
         for (let i = 0; i < count; i++) {
             const angle = baseAngle + (i - centerIndex) * spread;
+            const paletteEntry = (palette && palette.length > 0) ? palette[i % palette.length] : null;
             this.thrownProjectiles = this.thrownProjectiles || [];
             this.thrownProjectiles.push({
                 x: ecx,
@@ -1480,12 +1499,14 @@ class Enemy {
                 damage: Math.floor(this.attackDamage * damageScale),
                 lifetime,
                 age: 0,
-                trailRgb,
-                glowInner,
-                glowMid,
-                glowOuter,
-                coreColor,
-                strokeColor
+                trailRgb: (paletteEntry && typeof paletteEntry.trailRgb === 'string') ? paletteEntry.trailRgb : trailRgb,
+                glowInner: (paletteEntry && typeof paletteEntry.glowInner === 'string') ? paletteEntry.glowInner : glowInner,
+                glowMid: (paletteEntry && typeof paletteEntry.glowMid === 'string') ? paletteEntry.glowMid : glowMid,
+                glowOuter: (paletteEntry && typeof paletteEntry.glowOuter === 'string') ? paletteEntry.glowOuter : glowOuter,
+                coreColor: (paletteEntry && typeof paletteEntry.coreColor === 'string') ? paletteEntry.coreColor : coreColor,
+                strokeColor: (paletteEntry && typeof paletteEntry.strokeColor === 'string') ? paletteEntry.strokeColor : strokeColor,
+                shardColor: (paletteEntry && typeof paletteEntry.shardColor === 'string') ? paletteEntry.shardColor : shardColor,
+                projectileShape
             });
         }
         this.facingRight = pcx > ecx;
@@ -1548,14 +1569,54 @@ class Enemy {
             ctx.arc(0, 0, proj.width * 1.4, 0, Math.PI * 2);
             ctx.fill();
 
-            // Core orb
-            ctx.fillStyle = proj.coreColor || '#CC44FF';
-            ctx.strokeStyle = proj.strokeColor || '#8800CC';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, proj.width / 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+            if (proj.projectileShape === 'crystal') {
+                const halfW = proj.width / 2;
+                const halfH = proj.height / 2;
+
+                // Main faceted crystal body.
+                ctx.fillStyle = proj.coreColor || '#CC44FF';
+                ctx.strokeStyle = proj.strokeColor || '#8800CC';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, -halfH);
+                ctx.lineTo(halfW * 0.72, 0);
+                ctx.lineTo(0, halfH);
+                ctx.lineTo(-halfW * 0.72, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Inner shard highlight for a more crystalline read.
+                ctx.fillStyle = proj.shardColor || 'rgba(255, 255, 255, 0.92)';
+                ctx.beginPath();
+                ctx.moveTo(0, -halfH * 0.72);
+                ctx.lineTo(halfW * 0.24, -halfH * 0.08);
+                ctx.lineTo(0, halfH * 0.28);
+                ctx.lineTo(-halfW * 0.18, -halfH * 0.1);
+                ctx.closePath();
+                ctx.fill();
+
+                // Small trailing shard.
+                ctx.globalAlpha = 0.7;
+                ctx.fillStyle = proj.strokeColor || '#8800CC';
+                ctx.beginPath();
+                ctx.moveTo(-nx * 6, -ny * 6);
+                ctx.lineTo(-nx * 10 + ny * 3, -ny * 10 - nx * 3);
+                ctx.lineTo(-nx * 13, -ny * 13);
+                ctx.lineTo(-nx * 10 - ny * 3, -ny * 10 + nx * 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            } else {
+                // Core orb
+                ctx.fillStyle = proj.coreColor || '#CC44FF';
+                ctx.strokeStyle = proj.strokeColor || '#8800CC';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, proj.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
 
             ctx.restore();
         }
