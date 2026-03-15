@@ -23,7 +23,7 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'MALODOR', bossTitle: 'Enemy Kingpin', ability: 'projectile' },
     'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'STEAMPUNK WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
     'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' },
-    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Ridge Warden', ability: 'crystalBarrage' }
+    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Flower Chief', ability: 'crystalBarrage' }
 };
 
 const HEAVY_BOSS_ATTACK_TYPES = new Set(['BOSS5', 'BOSS6', 'BOSS7']);
