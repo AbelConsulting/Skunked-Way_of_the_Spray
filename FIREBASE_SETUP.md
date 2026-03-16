@@ -15,7 +15,7 @@ VS Code Workspace (Command Center)
 │   └── package.json       ← separate deps (firebase-admin, firebase-functions)
 ├── dist/                  ← Build output → deployed to Firebase Hosting
 ├── firebase.json          ← Hosting config, rewrites, headers, emulators
-├── .firebaserc            ← Project alias (studio-3829586481-2a2cf)
+├── .firebaserc            ← Project alias (wots-52349111-5060d)
 ├── firestore.rules        ← Security rules (read: public, write: functions only)
 ├── firestore.indexes.json ← Composite indexes for score queries
 ├── android/               ← Capacitor Android shell
@@ -40,7 +40,7 @@ npm install -g firebase-tools
 firebase login
 ```
 This opens a browser for Google OAuth. Your Firebase project is already linked
-via `.firebaserc` → `studio-3829586481-2a2cf`.
+via `.firebaserc` → `wots-52349111-5060d`.
 
 ### 3. Install Cloud Functions dependencies
 ```bash

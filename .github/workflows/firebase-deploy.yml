@@ -65,11 +65,11 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
-          projectId: studio-3829586481-2a2cf
+          projectId: wots-52349111-5060d
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
       - name: Deploy Cloud Functions
-        run: npx firebase-tools deploy --only functions --project studio-3829586481-2a2cf
+        run: npx firebase-tools deploy --only functions --project wots-52349111-5060d
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

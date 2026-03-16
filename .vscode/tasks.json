@@ -171,10 +171,10 @@
 			"label": "Firebase: Open Console in Browser",
 			"type": "shell",
 			"command": "cmd",
-			"args": ["/c", "start", "https://console.firebase.google.com/project/studio-3829586481-2a2cf/overview"],
+			"args": ["/c", "start", "https://studio.firebase.google.com/wots-52349111"],
 			"windows": {
 				"command": "cmd",
-				"args": ["/c", "start", "https://console.firebase.google.com/project/studio-3829586481-2a2cf/overview"]
+				"args": ["/c", "start", "https://studio.firebase.google.com/wots-52349111"]
 			},
 			"problemMatcher": []
 		}
