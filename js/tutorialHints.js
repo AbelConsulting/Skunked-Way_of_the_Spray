@@ -56,7 +56,7 @@ class TutorialHints {
         this.HINTS = {
             move_jump: {
                 id: 'move_jump',
-                duration: 8,
+                duration: 12,
                 kb:    ['← → to Move  •  SPACE to Jump',
                         'Double-tap SPACE for a double jump!'],
                 touch: ['Use ⟸ ⟹ to Move  •  ⤒ to Jump',
@@ -64,7 +64,7 @@ class TutorialHints {
             },
             attack: {
                 id: 'attack',
-                duration: 7,
+                duration: 10,
                 kb:    ['Press X to Attack enemies!',
                         'Chain hits within 2s for combos!'],
                 touch: ['Tap 🗡 to Attack enemies!',
@@ -72,7 +72,7 @@ class TutorialHints {
             },
             shadow_strike: {
                 id: 'shadow_strike',
-                duration: 7,
+                duration: 10,
                 kb:    ['Press Z for Shadow Strike!',
                         'Dash through attacks — invincible!'],
                 touch: ['Tap 💥 for Shadow Strike!',
@@ -80,7 +80,7 @@ class TutorialHints {
             },
             skunk_shot: {
                 id: 'skunk_shot',
-                duration: 7,
+                duration: 10,
                 kb:    ['Press C to fire Skunk Shot!',
                         'Ranged spray that stuns enemies.'],
                 touch: ['Tap 🦨 for Skunk Shot!',
@@ -88,7 +88,7 @@ class TutorialHints {
             },
             golden_idol: {
                 id: 'golden_idol',
-                duration: 7,
+                duration: 10,
                 kb:    ['✦ Golden Idol spotted!',
                         'Collect all 3 per stage for boosts!'],
                 touch: ['✦ Golden Idol spotted!',
@@ -96,7 +96,7 @@ class TutorialHints {
             },
             boss_encounter: {
                 id: 'boss_encounter',
-                duration: 8,
+                duration: 12,
                 kb:    ['⚔ Boss Incoming!',
                         'Attack after they strike.',
                         'At 50% HP they enrage — stay alert!'],
@@ -106,7 +106,7 @@ class TutorialHints {
             },
             exit_portal: {
                 id: 'exit_portal',
-                duration: 6,
+                duration: 9,
                 kb:    ['🌀 Exit Portal opened!',
                         'Head right to complete the stage.'],
                 touch: ['🌀 Exit Portal opened!',
@@ -114,7 +114,7 @@ class TutorialHints {
             },
             objective: {
                 id: 'objective',
-                duration: 8,
+                duration: 12,
                 kb:    ['OBJECTIVE: Defeat enemies & boss,',
                         'then reach the Exit Portal!'],
                 touch: ['OBJECTIVE: Defeat enemies & boss,',
@@ -229,9 +229,10 @@ class TutorialHints {
         this._markSeen(def.id);
     }
 
-    /** Dismiss the current hint immediately (called on key/tap) */
+    /** Dismiss the current hint (called on key/tap).
+     *  Ignored during the first 2s so gameplay keys don't skip the hint. */
     dismiss() {
-        if (this._active && !this._active.dismissed) {
+        if (this._active && !this._active.dismissed && this._active.timer >= 2.0) {
             this._active.dismissed = true;
         }
     }
@@ -281,9 +282,9 @@ class TutorialHints {
 
         h.timer += dt;
 
-        // Fade in (0-0.7s), hold, fade out (last 1.0s)
-        const fadeIn = 0.7;
-        const fadeOut = 1.0;
+        // Fade in (0-0.8s), hold, fade out (last 1.5s)
+        const fadeIn = 0.8;
+        const fadeOut = 1.5;
         if (h.timer < fadeIn) {
             h.alpha = h.timer / fadeIn;
         } else if (h.timer > h.duration - fadeOut) {
