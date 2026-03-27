@@ -619,10 +619,11 @@
             text-align: center;
         }
 
-        /* Sub-screen overlays (Info / Scores / Settings from main menu) */
+        /* Sub-screen overlays (Info / Scores / Settings / How to Play from main menu) */
         #menu-scores-overlay,
         #menu-info-overlay,
-        #menu-settings-overlay {
+        #menu-settings-overlay,
+        #menu-howtoplay-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
@@ -631,6 +632,83 @@
             z-index: 510;
             background: radial-gradient(ellipse at 50% 30%, rgba(0,0,22,0.92), rgba(0,0,0,0.96));
             animation: menuFadeIn 0.35s cubic-bezier(.2,.9,.2,1) both;
+        }
+
+        /* How to Play custom styles */
+        .htp-scoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 6px;
+            margin: 8px 0;
+        }
+        .htp-scoring-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+        .htp-scoring-item strong { color: #fff; }
+        .htp-scoring-item span { color: #FFD93D; font-weight: 600; }
+        .htp-tip {
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            margin: 6px 0 0;
+            padding: 6px 10px;
+            border-left: 3px solid rgba(255,214,61,0.4);
+            background: rgba(255,214,61,0.05);
+            border-radius: 0 6px 6px 0;
+        }
+        .htp-idol-bonus {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.03));
+            border: 1px solid rgba(255,215,0,0.18);
+        }
+        .htp-idol-bonus span {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+        }
+        .htp-combat-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .htp-combat-card {
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .htp-combat-card h4 {
+            margin: 0 0 4px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .htp-combat-card p {
+            margin: 0;
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.4;
+        }
+        .htp-tips-list {
+            margin: 6px 0;
+            padding-left: 18px;
+            list-style: disc;
+        }
+        .htp-tips-list li {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+            margin-bottom: 4px;
         }
 
         .menu-sub-panel {
@@ -2100,6 +2178,7 @@
                             </div>
                             <div class="start-menu-actions">
                                 <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label">&#9654; Launch Run</span><span class="menu-btn-meta">Drop straight into Stage 1 and keep momentum.</span></button>
+                                <button id="menu-howtoplay-btn" class="menu-btn menu-btn--howtoplay"><span class="menu-btn-label">&#128214; How to Play</span><span class="menu-btn-meta">Learn scoring, idols, time attack, and combat.</span></button>
                                 <button id="menu-scores-btn" class="menu-btn menu-btn--scores"><span class="menu-btn-label">&#127942; High Scores</span><span class="menu-btn-meta">Check the board and chase the next target score.</span></button>
                                 <button id="menu-info-btn" class="menu-btn menu-btn--info"><span class="menu-btn-label">&#9432; Intel</span><span class="menu-btn-meta">Review controls, stages, enemies, and boss info.</span></button>
                                 <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements"><span class="menu-btn-label">&#127894;&#65039; Achievements</span><span class="menu-btn-meta">Track mastery goals and completion progress.</span></button>
@@ -2112,6 +2191,92 @@
                 </div>
             </div>
 
+
+            <!-- HOW TO PLAY SCREEN (from main menu) -->
+            <div id="menu-howtoplay-overlay" style="display:none;">
+                <div class="menu-sub-panel menu-sub-panel--wide">
+                    <div class="menu-sub-header">
+                        <p class="menu-sub-eyebrow">Field Manual</p>
+                        <h2 class="menu-sub-title">&#128214; How to Play</h2>
+                        <p class="menu-sub-lede">Everything you need to survive, score big, and master the spray.</p>
+                    </div>
+                    <hr class="pause-divider">
+
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">&#127919; Objective</h3>
+                        <p class="menu-sub-section-copy">Fight through <strong>10 stages</strong> of enemies and bosses. Defeat every enemy in a stage to advance. Lose all your lives and it's game over &mdash; your final score is submitted to the leaderboard.</p>
+                    </div>
+
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">&#11088; Scoring</h3>
+                        <p class="menu-sub-section-copy">Every enemy you defeat earns base points. Chain kills within <strong>2 seconds</strong> to build a <strong>combo multiplier</strong> (up to 10&times;). The faster you chain, the higher your score climbs.</p>
+                        <div class="htp-scoring-grid">
+                            <div class="htp-scoring-item"><strong>Grunt</strong><span>100 pts</span></div>
+                            <div class="htp-scoring-item"><strong>Speedster</strong><span>120 pts</span></div>
+                            <div class="htp-scoring-item"><strong>Shield Tank</strong><span>150 pts</span></div>
+                            <div class="htp-scoring-item"><strong>Kamikaze</strong><span>200 pts</span></div>
+                            <div class="htp-scoring-item"><strong>Jumper</strong><span>200 pts</span></div>
+                            <div class="htp-scoring-item"><strong>Thrower</strong><span>250 pts</span></div>
+                            <div class="htp-scoring-item"><strong>Boss Kill</strong><span>500+ pts</span></div>
+                            <div class="htp-scoring-item"><strong>Chain Explosion</strong><span>500 bonus</span></div>
+                        </div>
+                        <p class="htp-tip">&#128161; Boss score scales with their HP multiplier &mdash; later bosses are worth more.</p>
+                    </div>
+
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">&#128081; Golden Idols</h3>
+                        <p class="menu-sub-section-copy">Each stage hides <strong>3 Golden Idols</strong>. Collecting one gives you <strong>+250 score</strong>, <strong>+30 HP</strong>, and <strong>2 seconds of invulnerability</strong>.</p>
+                        <p class="menu-sub-section-copy">Grab <strong>all 3</strong> in a single stage to activate the <strong>Idol Set Bonus</strong>:</p>
+                        <div class="htp-idol-bonus">
+                            <span>&#9989; +25% Movement Speed</span>
+                            <span>&#9989; +30% Attack Damage</span>
+                            <span>&#9989; +2,000 Bonus Points</span>
+                        </div>
+                        <p class="htp-tip">&#128161; Idols are placed throughout the level &mdash; explore every platform to find them all!</p>
+                    </div>
+
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">&#9201; Time Attack &amp; Pacing</h3>
+                        <p class="menu-sub-section-copy">Each stage has a <strong>stage timer</strong> ticking down. Clear enemies quickly to earn a <strong>time bonus</strong> at the end of the stage. The faster you clear, the more bonus points you bank.</p>
+                        <p class="menu-sub-section-copy">Speed isn't just about the timer &mdash; keeping momentum feeds your <strong>combo chain</strong>. Hesitate too long between kills and the multiplier resets.</p>
+                        <p class="htp-tip">&#128161; Balance speed with survival &mdash; dying costs a life and resets your combo.</p>
+                    </div>
+
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">&#9876; Combat Basics</h3>
+                        <p class="menu-sub-section-copy">You have three attack types at your disposal:</p>
+                        <div class="htp-combat-grid">
+                            <div class="htp-combat-card">
+                                <h4>&#128481; Basic Attack</h4>
+                                <p>Fast melee strike. Low cooldown, perfect for building combos. Press <strong>X</strong> or the Attack button.</p>
+                            </div>
+                            <div class="htp-combat-card">
+                                <h4>&#9889; Shadow Strike</h4>
+                                <p>Dash forward with invincibility frames. Pass through enemy attacks! Press <strong>Z</strong> or the Special button.</p>
+                            </div>
+                            <div class="htp-combat-card">
+                                <h4>&#128163; Skunk Shot</h4>
+                                <p>Ranged spray that "skunks" enemies, freezing them for 5s. Ammo-based &mdash; collect pickups. Press <strong>C</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-sub-section">
+                        <h3 class="menu-sub-section-title">&#128155; Survival Tips</h3>
+                        <ul class="htp-tips-list">
+                            <li>You start with <strong>3 lives</strong> and <strong>100 HP</strong>. Losing all HP costs a life.</li>
+                            <li>Enemies drop <strong>Health Regen</strong> (20% chance) and rarely <strong>Extra Lives</strong> (3% chance).</li>
+                            <li>Use <strong>Shadow Strike</strong> to dodge through dangerous situations &mdash; you're invincible during the dash.</li>
+                            <li><strong>Skunk Shot</strong> disrupts Kamikaze fuses &mdash; spray a group before they explode!</li>
+                            <li>Bosses telegraph their big attacks &mdash; watch the wind-up animation and dodge first, attack second.</li>
+                            <li><strong>Double-jump</strong> (tap Space twice) to reach high platforms and dodge Jumper arcs.</li>
+                        </ul>
+                    </div>
+
+                    <hr class="pause-divider" style="margin-top:12px;">
+                    <button id="menu-howtoplay-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
+                </div>
+            </div>
             <!-- â•â•â•â•â•â• HIGH SCORES SCREEN (from main menu) â•â•â•â•â•â• -->
             <div id="menu-scores-overlay" style="display:none;">
                 <div class="menu-sub-panel">
@@ -2679,7 +2844,9 @@
                         const scoresOverlay     = document.getElementById('menu-scores-overlay');
                         const infoOverlay       = document.getElementById('menu-info-overlay');
                         const settingsOverlay   = document.getElementById('menu-settings-overlay');
+                        const howtoplayOverlay  = document.getElementById('menu-howtoplay-overlay');
                         const playBtn           = document.getElementById('menu-play-btn');
+                        const howtoplayBtn      = document.getElementById('menu-howtoplay-btn');
                         const scoresBtn         = document.getElementById('menu-scores-btn');
                         const infoBtn           = document.getElementById('menu-info-btn');
                         const achievementsBtn   = document.getElementById('menu-achievements-btn');
@@ -2687,6 +2854,7 @@
                         const scoresBackBtn     = document.getElementById('menu-scores-back');
                         const infoBackBtn       = document.getElementById('menu-info-back');
                         const settingsBackBtn   = document.getElementById('menu-settings-back');
+                        const howtoplayBackBtn  = document.getElementById('menu-howtoplay-back');
                         const scoresBoardEl     = document.getElementById('menu-scores-board');
                         const infoAchievementsGrid = document.getElementById('info-achieve-grid');
                         const infoBossSummary = document.getElementById('info-boss-summary');
@@ -2849,6 +3017,7 @@
                             if (scoresOverlay) scoresOverlay.style.display = 'none';
                             if (infoOverlay) infoOverlay.style.display = 'none';
                             if (settingsOverlay) settingsOverlay.style.display = 'none';
+                            if (howtoplayOverlay) howtoplayOverlay.style.display = 'none';
                             window._startMenuVisible = false;
                         }
                         // Expose globally so other code can call it instead of duplicating
@@ -2896,6 +3065,7 @@
                             if (scoresOverlay) scoresOverlay.style.display = 'none';
                             if (infoOverlay) infoOverlay.style.display = 'none';
                             if (settingsOverlay) settingsOverlay.style.display = 'none';
+                            if (howtoplayOverlay) howtoplayOverlay.style.display = 'none';
                             window._startMenuVisible = true;
                         }
 
@@ -2938,6 +3108,16 @@
                                     }
                                 }
                                 if (scoresOverlay) scoresOverlay.style.display = 'flex';
+                            });
+                        }
+
+                        // HOW TO PLAY button
+                        if (howtoplayBtn) {
+                            howtoplayBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                if (howtoplayOverlay) howtoplayOverlay.style.display = 'flex';
                             });
                         }
 
@@ -3029,6 +3209,13 @@
                                 showStartMenu();
                             });
                         }
+                        if (howtoplayBackBtn) {
+                            howtoplayBackBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                showStartMenu();
+                            });
+                        }
 
                         // Reset Tutorial Hints button
                         const resetTutorialBtn = document.getElementById('reset-tutorial-btn');
@@ -3095,6 +3282,7 @@
                             trapFocus(document.getElementById('menu-scores-overlay'));
                             trapFocus(document.getElementById('menu-info-overlay'));
                             trapFocus(document.getElementById('menu-settings-overlay'));
+                            trapFocus(document.getElementById('menu-howtoplay-overlay'));
                         } catch (e) {}
 
                         // Show the start menu again when returning to MENU state
