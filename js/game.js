@@ -1120,6 +1120,9 @@ class Game {
             this.state = 'LEVEL_COMPLETE';
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
             this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
+
+            // Notify ad manager for interstitial pacing
+            try { if (window.AdManager && typeof AdManager.onStageComplete === 'function') AdManager.onStageComplete(); } catch (e) { __err('game', e); }
             
             // Track level completion and perfect runs
             try {
@@ -2323,6 +2326,38 @@ class Game {
         const lockout = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
             ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
         return Math.max(0, (lockout - (Date.now() - this._gameOverTime)) / 1000);
+    }
+
+    /**
+     * Revive the player after watching a rewarded ad.
+     * Continues from the current level with 1 life and full HP.
+     */
+    reviveFromAd() {
+        if (this.state !== 'GAME_OVER') return;
+
+        this.lives = 1;
+        this.state = 'PLAYING';
+        this._gameOverTime = 0;
+
+        // Restore player to a safe state
+        if (this.player) {
+            this.player.health = this.player.maxHealth;
+            this.player.invulnerableTimer = 3.0; // generous i-frames after revive
+            this.player.velocityY = 0;
+            this.player.isAlive = true;
+            this.player._deathTimer = 0;
+            this.player._deathPhase = null;
+        }
+
+        this.isRespawning = false;
+        this.respawnTimer = 0;
+        this._pendingRespawn = null;
+
+        // Resume music
+        try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
+
+        this.dispatchGameStateChange();
+        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Player revived via ad reward.');
     }
 
     _performRespawn() {

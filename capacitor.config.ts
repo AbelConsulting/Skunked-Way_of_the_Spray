@@ -32,6 +32,11 @@ const config: CapacitorConfig = {
     ScreenOrientation: {
       defaultOrientation: 'landscape',
     },
+    AdMob: {
+      // Use test ads during development; switch to false for production
+      testingDevices: [],
+      initializeForTesting: true,
+    },
   },
 };
 
