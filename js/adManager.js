@@ -5,8 +5,8 @@
  * for the Android build. Gracefully no-ops on web / when plugin is absent.
  *
  * Ad Unit IDs (Mephitideus — pub-8519140628365141):
- *   Banner:       ca-app-pub-8519140628365141/4631220272
- *   Rewarded:     PLACEHOLDER — replace with real unit once created in AdMob console
+ *   Banner:       ca-app-pub-8519140628365141/6620194957
+ *   Rewarded:     ca-app-pub-8519140628365141/4115014216
  *   Interstitial: PLACEHOLDER — replace with real unit once created in AdMob console
  *
  * Google AdMob test ad unit IDs (used when testing = true):
@@ -20,9 +20,9 @@ const AdManager = (() => {
 
     // ── Configuration ──────────────────────────────────────────────
     const CONFIG = {
-        // Replace these with your real ad unit IDs from AdMob console:
-        bannerAdUnitId:       'ca-app-pub-8519140628365141/4631220272',
-        rewardedAdUnitId:     'ca-app-pub-8519140628365141/REWARDED_UNIT_ID',
+        // Real ad unit IDs from AdMob console:
+        bannerAdUnitId:       'ca-app-pub-8519140628365141/6620194957',
+        rewardedAdUnitId:     'ca-app-pub-8519140628365141/4115014216',
         interstitialAdUnitId: 'ca-app-pub-8519140628365141/INTERSTITIAL_UNIT_ID',
 
         // Google's official test ad unit IDs — used when testing is true
@@ -34,7 +34,7 @@ const AdManager = (() => {
         testing: true,
 
         // Show an interstitial every N stages (0 = never)
-        interstitialEveryNStages: 3,
+        interstitialEveryNStages: 0,
 
         // Max rewarded revives per session (prevent abuse)
         maxRevivesPerSession: 2,
@@ -240,7 +240,7 @@ const AdManager = (() => {
         }
     }
 
-    // ── Interstitial ───────────────────────────────────────────────
+    // ── Interstitial ─────────────────────────────────────────────────────
     async function _prepareInterstitial() {
         if (!_available || !_plugin) return;
         try {
