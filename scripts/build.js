@@ -55,7 +55,7 @@ async function build({ minify = true, sourcemap = false } = {}) {
 
   // Copy static site files into dist so Wrangler/Pages can publish the folder
   try {
-    const staticFiles = ['index.html', 'styles.css', 'achievements.css', 'manifest.json', 'sw.js', 'package.json'];
+    const staticFiles = ['index.html', 'styles.css', 'achievements.css', 'manifest.json', 'sw.js', 'package.json', 'privacy.html', 'terms.html'];
     for (const f of staticFiles) {
       const src = path.join(ROOT, f);
       const dest = path.join(DIST, f);
