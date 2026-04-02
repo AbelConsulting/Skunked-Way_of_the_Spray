@@ -50,3 +50,7 @@ android/build/
 android/app/release/
 *.keystore
 *.jks
+
+# Android Keystore rules
+*.keystore
+keystore.properties
