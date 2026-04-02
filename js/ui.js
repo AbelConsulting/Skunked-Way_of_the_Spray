@@ -286,12 +286,35 @@ class UI {
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fillText(`${secs}...`, cx, instructY);
         } else {
-            // Blinking prompt
-            const blink = Math.sin(now / 400) * 0.4 + 0.6;
-            ctx.globalAlpha = blink;
-            ctx.font = "16px 'Press Start 2P', monospace";
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillText('PRESS ENTER OR TAP TO RESTART', cx, instructY);
+            // "Watch Ad to Revive" option (only on native Android with ads available)
+            const adAvailable = window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded();
+            if (adAvailable) {
+                // Revive button — pulsing green
+                const revivePulse = Math.sin(now / 350) * 0.3 + 0.7;
+                ctx.globalAlpha = revivePulse;
+                ctx.font = "bold 16px 'Press Start 2P', monospace";
+                ctx.fillStyle = '#44FF44';
+                ctx.shadowColor = '#44FF44';
+                ctx.shadowBlur = 10;
+                ctx.fillText('\u25B6 WATCH AD TO REVIVE', cx, instructY);
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+
+                // Restart option below
+                const restartY = instructY + 32;
+                const blink = Math.sin(now / 400) * 0.3 + 0.5;
+                ctx.globalAlpha = blink;
+                ctx.font = "12px 'Press Start 2P', monospace";
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.fillText('PRESS ENTER OR TAP TO RESTART', cx, restartY);
+            } else {
+                // Standard blinking restart prompt
+                const blink = Math.sin(now / 400) * 0.4 + 0.6;
+                ctx.globalAlpha = blink;
+                ctx.font = "16px 'Press Start 2P', monospace";
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText('PRESS ENTER OR TAP TO RESTART', cx, instructY);
+            }
         }
         ctx.restore();
     }

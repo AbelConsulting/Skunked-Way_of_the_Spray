@@ -355,6 +355,21 @@ class Game {
                     } else if (this.state === 'GAME_OVER') {
                         // Respect lockout period so player can see game over stats
                         if (this._isGameOverLocked()) return;
+                        // If a rewarded ad is available, show it to revive
+                        if (window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded()) {
+                            AdManager.showRewarded().then((rewarded) => {
+                                if (rewarded && this.state === 'GAME_OVER') {
+                                    this.reviveFromAd();
+                                } else {
+                                    // Ad dismissed — restart normally
+                                    this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
+                                    this.startGame(0);
+                                    this.dispatchGameStateChange();
+                                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
+                                }
+                            });
+                            return;
+                        }
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0);
                         this.dispatchGameStateChange();
@@ -597,6 +612,9 @@ class Game {
 
             // Prevent delayed death stingers from a previous run bleeding into a new start.
             try { this.audioManager && this.audioManager.cancelDeathSequence && this.audioManager.cancelDeathSequence(); } catch (e) { __err('game', e); }
+
+            // Reset ad session counters for the new run
+            try { if (window.AdManager && typeof AdManager.resetSession === 'function') AdManager.resetSession(); } catch (e) { __err('game', e); }
             
             // Start with a fade in
             this.transitionState = 'FADE_IN';
@@ -1118,6 +1136,7 @@ class Game {
             if (this.state === 'LEVEL_COMPLETE') return;
             
             this.state = 'LEVEL_COMPLETE';
+            this.dispatchGameStateChange();
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
             this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
 
@@ -1146,6 +1165,7 @@ class Game {
 
         victory() {
             this.state = 'VICTORY'; // Handle this in draw
+            this.dispatchGameStateChange();
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('GAME VICTORY!');
 
             // Tutorial complete — suppress hints on future playthroughs
@@ -1255,6 +1275,7 @@ class Game {
                         if (typeof LEVEL_CONFIGS !== 'undefined' && nextIndex < LEVEL_CONFIGS.length) {
                             this.loadLevel(nextIndex);
                             this.state = 'PLAYING';
+                            this.dispatchGameStateChange();
                             if (this.enemyManager) this.enemyManager.spawnTimer = 0;
                         } else {
                             this.victory();

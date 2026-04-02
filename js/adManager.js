@@ -5,11 +5,12 @@
  * for the Android build. Gracefully no-ops on web / when plugin is absent.
  *
  * Ad Unit IDs (Mephitideus — pub-8519140628365141):
- *   Banner:       ca-app-pub-8519140628365141/4631220272   (handled natively in layout)
+ *   Banner:       ca-app-pub-8519140628365141/4631220272
  *   Rewarded:     PLACEHOLDER — replace with real unit once created in AdMob console
  *   Interstitial: PLACEHOLDER — replace with real unit once created in AdMob console
  *
  * Google AdMob test ad unit IDs (used when testing = true):
+ *   Banner:       ca-app-pub-3940256099942544/6300978111
  *   Rewarded:     ca-app-pub-3940256099942544/5224354917
  *   Interstitial: ca-app-pub-3940256099942544/1033173712
  */
@@ -20,10 +21,12 @@ const AdManager = (() => {
     // ── Configuration ──────────────────────────────────────────────
     const CONFIG = {
         // Replace these with your real ad unit IDs from AdMob console:
+        bannerAdUnitId:       'ca-app-pub-8519140628365141/4631220272',
         rewardedAdUnitId:     'ca-app-pub-8519140628365141/REWARDED_UNIT_ID',
         interstitialAdUnitId: 'ca-app-pub-8519140628365141/INTERSTITIAL_UNIT_ID',
 
         // Google's official test ad unit IDs — used when testing is true
+        testBannerId:        'ca-app-pub-3940256099942544/6300978111',
         testRewardedId:      'ca-app-pub-3940256099942544/5224354917',
         testInterstitialId:  'ca-app-pub-3940256099942544/1033173712',
 
@@ -43,10 +46,16 @@ const AdManager = (() => {
     let _available     = false;  // true only on native Android with plugin
     let _rewardedReady      = false;
     let _interstitialReady  = false;
+    let _bannerVisible      = false;
+    let _bannerLoaded       = false;
     let _revivesUsed        = 0;
     let _stagesSinceAd      = 0;
 
     // ── Helpers ────────────────────────────────────────────────────
+    function _getBannerId() {
+        return CONFIG.testing ? CONFIG.testBannerId : CONFIG.bannerAdUnitId;
+    }
+
     function _getRewardedId() {
         return CONFIG.testing ? CONFIG.testRewardedId : CONFIG.rewardedAdUnitId;
     }
@@ -98,8 +107,85 @@ const AdManager = (() => {
             _prepareRewarded();
             _prepareInterstitial();
 
+            // Show banner on menu screens by default
+            showBanner();
+
+            // Listen for game state changes to show/hide banner
+            window.addEventListener('gameStateChange', _onGameStateChange);
+
         } catch (e) {
             _warn('AdMob init failed:', e);
+        }
+    }
+
+    // ── Banner ──────────────────────────────────────────────────────
+    /**
+     * Show a small banner ad at the bottom of the screen.
+     * Safe to call multiple times — no-ops if already visible.
+     */
+    async function showBanner() {
+        if (!_available || !_plugin || _bannerVisible) return;
+        try {
+            const BannerAdSize = (await import('@capacitor-community/admob')).BannerAdSize;
+            const BannerAdPosition = (await import('@capacitor-community/admob')).BannerAdPosition;
+            await _plugin.showBanner({
+                adId: _getBannerId(),
+                adSize: BannerAdSize.ADAPTIVE_BANNER,
+                position: BannerAdPosition.BOTTOM_CENTER,
+                isTesting: CONFIG.testing,
+            });
+            _bannerVisible = true;
+            _bannerLoaded = true;
+            _log('Banner shown.');
+        } catch (e) {
+            _warn('Banner show failed:', e);
+        }
+    }
+
+    /**
+     * Hide the banner ad. Call when entering active gameplay.
+     */
+    async function hideBanner() {
+        if (!_available || !_plugin || !_bannerVisible) return;
+        try {
+            await _plugin.hideBanner();
+            _bannerVisible = false;
+            _log('Banner hidden.');
+        } catch (e) {
+            _warn('Banner hide failed:', e);
+        }
+    }
+
+    /**
+     * Completely remove the banner (frees resources).
+     */
+    async function removeBanner() {
+        if (!_available || !_plugin || !_bannerLoaded) return;
+        try {
+            await _plugin.removeBanner();
+            _bannerVisible = false;
+            _bannerLoaded = false;
+            _log('Banner removed.');
+        } catch (e) {
+            _warn('Banner remove failed:', e);
+        }
+    }
+
+    /**
+     * Auto-manage banner visibility based on game state.
+     * Banner shows on: MENU, GAME_OVER, PAUSED, LEVEL_COMPLETE, VICTORY
+     * Banner hides on: PLAYING
+     */
+    function _onGameStateChange(ev) {
+        try {
+            const state = ev && ev.detail && ev.detail.state;
+            if (state === 'PLAYING') {
+                hideBanner();
+            } else {
+                showBanner();
+            }
+        } catch (e) {
+            _warn('Banner state handler error:', e);
         }
     }
 
@@ -208,12 +294,17 @@ const AdManager = (() => {
     return {
         CONFIG,
         initialize,
+        showBanner,
+        hideBanner,
+        removeBanner,
         canShowRewarded,
         showRewarded,
         onStageComplete,
         resetSession,
         /** True if ads are available on this platform. */
         get available() { return _available; },
+        /** True if the banner is currently visible. */
+        get bannerVisible() { return _bannerVisible; },
     };
 })();
 
