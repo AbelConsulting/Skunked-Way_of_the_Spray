@@ -1,6 +1,7 @@
 [build]
   publish = "."
-  command = "echo 'No build step required'"
+  command = "echo 'Static site — no build step required'"
+  functions = "netlify/functions"
 
 # Serve .well-known files as-is (needed for Digital Asset Links / TWA)
 [[redirects]]

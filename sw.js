@@ -13,7 +13,7 @@
  * Bump CACHE_VERSION when you deploy new code/assets to bust the cache.
  */
 
-const CACHE_VERSION = 'skunked-v6';
+const CACHE_VERSION = 'skunked-v7';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Determine base path from service worker location
@@ -42,6 +42,7 @@ const CORE_ASSETS_RELATIVE = [
   'manifest.json',
 
   // JS engine
+  'js/firebase.js',
   'js/config.js',
   'js/utils.js',
   'js/highscores.js',
@@ -208,6 +209,9 @@ self.addEventListener('fetch', (event) => {
   if (!request.url.startsWith(self.location.origin)) return;
 
   const url = new URL(request.url);
+
+  // Never cache API calls — always hit the network (Netlify Functions)
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/.netlify/')) return;
 
   // Network-first for HTML (always get latest page shell)
   if (request.mode === 'navigate' || url.pathname.endsWith('.html')) {
