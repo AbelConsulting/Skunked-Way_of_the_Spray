@@ -22,8 +22,12 @@ exports.handler = async function(event, context) {
   try { body = JSON.parse(event.body || '{}'); } catch (e) { return { statusCode: 400, body: 'Invalid JSON' }; }
 
   const score = (typeof body.score === 'number') ? Math.floor(body.score) : null;
-  const initials = (typeof body.initials === 'string') ? body.initials.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3) : '---';
-  const achievements = Array.isArray(body.achievements) ? body.achievements.filter(a => typeof a === 'string').slice(0, 60) : [];
+  const initials = (typeof body.initials === 'string') ? body.initials.replace(/[^\w\s-]/g, '').trim().slice(0, 10) || '---' : '---';
+  const achievements = Array.isArray(body.achievements) ? body.achievements.filter(a => typeof a === 'string' && a.length <= 40).slice(0, 60) : [];
+  const prestige = (typeof body.prestige === 'number' && body.prestige >= 0) ? Math.floor(body.prestige) : 0;
+  const title = (typeof body.title === 'string') ? body.title.replace(/[^\w\s]/g, '').trim().slice(0, 20) : '';
+  const achievementCount = (typeof body.achievementCount === 'number' && body.achievementCount >= 0) ? Math.floor(body.achievementCount) : 0;
+  const level = (typeof body.level === 'number' && body.level >= 0) ? Math.floor(body.level) : 0;
   const recaptchaToken = typeof body.recaptchaToken === 'string' ? body.recaptchaToken : null;
 
   if (score === null || score < 0) return { statusCode: 400, body: JSON.stringify({ error: 'bad_score' }) };
@@ -120,7 +124,7 @@ exports.handler = async function(event, context) {
       arr = [];
     }
 
-    const entry = { score, initials, date: new Date().toISOString(), achievements };
+    const entry = { score, initials, date: new Date().toISOString(), achievements, prestige, title, achievementCount, level };
     arr.push(entry);
     arr.sort((a,b)=>b.score - a.score || new Date(a.date) - new Date(b.date));
     arr = arr.slice(0, MAX_ENTRIES);

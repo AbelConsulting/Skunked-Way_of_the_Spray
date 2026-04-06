@@ -31,7 +31,7 @@ export async function checkHealth() {
  * @param {string[]} [achievements] Achievement names earned this run.
  * @returns {Promise<void>}
  */
-export async function submitScore(name, score, achievements) {
+export async function submitScore(name, score, achievements, meta) {
   try {
     const res = await fetch(`${API_BASE}/submit-score`, {
       method: 'POST',
@@ -39,7 +39,11 @@ export async function submitScore(name, score, achievements) {
       body: JSON.stringify({
         initials: name,
         score: score,
-        achievements: Array.isArray(achievements) ? achievements : []
+        achievements: Array.isArray(achievements) ? achievements : [],
+        prestige: (meta && typeof meta.prestige === 'number') ? meta.prestige : 0,
+        title: (meta && typeof meta.title === 'string') ? meta.title : '',
+        achievementCount: (meta && typeof meta.achievementCount === 'number') ? meta.achievementCount : 0,
+        level: (meta && typeof meta.level === 'number') ? meta.level : 0
       })
     });
     if (!res.ok) {
@@ -67,6 +71,10 @@ export async function getHighScores(count = 10) {
       score: entry.score,
       timestamp: entry.date ? new Date(entry.date) : null,
       achievements: entry.achievements || [],
+      prestige: entry.prestige || 0,
+      title: entry.title || '',
+      achievementCount: entry.achievementCount || 0,
+      level: entry.level || 0,
     }));
   } catch (e) {
     console.error('Error fetching scores:', e);

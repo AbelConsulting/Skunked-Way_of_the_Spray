@@ -113,6 +113,70 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     return ACHIEVEMENT_DEFINITIONS.map(({ check, ...achievement }) => ({ ...achievement }));
   }
 
+  // ── Achievement-Based Titles ──
+  // Earned by total achievement count; displayed on leaderboard next to player name.
+  const TITLE_TIERS = Object.freeze([
+    { min:  0, title: 'Newcomer',     color: '#aaaaaa' },
+    { min:  5, title: 'Recruit',      color: '#66bb6a' },
+    { min: 10, title: 'Fighter',      color: '#42a5f5' },
+    { min: 15, title: 'Warrior',      color: '#ab47bc' },
+    { min: 25, title: 'Champion',     color: '#ffa726' },
+    { min: 35, title: 'Legend',       color: '#ffd700' },
+    { min: 45, title: 'Grandmaster',  color: '#ff5252' },
+    { min: 55, title: 'Mythic',       color: '#e040fb' },
+  ]);
+
+  function getTitleForCount(count) {
+    let tier = TITLE_TIERS[0];
+    for (const t of TITLE_TIERS) {
+      if (count >= t.min) tier = t;
+    }
+    return tier;
+  }
+
+  function getPlayerTitle() {
+    const achievements = loadAchievements();
+    const count = Object.values(achievements).filter(a => a && a.unlocked).length;
+    return { ...getTitleForCount(count), count, total: ACHIEVEMENT_DEFINITIONS.length };
+  }
+
+  // ── Prestige Score ──
+  // Weighted achievement points — harder achievements are worth more.
+  const PRESTIGE_WEIGHTS = Object.freeze({
+    // Easy (1 pt)
+    first_kill: 1, spray_novice: 1, combo_master: 1, chain_reaction: 1, boss_slayer: 1,
+    close_call: 1, relic_hunter: 1, halfway_there: 1, dedicated: 1,
+    // Medium (3 pt)
+    enemy_slayer: 3, combo_adept: 3, high_scorer: 3, shadow_initiate: 3, stink_bomber: 3,
+    air_juggler: 3, precision_striker: 3, boss_crusher: 3, perfect_level: 3, survivor: 3,
+    no_lives_lost: 3, power_hungry: 3, demolition_expert: 3, multi_hit_master: 3,
+    mass_extinction: 3, time_invested: 3, multiplier_max: 3, idol_hoarder: 3,
+    // Hard (5 pt)
+    exterminator: 5, combo_legend: 5, score_attack: 5, shadow_master: 5, toxic_cloud: 5,
+    sky_warrior: 5, sharpshooter: 5, boss_hunter: 5, iron_fur: 5, cheating_death: 5,
+    endurance: 5, master_collector: 5, speed_demon: 5, world_saver: 5,
+    veteran_hunter: 5, addicted: 5, armageddon: 5, berserker: 5,
+    // Epic (10 pt)
+    genocide: 10, combo_god: 10, score_legend: 10, phantom_blade: 10,
+    never_miss: 10, flawless_run: 10, completionist: 10, speed_god: 10,
+    veteran: 10, no_lifer: 10, glass_cannon: 10, pacifist_start: 10,
+  });
+
+  function getPrestigeScore(achievements) {
+    const achs = achievements || loadAchievements();
+    let total = 0;
+    for (const [id, data] of Object.entries(achs)) {
+      if (data && data.unlocked) total += (PRESTIGE_WEIGHTS[id] || 1);
+    }
+    return total;
+  }
+
+  function getMaxPrestige() {
+    let total = 0;
+    for (const a of ACHIEVEMENT_DEFINITIONS) total += (PRESTIGE_WEIGHTS[a.id] || 1);
+    return total;
+  }
+
   // Score validation to prevent obviously tampered scores
   function validateScore(score) {
     if (typeof score !== 'number' || score < 0 || !isFinite(score)) return false;
@@ -271,15 +335,17 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     try {
       // Run achievement checks for this run (may unlock new ones)
       if (gameStats) checkAchievements(gameStats);
-      // Send ALL unlocked achievements so the leaderboard shows total progress
+      // Build rich payload: all unlocked achievement IDs, prestige, title
       const allUnlocked = loadAchievements();
-      const achievementNames = Object.keys(allUnlocked)
-        .filter(id => allUnlocked[id] && allUnlocked[id].unlocked)
-        .map(id => {
-          const def = ACHIEVEMENT_DEFINITIONS.find(a => a.id === id);
-          return def ? def.name : id;
-        });
-      await submitAPIScore(name, score, achievementNames);
+      const achievementIds = Object.keys(allUnlocked).filter(id => allUnlocked[id] && allUnlocked[id].unlocked);
+      const prestige = getPrestigeScore(allUnlocked);
+      const titleInfo = getPlayerTitle();
+      await submitAPIScore(name, score, achievementIds, {
+        prestige,
+        title: titleInfo.title,
+        achievementCount: titleInfo.count,
+        level: gameStats ? (gameStats.levelsCompleted || 0) : 0
+      });
     } catch (e) {
       console.error("Failed to submit score to skunked.io", e);
     }
@@ -306,6 +372,13 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
       const scoreLine = document.createElement('div');
       scoreLine.className = 'highscore-prompt-score';
       scoreLine.textContent = `Score: ${score.toLocaleString()}`;
+
+      // Show player title and prestige
+      const titleInfo = getPlayerTitle();
+      const prestige = getPrestigeScore();
+      const titleLine = document.createElement('div');
+      titleLine.className = 'highscore-prompt-title-line';
+      titleLine.innerHTML = `<span style="color:${titleInfo.color};font-weight:bold">${titleInfo.title}</span> \u2022 \u2b50 ${prestige} Prestige \u2022 ${titleInfo.count}/${titleInfo.total} Achievements`;
 
       const input = document.createElement('input');
       input.maxLength = 10; // Allow longer names
@@ -366,6 +439,7 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
       btnRow.appendChild(skip);
       box.appendChild(title);
       box.appendChild(scoreLine);
+      box.appendChild(titleLine);
       box.appendChild(input);
       box.appendChild(btnRow);
       overlay.appendChild(box);
@@ -424,25 +498,83 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
 
             const info = document.createElement('div');
             info.className = 'scoreboard-info';
-            
-            const nameScore = document.createElement('div');
-            nameScore.className = 'scoreboard-name';
-            nameScore.textContent = `${scoreData.name} — ${scoreData.score.toLocaleString()}`;
-            info.appendChild(nameScore);
+
+            // Player name
+            const nameRow = document.createElement('div');
+            nameRow.className = 'scoreboard-name';
+            nameRow.textContent = scoreData.name || '???';
+
+            // Title badge (derived from achievement count)
+            const achCount = (Array.isArray(scoreData.achievements) ? scoreData.achievements.length : 0);
+            const titleData = scoreData.title
+              ? TITLE_TIERS.find(t => t.title === scoreData.title) || getTitleForCount(achCount)
+              : getTitleForCount(achCount);
+            if (achCount > 0) {
+              const titleBadge = document.createElement('span');
+              titleBadge.className = 'scoreboard-title-badge';
+              titleBadge.textContent = titleData.title;
+              titleBadge.style.color = titleData.color;
+              nameRow.appendChild(document.createTextNode(' '));
+              nameRow.appendChild(titleBadge);
+            }
+            info.appendChild(nameRow);
+
+            // Score line
+            const scoreLine = document.createElement('div');
+            scoreLine.className = 'scoreboard-score';
+            scoreLine.textContent = scoreData.score.toLocaleString();
+            info.appendChild(scoreLine);
+
+            // Achievement badges row (show top 5 icons)
+            if (achCount > 0) {
+              const badgeRow = document.createElement('div');
+              badgeRow.className = 'scoreboard-badges';
+              const achIds = scoreData.achievements.slice(0, 5);
+              for (const achId of achIds) {
+                const def = ACHIEVEMENT_DEFINITIONS.find(a => a.id === achId);
+                if (def) {
+                  const badge = document.createElement('span');
+                  badge.className = 'scoreboard-badge';
+                  badge.textContent = def.icon;
+                  badge.title = def.name;
+                  badgeRow.appendChild(badge);
+                }
+              }
+              if (achCount > 5) {
+                const more = document.createElement('span');
+                more.className = 'scoreboard-badge-more';
+                more.textContent = `+${achCount - 5}`;
+                badgeRow.appendChild(more);
+              }
+              info.appendChild(badgeRow);
+            }
+
+            // Right column: prestige + date
+            const rightCol = document.createElement('div');
+            rightCol.className = 'scoreboard-right';
+
+            const prestige = scoreData.prestige || 0;
+            if (prestige > 0) {
+              const prestigeEl = document.createElement('div');
+              prestigeEl.className = 'scoreboard-prestige';
+              prestigeEl.textContent = `⭐ ${prestige}`;
+              prestigeEl.title = 'Prestige Score';
+              rightCol.appendChild(prestigeEl);
+            }
 
             const date = document.createElement('div');
             date.className = 'scoreboard-date';
             if (scoreData.timestamp) {
-              // API returns plain Date objects or ISO strings
               const d = (scoreData.timestamp instanceof Date)
                 ? scoreData.timestamp
                 : new Date(scoreData.timestamp);
               date.textContent = d.toLocaleDateString();
             }
-            
+            rightCol.appendChild(date);
+
             entry.appendChild(rank);
             entry.appendChild(info);
-            entry.appendChild(date);
+            entry.appendChild(rightCol);
             list.appendChild(entry);
         });
     }
@@ -460,7 +592,7 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
 
   // Expose the public API
   window.Highscores = {
-    // New async functions for global scores
+    // Global scores
     loadScores,
     isHighScore,
     addScore,
@@ -474,7 +606,12 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     saveAchievements,
     checkAchievements,
     renderAchievements,
-    validateScore
+    validateScore,
+    // Title & Prestige system
+    getPlayerTitle,
+    getPrestigeScore,
+    getMaxPrestige,
+    getTitleForCount,
   };
 
 })(window);
