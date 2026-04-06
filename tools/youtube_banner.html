@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skunked — YouTube Banner Generator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #222; display: flex; flex-direction: column; align-items: center; padding: 20px; font-family: sans-serif; color: #ccc; }
+  h2 { margin-bottom: 8px; }
+  p.info { font-size: 13px; margin-bottom: 12px; color: #999; }
+  canvas { border: 1px solid #555; max-width: 100%; height: auto; }
+  .guides { margin-top: 8px; font-size: 12px; color: #888; }
+  button { margin-top: 12px; padding: 10px 28px; font-size: 15px; cursor: pointer; background: #FFD700; color: #111; border: none; border-radius: 6px; font-weight: bold; }
+  button:hover { background: #FFC200; }
+</style>
+<!-- Google Font used by the game -->
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<h2>YouTube Banner Generator</h2>
+<p class="info">2560 × 1440 — safe area (center 1546 × 423) shown with dashed guides</p>
+<canvas id="banner" width="2560" height="1440"></canvas>
+<p class="guides">Dashed rectangle = safe area visible on all devices (mobile/TV/desktop)</p>
+<button onclick="downloadBanner()">Download PNG</button>
+
+<script>
+const CANVAS_W = 2560;
+const CANVAS_H = 1440;
+const SAFE_W = 1546;
+const SAFE_H = 423;
+
+const canvas = document.getElementById('banner');
+const ctx = canvas.getContext('2d');
+
+// Helpers
+function loadImg(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => { console.warn('Failed to load:', src); resolve(null); };
+    img.src = src;
+  });
+}
+
+function extractFrame(sheet, frameW, frameH, frameIndex) {
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = frameW;
+  offCanvas.height = frameH;
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.drawImage(sheet, frameIndex * frameW, 0, frameW, frameH, 0, 0, frameW, frameH);
+  return offCanvas;
+}
+
+function drawScaled(ctx, source, x, y, scale, flipX = false) {
+  ctx.save();
+  if (flipX) {
+    ctx.translate(x + source.width * scale, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(source, 0, 0, source.width * scale, source.height * scale);
+  } else {
+    ctx.drawImage(source, x, y, source.width * scale, source.height * scale);
+  }
+  ctx.restore();
+}
+
+async function render() {
+  // Base path relative to tools/
+  const base = '../assets/sprites/';
+
+  // Load assets in parallel
+  const [bgForest, bgNeon, bgFinal, ninjaIdle, ninjaAttack, ninjaShadow,
+         bossIdle, boss3Idle, boss5Idle, boss7Idle,
+         basicIdle, flyIdle, icon] = await Promise.all([
+    loadImg(base + 'backgrounds/forest_bg.png'),
+    loadImg(base + 'backgrounds/neon_bg.png'),
+    loadImg(base + 'backgrounds/final_bg.png'),
+    loadImg(base + 'characters/ninja_idle.png'),
+    loadImg(base + 'characters/ninja_attack.png'),
+    loadImg(base + 'characters/ninja_shadow_strike.png'),
+    loadImg(base + 'enemies/boss_idle.png'),
+    loadImg(base + 'enemies/boss3_idle.png'),
+    loadImg(base + 'enemies/boss5_idle.png'),
+    loadImg(base + 'enemies/boss7_idle.png'),
+    loadImg(base + 'enemies/basic_idle.png'),
+    loadImg(base + 'enemies/fly_idle.png'),
+    loadImg('../assets/icons/icon-512x512.png'),
+  ]);
+
+  // --- BACKGROUND: dark cinematic gradient with game bg composited ---
+  ctx.fillStyle = '#0a0a14';
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // Tile backgrounds across the banner (left / center / right)
+  const bgImages = [bgForest, bgNeon, bgFinal].filter(Boolean);
+  if (bgImages.length > 0) {
+    const sectionW = CANVAS_W / bgImages.length;
+    for (let i = 0; i < bgImages.length; i++) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      const bg = bgImages[i];
+      const scale = Math.max(sectionW / bg.width, CANVAS_H / bg.height);
+      const drawW = bg.width * scale;
+      const drawH = bg.height * scale;
+      ctx.drawImage(bg, i * sectionW + (sectionW - drawW) / 2, (CANVAS_H - drawH) / 2, drawW, drawH);
+      ctx.restore();
+    }
+  }
+
+  // Dark vignette overlay
+  const vg = ctx.createRadialGradient(CANVAS_W / 2, CANVAS_H / 2, 300, CANVAS_W / 2, CANVAS_H / 2, CANVAS_W * 0.7);
+  vg.addColorStop(0, 'rgba(10,10,20,0)');
+  vg.addColorStop(1, 'rgba(10,10,20,0.85)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // --- CHARACTERS: bosses on left, enemies on right, ninja center ---
+  const charY = CANVAS_H * 0.48; // vertical center-ish
+
+  // Left side bosses (facing right)
+  if (bossIdle) {
+    const frame = extractFrame(bossIdle, 128, 128, 0);
+    drawScaled(ctx, frame, 180, charY - 120, 4.0, false);
+  }
+  if (boss3Idle) {
+    const frame = extractFrame(boss3Idle, 128, 128, 0);
+    drawScaled(ctx, frame, 520, charY - 80, 3.2, false);
+  }
+
+  // Right side bosses (facing left / flipped)
+  if (boss5Idle) {
+    const frame = extractFrame(boss5Idle, 128, 128, 0);
+    drawScaled(ctx, frame, CANVAS_W - 520 - 128 * 3.2, charY - 80, 3.2, true);
+  }
+  if (boss7Idle) {
+    const frame = extractFrame(boss7Idle, 128, 128, 0);
+    drawScaled(ctx, frame, CANVAS_W - 180 - 128 * 4, charY - 120, 4.0, true);
+  }
+
+  // Small enemies scattered
+  if (basicIdle) {
+    const frame = extractFrame(basicIdle, 48, 48, 0);
+    drawScaled(ctx, frame, 760, charY + 220, 3.0, false);
+    drawScaled(ctx, frame, CANVAS_W - 760 - 144, charY + 220, 3.0, true);
+  }
+  if (flyIdle) {
+    const frame = extractFrame(flyIdle, 40, 40, 0);
+    drawScaled(ctx, frame, 650, charY - 200, 2.8, false);
+    drawScaled(ctx, frame, CANVAS_W - 650 - 112, charY - 200, 2.8, true);
+  }
+
+  // --- NINJA CENTER (shadow strike frame — action pose) ---
+  const ninjaSheet = ninjaShadow || ninjaAttack || ninjaIdle;
+  if (ninjaSheet) {
+    const frame = extractFrame(ninjaSheet, 64, 64, ninjaShadow ? 1 : 2);
+    // Big hero ninja
+    const ninjaScale = 6.5;
+    const ninjaW = 64 * ninjaScale;
+    const ninjaH = 64 * ninjaScale;
+    const ninjaX = (CANVAS_W - ninjaW) / 2;
+    const ninjaY = charY - ninjaH / 2 + 40;
+
+    // Glow behind ninja
+    ctx.save();
+    ctx.shadowColor = '#00FF77';
+    ctx.shadowBlur = 80;
+    drawScaled(ctx, frame, ninjaX, ninjaY, ninjaScale);
+    ctx.restore();
+    // Draw again without glow for crisp sprite on top
+    drawScaled(ctx, frame, ninjaX, ninjaY, ninjaScale);
+  }
+
+  // --- TITLE TEXT ---
+  const centerX = CANVAS_W / 2;
+  const titleY = CANVAS_H * 0.16;
+
+  // "SKUNKED" — large
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Outer glow
+  ctx.shadowColor = '#FF4400';
+  ctx.shadowBlur = 40;
+  ctx.font = 'bold 180px Bangers, Impact, sans-serif';
+  ctx.fillStyle = '#FFD700';
+  ctx.fillText('SKUNKED', centerX, titleY);
+
+  // Redraw without shadow for crispness
+  ctx.shadowBlur = 0;
+  ctx.fillText('SKUNKED', centerX, titleY);
+
+  // Stroke
+  ctx.strokeStyle = '#AA3300';
+  ctx.lineWidth = 4;
+  ctx.strokeText('SKUNKED', centerX, titleY);
+  ctx.restore();
+
+  // Subtitle: "WAY OF THE SPRAY"
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '64px Bangers, Impact, sans-serif';
+  ctx.shadowColor = '#00FFAA';
+  ctx.shadowBlur = 20;
+
+  const subtitleGrad = ctx.createLinearGradient(centerX - 400, 0, centerX + 400, 0);
+  subtitleGrad.addColorStop(0, '#00FF77');
+  subtitleGrad.addColorStop(0.5, '#4ECDC4');
+  subtitleGrad.addColorStop(1, '#00FF77');
+  ctx.fillStyle = subtitleGrad;
+  ctx.fillText('WAY OF THE SPRAY', centerX, titleY + 110);
+  ctx.shadowBlur = 0;
+  ctx.fillText('WAY OF THE SPRAY', centerX, titleY + 110);
+  ctx.restore();
+
+  // --- TAGLINE at bottom ---
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '42px "Press Start 2P", monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.shadowColor = '#000';
+  ctx.shadowBlur = 8;
+  ctx.fillText('PLAY FREE AT SKUNKED.IO', centerX, CANVAS_H * 0.88);
+  ctx.restore();
+
+  // --- COMBO / ACTION FLAIR ---
+  // "15 HIT COMBO!" on the right side
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 56px Bangers, sans-serif';
+  ctx.fillStyle = '#FF4444';
+  ctx.shadowColor = '#FF0000';
+  ctx.shadowBlur = 30;
+  ctx.translate(CANVAS_W * 0.82, CANVAS_H * 0.40);
+  ctx.rotate(-0.15);
+  ctx.fillText('15 HIT COMBO!', 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.fillText('15 HIT COMBO!', 0, 0);
+  ctx.restore();
+
+  // "SHADOW STRIKE!" on the left side
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 52px Bangers, sans-serif';
+  ctx.fillStyle = '#00FF77';
+  ctx.shadowColor = '#00FF77';
+  ctx.shadowBlur = 25;
+  ctx.translate(CANVAS_W * 0.18, CANVAS_H * 0.40);
+  ctx.rotate(0.12);
+  ctx.fillText('SHADOW STRIKE!', 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.fillText('SHADOW STRIKE!', 0, 0);
+  ctx.restore();
+
+  // --- SAFE AREA GUIDE (dashed) ---
+  ctx.save();
+  ctx.setLineDash([16, 10]);
+  ctx.strokeStyle = 'rgba(255,255,0,0.35)';
+  ctx.lineWidth = 2;
+  const sx = (CANVAS_W - SAFE_W) / 2;
+  const sy = (CANVAS_H - SAFE_H) / 2;
+  ctx.strokeRect(sx, sy, SAFE_W, SAFE_H);
+  ctx.restore();
+}
+
+function downloadBanner() {
+  const link = document.createElement('a');
+  link.download = 'skunked_youtube_banner.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Render once fonts are loaded
+document.fonts.ready.then(render);
+</script>
+</body>
+</html>
