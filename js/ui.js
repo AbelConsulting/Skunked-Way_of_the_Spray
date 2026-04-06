@@ -341,43 +341,163 @@ class UI {
         let achieveEndY = boxY + boxH;
         if (newAchievements.length > 0) {
             const achDelay = statsBaseDelay + stats.length * staggerDelay + 0.3;
-            const achProgress = Math.max(0, Math.min(1, (elapsed - achDelay) / 0.5));
-            if (achProgress > 0) {
-                const achEased = 1 - Math.pow(1 - achProgress, 2);
-                const achY = boxY + boxH + 16;
-                achieveEndY = achY + 28;
+            const achHeaderProgress = Math.max(0, Math.min(1, (elapsed - achDelay) / 0.45));
+            if (achHeaderProgress > 0) {
+                const achHeaderEased = 1 - Math.pow(1 - achHeaderProgress, 3);
+                const achHeaderY = boxY + boxH + 18;
 
+                // ── "ACHIEVEMENTS UNLOCKED" header with shimmer ──
                 ctx.save();
-                ctx.globalAlpha = achEased;
-                ctx.font = "bold 13px 'Press Start 2P', monospace";
+                ctx.globalAlpha = achHeaderEased;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#FFD700';
+
+                // Shimmer highlight sweeps across the text
+                const shimmerCycle = ((now % 3000) / 3000); // 0→1 over 3s
+                const shimmerX = cx - 140 + shimmerCycle * 280;
+                const headerGrad = ctx.createLinearGradient(shimmerX - 40, 0, shimmerX + 40, 0);
+                headerGrad.addColorStop(0, '#FFD700');
+                headerGrad.addColorStop(0.5, '#FFFFFF');
+                headerGrad.addColorStop(1, '#FFD700');
+
+                ctx.font = "bold 12px 'Press Start 2P', monospace";
+                ctx.fillStyle = headerGrad;
                 ctx.shadowColor = '#FFD700';
-                ctx.shadowBlur = 8;
-                ctx.fillText('ACHIEVEMENTS UNLOCKED', cx, achY);
+                ctx.shadowBlur = 10;
+                ctx.fillText('ACHIEVEMENTS UNLOCKED', cx, achHeaderY);
                 ctx.shadowBlur = 0;
-
-                // Draw each achievement badge
-                const badgeY = achY + 22;
-                const badgeSpacing = Math.min(140, (boxW - 40) / newAchievements.length);
-                const totalWidth = badgeSpacing * (newAchievements.length - 1);
-                const startX = cx - totalWidth / 2;
-
-                newAchievements.forEach((ach, i) => {
-                    const bx = newAchievements.length === 1 ? cx : startX + i * badgeSpacing;
-                    // Icon
-                    ctx.font = '22px sans-serif';
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillText(ach.icon || '\uD83C\uDFC6', bx, badgeY);
-                    // Name
-                    ctx.font = "bold 10px 'Press Start 2P', monospace";
-                    ctx.fillStyle = '#FFDD88';
-                    ctx.fillText(ach.name || '', bx, badgeY + 18);
-                });
-
-                achieveEndY = badgeY + 30;
                 ctx.restore();
+
+                // ── Decorative separator under header ──
+                const achSepY = achHeaderY + 12;
+                const achSepGrad = ctx.createLinearGradient(cx - 100, 0, cx + 100, 0);
+                achSepGrad.addColorStop(0, 'transparent');
+                achSepGrad.addColorStop(0.3, 'rgba(255,215,0,0.35)');
+                achSepGrad.addColorStop(0.7, 'rgba(255,215,0,0.35)');
+                achSepGrad.addColorStop(1, 'transparent');
+                ctx.save();
+                ctx.globalAlpha = achHeaderEased;
+                ctx.fillStyle = achSepGrad;
+                ctx.fillRect(cx - 100, achSepY, 200, 1);
+                ctx.restore();
+
+                // ── Badge cards ──
+                const badgeCardW = 110;
+                const badgeCardH = 72;
+                const badgeGap = 12;
+                const maxPerRow = Math.max(1, Math.floor((boxW - 20) / (badgeCardW + badgeGap)));
+                const badgeStagger = 0.18; // seconds between each badge pop-in
+                const badgeAnimDuration = 0.4;
+                const badgeBaseDelay = achDelay + 0.35;
+
+                // Layout: center badges, wrap to multiple rows if needed
+                const rows = [];
+                for (let ri = 0; ri < newAchievements.length; ri += maxPerRow) {
+                    rows.push(newAchievements.slice(ri, ri + maxPerRow));
+                }
+
+                let currentRowY = achSepY + 14;
+                let badgeIndex = 0;
+
+                for (const row of rows) {
+                    const rowWidth = row.length * badgeCardW + (row.length - 1) * badgeGap;
+                    const rowStartX = cx - rowWidth / 2;
+
+                    for (let i = 0; i < row.length; i++) {
+                        const ach = row[i];
+                        const thisBadgeDelay = badgeBaseDelay + badgeIndex * badgeStagger;
+                        const badgeProgress = Math.max(0, Math.min(1, (elapsed - thisBadgeDelay) / badgeAnimDuration));
+                        badgeIndex++;
+
+                        if (badgeProgress <= 0) continue;
+
+                        // Pop-in: scale from 0.3→1 + fade
+                        const popEased = 1 - Math.pow(1 - badgeProgress, 3); // ease-out cubic
+                        const badgeScale = 0.3 + 0.7 * popEased;
+                        const badgeAlpha = popEased;
+
+                        // Subtle float after fully popped in
+                        const floatOffset = badgeProgress >= 1 ? Math.sin(now / 800 + badgeIndex * 1.2) * 2 : 0;
+
+                        const cardX = rowStartX + i * (badgeCardW + badgeGap);
+                        const cardCX = cardX + badgeCardW / 2;
+                        const cardCY = currentRowY + badgeCardH / 2 + floatOffset;
+
+                        ctx.save();
+                        ctx.globalAlpha = badgeAlpha;
+                        ctx.translate(cardCX, cardCY);
+                        ctx.scale(badgeScale, badgeScale);
+
+                        // Card background — dark with golden glow border
+                        const cardLeft = -badgeCardW / 2;
+                        const cardTop = -badgeCardH / 2;
+                        const cr = 8;
+
+                        // Outer glow
+                        ctx.shadowColor = '#FFD700';
+                        ctx.shadowBlur = 12 * badgeAlpha;
+
+                        // Gradient card fill
+                        const cardGrad = ctx.createLinearGradient(cardLeft, cardTop, cardLeft, cardTop + badgeCardH);
+                        cardGrad.addColorStop(0, 'rgba(50, 40, 10, 0.85)');
+                        cardGrad.addColorStop(0.5, 'rgba(30, 25, 5, 0.90)');
+                        cardGrad.addColorStop(1, 'rgba(20, 15, 0, 0.85)');
+                        ctx.fillStyle = cardGrad;
+
+                        // Card border
+                        ctx.strokeStyle = 'rgba(255, 215, 0, 0.45)';
+                        ctx.lineWidth = 1.5;
+
+                        // Draw rounded rect
+                        ctx.beginPath();
+                        ctx.moveTo(cardLeft + cr, cardTop);
+                        ctx.lineTo(cardLeft + badgeCardW - cr, cardTop);
+                        ctx.arcTo(cardLeft + badgeCardW, cardTop, cardLeft + badgeCardW, cardTop + cr, cr);
+                        ctx.lineTo(cardLeft + badgeCardW, cardTop + badgeCardH - cr);
+                        ctx.arcTo(cardLeft + badgeCardW, cardTop + badgeCardH, cardLeft + badgeCardW - cr, cardTop + badgeCardH, cr);
+                        ctx.lineTo(cardLeft + cr, cardTop + badgeCardH);
+                        ctx.arcTo(cardLeft, cardTop + badgeCardH, cardLeft, cardTop + badgeCardH - cr, cr);
+                        ctx.lineTo(cardLeft, cardTop + cr);
+                        ctx.arcTo(cardLeft, cardTop, cardLeft + cr, cardTop, cr);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.stroke();
+
+                        // Icon — centered, large
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.font = '26px sans-serif';
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(ach.icon || '\uD83C\uDFC6', 0, -12);
+
+                        // Achievement name
+                        ctx.font = "bold 8px 'Press Start 2P', monospace";
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillText(ach.name || '', 0, 12);
+
+                        // Description — dimmer, smaller
+                        if (ach.desc) {
+                            ctx.font = "7px 'Press Start 2P', monospace";
+                            ctx.fillStyle = 'rgba(255, 220, 150, 0.6)';
+                            // Truncate long descriptions to fit card width
+                            let descText = ach.desc;
+                            if (ctx.measureText(descText).width > badgeCardW - 12) {
+                                while (descText.length > 3 && ctx.measureText(descText + '...').width > badgeCardW - 12) {
+                                    descText = descText.slice(0, -1);
+                                }
+                                descText += '...';
+                            }
+                            ctx.fillText(descText, 0, 26);
+                        }
+
+                        ctx.restore();
+                    }
+
+                    currentRowY += badgeCardH + badgeGap;
+                }
+
+                achieveEndY = currentRowY;
             }
         }
 
