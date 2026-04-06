@@ -227,6 +227,7 @@ class TutorialHints {
             dismissed: false
         };
         this._markSeen(def.id);
+        try { Analytics.trackTutorialStep(def.id); } catch(e) {}
     }
 
     /** Dismiss the current hint (called on key/tap).

@@ -3087,6 +3087,7 @@
                             playBtn.addEventListener('click', (ev) => {
                                 ev.preventDefault();
                                 ev.stopPropagation();
+                                try { Analytics.trackMenuAction('play'); } catch(e) {}
                                 startGameFromMenu();
                             });
                         }
@@ -3120,6 +3121,7 @@
                                         scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Could not load scores</p>';
                                     }
                                 }
+                                try { Analytics.trackMenuAction('high_scores'); } catch(e) {}
                                 if (scoresOverlay) scoresOverlay.style.display = 'flex';
                             });
                         }
@@ -3130,6 +3132,7 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                                try { Analytics.trackMenuAction('how_to_play'); } catch(e) {}
                                 if (howtoplayOverlay) howtoplayOverlay.style.display = 'flex';
                             });
                         }
@@ -3141,6 +3144,7 @@
                                 ev.stopPropagation();
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 activateInfoTab('about');
+                                try { Analytics.trackMenuAction('info'); } catch(e) {}
                                 if (infoOverlay) infoOverlay.style.display = 'flex';
                             });
                         }
@@ -3152,6 +3156,7 @@
                                 ev.stopPropagation();
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 activateInfoTab('achievements');
+                                try { Analytics.trackMenuAction('achievements'); } catch(e) {}
                                 if (infoOverlay) infoOverlay.style.display = 'flex';
                             });
                         }
@@ -3174,6 +3179,7 @@
                                     if (sfxV && sfxS) sfxV.textContent = sfxS.value + '%';
                                     if (musV && musS) musV.textContent = musS.value + '%';
                                 } catch (e) {}
+                                try { Analytics.trackMenuAction('settings'); } catch(e) {}
                                 if (settingsOverlay) settingsOverlay.style.display = 'flex';
                             });
                         }
