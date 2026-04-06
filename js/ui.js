@@ -138,9 +138,10 @@ class UI {
         ctx.fillText('Press ESC to Resume', this.width / 2, this.height / 2 + 60);
     }
 
-    drawGameOver(ctx, score, gameStats = {}, lockoutRemaining = 0) {
+    drawGameOver(ctx, score, gameStats = {}, lockoutRemaining = 0, extra = {}) {
         const now = Date.now();
         const cx = this.width / 2;
+        const elapsed = extra.elapsed || 0; // seconds since game over started
 
         // ── Animated vignette background ──
         const gradient = ctx.createRadialGradient(cx, this.height * 0.3, 0, cx, this.height * 0.5, this.height);
@@ -159,8 +160,11 @@ class UI {
         }
         ctx.restore();
 
-        // ── Title with pulsing glow ──
-        const titleY = this.height * 0.18;
+        // ── Title with pulsing glow (slides down from top) ──
+        const titleTargetY = this.height * 0.13;
+        const titleSlide = Math.min(1, elapsed / 0.6);
+        const titleEased = 1 - Math.pow(1 - titleSlide, 3); // ease-out cubic
+        const titleY = -40 + (titleTargetY + 40) * titleEased;
         const titlePulse = 12 + Math.sin(now / 300) * 10;
         ctx.save();
         ctx.font = "bold 68px 'Bangers', 'Arial Black', Impact, sans-serif";
@@ -177,8 +181,26 @@ class UI {
         ctx.fillText('GAME OVER', cx, titleY);
         ctx.restore();
 
+        // ── Level reached subtitle (fades in after title) ──
+        const levelReached = extra.levelReached || 0;
+        const levelName = extra.levelName || '';
+        if (levelReached > 0) {
+            const levelFade = Math.max(0, Math.min(1, (elapsed - 0.4) / 0.5));
+            if (levelFade > 0) {
+                ctx.save();
+                ctx.globalAlpha = levelFade * 0.8;
+                ctx.font = "bold 16px 'Press Start 2P', monospace";
+                ctx.fillStyle = '#AAAACC';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const levelText = levelName ? `STAGE ${levelReached} \u2022 ${levelName.toUpperCase()}` : `STAGE ${levelReached}`;
+                ctx.fillText(levelText, cx, titleY + 40);
+                ctx.restore();
+            }
+        }
+
         // ── Decorative divider ──
-        const divY = titleY + 42;
+        const divY = titleY + 58;
         const divGrad = ctx.createLinearGradient(cx - 200, 0, cx + 200, 0);
         divGrad.addColorStop(0, 'transparent');
         divGrad.addColorStop(0.3, 'rgba(255,80,80,0.6)');
@@ -187,8 +209,15 @@ class UI {
         ctx.fillStyle = divGrad;
         ctx.fillRect(cx - 200, divY, 400, 2);
 
-        // ── Score ──
-        const scoreY = divY + 38;
+        // ── Score with count-up animation ──
+        const scoreY = divY + 36;
+        const scoreCountDuration = 1.8; // seconds for the count-up
+        const scoreStart = 0.5; // delay before count starts
+        const scoreProgress = Math.max(0, Math.min(1, (elapsed - scoreStart) / scoreCountDuration));
+        // Ease-out for satisfying deceleration
+        const scoreEased = 1 - Math.pow(1 - scoreProgress, 3);
+        const displayScore = Math.floor(score * scoreEased);
+
         ctx.save();
         ctx.font = "bold 44px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = '#FFD700';
@@ -196,17 +225,35 @@ class UI {
         ctx.shadowColor = '#FFD700';
         ctx.shadowBlur = 14;
         ctx.letterSpacing = '0.03em';
-        ctx.fillText(`SCORE: ${score.toLocaleString()}`, cx, scoreY);
+        ctx.fillText(`SCORE: ${displayScore.toLocaleString()}`, cx, scoreY);
         ctx.restore();
 
-        // ── Stats panel ──
+        // ── NEW HIGH SCORE flash ──
+        if (extra.isHighScore && elapsed > scoreStart + scoreCountDuration * 0.7) {
+            const hsFade = Math.min(1, (elapsed - (scoreStart + scoreCountDuration * 0.7)) / 0.4);
+            const hsPulse = 0.7 + Math.sin(now / 200) * 0.3;
+            ctx.save();
+            ctx.globalAlpha = hsFade * hsPulse;
+            ctx.font = "bold 18px 'Press Start 2P', monospace";
+            ctx.fillStyle = '#FFD700';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#FFAA00';
+            ctx.shadowBlur = 16;
+            ctx.fillText('\u2B50 NEW HIGH SCORE! \u2B50', cx, scoreY + 32);
+            ctx.restore();
+        }
+
+        // ── Stats panel with staggered reveal ──
         const boxW = Math.min(520, this.width - 60);
         const boxH = 220;
         const boxX = cx - boxW / 2;
-        const boxY = scoreY + 28;
+        const boxY = scoreY + (extra.isHighScore ? 52 : 28);
 
         // Panel background with subtle border
+        const panelFade = Math.max(0, Math.min(1, (elapsed - 0.8) / 0.4));
         ctx.save();
+        ctx.globalAlpha = panelFade;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
         ctx.strokeStyle = 'rgba(255, 80, 80, 0.18)';
         ctx.lineWidth = 1;
@@ -225,6 +272,7 @@ class UI {
 
         // Panel header
         ctx.save();
+        ctx.globalAlpha = panelFade;
         ctx.font = "bold 20px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
         ctx.textAlign = 'center';
@@ -233,6 +281,8 @@ class UI {
         ctx.restore();
 
         // Thin separator under header
+        ctx.save();
+        ctx.globalAlpha = panelFade;
         const sepGrad = ctx.createLinearGradient(boxX + 20, 0, boxX + boxW - 20, 0);
         sepGrad.addColorStop(0, 'transparent');
         sepGrad.addColorStop(0.3, 'rgba(255,255,255,0.12)');
@@ -240,10 +290,15 @@ class UI {
         sepGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = sepGrad;
         ctx.fillRect(boxX + 20, boxY + 34, boxW - 40, 1);
+        ctx.restore();
 
-        // Stats
+        // Stats — each row slides in and fades with a stagger
         const statsStartY = boxY + 55;
         const lineHeight = 30;
+        const staggerDelay = 0.15; // seconds between each stat appearing
+        const statsBaseDelay = 1.2; // seconds after game over before first stat
+        const statAnimDuration = 0.35; // each stat's entrance duration
+
         const stats = [
             { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
             { label: '\u23F1\uFE0F  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
@@ -254,37 +309,112 @@ class UI {
         ];
 
         stats.forEach((stat, index) => {
+            const statDelay = statsBaseDelay + index * staggerDelay;
+            const statProgress = Math.max(0, Math.min(1, (elapsed - statDelay) / statAnimDuration));
+            if (statProgress <= 0) return; // not visible yet
+
+            const statEased = 1 - Math.pow(1 - statProgress, 2); // ease-out quad
+            const slideOffset = (1 - statEased) * 30; // slide in from right
             const y = statsStartY + (index * lineHeight);
 
             ctx.save();
+            ctx.globalAlpha = statEased;
             ctx.font = "15px 'Press Start 2P', monospace";
             ctx.textBaseline = 'middle';
 
             // Label
             ctx.textAlign = 'left';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.fillText(stat.label, boxX + 24, y);
+            ctx.fillText(stat.label, boxX + 24 - slideOffset, y);
 
             // Value
             ctx.textAlign = 'right';
             ctx.fillStyle = stat.color;
             ctx.shadowColor = stat.color;
             ctx.shadowBlur = 4;
-            ctx.fillText(String(stat.value), boxX + boxW - 24, y);
+            ctx.fillText(String(stat.value), boxX + boxW - 24 + slideOffset, y);
             ctx.restore();
         });
 
-        // ── Continue prompt ──
-        const instructY = boxY + boxH + 36;
+        // ── Achievement badges (shown below stats if any were unlocked) ──
+        const newAchievements = extra.newAchievements || [];
+        let achieveEndY = boxY + boxH;
+        if (newAchievements.length > 0) {
+            const achDelay = statsBaseDelay + stats.length * staggerDelay + 0.3;
+            const achProgress = Math.max(0, Math.min(1, (elapsed - achDelay) / 0.5));
+            if (achProgress > 0) {
+                const achEased = 1 - Math.pow(1 - achProgress, 2);
+                const achY = boxY + boxH + 16;
+                achieveEndY = achY + 28;
+
+                ctx.save();
+                ctx.globalAlpha = achEased;
+                ctx.font = "bold 13px 'Press Start 2P', monospace";
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#FFD700';
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 8;
+                ctx.fillText('ACHIEVEMENTS UNLOCKED', cx, achY);
+                ctx.shadowBlur = 0;
+
+                // Draw each achievement badge
+                const badgeY = achY + 22;
+                const badgeSpacing = Math.min(140, (boxW - 40) / newAchievements.length);
+                const totalWidth = badgeSpacing * (newAchievements.length - 1);
+                const startX = cx - totalWidth / 2;
+
+                newAchievements.forEach((ach, i) => {
+                    const bx = newAchievements.length === 1 ? cx : startX + i * badgeSpacing;
+                    // Icon
+                    ctx.font = '22px sans-serif';
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(ach.icon || '\uD83C\uDFC6', bx, badgeY);
+                    // Name
+                    ctx.font = "bold 10px 'Press Start 2P', monospace";
+                    ctx.fillStyle = '#FFDD88';
+                    ctx.fillText(ach.name || '', bx, badgeY + 18);
+                });
+
+                achieveEndY = badgeY + 30;
+                ctx.restore();
+            }
+        }
+
+        // ── Continue prompt with animated progress ring during lockout ──
+        const instructY = achieveEndY + 28;
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         if (lockoutRemaining > 0) {
+            // Animated circular countdown
+            const lockoutTotal = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                ? Config.GAME_OVER_LOCKOUT : 3.0;
+            const progress = 1 - (lockoutRemaining / lockoutTotal);
+            const ringRadius = 18;
+            const ringX = cx;
+            const ringY = instructY;
+
+            // Background ring
+            ctx.beginPath();
+            ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Progress arc
+            ctx.beginPath();
+            ctx.arc(ringX, ringY, ringRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Countdown number inside ring
             const secs = Math.ceil(lockoutRemaining);
-            ctx.font = "bold 22px 'Press Start 2P', monospace";
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ctx.fillText(`${secs}...`, cx, instructY);
+            ctx.font = "bold 16px 'Press Start 2P', monospace";
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillText(String(secs), ringX, ringY + 1);
         } else {
             // "Watch Ad to Revive" option (only on native Android with ads available)
             const adAvailable = window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded();

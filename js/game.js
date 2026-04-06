@@ -72,6 +72,11 @@ class Game {
         // Game Over lockout: timestamp (ms) when GAME_OVER was entered.
         // Input is blocked until GAME_OVER_LOCKOUT seconds have elapsed.
         this._gameOverTime = 0;
+        this._gameOverAnim = null;        // GameOverAnimation instance
+        this._gameOverNewAchievements = []; // Achievements unlocked this run
+        this._gameOverIsHighScore = false;  // Whether the score made the leaderboard
+        this._gameOverLevelReached = 0;     // Level index reached when died
+        this._gameOverLevelName = '';        // Level name reached when died
 
         // Respawn/death flow
         this.isRespawning = false;
@@ -629,6 +634,7 @@ class Game {
             this.score = 0;
             this.lives = 3;
             this._gameOverTime = 0; // Clear lockout from previous game over
+            this._gameOverAnim = null; // Clear previous game over animation
             
             // Set a game-level grace period timestamp - player cannot die before this time
             this._gameStartTime = Date.now();
@@ -1289,8 +1295,14 @@ class Game {
             }
 
             if (this.state !== "PLAYING") {
-                if (this.state === "GAME_OVER" && this.player && typeof this.player.updateDeath === 'function') {
-                    this.player.updateDeath(dt);
+                if (this.state === "GAME_OVER") {
+                    if (this.player && typeof this.player.updateDeath === 'function') {
+                        this.player.updateDeath(dt);
+                    }
+                    // Update the game over particle/shake animation
+                    if (this._gameOverAnim && this._gameOverAnim.isActive()) {
+                        this._gameOverAnim.update(dt);
+                    }
                 }
                 return;
             }
@@ -2275,6 +2287,24 @@ class Game {
             // Notify UI layers (mobile touch controls) about state change
             try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) { __err('game', e); }
 
+            // Kick off the visual game over animation (particles, shake, overlay)
+            try {
+                if (typeof GameOverAnimation !== 'undefined') {
+                    this._gameOverAnim = new GameOverAnimation(this.width, this.height);
+                    this._gameOverAnim.start();
+                }
+            } catch (e) { __err('game', e); }
+
+            // Capture level reached
+            this._gameOverLevelReached = (this.currentLevelIndex || 0) + 1;
+            try {
+                if (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[this.currentLevelIndex]) {
+                    this._gameOverLevelName = LEVEL_CONFIGS[this.currentLevelIndex].name || '';
+                } else {
+                    this._gameOverLevelName = '';
+                }
+            } catch (e) { this._gameOverLevelName = ''; }
+
             // Finalize game statistics
             this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
             this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
@@ -2282,16 +2312,28 @@ class Game {
             this.gameStats.score = this.score; // Add score to stats for achievements
 
             // Check for new achievements
-            let newAchievements = [];
+            this._gameOverNewAchievements = [];
             try {
                 if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
-                    newAchievements = Highscores.checkAchievements(this.gameStats);
-                    if (newAchievements.length > 0) {
-                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked:', newAchievements);
-                        // Could show achievement notification here
+                    this._gameOverNewAchievements = Highscores.checkAchievements(this.gameStats);
+                    if (this._gameOverNewAchievements.length > 0) {
+                        if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked:', this._gameOverNewAchievements);
                     }
                 }
             } catch (e) { console.warn('Achievement check failed', e); }
+
+            // Check for new high score (async, update flag when resolved)
+            this._gameOverIsHighScore = false;
+            try {
+                if (window.Highscores && typeof Highscores.isHighScore === 'function') {
+                    const hsPromise = Highscores.isHighScore(this.score);
+                    if (hsPromise && typeof hsPromise.then === 'function') {
+                        hsPromise.then(isHS => { this._gameOverIsHighScore = !!isHS; }).catch(() => {});
+                    } else {
+                        this._gameOverIsHighScore = !!hsPromise;
+                    }
+                }
+            } catch (e) { /* ignore */ }
 
             // Delay high score prompt to allow player to see game over screen
             const hsDelay = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_HIGHSCORE_DELAY === 'number')
@@ -2797,7 +2839,17 @@ class Game {
         } else if (this.state === "MENU") {
             this.ui.drawMenu(this.ctx);
         } else if (this.state === "GAME_OVER") {
-            this.ui.drawGameOver(this.ctx, this.score, this.gameStats, this._gameOverLockoutRemaining());
+            // Draw the particle/shake animation layer first (behind stats UI)
+            if (this._gameOverAnim) {
+                this._gameOverAnim.draw(this.ctx);
+            }
+            this.ui.drawGameOver(this.ctx, this.score, this.gameStats, this._gameOverLockoutRemaining(), {
+                isHighScore: this._gameOverIsHighScore,
+                levelReached: this._gameOverLevelReached,
+                levelName: this._gameOverLevelName,
+                newAchievements: this._gameOverNewAchievements,
+                elapsed: (Date.now() - this._gameOverTime) / 1000
+            });
         }
 
         this.ctx.restore();
