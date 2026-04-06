@@ -8,7 +8,7 @@
 // Global high-score manager using the skunked.io leaderboard API.
 
 // Import the REST API functions for the global leaderboard
-import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth } from './firebase.js';
+import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth } from './firebase.js'; // REST client (no Firebase SDK)
 
 (function(window){
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
@@ -232,7 +232,7 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
   // --- End of achievement logic ---
 
   /**
-   * Fetches scores from Firebase.
+   * Fetches scores from the skunked.io leaderboard.
    * @returns {Promise<Array>} A promise that resolves to an array of score objects.
    */
   async function loadScores(){
@@ -258,9 +258,10 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
   }
 
   /**
-   * Submits a score to Firebase.
+   * Submits a score to the skunked.io leaderboard.
    * @param {number} score The player's score.
    * @param {string} name The player's name/initials.
+   * @param {object} [gameStats] Game session stats for achievement checks.
    */
   async function addScore(score, name, gameStats) {
     if (!validateScore(score)) {
@@ -268,13 +269,17 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
       return;
     }
     try {
-      // Collect unlocked achievement names to send alongside the score
-      const achievements = [];
-      if (gameStats) {
-        const checked = checkAchievements(gameStats);
-        for (const a of checked) achievements.push(a.name);
-      }
-      await submitAPIScore(name, score, achievements);
+      // Run achievement checks for this run (may unlock new ones)
+      if (gameStats) checkAchievements(gameStats);
+      // Send ALL unlocked achievements so the leaderboard shows total progress
+      const allUnlocked = loadAchievements();
+      const achievementNames = Object.keys(allUnlocked)
+        .filter(id => allUnlocked[id] && allUnlocked[id].unlocked)
+        .map(id => {
+          const def = ACHIEVEMENT_DEFINITIONS.find(a => a.id === id);
+          return def ? def.name : id;
+        });
+      await submitAPIScore(name, score, achievementNames);
     } catch (e) {
       console.error("Failed to submit score to skunked.io", e);
     }

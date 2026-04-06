@@ -6,78 +6,68 @@
  * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
  */
 // js/firebase.js
-// Global leaderboard integration via Firebase Firestore.
+// Global leaderboard integration via skunked.io REST API (Netlify Functions + S3).
+// No external SDK required — pure fetch().
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBSLz2KAgxnSbYZ8pYGSZH3gHM5DVgI1Nk",
-  authDomain: "studio-3829586481-2a2cf.firebaseapp.com",
-  projectId: "studio-3829586481-2a2cf",
-  storageBucket: "studio-3829586481-2a2cf.firebasestorage.app",
-  messagingSenderId: "209976896356",
-  appId: "1:209976896356:web:c1d442edcfe4919b892871"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const SCORES_COLLECTION = 'scores';
+const API_BASE = '/api';
 
 /**
- * Checks if Firestore is reachable.
+ * Checks if the leaderboard service is reachable.
  * @returns {Promise<boolean>}
  */
 export async function checkHealth() {
   try {
-    await getDocs(query(collection(db, SCORES_COLLECTION), limit(1)));
-    return true;
+    const res = await fetch(`${API_BASE}/health`, { method: 'GET' });
+    return res.ok;
   } catch {
     return false;
   }
 }
 
 /**
- * Submits a score to the Firestore leaderboard.
+ * Submits a score to the skunked.io leaderboard.
  * @param {string} name  The player name / gamer tag.
  * @param {number} score The score achieved.
- * @param {string[]} [_achievements] Unused — kept for call-site compat.
+ * @param {string[]} [achievements] Achievement names earned this run.
  * @returns {Promise<void>}
  */
-export async function submitScore(name, score, _achievements) {
+export async function submitScore(name, score, achievements) {
   try {
-    await addDoc(collection(db, SCORES_COLLECTION), {
-      initials: name,
-      score: score,
-      date: serverTimestamp()
+    const res = await fetch(`${API_BASE}/submit-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initials: name,
+        score: score,
+        achievements: Array.isArray(achievements) ? achievements : []
+      })
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('Score submission rejected:', res.status, err);
+    }
   } catch (e) {
     console.error('Error submitting score:', e);
   }
 }
 
 /**
- * Fetches the top scores from Firestore, ordered by score descending.
+ * Fetches the top scores from the leaderboard, ordered by score descending.
  * @param {number} [count=10] How many top scores to retrieve.
- * @returns {Promise<Array<{name: string, score: number, timestamp?: Date}>>}
+ * @returns {Promise<Array<{name: string, score: number, timestamp?: Date, achievements?: string[]}>>}
  */
 export async function getHighScores(count = 10) {
   try {
-    const q = query(
-      collection(db, SCORES_COLLECTION),
-      orderBy('score', 'desc'),
-      limit(count)
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        name: data.initials || '???',
-        score: data.score,
-        timestamp: data.date ? data.date.toDate() : null,
-        achievements: data.achievements || [],
-      };
-    });
+    const res = await fetch(`${API_BASE}/scores?count=${encodeURIComponent(count)}`);
+    if (!res.ok) return [];
+    const scores = await res.json();
+    if (!Array.isArray(scores)) return [];
+    return scores.map(entry => ({
+      name: entry.initials || '???',
+      score: entry.score,
+      timestamp: entry.date ? new Date(entry.date) : null,
+      achievements: entry.achievements || [],
+    }));
   } catch (e) {
     console.error('Error fetching scores:', e);
     return [];

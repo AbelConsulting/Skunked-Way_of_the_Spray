@@ -23,6 +23,7 @@ exports.handler = async function(event, context) {
 
   const score = (typeof body.score === 'number') ? Math.floor(body.score) : null;
   const initials = (typeof body.initials === 'string') ? body.initials.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3) : '---';
+  const achievements = Array.isArray(body.achievements) ? body.achievements.filter(a => typeof a === 'string').slice(0, 60) : [];
   const recaptchaToken = typeof body.recaptchaToken === 'string' ? body.recaptchaToken : null;
 
   if (score === null || score < 0) return { statusCode: 400, body: JSON.stringify({ error: 'bad_score' }) };
@@ -119,7 +120,7 @@ exports.handler = async function(event, context) {
       arr = [];
     }
 
-    const entry = { score, initials, date: new Date().toISOString() };
+    const entry = { score, initials, date: new Date().toISOString(), achievements };
     arr.push(entry);
     arr.sort((a,b)=>b.score - a.score || new Date(a.date) - new Date(b.date));
     arr = arr.slice(0, MAX_ENTRIES);
