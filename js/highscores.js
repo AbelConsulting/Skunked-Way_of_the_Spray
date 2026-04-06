@@ -346,6 +346,17 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
         achievementCount: titleInfo.count,
         level: gameStats ? (gameStats.levelsCompleted || 0) : 0
       });
+      // Analytics: score submit
+      try {
+        if (typeof Analytics !== 'undefined') {
+          Analytics.trackScoreSubmit({
+            score,
+            name,
+            levelReached: gameStats ? (gameStats.levelsCompleted || 0) : 0,
+            prestige
+          });
+        }
+      } catch (e) { /* */ }
     } catch (e) {
       console.error("Failed to submit score to skunked.io", e);
     }

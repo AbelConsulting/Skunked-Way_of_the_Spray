@@ -828,6 +828,17 @@ class Game {
 
             await this.ensureLevelMusic();
             this.dispatchGameStateChange();
+
+            // Analytics: game start
+            try {
+                if (typeof Analytics !== 'undefined') {
+                    Analytics.trackGameStart({
+                        level: (this.currentLevelIndex || 0) + 1,
+                        levelName: (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[this.currentLevelIndex]) ? LEVEL_CONFIGS[this.currentLevelIndex].name : ''
+                    });
+                }
+            } catch (e) { /* analytics must never break gameplay */ }
+
             // Ensure camera centers on player immediately after starting
             try { if (typeof this.centerCameraOnPlayer === 'function') this.centerCameraOnPlayer(); } catch (e) { __err('game', e); }
             // Pre-render static layer (platform tiles) so visuals are ready
@@ -901,6 +912,7 @@ class Game {
             if (this.state === 'PLAYING') {
                 this.state = 'PAUSED';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) { __err('game', e); }
+                try { if (typeof Analytics !== 'undefined') Analytics.trackPause(); } catch (e) { /* */ }
                 this.audioManager.playSound && this.audioManager.playSound('pause');
                 this.audioManager.pauseMusic && this.audioManager.pauseMusic();
                 this.audioManager.pauseAmbient && this.audioManager.pauseAmbient();
@@ -944,6 +956,7 @@ class Game {
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) { __err('game', e); }
+                try { if (typeof Analytics !== 'undefined') Analytics.trackResume(); } catch (e) { /* */ }
                 this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
                 this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient();
@@ -1190,6 +1203,21 @@ class Game {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
             this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
 
+            // Analytics: level complete
+            try {
+                if (typeof Analytics !== 'undefined') {
+                    const lvlIdx = this.currentLevelIndex || 0;
+                    Analytics.trackLevelComplete({
+                        level: lvlIdx + 1,
+                        levelName: (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[lvlIdx]) ? LEVEL_CONFIGS[lvlIdx].name : '',
+                        score: this.score,
+                        time: (Date.now() / 1000) - (this.gameStats.startTime || 0),
+                        enemiesDefeated: this.gameStats.enemiesDefeated || 0,
+                        perfect: (this.gameStats.levelDamageTaken || 0) === 0
+                    });
+                }
+            } catch (e) { /* analytics must never break gameplay */ }
+
             // Notify ad manager for interstitial pacing
             try { if (window.AdManager && typeof AdManager.onStageComplete === 'function') AdManager.onStageComplete(); } catch (e) { __err('game', e); }
             
@@ -1254,6 +1282,20 @@ class Game {
                     }
                 }
             } catch (e) { __err('game', e); }
+
+            // Analytics: victory
+            try {
+                if (typeof Analytics !== 'undefined') {
+                    Analytics.trackVictory({
+                        score: this.score,
+                        completionTime: this.gameStats.completionTime,
+                        levelsCompleted: this.gameStats.levelsCompleted,
+                        perfectLevels: this.gameStats.perfectLevels,
+                        enemiesDefeated: this.gameStats.enemiesDefeated,
+                        maxCombo: this.gameStats.maxCombo
+                    });
+                }
+            } catch (e) { /* analytics must never break gameplay */ }
 
             // Notify any external UI
             try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) { __err('game', e); }
@@ -2362,6 +2404,18 @@ class Game {
         this.lives--;
         this.gameStats.deathsThisRun = (this.gameStats.deathsThisRun || 0) + 1;
 
+        // Analytics: player death
+        try {
+            if (typeof Analytics !== 'undefined') {
+                Analytics.trackPlayerDeath({
+                    level: (this.currentLevelIndex || 0) + 1,
+                    livesRemaining: this.lives,
+                    score: this.score,
+                    enemiesDefeated: this.gameStats.enemiesDefeated || 0
+                });
+            }
+        } catch (e) { /* analytics must never break gameplay */ }
+
         if (this.lives > 0) {
             // Trigger death animation first, then respawn after delay
             try {
@@ -2437,6 +2491,22 @@ class Game {
                     }
                 }
             } catch (e) { console.warn('Achievement check failed', e); }
+
+            // Analytics: game over
+            try {
+                if (typeof Analytics !== 'undefined') {
+                    Analytics.trackGameOver({
+                        score: this.score,
+                        levelReached: this._gameOverLevelReached,
+                        levelName: this._gameOverLevelName,
+                        timeSurvived: this.gameStats.timeSurvived,
+                        enemiesDefeated: this.gameStats.enemiesDefeated,
+                        maxCombo: this.gameStats.maxCombo,
+                        accuracy: this.gameStats.accuracy,
+                        achievementsUnlocked: (this._gameOverNewAchievements || []).length
+                    });
+                }
+            } catch (e) { /* analytics must never break gameplay */ }
 
             // Check for new high score (async, update flag when resolved)
             this._gameOverIsHighScore = false;
@@ -2536,6 +2606,16 @@ class Game {
         try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
 
         this.dispatchGameStateChange();
+        // Analytics: ad revive
+        try {
+            if (typeof Analytics !== 'undefined') {
+                Analytics.trackAdRevive({
+                    level: (this.currentLevelIndex || 0) + 1,
+                    score: this.score,
+                    revivesUsed: window.AdManager ? (AdManager._revivesUsed || 1) : 1
+                });
+            }
+        } catch (e) { /* */ }
         if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Player revived via ad reward.');
     }
 

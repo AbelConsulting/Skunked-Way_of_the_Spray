@@ -1067,6 +1067,9 @@ class GameApp {
             // Expose for diagnostic tests and external tooling
             try { window.game = this.game; window.gameApp = this; } catch (e) { /* ignore in strict contexts */ }
 
+            // Analytics: identify user properties (platform, screen, etc.)
+            try { if (typeof Analytics !== 'undefined') Analytics.identify(); } catch (e) { /* */ }
+
             // Defensive: mark game ready once the Game instance exists so
             // automated tests don't hang if later optional steps fail.
             try {

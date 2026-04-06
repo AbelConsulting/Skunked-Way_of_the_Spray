@@ -29,6 +29,12 @@ class Achievements {
                 this.showNextNotification();
             }
             this.save();
+            // Analytics: achievement unlock
+            try {
+                if (typeof Analytics !== 'undefined') {
+                    Analytics.trackAchievement({ id, name: this.achievements[id].name });
+                }
+            } catch (e) { /* */ }
             // Play achievement unlock fanfare
             if (this.audioManager) {
                 this.audioManager.playSound('achievement_unlock', { volume: 0.85, rate: 1.0 });
