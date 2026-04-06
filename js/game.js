@@ -343,9 +343,28 @@ class Game {
                     event.preventDefault();
                 }
 
+                // Arrow key scrolling on game-over screen
+                if (this.state === 'GAME_OVER' && (key === 'arrowup' || key === 'arrowdown')) {
+                    if (this.ui) {
+                        const scrollAmt = key === 'arrowdown' ? 40 : -40;
+                        this.ui._goScrollY += scrollAmt;
+                        this.ui._goScrollVel = 0;
+                        this.ui._clampGameOverScroll();
+                    }
+                    return;
+                }
+
                 // Global controls
                     if (key === 'escape') {
-                        this.togglePause();
+                        if (this.state === 'GAME_OVER' && !this._isGameOverLocked()) {
+                            // Return to menu from game over
+                            this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
+                            this.state = 'MENU';
+                            this._gameOverTime = 0;
+                            this.dispatchGameStateChange();
+                        } else {
+                            this.togglePause();
+                        }
                     } else if (key === 'enter' || key === 'space') {
                     // Enter or Space can start/restart the game (Space
                     // enables A-button on gamepads to initiate gameplay

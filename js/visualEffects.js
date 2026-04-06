@@ -453,28 +453,9 @@ class GameOverAnimation {
             ctx.restore();
         }
 
-        // Centered GAME OVER text with neon glow
-        const text = 'GAME OVER';
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const centerX = this.width / 2;
-        const centerY = this.height / 2 - 40;
-
-        // Glow
-        ctx.font = 'bold 64px Arial';
-        ctx.fillStyle = '#FF2D55';
-        ctx.shadowColor = '#FF2D55';
-        ctx.shadowBlur = 30 * overlayAlpha;
-        ctx.globalAlpha = Math.min(1, 0.85 + overlayAlpha * 0.15);
-        ctx.fillText(text, centerX, centerY);
-
-        // White core
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 48px Arial';
-        ctx.fillText(text, centerX, centerY + 6);
-        ctx.restore();
+        // GAME OVER text is rendered by ui.drawGameOver() which has a
+        // better animated version (slide-in + pulsing glow). Removed here
+        // to avoid duplicate text rendering.
 
         ctx.restore();
     }

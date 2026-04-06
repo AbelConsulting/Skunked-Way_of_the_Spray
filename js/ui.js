@@ -28,6 +28,85 @@ class UI {
 
         // Title-screen particle field (lazy-initialised on first drawMenu call)
         this._menuParticles = null;
+
+        // Game-over scroll state (canvas-based virtual scroll)
+        this._goScrollY = 0;       // current scroll offset (px, 0 = top)
+        this._goScrollVel = 0;     // momentum velocity
+        this._goTouchStartY = null;
+        this._goTouchLastY = null;
+        this._goContentH = 0;      // total content height (computed each frame)
+        this._goScrollBound = false;
+    }
+
+    /**
+     * Bind scroll input (wheel + touch drag) to the game canvas for game-over scrolling.
+     * Called lazily on first game-over render.
+     */
+    _bindGameOverScroll() {
+        if (this._goScrollBound) return;
+        this._goScrollBound = true;
+
+        const canvas = document.getElementById('gameCanvas');
+        if (!canvas) return;
+
+        // Mouse wheel
+        canvas.addEventListener('wheel', (e) => {
+            if (!window.game || window.game.state !== 'GAME_OVER') return;
+            e.preventDefault();
+            this._goScrollY += e.deltaY * 0.8;
+            this._goScrollVel = 0; // kill momentum on direct wheel
+            this._clampGameOverScroll();
+        }, { passive: false });
+
+        // Touch drag
+        canvas.addEventListener('touchstart', (e) => {
+            if (!window.game || window.game.state !== 'GAME_OVER') return;
+            if (e.touches.length !== 1) return;
+            this._goTouchStartY = e.touches[0].clientY;
+            this._goTouchLastY = e.touches[0].clientY;
+            this._goScrollVel = 0;
+        }, { passive: true });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!window.game || window.game.state !== 'GAME_OVER') return;
+            if (this._goTouchLastY === null) return;
+            const touch = e.touches[0];
+            // Convert screen delta to canvas-logical delta (account for CSS scaling)
+            const rect = canvas.getBoundingClientRect();
+            const scale = canvas.height / rect.height;
+            const dy = (this._goTouchLastY - touch.clientY) * scale;
+            this._goScrollY += dy;
+            this._goScrollVel = dy * 12; // rough velocity for momentum
+            this._goTouchLastY = touch.clientY;
+            this._clampGameOverScroll();
+            // Prevent page scroll when we're scrolling game-over content
+            if (Math.abs(this._goScrollY) > 2) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            this._goTouchStartY = null;
+            this._goTouchLastY = null;
+        }, { passive: true });
+    }
+
+    /** Clamp scroll offset to valid range. */
+    _clampGameOverScroll() {
+        const maxScroll = Math.max(0, this._goContentH - this.height + 30);
+        this._goScrollY = Math.max(0, Math.min(maxScroll, this._goScrollY));
+    }
+
+    /** Update momentum scrolling (call each frame while in GAME_OVER). */
+    _updateGameOverScroll(dt) {
+        if (this._goTouchLastY !== null) return; // dragging — skip momentum
+        if (Math.abs(this._goScrollVel) > 0.5) {
+            this._goScrollY += this._goScrollVel * dt;
+            this._goScrollVel *= 0.92; // friction
+            this._clampGameOverScroll();
+        } else {
+            this._goScrollVel = 0;
+        }
     }
 
     /**
@@ -143,6 +222,15 @@ class UI {
         const cx = this.width / 2;
         const elapsed = extra.elapsed || 0; // seconds since game over started
 
+        // ── Scroll setup ──
+        this._bindGameOverScroll();
+        // Reset scroll at the start of a new game over
+        if (elapsed < 0.05) {
+            this._goScrollY = 0;
+            this._goScrollVel = 0;
+        }
+        this._updateGameOverScroll(1 / 60); // approximate dt
+
         // ── Animated vignette background ──
         const gradient = ctx.createRadialGradient(cx, this.height * 0.3, 0, cx, this.height * 0.5, this.height);
         gradient.addColorStop(0, 'rgba(60, 0, 0, 0.75)');
@@ -159,6 +247,13 @@ class UI {
             ctx.fillRect(0, y, this.width, 2);
         }
         ctx.restore();
+
+        // ── Apply scroll offset for all content below ──
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, this.width, this.height);
+        ctx.clip();
+        ctx.translate(0, -this._goScrollY);
 
         // ── Title with pulsing glow (slides down from top) ──
         const titleTargetY = this.height * 0.13;
@@ -218,14 +313,30 @@ class UI {
         const scoreEased = 1 - Math.pow(1 - scoreProgress, 3);
         const displayScore = Math.floor(score * scoreEased);
 
+        // Play a satisfying ding when score count-up finishes
+        if (scoreProgress >= 1 && !this._scoreCountDingPlayed && score > 0) {
+            this._scoreCountDingPlayed = true;
+            try {
+                if (window.game && window.game.audioManager && window.game.audioManager.playSound) {
+                    window.game.audioManager.playSound('ui_confirm', 0.4);
+                }
+            } catch (e) { /* audio unavailable */ }
+        }
+        // Reset ding flag when a new game over starts
+        if (elapsed < 0.1) this._scoreCountDingPlayed = false;
+
+        // Score text with satisfying scale pop when count finishes
+        const scorePop = scoreProgress >= 1 ? 1 + Math.max(0, 0.08 * Math.sin((elapsed - scoreStart - scoreCountDuration) * 8) * Math.exp(-(elapsed - scoreStart - scoreCountDuration) * 4)) : 1;
         ctx.save();
+        ctx.translate(cx, scoreY);
+        ctx.scale(scorePop, scorePop);
         ctx.font = "bold 44px 'Bangers', 'Arial Black', sans-serif";
         ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#FFD700';
         ctx.shadowBlur = 14;
         ctx.letterSpacing = '0.03em';
-        ctx.fillText(`SCORE: ${displayScore.toLocaleString()}`, cx, scoreY);
+        ctx.fillText(`SCORE: ${displayScore.toLocaleString()}`, 0, 0);
         ctx.restore();
 
         // ── NEW HIGH SCORE flash ──
@@ -250,13 +361,17 @@ class UI {
         const boxX = cx - boxW / 2;
         const boxY = scoreY + (extra.isHighScore ? 52 : 28);
 
-        // Panel background with subtle border
+        // Panel background with improved contrast
         const panelFade = Math.max(0, Math.min(1, (elapsed - 0.8) / 0.4));
         ctx.save();
         ctx.globalAlpha = panelFade;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-        ctx.strokeStyle = 'rgba(255, 80, 80, 0.18)';
-        ctx.lineWidth = 1;
+        const panelGrad = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxH);
+        panelGrad.addColorStop(0, 'rgba(15, 5, 20, 0.82)');
+        panelGrad.addColorStop(0.5, 'rgba(8, 2, 12, 0.88)');
+        panelGrad.addColorStop(1, 'rgba(15, 5, 20, 0.82)');
+        ctx.fillStyle = panelGrad;
+        ctx.strokeStyle = 'rgba(255, 80, 80, 0.30)';
+        ctx.lineWidth = 1.5;
         const r = 10;
         // Rounded rect
         ctx.beginPath();
@@ -536,8 +651,25 @@ class UI {
             ctx.fillStyle = 'rgba(255,255,255,0.5)';
             ctx.fillText(String(secs), ringX, ringY + 1);
         } else {
+            // ── Encouraging tip (fades in once lockout ends) ──
+            const tipFadeStart = 0; // show immediately after lockout
+            const tipProgress = Math.min(1, (elapsed - ((typeof Config !== 'undefined' && Config.GAME_OVER_LOCKOUT) || 3)) / 0.6);
+            if (tipProgress > 0) {
+                const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
+                if (tips) {
+                    ctx.save();
+                    ctx.globalAlpha = tipProgress * 0.65;
+                    ctx.font = "11px 'Press Start 2P', monospace";
+                    ctx.fillStyle = '#AABBCC';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(tips, cx, instructY - 8);
+                    ctx.restore();
+                }
+            }
+
             // "Watch Ad to Revive" option (only on native Android with ads available)
             const adAvailable = window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded();
+            const promptBaseY = instructY + 10;
             if (adAvailable) {
                 // Revive button — pulsing green
                 const revivePulse = Math.sin(now / 350) * 0.3 + 0.7;
@@ -546,27 +678,123 @@ class UI {
                 ctx.fillStyle = '#44FF44';
                 ctx.shadowColor = '#44FF44';
                 ctx.shadowBlur = 10;
-                ctx.fillText('\u25B6 WATCH AD TO REVIVE', cx, instructY);
+                ctx.fillText('\u25B6 WATCH AD TO REVIVE', cx, promptBaseY);
                 ctx.shadowBlur = 0;
                 ctx.globalAlpha = 1;
 
                 // Restart option below
-                const restartY = instructY + 32;
+                const restartY = promptBaseY + 30;
                 const blink = Math.sin(now / 400) * 0.3 + 0.5;
                 ctx.globalAlpha = blink;
                 ctx.font = "12px 'Press Start 2P', monospace";
                 ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.fillText('PRESS ENTER OR TAP TO RESTART', cx, restartY);
+                ctx.fillText('ENTER / TAP \u2192 RESTART', cx, restartY);
+
+                // Return to menu hint
+                ctx.globalAlpha = 0.4;
+                ctx.font = "9px 'Press Start 2P', monospace";
+                ctx.fillStyle = 'rgba(200,200,220,0.7)';
+                ctx.fillText('ESC \u2192 MENU', cx, restartY + 22);
             } else {
-                // Standard blinking restart prompt
+                // Standard restart prompt — animated entrance
+                const promptEntrance = Math.min(1, tipProgress);
                 const blink = Math.sin(now / 400) * 0.4 + 0.6;
-                ctx.globalAlpha = blink;
+                ctx.globalAlpha = blink * promptEntrance;
                 ctx.font = "16px 'Press Start 2P', monospace";
                 ctx.fillStyle = '#FFFFFF';
-                ctx.fillText('PRESS ENTER OR TAP TO RESTART', cx, instructY);
+                ctx.shadowColor = '#FFFFFF';
+                ctx.shadowBlur = 6;
+                ctx.fillText('ENTER / TAP \u2192 RESTART', cx, promptBaseY);
+                ctx.shadowBlur = 0;
+
+                // Return to menu hint
+                ctx.globalAlpha = 0.4 * promptEntrance;
+                ctx.font = "9px 'Press Start 2P', monospace";
+                ctx.fillStyle = 'rgba(200,200,220,0.7)';
+                ctx.fillText('ESC \u2192 MENU', cx, promptBaseY + 26);
             }
         }
-        ctx.restore();
+        ctx.restore(); // end of lockout/prompt section
+
+        // ── Track total content height for scroll clamping ──
+        const contentBottomY = (lockoutRemaining > 0) ? instructY + 30 :
+            (window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded())
+                ? instructY + 10 + 30 + 22 + 20
+                : instructY + 10 + 26 + 20;
+        this._goContentH = contentBottomY;
+        this._clampGameOverScroll();
+
+        ctx.restore(); // end of scroll translate + clip
+
+        // ── Scroll indicators (drawn outside scroll transform) ──
+        const maxScroll = Math.max(0, this._goContentH - this.height + 30);
+        if (maxScroll > 5) {
+            // Bottom fade + arrow when content is below
+            if (this._goScrollY < maxScroll - 2) {
+                const fadePulse = 0.4 + Math.sin(now / 600) * 0.2;
+                // Bottom gradient fade
+                const botGrad = ctx.createLinearGradient(0, this.height - 50, 0, this.height);
+                botGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                botGrad.addColorStop(1, 'rgba(0,0,0,0.7)');
+                ctx.fillStyle = botGrad;
+                ctx.fillRect(0, this.height - 50, this.width, 50);
+                // Down arrow
+                ctx.save();
+                ctx.globalAlpha = fadePulse;
+                ctx.font = "bold 18px 'Press Start 2P', monospace";
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('\u25BC', cx, this.height - 14);
+                ctx.restore();
+            }
+            // Top fade + arrow when scrolled down
+            if (this._goScrollY > 2) {
+                const fadePulse = 0.4 + Math.sin(now / 600) * 0.2;
+                const topGrad = ctx.createLinearGradient(0, 0, 0, 40);
+                topGrad.addColorStop(0, 'rgba(0,0,0,0.7)');
+                topGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = topGrad;
+                ctx.fillRect(0, 0, this.width, 40);
+                ctx.save();
+                ctx.globalAlpha = fadePulse;
+                ctx.font = "bold 18px 'Press Start 2P', monospace";
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('\u25B2', cx, 16);
+                ctx.restore();
+            }
+            // Thin scroll track on the right edge
+            const trackH = this.height - 20;
+            const thumbH = Math.max(30, trackH * (this.height / this._goContentH));
+            const thumbY = 10 + (trackH - thumbH) * (this._goScrollY / maxScroll);
+            ctx.save();
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillRect(this.width - 6, thumbY, 3, thumbH);
+            ctx.restore();
+        }
+    }
+
+    /**
+     * Returns a contextual encouragement tip based on player performance.
+     */
+    _getGameOverTip(levelReached, stats) {
+        if (!stats) return null;
+        const combo = stats.maxCombo || 0;
+        const accuracy = stats.accuracy || 0;
+        const enemies = stats.enemiesDefeated || 0;
+        const time = stats.timeSurvived || 0;
+
+        // Select a tip based on what could improve
+        if (levelReached <= 1 && enemies < 5) return '\uD83D\uDCA1 TIP: Time your attacks to build combos!';
+        if (combo < 3 && enemies > 0) return '\uD83D\uDD25 Chain attacks on enemies for big combo bonuses!';
+        if (accuracy < 0.3 && enemies > 3) return '\uD83C\uDFAF Land more hits to boost your accuracy score!';
+        if (time < 30) return '\u26A1 Stay mobile! Jump and dodge to survive longer.';
+        if (levelReached >= 3) return '\uD83C\uDFC6 Great run! You made it to Stage ' + levelReached + '!';
+        if (combo >= 5) return '\uD83D\uDD25 Nice combos! Keep that momentum going!';
+        return '\uD83D\uDCAA Keep going \u2014 every run makes you stronger!';
     }
 
     formatTime(seconds) {

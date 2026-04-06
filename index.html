@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
   Proprietary and confidential â€” unauthorized copying, distribution, or use
@@ -3458,11 +3458,10 @@
 
             // Restart button handler
             const restartBtn = document.getElementById('btn-restart');
+            const menuBtn = document.getElementById('btn-menu');
             if (restartBtn) {
                 restartBtn.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    // Respect game-over lockout: the keydown will be blocked by game.js
-                    // if the lockout hasn't expired, but also guard here for clarity
                     try {
                         if (window.game && typeof window.game._isGameOverLocked === 'function' && window.game._isGameOverLocked()) return;
                     } catch (ex) {}
@@ -3471,22 +3470,38 @@
                 }, { passive: false });
             }
 
+            // Menu button handler - returns to title from game over
+            if (menuBtn) {
+                menuBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    try {
+                        if (window.game && typeof window.game._isGameOverLocked === 'function' && window.game._isGameOverLocked()) return;
+                    } catch (ex) {}
+                    triggerKeyEvent('Escape', 'keydown');
+                    setTimeout(() => triggerKeyEvent('Escape', 'keyup'), 100);
+                }, { passive: false });
+            }
+
             // Show/hide restart on game state â€” delay showing during lockout
             window.addEventListener('gameStateChange', (e) => {
-                if (restartBtn && e.detail.state === 'GAME_OVER') {
+                const isGameOver = e.detail && e.detail.state === 'GAME_OVER';
+                if (isGameOver) {
                     // Hide initially, show after lockout expires
-                    restartBtn.style.display = 'none';
+                    if (restartBtn) restartBtn.style.display = 'none';
+                    if (menuBtn) menuBtn.style.display = 'none';
                     const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
                         ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
                     setTimeout(() => {
                         try {
                             if (window.game && window.game.state === 'GAME_OVER') {
-                                restartBtn.style.display = 'block';
+                                if (restartBtn) restartBtn.style.display = 'block';
+                                if (menuBtn) menuBtn.style.display = 'block';
                             }
                         } catch (ex) {}
                     }, lockoutMs);
-                } else if (restartBtn) {
-                    restartBtn.style.display = 'none';
+                } else {
+                    if (restartBtn) restartBtn.style.display = 'none';
+                    if (menuBtn) menuBtn.style.display = 'none';
                 }
             });
             
@@ -3813,7 +3828,8 @@
                 <button class="touch-btn touch-btn--move" id="btn-left" aria-label="Move left">&#10232;</button>
                 <button class="touch-btn touch-btn--move" id="btn-right" aria-label="Move right">&#10233;</button>
             </div>
-            <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
+            <div id="game-over-controls" class="control-group" style="pointer-events:auto; display:flex; gap:8px; align-items:center;">
+                <button class="touch-btn touch-btn--menu" id="btn-menu" style="display:none; font-size:18px; opacity:0.7;" aria-label="Menu">&#9776;</button>
                 <button class="touch-btn touch-btn--restart" id="btn-restart" style="display:none;" aria-label="Restart">&#10226;</button>
             </div>
             <div id="actions" class="control-group" style="pointer-events:auto; display:flex; gap:8px;">
