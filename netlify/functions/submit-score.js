@@ -9,6 +9,12 @@
 
 const MAX_ENTRIES = 100;
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
 // Simple in-memory rate limiter (best-effort for serverless warm containers).
 // For production use consider Redis, Cloudflare KV, or a hosted rate-limit service.
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
@@ -16,10 +22,13 @@ const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '10', 10); // max 
 const ipCounter = new Map(); // { ip -> { count, firstTs } }
 
 exports.handler = async function(event, context) {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS_HEADERS, body: '' };
+  }
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: CORS_HEADERS, body: 'Method Not Allowed' };
 
   let body;
-  try { body = JSON.parse(event.body || '{}'); } catch (e) { return { statusCode: 400, body: 'Invalid JSON' }; }
+  try { body = JSON.parse(event.body || '{}'); } catch (e) { return { statusCode: 400, headers: CORS_HEADERS, body: 'Invalid JSON' }; }
 
   const score = (typeof body.score === 'number') ? Math.floor(body.score) : null;
   const initials = (typeof body.initials === 'string') ? body.initials.replace(/[^\w\s-]/g, '').trim().slice(0, 10) || '---' : '---';
@@ -30,7 +39,7 @@ exports.handler = async function(event, context) {
   const level = (typeof body.level === 'number' && body.level >= 0) ? Math.floor(body.level) : 0;
   const recaptchaToken = typeof body.recaptchaToken === 'string' ? body.recaptchaToken : null;
 
-  if (score === null || score < 0) return { statusCode: 400, body: JSON.stringify({ error: 'bad_score' }) };
+  if (score === null || score < 0) return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: 'bad_score' }) };
 
   // Extract client IP (try several headers - depends on platform)
   const headers = event.headers || {};
@@ -47,7 +56,7 @@ exports.handler = async function(event, context) {
     st.count += 1;
     ipCounter.set(ip, st);
     if (st.count > RATE_LIMIT_MAX) {
-      return { statusCode: 429, body: JSON.stringify({ error: 'rate_limited' }) };
+      return { statusCode: 429, headers: CORS_HEADERS, body: JSON.stringify({ error: 'rate_limited' }) };
     }
   } catch (e) {
     console.warn('rate limit check failed', e);
@@ -61,12 +70,12 @@ exports.handler = async function(event, context) {
   const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET || null;
 
   if (!owner || !repo || !token) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'missing_server_config' }) };
+    return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: 'missing_server_config' }) };
   }
 
   // Verify reCAPTCHA token if configured
   if (RECAPTCHA_SECRET) {
-    if (!recaptchaToken) return { statusCode: 400, body: JSON.stringify({ error: 'recaptcha_missing' }) };
+    if (!recaptchaToken) return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: 'recaptcha_missing' }) };
     try {
       const v = await fetch('https://www.google.com/recaptcha/api/siteverify', {
         method: 'POST',
@@ -75,16 +84,16 @@ exports.handler = async function(event, context) {
       });
       const verdict = await v.json();
       if (!verdict.success) {
-        return { statusCode: 403, body: JSON.stringify({ error: 'recaptcha_failed', details: verdict }) };
+        return { statusCode: 403, headers: CORS_HEADERS, body: JSON.stringify({ error: 'recaptcha_failed', details: verdict }) };
       }
       // If v3, enforce min score threshold (default 0.3)
       const minScore = parseFloat(process.env.RECAPTCHA_MIN_SCORE || '0.3');
       if (typeof verdict.score === 'number' && verdict.score < minScore) {
-        return { statusCode: 403, body: JSON.stringify({ error: 'recaptcha_low_score', score: verdict.score }) };
+        return { statusCode: 403, headers: CORS_HEADERS, body: JSON.stringify({ error: 'recaptcha_low_score', score: verdict.score }) };
       }
     } catch (e) {
       console.warn('recaptcha verify failed', e);
-      return { statusCode: 500, body: JSON.stringify({ error: 'recaptcha_verify_error' }) };
+      return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: 'recaptcha_verify_error' }) };
     }
   } else {
     // not configured -> warning in logs, allow for dev
@@ -97,7 +106,7 @@ exports.handler = async function(event, context) {
   const AWS_REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1';
 
   if (!S3_BUCKET) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'missing_s3_config' }) };
+    return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: 'missing_s3_config' }) };
   }
 
   const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
@@ -134,10 +143,11 @@ exports.handler = async function(event, context) {
 
     return {
       statusCode: 200,
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: true, leaderboard: arr })
     };
   } catch (e) {
     console.error('submit-score (s3) error', e);
-    return { statusCode: 500, body: JSON.stringify({ error: 'server_error' }) };
+    return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: 'server_error' }) };
   }
 };

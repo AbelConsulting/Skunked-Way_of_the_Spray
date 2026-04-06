@@ -13,7 +13,7 @@
  * Bump CACHE_VERSION when you deploy new code/assets to bust the cache.
  */
 
-const CACHE_VERSION = 'skunked-v7';
+const CACHE_VERSION = 'skunked-v8';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Determine base path from service worker location

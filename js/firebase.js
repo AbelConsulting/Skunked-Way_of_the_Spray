@@ -9,7 +9,8 @@
 // Global leaderboard integration via skunked.io REST API (Netlify Functions + S3).
 // No external SDK required — pure fetch().
 
-const API_BASE = '/api';
+// Site is served from Cloudflare; Netlify hosts the serverless functions.
+const API_BASE = 'https://wayofthespray.netlify.app/api';
 
 /**
  * Checks if the leaderboard service is reachable.
