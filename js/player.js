@@ -277,6 +277,7 @@ class Player {
         if (this.skunkAmmo > 0 && this.skunkCooldownTimer <= 0 && this.hitStunTimer <= 0) {
             this.skunkAmmo--;
             this.skunkCooldownTimer = this.skunkCooldown;
+            this._skunkShotJustFired = true; // Flag for gameStats tracking
 
             this.isSkunkShooting = true;
             this.skunkShotTimer = this.skunkShotDuration;

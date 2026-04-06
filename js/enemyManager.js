@@ -273,6 +273,8 @@ class EnemyManager {
                             const sourceDepth = (explosion.enemy && typeof explosion.enemy.chainExplosionDepth === 'number')
                                 ? explosion.enemy.chainExplosionDepth : 0;
                             enemy.chainExplosionDepth = sourceDepth + 1;
+                            // Track chain kills for achievements
+                            this._exploderChainKills = (this._exploderChainKills || 0) + 1;
                         }
                     }
                 }

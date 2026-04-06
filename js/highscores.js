@@ -14,20 +14,94 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
   const MAX_SCORES = 10; // The number of scores to show on the leaderboard.
   const ACHIEVEMENT_DEFINITIONS = Object.freeze([
+    // ── Combat Basics ──
     { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', icon: '🩸', check: (stats) => statNumber(stats.enemiesDefeated) >= 1 },
     { id: 'enemy_slayer', name: 'Enemy Slayer', desc: 'Defeat 50 enemies in a run', icon: '⚔️', check: (stats) => statNumber(stats.enemiesDefeated) >= 50 },
     { id: 'exterminator', name: 'Exterminator', desc: 'Defeat 150 enemies in a run', icon: '☠️', check: (stats) => statNumber(stats.enemiesDefeated) >= 150 },
+    { id: 'genocide', name: 'Unstoppable', desc: 'Defeat 300 enemies in a run', icon: '💀', check: (stats) => statNumber(stats.enemiesDefeated) >= 300 },
+
+    // ── Combo Mastery ──
     { id: 'combo_master', name: 'Combo Starter', desc: 'Reach a 5-hit combo', icon: '🔥', check: (stats) => statNumber(stats.maxCombo) >= 5 },
+    { id: 'combo_adept', name: 'Combo Adept', desc: 'Reach a 10-hit combo', icon: '🔥', check: (stats) => statNumber(stats.maxCombo) >= 10 },
     { id: 'combo_legend', name: 'Combo Legend', desc: 'Reach a 20-hit combo', icon: '🌪️', check: (stats) => statNumber(stats.maxCombo) >= 20 },
+    { id: 'combo_god', name: 'Combo God', desc: 'Reach a 50-hit combo', icon: '💫', check: (stats) => statNumber(stats.maxCombo) >= 50 },
+    { id: 'multi_hit_master', name: 'Cleave Master', desc: 'Land 10 multi-hit attacks in a run', icon: '🗡️', check: (stats) => statNumber(stats.multiKills) >= 10 },
+
+    // ── Score ──
     { id: 'high_scorer', name: 'High Scorer', desc: 'Score over 50,000 points', icon: '💎', check: (stats) => statNumber(stats.score) >= 50000 },
     { id: 'score_attack', name: 'Score Attack', desc: 'Score over 150,000 points', icon: '👑', check: (stats) => statNumber(stats.score) >= 150000 },
+    { id: 'score_legend', name: 'Score Legend', desc: 'Score over 500,000 points', icon: '🏆', check: (stats) => statNumber(stats.score) >= 500000 },
+
+    // ── Shadow Strike ──
+    { id: 'shadow_initiate', name: 'Shadow Initiate', desc: 'Use Shadow Strike 10 times in a run', icon: '🌑', check: (stats) => statNumber(stats.shadowStrikesUsed) >= 10 },
+    { id: 'shadow_master', name: 'Shadow Master', desc: 'Kill 25 enemies with Shadow Strike', icon: '🌘', check: (stats) => statNumber(stats.shadowStrikeKills) >= 25 },
+    { id: 'phantom_blade', name: 'Phantom Blade', desc: 'Kill 75 enemies with Shadow Strike', icon: '👻', check: (stats) => statNumber(stats.shadowStrikeKills) >= 75 },
+
+    // ── Skunk Spray ──
+    { id: 'spray_novice', name: 'Spray Novice', desc: 'Fire 5 Skunk Shots in a run', icon: '💨', check: (stats) => statNumber(stats.skunkShotsFired) >= 5 },
+    { id: 'stink_bomber', name: 'Stink Bomber', desc: 'Skunk 20 enemies in a run', icon: '🦨', check: (stats) => statNumber(stats.enemiesSkunked) >= 20 },
+    { id: 'toxic_cloud', name: 'Toxic Cloud', desc: 'Skunk 50 enemies in a run', icon: '☁️', check: (stats) => statNumber(stats.enemiesSkunked) >= 50 },
+
+    // ── Aerial Combat ──
+    { id: 'air_juggler', name: 'Air Juggler', desc: 'Defeat 5 enemies while airborne', icon: '🦅', check: (stats) => statNumber(stats.airKills) >= 5 },
+    { id: 'sky_warrior', name: 'Sky Warrior', desc: 'Defeat 25 enemies while airborne', icon: '✈️', check: (stats) => statNumber(stats.airKills) >= 25 },
+
+    // ── Accuracy & Precision ──
+    { id: 'precision_striker', name: 'Precision Striker', desc: '75% accuracy after 20+ attacks', icon: '🎯', check: (stats) => statNumber(stats.attacksAttempted) >= 20 && statNumber(stats.accuracy) >= 0.75 },
+    { id: 'sharpshooter', name: 'Sharpshooter', desc: '90% accuracy after 50+ attacks', icon: '🎯', check: (stats) => statNumber(stats.attacksAttempted) >= 50 && statNumber(stats.accuracy) >= 0.90 },
+    { id: 'never_miss', name: 'Never Miss', desc: '100% accuracy after 30+ attacks', icon: '💯', check: (stats) => statNumber(stats.attacksAttempted) >= 30 && statNumber(stats.accuracy) >= 1.0 },
+
+    // ── Boss Hunting ──
+    { id: 'boss_slayer', name: 'Boss Slayer', desc: 'Defeat your first boss', icon: '🐲', check: (stats) => statNumber(stats.bossesDefeated) >= 1 },
+    { id: 'boss_crusher', name: 'Boss Crusher', desc: 'Defeat 3 bosses in a run', icon: '⚒️', check: (stats) => statNumber(stats.bossesDefeated) >= 3 },
+    { id: 'boss_hunter', name: 'Boss Hunter', desc: 'Defeat all 6 bosses in a run', icon: '🏹', check: (stats) => statNumber(stats.bossesDefeated) >= 6 },
+    { id: 'veteran_hunter', name: 'Veteran Hunter', desc: 'Defeat 20 bosses across all runs', icon: '🗡️', check: (stats) => statNumber(stats.totalBossesDefeated) >= 20 },
+
+    // ── Survival & Grit ──
     { id: 'perfect_level', name: 'Untouchable', desc: 'Complete a level without taking damage', icon: '🛡️', check: (stats) => statNumber(stats.perfectLevels) >= 1 },
     { id: 'iron_fur', name: 'Iron Fur', desc: 'Finish 3 perfect levels in one run', icon: '🦾', check: (stats) => statNumber(stats.perfectLevels) >= 3 },
+    { id: 'flawless_run', name: 'Flawless Run', desc: 'Complete the game with 0 damage taken', icon: '✨', check: (stats) => !!stats.gameCompleted && statNumber(stats.damageTaken) === 0 },
+    { id: 'close_call', name: 'Close Call', desc: 'Survive a hit at under 15% health', icon: '💔', check: (stats) => statNumber(stats.closeCalls) >= 1 },
+    { id: 'cheating_death', name: 'Cheating Death', desc: 'Survive 5 close calls in a run', icon: '😰', check: (stats) => statNumber(stats.closeCalls) >= 5 },
+    { id: 'survivor', name: 'Survivor', desc: 'Survive for 10 minutes in one run', icon: '⏰', check: (stats) => statNumber(stats.timeSurvived) >= 600 },
+    { id: 'endurance', name: 'Endurance', desc: 'Survive for 20 minutes in one run', icon: '⌛', check: (stats) => statNumber(stats.timeSurvived) >= 1200 },
+    { id: 'no_lives_lost', name: 'No Lives Lost', desc: 'Complete a level without losing a life', icon: '💚', check: (stats) => statNumber(stats.levelsCompleted) >= 1 && statNumber(stats.deathsThisRun) === 0 },
+
+    // ── Collection & Exploration ──
     { id: 'relic_hunter', name: 'Relic Hunter', desc: 'Collect 10 Golden Idols across all runs', icon: '🗿', check: (stats) => statNumber(stats.totalIdolsCollected) >= 10 },
+    { id: 'idol_hoarder', name: 'Idol Hoarder', desc: 'Collect 50 Golden Idols across all runs', icon: '🏺', check: (stats) => statNumber(stats.totalIdolsCollected) >= 50 },
     { id: 'master_collector', name: 'Master Collector', desc: 'Complete 3 idol sets in one run', icon: '🏅', check: (stats) => statNumber(stats.idolSetsCompleted) >= 3 },
-    { id: 'precision_striker', name: 'Precision Striker', desc: 'Finish with 75% accuracy after 20 attacks', icon: '🎯', check: (stats) => statNumber(stats.attacksAttempted) >= 20 && statNumber(stats.accuracy) >= 0.75 },
-    { id: 'speed_demon', name: 'Speed Demon', desc: 'Beat the game in 15 minutes or less', icon: '⚡', check: (stats) => !!stats.gameCompleted && statNumber(stats.completionTime) > 0 && statNumber(stats.completionTime) <= 900 },
+    { id: 'completionist', name: 'Completionist', desc: 'Collect all 18 idols in a single run', icon: '🌈', check: (stats) => statNumber(stats.idolsCollected) >= 18 },
+    { id: 'power_hungry', name: 'Power Hungry', desc: 'Collect 15 power-ups in a run', icon: '⚡', check: (stats) => statNumber(stats.powerUpsCollected) >= 15 },
+
+    // ── Chain Reactions ──
+    { id: 'chain_reaction', name: 'Chain Reaction', desc: 'Trigger an exploder chain kill', icon: '💥', check: (stats) => statNumber(stats.exploderChainKills) >= 1 },
+    { id: 'demolition_expert', name: 'Demolition Expert', desc: 'Trigger 5 exploder chain kills in a run', icon: '🧨', check: (stats) => statNumber(stats.exploderChainKills) >= 5 },
+
+    // ── Speedrunning ──
+    { id: 'speed_demon', name: 'Speed Demon', desc: 'Beat the game in under 15 minutes', icon: '⚡', check: (stats) => !!stats.gameCompleted && statNumber(stats.completionTime) > 0 && statNumber(stats.completionTime) <= 900 },
+    { id: 'speed_god', name: 'Speed God', desc: 'Beat the game in under 10 minutes', icon: '🚀', check: (stats) => !!stats.gameCompleted && statNumber(stats.completionTime) > 0 && statNumber(stats.completionTime) <= 600 },
+
+    // ── Campaign & Progression ──
     { id: 'world_saver', name: 'World Saver', desc: 'Complete the campaign', icon: '🌟', check: (stats) => !!stats.gameCompleted },
+    { id: 'halfway_there', name: 'Halfway There', desc: 'Complete 3 levels in a run', icon: '🏔️', check: (stats) => statNumber(stats.levelsCompleted) >= 3 },
+
+    // ── Cross-Run Dedication ──
+    { id: 'dedicated', name: 'Dedicated', desc: 'Play 10 runs', icon: '🎮', check: (stats) => statNumber(stats.totalRuns) >= 10 },
+    { id: 'addicted', name: 'Addicted', desc: 'Play 50 runs', icon: '🕹️', check: (stats) => statNumber(stats.totalRuns) >= 50 },
+    { id: 'veteran', name: 'Veteran', desc: 'Play 100 runs', icon: '🎖️', check: (stats) => statNumber(stats.totalRuns) >= 100 },
+    { id: 'mass_extinction', name: 'Mass Extinction', desc: 'Defeat 1,000 enemies across all runs', icon: '🪦', check: (stats) => statNumber(stats.totalEnemiesDefeated) >= 1000 },
+    { id: 'armageddon', name: 'Armageddon', desc: 'Defeat 5,000 enemies across all runs', icon: '🔱', check: (stats) => statNumber(stats.totalEnemiesDefeated) >= 5000 },
+    { id: 'time_invested', name: 'Time Invested', desc: 'Play for 1 hour total', icon: '⏳', check: (stats) => statNumber(stats.totalPlayTime) >= 3600 },
+    { id: 'no_lifer', name: 'No-Lifer', desc: 'Play for 5 hours total', icon: '🌙', check: (stats) => statNumber(stats.totalPlayTime) >= 18000 },
+
+    // ── Damage & Efficiency ──
+    { id: 'glass_cannon', name: 'Glass Cannon', desc: 'Deal 5,000+ damage while taking under 50', icon: '🔮', check: (stats) => statNumber(stats.totalDamage) >= 5000 && statNumber(stats.damageTaken) < 50 },
+    { id: 'berserker', name: 'Berserker', desc: 'Deal 10,000 damage in a single run', icon: '🪓', check: (stats) => statNumber(stats.totalDamage) >= 10000 },
+
+    // ── Secret / Fun ──
+    { id: 'multiplier_max', name: 'Multiplier Maniac', desc: 'Reach a 3.0x combo multiplier', icon: '✖️', check: (stats) => statNumber(stats.bestMultiplier) >= 3.0 },
+    { id: 'pacifist_start', name: 'Pacifist Start', desc: 'Survive 60 seconds without attacking', icon: '🕊️', check: (stats) => statNumber(stats.timeSurvived) >= 60 && statNumber(stats.attacksAttempted) === 0 },
   ]);
 
   function statNumber(value, fallback = 0) {

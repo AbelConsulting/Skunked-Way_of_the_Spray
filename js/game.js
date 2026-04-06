@@ -674,8 +674,33 @@ class Game {
                 totalIdolsCollected: parseInt(localStorage.getItem('totalIdolsCollected') || '0'),
                 gameCompleted: false,
                 completionTime: 0,
-                fastestCompletion: parseFloat(localStorage.getItem('fastestCompletion')) || Infinity
+                fastestCompletion: parseFloat(localStorage.getItem('fastestCompletion')) || Infinity,
+                // Combat tracking
+                bossesDefeated: 0,
+                shadowStrikesUsed: 0,
+                shadowStrikeKills: 0,
+                skunkShotsFired: 0,
+                skunkShotsHit: 0,
+                enemiesSkunked: 0,
+                exploderChainKills: 0,
+                airKills: 0,
+                // Power-up tracking
+                powerUpsCollected: 0,
+                healthRegensCollected: 0,
+                damageBoostsCollected: 0,
+                speedBoostsCollected: 0,
+                extraLivesCollected: 0,
+                // Survival tracking
+                closeCalls: 0,
+                deathsThisRun: 0,
+                // Cross-run persistent stats
+                totalRuns: parseInt(localStorage.getItem('skunkfu_totalRuns') || '0') + 1,
+                totalEnemiesDefeated: parseInt(localStorage.getItem('skunkfu_totalEnemiesDefeated') || '0'),
+                totalBossesDefeated: parseInt(localStorage.getItem('skunkfu_totalBossesDefeated') || '0'),
+                totalPlayTime: parseFloat(localStorage.getItem('skunkfu_totalPlayTime') || '0')
             };
+            // Persist incremented run count
+            try { localStorage.setItem('skunkfu_totalRuns', String(this.gameStats.totalRuns)); } catch (e) { /* ignore */ }
 
             // Reset idol tracking for a new run
             this.idolProgress = {};
@@ -1372,6 +1397,7 @@ class Game {
                 // Check if boss instance is dead
                 if (this.enemyManager.bossInstance && (this.enemyManager.bossInstance.health <= 0 || this.enemyManager.enemies.indexOf(this.enemyManager.bossInstance) === -1)) {
                      this.bossDefeated = true;
+                         this.gameStats.bossesDefeated = (this.gameStats.bossesDefeated || 0) + 1;
                          if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Boss Defeated! Exit Unlocked.');
                      // Boss defeat sound
                      if (this.audioManager && this.audioManager.playSound) {
@@ -1643,6 +1669,19 @@ class Game {
                     this.hitSparks.push(burst);
                 }
                 
+                // Track power-up collection stats
+                try {
+                    if (result && result.success) {
+                        if (result.type === 'EXTRA_LIFE' || result.type === 'HEALTH_REGEN' || result.type === 'DAMAGE_BOOST' || result.type === 'SPEED_BOOST' || result.type === 'SKUNK_POWERUP') {
+                            this.gameStats.powerUpsCollected = (this.gameStats.powerUpsCollected || 0) + 1;
+                        }
+                        if (result.type === 'EXTRA_LIFE') this.gameStats.extraLivesCollected = (this.gameStats.extraLivesCollected || 0) + 1;
+                        if (result.type === 'HEALTH_REGEN') this.gameStats.healthRegensCollected = (this.gameStats.healthRegensCollected || 0) + 1;
+                        if (result.type === 'DAMAGE_BOOST') this.gameStats.damageBoostsCollected = (this.gameStats.damageBoostsCollected || 0) + 1;
+                        if (result.type === 'SPEED_BOOST') this.gameStats.speedBoostsCollected = (this.gameStats.speedBoostsCollected || 0) + 1;
+                    }
+                } catch (e) { __err('game', e); }
+
                 // Grant extra life if applicable
                 if (result && result.type === 'EXTRA_LIFE' && result.success) {
                     this.lives = Math.min(this.lives + (result.lives || 1), 9);
@@ -1760,7 +1799,19 @@ class Game {
         try {
             if (this.player && this.player._attackJustStarted) {
                 this.gameStats.attacksAttempted++;
+                // Track shadow strikes separately
+                if (this.player.isShadowStriking) {
+                    this.gameStats.shadowStrikesUsed = (this.gameStats.shadowStrikesUsed || 0) + 1;
+                }
                 this.player._attackJustStarted = false;
+            }
+        } catch (e) { __err('game', e); }
+
+        // Track skunk projectile fires (player decrements ammo in shootSkunkProjectile)
+        try {
+            if (this.player && this.player._skunkShotJustFired) {
+                this.gameStats.skunkShotsFired = (this.gameStats.skunkShotsFired || 0) + 1;
+                this.player._skunkShotJustFired = false;
             }
         } catch (e) { __err('game', e); }
 
@@ -1777,6 +1828,14 @@ class Game {
                 if (this.player && !this.player._attackDidHit) {
                     this.gameStats.attacksHit++;
                     this.player._attackDidHit = true;
+                    // Track shadow strike hits for kill attribution
+                    if (this.player.isShadowStriking) {
+                        this.player._lastHitWasShadowStrike = true;
+                    }
+                    // Track air kills (player not on ground)
+                    if (!this.player.grounded) {
+                        this.player._lastHitWasAirborne = true;
+                    }
                 }
             } catch (e) { __err('game', e); }
             this.gameStats.totalDamage += attackResult.totalDamage;
@@ -1904,7 +1963,22 @@ class Game {
         try { this.player._prevMilestoneTier = this.player._lastComboTier || 0; } catch (e) { __err('game', e); }
 
         // Sync stats from other systems
+        const prevDefeated = this.gameStats.enemiesDefeated || 0;
         this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
+        const killsDelta = this.gameStats.enemiesDefeated - prevDefeated;
+        // Attribute kills to shadow strike or air attacks if applicable
+        if (killsDelta > 0) {
+            try {
+                if (this.player._lastHitWasShadowStrike) {
+                    this.gameStats.shadowStrikeKills = (this.gameStats.shadowStrikeKills || 0) + killsDelta;
+                }
+                if (this.player._lastHitWasAirborne) {
+                    this.gameStats.airKills = (this.gameStats.airKills || 0) + killsDelta;
+                }
+            } catch (e) { __err('game', e); }
+        }
+        // Reset per-attack flags after kill attribution
+        try { this.player._lastHitWasShadowStrike = false; this.player._lastHitWasAirborne = false; } catch (e) {}
         this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
         this.gameStats.currentCombo = this.player.comboCount || 0;
         this.gameStats.comboMultiplier = (typeof this.player.getComboMultiplier === 'function') ? this.player.getComboMultiplier() : 1.0;
@@ -1925,6 +1999,12 @@ class Game {
             try {
                 this.gameStats.damageTaken += playerHit.damage;
                 this.gameStats.levelDamageTaken += playerHit.damage;
+                // Close call: survived a hit at <=15% health
+                if (this.player && this.player.health > 0 && this.player.maxHealth > 0) {
+                    if (this.player.health / this.player.maxHealth <= 0.15) {
+                        this.gameStats.closeCalls = (this.gameStats.closeCalls || 0) + 1;
+                    }
+                }
             } catch (e) { __err('game', e); }
 
             // Screen shake when boss hits player (stronger than normal enemy)
@@ -2026,6 +2106,7 @@ class Game {
                     if (distance <= spray.radius) {
                         // Mark enemy as hit by this spray
                         spray.hitEnemies.add(enemy);
+                        this.gameStats.enemiesSkunked = (this.gameStats.enemiesSkunked || 0) + 1;
                         
                         // Apply skunk effect
                         enemy.isSkunked = true;
@@ -2260,6 +2341,7 @@ class Game {
 
         // Player died - check for remaining lives
         this.lives--;
+        this.gameStats.deathsThisRun = (this.gameStats.deathsThisRun || 0) + 1;
 
         if (this.lives > 0) {
             // Trigger death animation first, then respawn after delay
@@ -2310,6 +2392,21 @@ class Game {
             this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
             this.gameStats.maxCombo = Math.max(this.gameStats.maxCombo, this.player.comboCount || 0);
             this.gameStats.score = this.score; // Add score to stats for achievements
+            // Grab chain kill stats from enemyManager
+            this.gameStats.exploderChainKills = this.enemyManager._exploderChainKills || 0;
+
+            // Persist cross-run cumulative stats to localStorage
+            try {
+                const totalEnemies = (parseInt(localStorage.getItem('skunkfu_totalEnemiesDefeated') || '0') || 0) + (this.gameStats.enemiesDefeated || 0);
+                const totalBosses = (parseInt(localStorage.getItem('skunkfu_totalBossesDefeated') || '0') || 0) + (this.gameStats.bossesDefeated || 0);
+                const totalTime = (parseFloat(localStorage.getItem('skunkfu_totalPlayTime') || '0') || 0) + (this.gameStats.timeSurvived || 0);
+                localStorage.setItem('skunkfu_totalEnemiesDefeated', String(totalEnemies));
+                localStorage.setItem('skunkfu_totalBossesDefeated', String(totalBosses));
+                localStorage.setItem('skunkfu_totalPlayTime', String(totalTime));
+                this.gameStats.totalEnemiesDefeated = totalEnemies;
+                this.gameStats.totalBossesDefeated = totalBosses;
+                this.gameStats.totalPlayTime = totalTime;
+            } catch (e) { /* localStorage unavailable */ }
 
             // Check for new achievements
             this._gameOverNewAchievements = [];
