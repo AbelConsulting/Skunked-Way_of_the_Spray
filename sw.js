@@ -122,7 +122,7 @@ const CORE_ASSETS_RELATIVE = [
   'assets/sprites/items/health_regen_item.svg',
 
   // Sprites — backgrounds & tiles
-  'assets/sprites/backgrounds/cave_crystal_bg.png',
+  'assets/sprites/backgrounds/caves_crystal_bg.png',
   'assets/sprites/backgrounds/cave_depths_bg.png',
   'assets/sprites/backgrounds/city_bg.png',
   'assets/sprites/backgrounds/forest_bg.png',
