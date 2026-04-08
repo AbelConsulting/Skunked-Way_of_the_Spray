@@ -6,11 +6,12 @@
  * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
  */
 // js/firebase.js
-// Global leaderboard integration via skunked.io REST API (Netlify Functions + S3).
+// Global leaderboard integration via skunked.io REST API (Firebase Cloud Functions + Firestore).
 // No external SDK required — pure fetch().
 
-// Site is served from Cloudflare; Netlify hosts the serverless functions.
-const API_BASE = 'https://wayofthespray.netlify.app/api';
+// Relative URL — routes to whatever host is serving the page
+// (Firebase hosting rewrites /api/* to Cloud Functions).
+const API_BASE = '/api';
 
 /**
  * Checks if the leaderboard service is reachable.

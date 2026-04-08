@@ -1086,6 +1086,8 @@ class GameApp {
             try {
                 const sfxSlider = document.getElementById('sfx-volume');
                 const sfxValSpan = document.getElementById('sfx-volume-value');
+                const musicSlider = document.getElementById('music-volume');
+                const musicValSpan = document.getElementById('music-volume-value');
                 const am = this.audioManager;
 
                 // Restore persisted volume preferences
