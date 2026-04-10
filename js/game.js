@@ -1218,13 +1218,19 @@ class Game {
             try {
                 if (typeof Analytics !== 'undefined') {
                     const lvlIdx = this.currentLevelIndex || 0;
+                    const sprayAcc = (this.gameStats.skunkShotsFired > 0)
+                        ? Math.round((this.gameStats.skunkShotsHit / this.gameStats.skunkShotsFired) * 100) : 0;
                     Analytics.trackLevelComplete({
                         level: lvlIdx + 1,
                         levelName: (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[lvlIdx]) ? LEVEL_CONFIGS[lvlIdx].name : '',
                         score: this.score,
                         time: (Date.now() / 1000) - (this.gameStats.startTime || 0),
                         enemiesDefeated: this.gameStats.enemiesDefeated || 0,
-                        perfect: (this.gameStats.levelDamageTaken || 0) === 0
+                        perfect: (this.gameStats.levelDamageTaken || 0) === 0,
+                        maxCombo: this.gameStats.maxCombo || 0,
+                        sprayAccuracy: sprayAcc,
+                        deathsThisLevel: this.gameStats.deathsThisRun || 0,
+                        idolsCollected: this.gameStats.idolsCollected || 0
                     });
                 }
             } catch (e) { /* analytics must never break gameplay */ }
@@ -1297,13 +1303,19 @@ class Game {
             // Analytics: victory
             try {
                 if (typeof Analytics !== 'undefined') {
+                    const sprayAcc = (this.gameStats.skunkShotsFired > 0)
+                        ? Math.round((this.gameStats.skunkShotsHit / this.gameStats.skunkShotsFired) * 100) : 0;
                     Analytics.trackVictory({
                         score: this.score,
                         completionTime: this.gameStats.completionTime,
                         levelsCompleted: this.gameStats.levelsCompleted,
                         perfectLevels: this.gameStats.perfectLevels,
                         enemiesDefeated: this.gameStats.enemiesDefeated,
-                        maxCombo: this.gameStats.maxCombo
+                        bossesDefeated: this.gameStats.bossesDefeated || 0,
+                        maxCombo: this.gameStats.maxCombo,
+                        sprayAccuracy: sprayAcc,
+                        deathsTotal: this.gameStats.deathsThisRun || 0,
+                        totalRuns: this.gameStats.totalRuns || 0
                     });
                 }
             } catch (e) { /* analytics must never break gameplay */ }
@@ -2109,6 +2121,7 @@ class Game {
                         // Deal damage and remove projectile
                         if (typeof this.player.takeDamage === 'function') {
                             this.player.takeDamage(proj.damage, enemy);
+                            this._lastDeathCause = 'projectile';
                         }
                         // Create a purple spray burst at impact
                         try {
@@ -2307,6 +2320,8 @@ class Game {
 
         // Log death triggers
         if ((playerHit && playerHit.hit) || fellOut || explosionHitPlayer) {
+            // Determine death cause for analytics
+            this._lastDeathCause = fellOut ? 'fall' : explosionHitPlayer ? 'explosion' : 'enemy';
             console.log('=== DEATH TRIGGER ===', {
                 playerHit: playerHit ? playerHit.hit : false,
                 fellOut,
@@ -2325,6 +2340,7 @@ class Game {
         if (this.player && this.player.health <= 0 && !this.player.isDying &&
             !this.isRespawning && this.state === 'PLAYING') {
             console.warn('=== ZOMBIE STATE DETECTED - forcing death ===');
+            this._lastDeathCause = this._lastDeathCause || 'zombie_state';
             this._handlePlayerDeath();
         }
 
@@ -2422,7 +2438,9 @@ class Game {
                     level: (this.currentLevelIndex || 0) + 1,
                     livesRemaining: this.lives,
                     score: this.score,
-                    enemiesDefeated: this.gameStats.enemiesDefeated || 0
+                    enemiesDefeated: this.gameStats.enemiesDefeated || 0,
+                    deathCause: this._lastDeathCause || 'unknown',
+                    deathsThisRun: this.gameStats.deathsThisRun || 0
                 });
             }
         } catch (e) { /* analytics must never break gameplay */ }
@@ -2506,6 +2524,8 @@ class Game {
             // Analytics: game over
             try {
                 if (typeof Analytics !== 'undefined') {
+                    const sprayAcc = (this.gameStats.skunkShotsFired > 0)
+                        ? Math.round((this.gameStats.skunkShotsHit / this.gameStats.skunkShotsFired) * 100) : 0;
                     Analytics.trackGameOver({
                         score: this.score,
                         levelReached: this._gameOverLevelReached,
@@ -2514,6 +2534,10 @@ class Game {
                         enemiesDefeated: this.gameStats.enemiesDefeated,
                         maxCombo: this.gameStats.maxCombo,
                         accuracy: this.gameStats.accuracy,
+                        sprayAccuracy: sprayAcc,
+                        bossesDefeated: this.gameStats.bossesDefeated || 0,
+                        deathsTotal: this.gameStats.deathsThisRun || 0,
+                        totalRuns: this.gameStats.totalRuns || 0,
                         achievementsUnlocked: (this._gameOverNewAchievements || []).length
                     });
                 }

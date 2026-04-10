@@ -18,12 +18,37 @@
 const Analytics = (() => {
     'use strict';
 
+    // ── opt-out gate ────────────────────────────────────────────
+    // Respect a simple flag so players/devs can disable analytics.
+    // Set `localStorage.skunkfu_analytics_optout = '1'` or call
+    // `Analytics.optOut()`.
+    let _optedOut = false;
+    try { _optedOut = localStorage.getItem('skunkfu_analytics_optout') === '1'; } catch (e) { /* */ }
+
     // ── helpers ──────────────────────────────────────────────────
     const push = (event, params) => {
+        if (_optedOut) return;
         try {
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({ event, ...params });
         } catch (e) { /* silently fail — analytics must never break gameplay */ }
+    };
+
+    /** Reliable unload beacon — falls back to dataLayer for non-unload events. */
+    const pushBeacon = (event, params) => {
+        if (_optedOut) return;
+        try {
+            if (navigator.sendBeacon) {
+                const payload = JSON.stringify({ event, ...params });
+                navigator.sendBeacon(
+                    'https://www.google-analytics.com/mp/collect',  // no-op endpoint; GTM picks up from dataLayer
+                    payload
+                );
+            }
+            // Always push to dataLayer too (GTM may still process it)
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event, ...params });
+        } catch (e) { /* */ }
     };
 
     const isMobile = () => {
@@ -39,6 +64,14 @@ const Analytics = (() => {
         return isMobile() ? 'mobile_web' : 'desktop_web';
     };
 
+    /** Detect active input method based on recent events. */
+    let _lastInputMethod = 'unknown';
+    try {
+        window.addEventListener('keydown', () => { _lastInputMethod = 'keyboard'; }, { capture: true, passive: true });
+        window.addEventListener('touchstart', () => { _lastInputMethod = 'touch'; }, { capture: true, passive: true });
+        window.addEventListener('gamepadconnected', () => { _lastInputMethod = 'gamepad'; });
+    } catch (e) { /* */ }
+
     let _sessionStart = Date.now();
 
     // ── public API ──────────────────────────────────────────────
@@ -48,13 +81,23 @@ const Analytics = (() => {
      * Call after the game canvas is initialised.
      */
     function identify() {
+        // Session count & returning-player flag from cross-run stats
+        let totalRuns = 0;
+        let perfMode = 'unknown';
+        try { totalRuns = parseInt(localStorage.getItem('skunkfu_totalRuns') || '0') || 0; } catch (e) { /* */ }
+        try { perfMode = localStorage.getItem('mobilePerfMode') || 'unknown'; } catch (e) { /* */ }
+
         push('user_properties_set', {
             user_properties: {
                 platform: platform(),
                 screen_w: window.innerWidth,
                 screen_h: window.innerHeight,
                 pixel_ratio: window.devicePixelRatio || 1,
-                touch: 'ontouchstart' in window
+                touch: 'ontouchstart' in window,
+                total_runs: totalRuns,
+                is_returning: totalRuns > 1,
+                perf_mode: perfMode,
+                input_method: _lastInputMethod
             }
         });
     }
@@ -85,7 +128,12 @@ const Analytics = (() => {
             score: data.score || 0,
             time_seconds: Math.round(data.time || 0),
             enemies_defeated: data.enemiesDefeated || 0,
-            perfect: !!data.perfect
+            perfect: !!data.perfect,
+            max_combo: data.maxCombo || 0,
+            spray_accuracy: data.sprayAccuracy || 0,
+            deaths_this_level: data.deathsThisLevel || 0,
+            idols_collected: data.idolsCollected || 0,
+            input_method: _lastInputMethod
         });
     }
 
@@ -98,8 +146,13 @@ const Analytics = (() => {
             enemies_defeated: data.enemiesDefeated || 0,
             max_combo: data.maxCombo || 0,
             accuracy: data.accuracy || 0,
+            spray_accuracy: data.sprayAccuracy || 0,
+            bosses_defeated: data.bossesDefeated || 0,
+            deaths_total: data.deathsTotal || 0,
             is_high_score: !!data.isHighScore,
             achievements_unlocked: data.achievementsUnlocked || 0,
+            total_runs: data.totalRuns || 0,
+            input_method: _lastInputMethod,
             session_duration: Math.round((Date.now() - _sessionStart) / 1000)
         });
     }
@@ -111,7 +164,12 @@ const Analytics = (() => {
             levels_completed: data.levelsCompleted || 0,
             perfect_levels: data.perfectLevels || 0,
             enemies_defeated: data.enemiesDefeated || 0,
+            bosses_defeated: data.bossesDefeated || 0,
             max_combo: data.maxCombo || 0,
+            spray_accuracy: data.sprayAccuracy || 0,
+            deaths_total: data.deathsTotal || 0,
+            total_runs: data.totalRuns || 0,
+            input_method: _lastInputMethod,
             session_duration: Math.round((Date.now() - _sessionStart) / 1000)
         });
     }
@@ -121,7 +179,10 @@ const Analytics = (() => {
             level: data.level || 1,
             lives_remaining: data.livesRemaining || 0,
             score: data.score || 0,
-            enemies_defeated: data.enemiesDefeated || 0
+            enemies_defeated: data.enemiesDefeated || 0,
+            death_cause: data.deathCause || 'unknown',
+            deaths_this_run: data.deathsThisRun || 0,
+            input_method: _lastInputMethod
         });
     }
 
@@ -224,14 +285,14 @@ const Analytics = (() => {
 
     function _onVisibilityChange() {
         if (document.visibilityState === 'hidden') {
-            push('session_end', {
+            pushBeacon('session_end', {
                 session_duration: Math.round((Date.now() - _sessionStart) / 1000)
             });
         }
     }
 
     function _onBeforeUnload() {
-        push('session_end', {
+        pushBeacon('session_end', {
             session_duration: Math.round((Date.now() - _sessionStart) / 1000)
         });
     }
@@ -256,6 +317,9 @@ const Analytics = (() => {
         trackTutorialStep,
         trackError,
         startHeartbeat,
-        stopHeartbeat
+        stopHeartbeat,
+        optOut() { _optedOut = true; try { localStorage.setItem('skunkfu_analytics_optout', '1'); } catch (e) { /* */ } },
+        optIn()  { _optedOut = false; try { localStorage.removeItem('skunkfu_analytics_optout'); } catch (e) { /* */ } },
+        isOptedOut() { return _optedOut; }
     };
 })();
