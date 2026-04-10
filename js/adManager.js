@@ -226,7 +226,7 @@ const AdManager = (() => {
             _rewardedReady = false;
             _revivesUsed++;
             _log('Rewarded ad completed. Revives used:', _revivesUsed);
-            try { Analytics.trackAdImpression('rewarded', 'revive'); } catch(e) {}
+            try { Analytics.trackAdImpression({ type: 'rewarded', placement: 'revive' }); } catch(e) {}
 
             // Immediately start loading the next one
             _prepareRewarded();
@@ -274,7 +274,7 @@ const AdManager = (() => {
             _stagesSinceAd = 0;
             await _plugin.showInterstitial();
             _log('Interstitial shown.');
-            try { Analytics.trackAdImpression('interstitial', 'stage_complete'); } catch(e) {}
+            try { Analytics.trackAdImpression({ type: 'interstitial', placement: 'stage_complete' }); } catch(e) {}
         } catch (e) {
             _warn('Interstitial failed:', e);
         }

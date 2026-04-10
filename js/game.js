@@ -912,7 +912,7 @@ class Game {
             if (this.state === 'PLAYING') {
                 this.state = 'PAUSED';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) { __err('game', e); }
-                try { if (typeof Analytics !== 'undefined') Analytics.trackPause(); } catch (e) { /* */ }
+                try { if (typeof Analytics !== 'undefined') Analytics.trackPause({ level: (this.currentLevelIndex || 0) + 1, score: this.score || 0 }); } catch (e) { /* */ }
                 this.audioManager.playSound && this.audioManager.playSound('pause');
                 this.audioManager.pauseMusic && this.audioManager.pauseMusic();
                 this.audioManager.pauseAmbient && this.audioManager.pauseAmbient();
@@ -956,7 +956,7 @@ class Game {
             } else if (this.state === 'PAUSED') {
                 this.state = 'PLAYING';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) { __err('game', e); }
-                try { if (typeof Analytics !== 'undefined') Analytics.trackResume(); } catch (e) { /* */ }
+                try { if (typeof Analytics !== 'undefined') Analytics.trackResume({ level: (this.currentLevelIndex || 0) + 1 }); } catch (e) { /* */ }
                 this.audioManager.playSound && this.audioManager.playSound('ui_back');
                 this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
                 this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient();
@@ -1185,6 +1185,17 @@ class Game {
                 // (They are level-specific and should start fresh each level)
                 this.player.idolBonuses = null;
             }
+
+            // Analytics: level start
+            try {
+                if (typeof Analytics !== 'undefined') {
+                    Analytics.trackLevelStart({
+                        level: index + 1,
+                        levelName: config.name || '',
+                        score: this.score || 0
+                    });
+                }
+            } catch (e) { /* analytics must never break gameplay */ }
 
             // Show level toast if UI available
             // (Assumes UI has been updated to support this, or we can just log for now)

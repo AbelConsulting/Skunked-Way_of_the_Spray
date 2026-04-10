@@ -164,21 +164,76 @@ const Analytics = (() => {
         push('menu_action', { action: action || '' });
     }
 
-    function trackPause() {
+    function trackPause(data = {}) {
         push('game_pause', {
-            level: window.game ? (window.game.currentLevelIndex || 0) + 1 : 0,
-            score: window.game ? window.game.score || 0 : 0
+            level: data.level || 0,
+            score: data.score || 0
         });
     }
 
-    function trackResume() {
+    function trackResume(data = {}) {
         push('game_resume', {
-            level: window.game ? (window.game.currentLevelIndex || 0) + 1 : 0
+            level: data.level || 0
         });
     }
 
     function trackTutorialStep(step) {
         push('tutorial_step', { step: step || '' });
+    }
+
+    // ── Errors ──────────────────────────────────────────────────
+
+    /** Track client-side errors (sampled — max 20 per session). */
+    let _errorCount = 0;
+    const _MAX_ERRORS = 20;
+
+    function trackError(data = {}) {
+        if (_errorCount >= _MAX_ERRORS) return;
+        _errorCount++;
+        push('client_error', {
+            error_tag: data.tag || 'unknown',
+            error_message: (data.message || '').substring(0, 200),
+            level: data.level || 0
+        });
+    }
+
+    // ── Engagement heartbeat ────────────────────────────────────
+
+    let _heartbeatInterval = null;
+
+    function startHeartbeat(intervalMs) {
+        stopHeartbeat();
+        const ms = intervalMs || 60000;
+        _heartbeatInterval = setInterval(() => {
+            push('heartbeat', {
+                session_duration: Math.round((Date.now() - _sessionStart) / 1000),
+                level: window.game ? (window.game.currentLevelIndex || 0) + 1 : 0
+            });
+        }, ms);
+
+        // Send a final pulse when the tab is being closed / hidden
+        try {
+            window.addEventListener('visibilitychange', _onVisibilityChange);
+            window.addEventListener('beforeunload', _onBeforeUnload);
+        } catch (e) { /* */ }
+    }
+
+    function stopHeartbeat() {
+        if (_heartbeatInterval) { clearInterval(_heartbeatInterval); _heartbeatInterval = null; }
+    }
+
+    function _onVisibilityChange() {
+        if (document.visibilityState === 'hidden') {
+            push('session_end', {
+                session_duration: Math.round((Date.now() - _sessionStart) / 1000)
+            });
+        }
+    }
+
+    function _onBeforeUnload() {
+        push('session_end', {
+            session_duration: Math.round((Date.now() - _sessionStart) / 1000)
+        });
     }
 
     // ── Expose ──────────────────────────────────────────────────
@@ -198,6 +253,9 @@ const Analytics = (() => {
         trackMenuAction,
         trackPause,
         trackResume,
-        trackTutorialStep
+        trackTutorialStep,
+        trackError,
+        startHeartbeat,
+        stopHeartbeat
     };
 })();

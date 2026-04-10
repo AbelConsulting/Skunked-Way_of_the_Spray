@@ -40,6 +40,13 @@
 
             // Surface the error
             console.warn('[' + tag + ']', msg);
+
+            // Forward to analytics (if loaded)
+            try {
+                if (typeof Analytics !== 'undefined' && Analytics.trackError) {
+                    Analytics.trackError({ tag: tag, message: msg });
+                }
+            } catch (_) { /* */ }
         } catch (_) {
             // Absolute last resort — never let the error handler itself crash
         }

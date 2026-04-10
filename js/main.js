@@ -1069,6 +1069,8 @@ class GameApp {
 
             // Analytics: identify user properties (platform, screen, etc.)
             try { if (typeof Analytics !== 'undefined') Analytics.identify(); } catch (e) { /* */ }
+            // Analytics: start engagement heartbeat (60s pulses)
+            try { if (typeof Analytics !== 'undefined' && Analytics.startHeartbeat) Analytics.startHeartbeat(); } catch (e) { /* */ }
 
             // Defensive: mark game ready once the Game instance exists so
             // automated tests don't hang if later optional steps fail.
