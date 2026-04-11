@@ -62,6 +62,8 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
     implementation 'com.google.android.gms:play-services-ads:21.0.0'
+    implementation 'com.google.android.gms:play-services-games-v2:22.0.0'
+    implementation 'com.google.android.play:sidekick:+'
 }
 
 apply from: 'capacitor.build.gradle'

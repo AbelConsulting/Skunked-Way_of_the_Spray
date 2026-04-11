@@ -2517,9 +2517,24 @@ class Game {
                     this._gameOverNewAchievements = Highscores.checkAchievements(this.gameStats);
                     if (this._gameOverNewAchievements.length > 0) {
                         if (typeof Config !== 'undefined' && Config.DEBUG) console.log('New achievements unlocked:', this._gameOverNewAchievements);
+                        // Sync newly unlocked achievements to Google Play Games
+                        try {
+                            if (window.PlayGamesServices && PlayGamesServices.isAvailable()) {
+                                for (const ach of this._gameOverNewAchievements) {
+                                    PlayGamesServices.unlockAchievement(ach.id);
+                                }
+                            }
+                        } catch (e) { /* GPGS sync is best-effort */ }
                     }
                 }
             } catch (e) { console.warn('Achievement check failed', e); }
+
+            // Submit score to Google Play Games leaderboard
+            try {
+                if (window.PlayGamesServices && PlayGamesServices.isAvailable()) {
+                    PlayGamesServices.submitScore(this.score);
+                }
+            } catch (e) { /* GPGS score submit is best-effort */ }
 
             // Analytics: game over
             try {

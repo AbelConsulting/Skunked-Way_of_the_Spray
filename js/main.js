@@ -933,6 +933,21 @@ class GameApp {
                 }, 4000);
             }
         } catch (e) { __err('main', e); }
+
+        // ── 6. Google Play Games Services auto sign-in ──────────────
+        try {
+            if (window.PlayGamesServices && PlayGamesServices.isAvailable()) {
+                PlayGamesServices.signIn().then((result) => {
+                    try { console.log('[PlayGames] Sign-in result:', result); } catch (e) { __err('main', e); }
+                    // Sync any achievements earned while offline
+                    if (result && result.isAuthenticated) {
+                        PlayGamesServices.syncAchievements();
+                    }
+                }).catch((e) => {
+                    try { console.warn('[PlayGames] Auto sign-in failed', e); } catch (ex) { __err('main', ex); }
+                });
+            }
+        } catch (e) { /* PlayGames not available — web build */ }
     }
 
     _handleNativeBack() {
