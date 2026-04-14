@@ -994,6 +994,13 @@ class AudioManager {
         this.soundEnabled = !this.soundEnabled;
         this.musicEnabled = !this.musicEnabled;
         
+        // Analytics: settings change
+        try {
+            if (typeof Analytics !== 'undefined') {
+                Analytics.trackSettingsChange({ setting: 'mute', value: !this.soundEnabled });
+            }
+        } catch (e) { /* */ }
+        
         if (!this.musicEnabled) {
             this.stopMusic();
             this.stopAmbient();

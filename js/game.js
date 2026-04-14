@@ -634,6 +634,17 @@ class Game {
         async startGame(levelIndex = 0) {
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game.startGame() called, level:', levelIndex);
 
+            // Analytics: track retry when restarting after game over or victory
+            try {
+                if (typeof Analytics !== 'undefined' && (this.state === 'GAME_OVER' || this.state === 'VICTORY')) {
+                    Analytics.trackRetry({
+                        previousScore: this.score || 0,
+                        previousLevel: (this.currentLevelIndex || 0) + 1,
+                        totalRuns: this.gameStats ? (this.gameStats.totalRuns || 0) : 0
+                    });
+                }
+            } catch (e) { /* analytics must never break gameplay */ }
+
             // Prevent delayed death stingers from a previous run bleeding into a new start.
             try { this.audioManager && this.audioManager.cancelDeathSequence && this.audioManager.cancelDeathSequence(); } catch (e) { __err('game', e); }
 
@@ -1427,6 +1438,7 @@ class Game {
                 const triggerX = this.level.completionConfig.bossTriggerX;
                 if (this.player.x > triggerX) {
                     this.bossEncountered = true;
+                    this._bossEncounterTime = Date.now();
                     // Stop spawning regular enemies to focus on boss
                     if (this.enemyManager) {
                         this.enemyManager.spawningEnabled = false;
@@ -1435,6 +1447,21 @@ class Game {
                     }
                     // Tutorial hint for boss encounter
                     if (this.tutorialHints) this.tutorialHints.trigger('boss_encounter');
+
+                    // Analytics: boss encounter
+                    try {
+                        if (typeof Analytics !== 'undefined') {
+                            const bi = this.enemyManager && this.enemyManager.bossInstance;
+                            Analytics.trackBossEncounter({
+                                level: (this.currentLevelIndex || 0) + 1,
+                                levelName: (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[this.currentLevelIndex]) ? LEVEL_CONFIGS[this.currentLevelIndex].name : '',
+                                bossType: (bi && bi.enemyType) || (this.level.bossConfig && this.level.bossConfig.type) || 'BOSS',
+                                bossName: (bi && bi.bossName) || '',
+                                playerHealth: this.player ? this.player.health : 0,
+                                score: this.score || 0
+                            });
+                        }
+                    } catch (e) { /* analytics must never break gameplay */ }
                     
                     // Visual/Audio cue
                     try {
@@ -1482,6 +1509,21 @@ class Game {
                 if (this.enemyManager.bossInstance && (this.enemyManager.bossInstance.health <= 0 || this.enemyManager.enemies.indexOf(this.enemyManager.bossInstance) === -1)) {
                      this.bossDefeated = true;
                          this.gameStats.bossesDefeated = (this.gameStats.bossesDefeated || 0) + 1;
+                         // Analytics: boss defeat
+                         try {
+                             if (typeof Analytics !== 'undefined') {
+                                 const bi = this.enemyManager.bossInstance;
+                                 Analytics.trackBossDefeat({
+                                     level: (this.currentLevelIndex || 0) + 1,
+                                     levelName: (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[this.currentLevelIndex]) ? LEVEL_CONFIGS[this.currentLevelIndex].name : '',
+                                     bossType: (bi && bi.enemyType) || (this.level && this.level.bossConfig && this.level.bossConfig.type) || 'BOSS',
+                                     bossName: (bi && bi.bossName) || '',
+                                     timeToKill: this._bossEncounterTime ? (Date.now() - this._bossEncounterTime) / 1000 : 0,
+                                     playerHealthRemaining: this.player ? this.player.health : 0,
+                                     score: this.score || 0
+                                 });
+                             }
+                         } catch (e) { /* analytics must never break gameplay */ }
                          if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Boss Defeated! Exit Unlocked.');
                      // Boss defeat sound
                      if (this.audioManager && this.audioManager.playSound) {
@@ -1756,6 +1798,16 @@ class Game {
                 // Track power-up collection stats
                 try {
                     if (result && result.success) {
+                        // Analytics: item pickup
+                        try {
+                            if (typeof Analytics !== 'undefined') {
+                                Analytics.trackItemPickup({
+                                    itemType: result.type || 'unknown',
+                                    level: (this.currentLevelIndex || 0) + 1,
+                                    score: this.score || 0
+                                });
+                            }
+                        } catch (e) { /* analytics must never break gameplay */ }
                         if (result.type === 'EXTRA_LIFE' || result.type === 'HEALTH_REGEN' || result.type === 'DAMAGE_BOOST' || result.type === 'SPEED_BOOST' || result.type === 'SKUNK_POWERUP') {
                             this.gameStats.powerUpsCollected = (this.gameStats.powerUpsCollected || 0) + 1;
                         }
@@ -1886,6 +1938,15 @@ class Game {
                 // Track shadow strikes separately
                 if (this.player.isShadowStriking) {
                     this.gameStats.shadowStrikesUsed = (this.gameStats.shadowStrikesUsed || 0) + 1;
+                    try {
+                        if (typeof Analytics !== 'undefined') {
+                            Analytics.trackShadowStrike({
+                                level: (this.currentLevelIndex || 0) + 1,
+                                enemiesHit: 0, // updated after hit detection
+                                score: this.score || 0
+                            });
+                        }
+                    } catch (e) { /* */ }
                 }
                 this.player._attackJustStarted = false;
             }

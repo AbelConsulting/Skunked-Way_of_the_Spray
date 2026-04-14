@@ -142,6 +142,15 @@ class TutorialHints {
         if (this._done) return;
         this._done = true;
         try { localStorage.setItem(this.DONE_KEY, '1'); } catch (e) {}
+        // Analytics: tutorial complete
+        try {
+            if (typeof Analytics !== 'undefined') {
+                Analytics.trackTutorialComplete({
+                    stepsSeen: Object.keys(this._seen || {}).length,
+                    runs: this._runCount || 0
+                });
+            }
+        } catch (e) { /* */ }
     }
 
     /**

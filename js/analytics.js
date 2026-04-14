@@ -34,18 +34,11 @@ const Analytics = (() => {
         } catch (e) { /* silently fail — analytics must never break gameplay */ }
     };
 
-    /** Reliable unload beacon — falls back to dataLayer for non-unload events. */
+    /** Reliable unload beacon via dataLayer push (sendBeacon to GA MP
+     *  was removed — it requires api_secret + measurement_id and was a no-op). */
     const pushBeacon = (event, params) => {
         if (_optedOut) return;
         try {
-            if (navigator.sendBeacon) {
-                const payload = JSON.stringify({ event, ...params });
-                navigator.sendBeacon(
-                    'https://www.google-analytics.com/mp/collect',  // no-op endpoint; GTM picks up from dataLayer
-                    payload
-                );
-            }
-            // Always push to dataLayer too (GTM may still process it)
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({ event, ...params });
         } catch (e) { /* */ }
@@ -219,6 +212,63 @@ const Analytics = (() => {
         });
     }
 
+    // ── Boss / combat ───────────────────────────────────────────
+
+    function trackBossEncounter(data = {}) {
+        push('boss_encounter', {
+            level: data.level || 1,
+            level_name: data.levelName || '',
+            boss_type: data.bossType || 'unknown',
+            boss_name: data.bossName || '',
+            player_health: data.playerHealth || 0,
+            score: data.score || 0
+        });
+    }
+
+    function trackBossDefeat(data = {}) {
+        push('boss_defeat', {
+            level: data.level || 1,
+            level_name: data.levelName || '',
+            boss_type: data.bossType || 'unknown',
+            boss_name: data.bossName || '',
+            time_to_kill: Math.round(data.timeToKill || 0),
+            player_health_remaining: data.playerHealthRemaining || 0,
+            score: data.score || 0
+        });
+    }
+
+    function trackItemPickup(data = {}) {
+        push('item_pickup', {
+            item_type: data.itemType || 'unknown',
+            level: data.level || 1,
+            score: data.score || 0
+        });
+    }
+
+    function trackShadowStrike(data = {}) {
+        push('shadow_strike', {
+            level: data.level || 1,
+            enemies_hit: data.enemiesHit || 0,
+            score: data.score || 0
+        });
+    }
+
+    function trackRetry(data = {}) {
+        push('game_retry', {
+            previous_score: data.previousScore || 0,
+            previous_level: data.previousLevel || 1,
+            total_runs: data.totalRuns || 0,
+            session_duration: Math.round((Date.now() - _sessionStart) / 1000)
+        });
+    }
+
+    function trackSettingsChange(data = {}) {
+        push('settings_change', {
+            setting: data.setting || '',
+            value: data.value != null ? data.value : ''
+        });
+    }
+
     // ── UI / navigation ─────────────────────────────────────────
 
     function trackMenuAction(action) {
@@ -242,6 +292,13 @@ const Analytics = (() => {
         push('tutorial_step', { step: step || '' });
     }
 
+    function trackTutorialComplete(data = {}) {
+        push('tutorial_complete', {
+            steps_seen: data.stepsSeen || 0,
+            runs: data.runs || 0
+        });
+    }
+
     // ── Errors ──────────────────────────────────────────────────
 
     /** Track client-side errors (sampled — max 20 per session). */
@@ -261,6 +318,7 @@ const Analytics = (() => {
     // ── Engagement heartbeat ────────────────────────────────────
 
     let _heartbeatInterval = null;
+    let _sessionEndSent = false;
 
     function startHeartbeat(intervalMs) {
         stopHeartbeat();
@@ -285,13 +343,19 @@ const Analytics = (() => {
 
     function _onVisibilityChange() {
         if (document.visibilityState === 'hidden') {
+            if (_sessionEndSent) return;
+            _sessionEndSent = true;
             pushBeacon('session_end', {
                 session_duration: Math.round((Date.now() - _sessionStart) / 1000)
             });
+        } else if (document.visibilityState === 'visible') {
+            _sessionEndSent = false; // reset if tab returns
         }
     }
 
     function _onBeforeUnload() {
+        if (_sessionEndSent) return;
+        _sessionEndSent = true;
         pushBeacon('session_end', {
             session_duration: Math.round((Date.now() - _sessionStart) / 1000)
         });
@@ -311,10 +375,17 @@ const Analytics = (() => {
         trackScoreSubmit,
         trackAdRevive,
         trackAdImpression,
+        trackBossEncounter,
+        trackBossDefeat,
+        trackItemPickup,
+        trackShadowStrike,
+        trackRetry,
+        trackSettingsChange,
         trackMenuAction,
         trackPause,
         trackResume,
         trackTutorialStep,
+        trackTutorialComplete,
         trackError,
         startHeartbeat,
         stopHeartbeat,
