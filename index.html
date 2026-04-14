@@ -4470,19 +4470,24 @@
 <!-- Service Worker registration for PWA / offline support -->
 <script>
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        // Use relative path for better compatibility with different deployment contexts
-        const swPath = './sw.js';
-        navigator.serviceWorker.register(swPath)
-            .then((reg) => {
-                console.log('[PWA] Service Worker registered successfully, scope:', reg.scope);
-            })
-            .catch((err) => {
-                // Service worker registration can fail if sw.js isn't deployed
-                // or if the server doesn't serve it with correct MIME type
-                console.log('[PWA] Service Worker registration skipped:', err.message);
-            });
-    });
+    // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
+    // can serve stale assets after an app update.
+    const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    if (!isNative) {
+        window.addEventListener('load', () => {
+            // Use relative path for better compatibility with different deployment contexts
+            const swPath = './sw.js';
+            navigator.serviceWorker.register(swPath)
+                .then((reg) => {
+                    console.log('[PWA] Service Worker registered successfully, scope:', reg.scope);
+                })
+                .catch((err) => {
+                    // Service worker registration can fail if sw.js isn't deployed
+                    // or if the server doesn't serve it with correct MIME type
+                    console.log('[PWA] Service Worker registration skipped:', err.message);
+                });
+        });
+    }
 }
 </script>
 </body>

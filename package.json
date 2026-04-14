@@ -37,7 +37,7 @@
     "cap:run": "npx cap run android"
   },
   "devDependencies": {
-    "esbuild": "^0.27.7",
+    "esbuild": "^0.28.0",
     "playwright": "^1.59.1"
   },
   "dependencies": {
@@ -48,9 +48,9 @@
     "@capacitor/core": "^8.3.0",
     "@capacitor/screen-orientation": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.1"
+    "@capacitor/status-bar": "^8.0.2"
   },
   "optionalDependencies": {
-    "@esbuild/win32-x64": "^0.27.2"
+    "@esbuild/win32-x64": "^0.28.0"
   }
 }

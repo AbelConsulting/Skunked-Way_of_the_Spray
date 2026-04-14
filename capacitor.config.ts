@@ -7,8 +7,8 @@ const config: CapacitorConfig = {
 
   // Android-specific configuration
   android: {
-    // Allow mixed content for local assets
-    allowMixedContent: true,
+    // Disallow mixed content in production (HTTPS only)
+    allowMixedContent: false,
     // Use hardware acceleration for our canvas game
     webContentsDebuggingEnabled: false,   // set true during dev
   },
