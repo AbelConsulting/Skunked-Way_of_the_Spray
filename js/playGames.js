@@ -29,8 +29,7 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
   }
 
   // ── Leaderboard ID ──
-  // Replace with the actual leaderboard ID from Google Play Console.
-  const LEADERBOARD_ID = 'REPLACE_WITH_YOUR_LEADERBOARD_ID';
+  const LEADERBOARD_ID = 'CgkI5NbknI4GEAIQAQ';
 
   // ── Achievement ID Mapping ──
   // Maps the game's internal achievement IDs → Google Play Games achievement IDs.
