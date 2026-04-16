@@ -23,7 +23,7 @@ const AdManager = (() => {
         // Real ad unit IDs from AdMob console:
         bannerAdUnitId:       'ca-app-pub-8519140628365141/6620194957',
         rewardedAdUnitId:     'ca-app-pub-8519140628365141/4115014216',
-        interstitialAdUnitId: 'ca-app-pub-8519140628365141/INTERSTITIAL_UNIT_ID',
+        interstitialAdUnitId: '', // TODO: create interstitial unit in AdMob console and paste ID here
 
         // Google's official test ad unit IDs — used when testing is true
         testBannerId:        'ca-app-pub-3940256099942544/6300978111',
@@ -31,7 +31,7 @@ const AdManager = (() => {
         testInterstitialId:  'ca-app-pub-3940256099942544/1033173712',
 
         // Set to false for production builds
-        testing: true,
+        testing: false,
 
         // Show an interstitial every N stages (0 = never)
         interstitialEveryNStages: 0,

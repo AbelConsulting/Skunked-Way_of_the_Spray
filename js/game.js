@@ -242,7 +242,7 @@ class Game {
         // Debug helpers
         this.debugOverlay = false;
         this.levelDebugVisuals = false; // show spawn visuals
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && typeof Config !== 'undefined' && Config.DEBUG) {
             try {
                 window.snapCameraToRight = () => { this.cameraX = Math.max(0, this.level.width - (this.viewWidth || this.width)); };
                 window.snapCameraToLeft = () => { this.cameraX = 0; };
@@ -251,7 +251,6 @@ class Game {
 
                 window.toggleHitboxes = (enable) => {
                     try {
-                        if (typeof Config === 'undefined') return;
                         if (typeof enable === 'boolean') Config.SHOW_HITBOXES = enable;
                         else Config.SHOW_HITBOXES = !Config.SHOW_HITBOXES;
                         try { localStorage.setItem('hitboxes', Config.SHOW_HITBOXES ? '1' : '0'); } catch (e) { __err('game', e); }
@@ -267,7 +266,6 @@ class Game {
                     } catch (e) { console.warn('toggleLevelDebugVisuals failed', e); }
                 };
 
-                // Debug: spawn health regen item at player location
                 window.spawnHealthRegen = (x, y) => {
                     try {
                         if (!this.itemManager) return console.warn('itemManager not initialized');
@@ -278,7 +276,6 @@ class Game {
                     } catch (e) { console.warn('spawnHealthRegen failed', e); }
                 };
 
-                // Debug: spawn extra life at player location
                 window.spawnExtraLife = (x, y) => {
                     try {
                         if (!this.itemManager) return console.warn('itemManager not initialized');
@@ -288,8 +285,7 @@ class Game {
                         console.log('Spawned extra life at', px, py);
                     } catch (e) { console.warn('spawnExtraLife failed', e); }
                 };
-                
-                // Debug: spawn skunk power-up at player location
+
                 window.spawnSkunkPowerup = (x, y) => {
                     try {
                         if (!this.itemManager) return console.warn('itemManager not initialized');
@@ -804,27 +800,7 @@ class Game {
                 this.player.health = this.player.maxHealth || 80;
             }
             
-            // Log detailed game start state
-            console.log('=== GAME START DEBUG ===');
-            console.log('Player state:', { 
-                pos: { x: this.player.x, y: this.player.y }, 
-                health: this.player.health,
-                maxHealth: this.player.maxHealth,
-                invulnerable: this.player.invulnerableTimer,
-                isDying: this.player.isDying
-            });
-            console.log('Enemy state:', {
-                count: this.enemyManager.enemies.length,
-                spawningEnabled: this.enemyManager.spawningEnabled,
-                spawnTimer: this.enemyManager.spawnTimer,
-                spawnInterval: this.enemyManager.spawnInterval
-            });
-            console.log('Level:', { 
-                width: this.level.width, 
-                height: this.level.height,
-                platforms: this.level.platforms?.length || 0
-            });
-            console.log('======================');
+
         
             // Stop menu music before starting level music
             this.stopMenuMusic();
