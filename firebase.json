@@ -12,7 +12,6 @@
       "**/tmp/**",
       "**/tmp-frames/**",
       "**/scripts/**",
-      "**/netlify/**",
       "**/*.py"
     ],
     "rewrites": [

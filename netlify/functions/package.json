@@ -1,7 +1,0 @@
-{
-  "name": "skunked-netlify-functions",
-  "private": true,
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.600.0"
-  }
-}

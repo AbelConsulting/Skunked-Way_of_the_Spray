@@ -158,4 +158,4 @@ Now that you're on Firebase, these are one-click additions:
 - [ ] Add GitHub secrets (`FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_TOKEN`)
 - [ ] Push to `main` — verify CI/CD auto-deploys
 - [ ] Test leaderboard: submit score, verify it shows up
-- [ ] (Optional) Remove Netlify/Cloudflare config once Firebase is confirmed live
+- [x] (Done) Removed Netlify config files (netlify.toml, _headers, NETLIFY_README.md, netlify/functions/)
