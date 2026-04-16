@@ -37,93 +37,93 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
   // with the real ID (e.g. 'CgkI...' strings).
   const ACHIEVEMENT_MAP = Object.freeze({
     // ── Combat Basics ──
-    first_kill:       'GPGS_FIRST_KILL',
-    enemy_slayer:     'GPGS_ENEMY_SLAYER',
-    exterminator:     'GPGS_EXTERMINATOR',
-    genocide:         'GPGS_GENOCIDE',
+    first_kill:       'CgkI5NbknI4GEAIQAg',
+    enemy_slayer:     'CgkI5NbknI4GEAIQAw',
+    exterminator:     'CgkI5NbknI4GEAIQBA',
+    genocide:         'CgkI5NbknI4GEAIQBQ',
 
     // ── Combo Mastery ──
-    combo_master:     'GPGS_COMBO_MASTER',
-    combo_adept:      'GPGS_COMBO_ADEPT',
-    combo_legend:     'GPGS_COMBO_LEGEND',
-    combo_god:        'GPGS_COMBO_GOD',
-    multi_hit_master: 'GPGS_MULTI_HIT_MASTER',
+    combo_master:     'CgkI5NbknI4GEAIQBg',
+    combo_adept:      'CgkI5NbknI4GEAIQBw',
+    combo_legend:     'CgkI5NbknI4GEAIQCA',
+    combo_god:        'CgkI5NbknI4GEAIQCQ',
+    multi_hit_master: 'CgkI5NbknI4GEAIQCg',
 
     // ── Score ──
-    high_scorer:      'GPGS_HIGH_SCORER',
-    score_attack:     'GPGS_SCORE_ATTACK',
-    score_legend:     'GPGS_SCORE_LEGEND',
+    high_scorer:      'CgkI5NbknI4GEAIQCw',
+    score_attack:     'CgkI5NbknI4GEAIQDA',
+    score_legend:     'CgkI5NbknI4GEAIQDQ',
 
     // ── Shadow Strike ──
-    shadow_initiate:  'GPGS_SHADOW_INITIATE',
-    shadow_master:    'GPGS_SHADOW_MASTER',
-    phantom_blade:    'GPGS_PHANTOM_BLADE',
+    shadow_initiate:  'CgkI5NbknI4GEAIQDg',
+    shadow_master:    'CgkI5NbknI4GEAIQDw',
+    phantom_blade:    'CgkI5NbknI4GEAIQEA',
 
     // ── Skunk Spray ──
-    spray_novice:     'GPGS_SPRAY_NOVICE',
-    stink_bomber:     'GPGS_STINK_BOMBER',
-    toxic_cloud:      'GPGS_TOXIC_CLOUD',
+    spray_novice:     'CgkI5NbknI4GEAIQEQ',
+    stink_bomber:     'CgkI5NbknI4GEAIQEg',
+    toxic_cloud:      'CgkI5NbknI4GEAIQEw',
 
     // ── Aerial Combat ──
-    air_juggler:      'GPGS_AIR_JUGGLER',
-    sky_warrior:      'GPGS_SKY_WARRIOR',
+    air_juggler:      'CgkI5NbknI4GEAIQFA',
+    sky_warrior:      'CgkI5NbknI4GEAIQFQ',
 
     // ── Accuracy & Precision ──
-    precision_striker: 'GPGS_PRECISION_STRIKER',
-    sharpshooter:     'GPGS_SHARPSHOOTER',
-    never_miss:       'GPGS_NEVER_MISS',
+    precision_striker: 'CgkI5NbknI4GEAIQFg',
+    sharpshooter:     'CgkI5NbknI4GEAIQFw',
+    never_miss:       'CgkI5NbknI4GEAIQGA',
 
     // ── Boss Hunting ──
-    boss_slayer:      'GPGS_BOSS_SLAYER',
-    boss_crusher:     'GPGS_BOSS_CRUSHER',
-    boss_hunter:      'GPGS_BOSS_HUNTER',
-    veteran_hunter:   'GPGS_VETERAN_HUNTER',
+    boss_slayer:      'CgkI5NbknI4GEAIQGQ',
+    boss_crusher:     'CgkI5NbknI4GEAIQGg',
+    boss_hunter:      'CgkI5NbknI4GEAIQGw',
+    veteran_hunter:   'CgkI5NbknI4GEAIQHA',
 
     // ── Survival & Grit ──
-    perfect_level:    'GPGS_PERFECT_LEVEL',
-    iron_fur:         'GPGS_IRON_FUR',
-    flawless_run:     'GPGS_FLAWLESS_RUN',
-    close_call:       'GPGS_CLOSE_CALL',
-    cheating_death:   'GPGS_CHEATING_DEATH',
-    survivor:         'GPGS_SURVIVOR',
-    endurance:        'GPGS_ENDURANCE',
-    no_lives_lost:    'GPGS_NO_LIVES_LOST',
+    perfect_level:    'CgkI5NbknI4GEAIQHQ',
+    iron_fur:         'CgkI5NbknI4GEAIQHg',
+    flawless_run:     'CgkI5NbknI4GEAIQHw',
+    close_call:       'CgkI5NbknI4GEAIQIA',
+    cheating_death:   'CgkI5NbknI4GEAIQIQ',
+    survivor:         'CgkI5NbknI4GEAIQIg',
+    endurance:        'CgkI5NbknI4GEAIQIw',
+    no_lives_lost:    'CgkI5NbknI4GEAIQJA',
 
     // ── Collection & Exploration ──
-    relic_hunter:     'GPGS_RELIC_HUNTER',
-    idol_hoarder:     'GPGS_IDOL_HOARDER',
-    master_collector: 'GPGS_MASTER_COLLECTOR',
-    completionist:    'GPGS_COMPLETIONIST',
-    power_hungry:     'GPGS_POWER_HUNGRY',
+    relic_hunter:     'CgkI5NbknI4GEAIQJQ',
+    idol_hoarder:     'CgkI5NbknI4GEAIQJg',
+    master_collector: 'CgkI5NbknI4GEAIQJw',
+    completionist:    'CgkI5NbknI4GEAIQKA',
+    power_hungry:     'CgkI5NbknI4GEAIQKQ',
 
     // ── Chain Reactions ──
-    chain_reaction:   'GPGS_CHAIN_REACTION',
-    demolition_expert:'GPGS_DEMOLITION_EXPERT',
+    chain_reaction:   'CgkI5NbknI4GEAIQKg',
+    demolition_expert:'CgkI5NbknI4GEAIQKw',
 
     // ── Speedrunning ──
-    speed_demon:      'GPGS_SPEED_DEMON',
-    speed_god:        'GPGS_SPEED_GOD',
+    speed_demon:      'CgkI5NbknI4GEAIQLA',
+    speed_god:        'CgkI5NbknI4GEAIQLQ',
 
     // ── Campaign & Progression ──
-    world_saver:      'GPGS_WORLD_SAVER',
-    halfway_there:    'GPGS_HALFWAY_THERE',
+    world_saver:      'CgkI5NbknI4GEAIQLg',
+    halfway_there:    'CgkI5NbknI4GEAIQLw',
 
     // ── Cross-Run Dedication ──
-    dedicated:        'GPGS_DEDICATED',
-    addicted:         'GPGS_ADDICTED',
-    veteran:          'GPGS_VETERAN',
-    mass_extinction:  'GPGS_MASS_EXTINCTION',
-    armageddon:       'GPGS_ARMAGEDDON',
-    time_invested:    'GPGS_TIME_INVESTED',
-    no_lifer:         'GPGS_NO_LIFER',
+    dedicated:        'CgkI5NbknI4GEAIQMA',
+    addicted:         'CgkI5NbknI4GEAIQMQ',
+    veteran:          'CgkI5NbknI4GEAIQMg',
+    mass_extinction:  'CgkI5NbknI4GEAIQMw',
+    armageddon:       'CgkI5NbknI4GEAIQNA',
+    time_invested:    'CgkI5NbknI4GEAIQNQ',
+    no_lifer:         'CgkI5NbknI4GEAIQNg',
 
     // ── Damage & Efficiency ──
-    glass_cannon:     'GPGS_GLASS_CANNON',
-    berserker:        'GPGS_BERSERKER',
+    glass_cannon:     'CgkI5NbknI4GEAIQNw',
+    berserker:        'CgkI5NbknI4GEAIQOA',
 
     // ── Secret / Fun ──
-    multiplier_max:   'GPGS_MULTIPLIER_MAX',
-    pacifist_start:   'GPGS_PACIFIST_START',
+    multiplier_max:   'CgkI5NbknI4GEAIQOQ',
+    pacifist_start:   'CgkI5NbknI4GEAIQOg',
   });
 
   // ────────────────────────────────────────────────────────────

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Google Play game services IDs. Save this file as res/values/games-ids.xml in your project.-->
+<resources>
+  <!--app_id-->
+  <string name="app_id" translatable="false">209976896356</string>
+  <!--package_name-->
+  <string name="package_name" translatable="false">com.skunksquad.skunkfu</string>
+  <!--achievement First Blood-->
+  <string name="achievement_first_blood" translatable="false">CgkI5NbknI4GEAIQAg</string>
+  <!--achievement Enemy Slayer-->
+  <string name="achievement_enemy_slayer" translatable="false">CgkI5NbknI4GEAIQAw</string>
+  <!--achievement Exterminator-->
+  <string name="achievement_exterminator" translatable="false">CgkI5NbknI4GEAIQBA</string>
+  <!--achievement Unstoppable-->
+  <string name="achievement_unstoppable" translatable="false">CgkI5NbknI4GEAIQBQ</string>
+  <!--achievement Combo Starter-->
+  <string name="achievement_combo_starter" translatable="false">CgkI5NbknI4GEAIQBg</string>
+  <!--achievement Combo Adept-->
+  <string name="achievement_combo_adept" translatable="false">CgkI5NbknI4GEAIQBw</string>
+  <!--achievement Combo Legend-->
+  <string name="achievement_combo_legend" translatable="false">CgkI5NbknI4GEAIQCA</string>
+  <!--achievement Combo God-->
+  <string name="achievement_combo_god" translatable="false">CgkI5NbknI4GEAIQCQ</string>
+  <!--achievement Cleave Master-->
+  <string name="achievement_cleave_master" translatable="false">CgkI5NbknI4GEAIQCg</string>
+  <!--achievement High Scorer-->
+  <string name="achievement_high_scorer" translatable="false">CgkI5NbknI4GEAIQCw</string>
+  <!--achievement Score Attack-->
+  <string name="achievement_score_attack" translatable="false">CgkI5NbknI4GEAIQDA</string>
+  <!--achievement Score Legend-->
+  <string name="achievement_score_legend" translatable="false">CgkI5NbknI4GEAIQDQ</string>
+  <!--achievement Shadow Initiate-->
+  <string name="achievement_shadow_initiate" translatable="false">CgkI5NbknI4GEAIQDg</string>
+  <!--achievement Shadow Master-->
+  <string name="achievement_shadow_master" translatable="false">CgkI5NbknI4GEAIQDw</string>
+  <!--achievement Phantom Blade-->
+  <string name="achievement_phantom_blade" translatable="false">CgkI5NbknI4GEAIQEA</string>
+  <!--achievement Spray Novice-->
+  <string name="achievement_spray_novice" translatable="false">CgkI5NbknI4GEAIQEQ</string>
+  <!--achievement Stink Bomber-->
+  <string name="achievement_stink_bomber" translatable="false">CgkI5NbknI4GEAIQEg</string>
+  <!--achievement Toxic Cloud-->
+  <string name="achievement_toxic_cloud" translatable="false">CgkI5NbknI4GEAIQEw</string>
+  <!--achievement Air Juggler-->
+  <string name="achievement_air_juggler" translatable="false">CgkI5NbknI4GEAIQFA</string>
+  <!--achievement Sky Warrior-->
+  <string name="achievement_sky_warrior" translatable="false">CgkI5NbknI4GEAIQFQ</string>
+  <!--achievement Precision Striker-->
+  <string name="achievement_precision_striker" translatable="false">CgkI5NbknI4GEAIQFg</string>
+  <!--achievement Sharpshooter-->
+  <string name="achievement_sharpshooter" translatable="false">CgkI5NbknI4GEAIQFw</string>
+  <!--achievement Never Miss-->
+  <string name="achievement_never_miss" translatable="false">CgkI5NbknI4GEAIQGA</string>
+  <!--achievement Boss Slayer-->
+  <string name="achievement_boss_slayer" translatable="false">CgkI5NbknI4GEAIQGQ</string>
+  <!--achievement Boss Crusher-->
+  <string name="achievement_boss_crusher" translatable="false">CgkI5NbknI4GEAIQGg</string>
+  <!--achievement Boss Hunter-->
+  <string name="achievement_boss_hunter" translatable="false">CgkI5NbknI4GEAIQGw</string>
+  <!--achievement Veteran Hunter-->
+  <string name="achievement_veteran_hunter" translatable="false">CgkI5NbknI4GEAIQHA</string>
+  <!--achievement Untouchable-->
+  <string name="achievement_untouchable" translatable="false">CgkI5NbknI4GEAIQHQ</string>
+  <!--achievement Iron Fur-->
+  <string name="achievement_iron_fur" translatable="false">CgkI5NbknI4GEAIQHg</string>
+  <!--achievement Flawless Run-->
+  <string name="achievement_flawless_run" translatable="false">CgkI5NbknI4GEAIQHw</string>
+  <!--achievement Close Call-->
+  <string name="achievement_close_call" translatable="false">CgkI5NbknI4GEAIQIA</string>
+  <!--achievement Cheating Death-->
+  <string name="achievement_cheating_death" translatable="false">CgkI5NbknI4GEAIQIQ</string>
+  <!--achievement Survivor-->
+  <string name="achievement_survivor" translatable="false">CgkI5NbknI4GEAIQIg</string>
+  <!--achievement Endurance-->
+  <string name="achievement_endurance" translatable="false">CgkI5NbknI4GEAIQIw</string>
+  <!--achievement No Lives Lost-->
+  <string name="achievement_no_lives_lost" translatable="false">CgkI5NbknI4GEAIQJA</string>
+  <!--achievement Relic Hunter-->
+  <string name="achievement_relic_hunter" translatable="false">CgkI5NbknI4GEAIQJQ</string>
+  <!--achievement Idol Hoarder-->
+  <string name="achievement_idol_hoarder" translatable="false">CgkI5NbknI4GEAIQJg</string>
+  <!--achievement Master Collector-->
+  <string name="achievement_master_collector" translatable="false">CgkI5NbknI4GEAIQJw</string>
+  <!--achievement Completionist-->
+  <string name="achievement_completionist" translatable="false">CgkI5NbknI4GEAIQKA</string>
+  <!--achievement Power Hungry-->
+  <string name="achievement_power_hungry" translatable="false">CgkI5NbknI4GEAIQKQ</string>
+  <!--achievement Chain Reaction-->
+  <string name="achievement_chain_reaction" translatable="false">CgkI5NbknI4GEAIQKg</string>
+  <!--achievement Demolition Expert-->
+  <string name="achievement_demolition_expert" translatable="false">CgkI5NbknI4GEAIQKw</string>
+  <!--achievement Speed Demon-->
+  <string name="achievement_speed_demon" translatable="false">CgkI5NbknI4GEAIQLA</string>
+  <!--achievement Speed God-->
+  <string name="achievement_speed_god" translatable="false">CgkI5NbknI4GEAIQLQ</string>
+  <!--achievement World Saver-->
+  <string name="achievement_world_saver" translatable="false">CgkI5NbknI4GEAIQLg</string>
+  <!--achievement Halfway There-->
+  <string name="achievement_halfway_there" translatable="false">CgkI5NbknI4GEAIQLw</string>
+  <!--achievement Dedicated-->
+  <string name="achievement_dedicated" translatable="false">CgkI5NbknI4GEAIQMA</string>
+  <!--achievement Addicted-->
+  <string name="achievement_addicted" translatable="false">CgkI5NbknI4GEAIQMQ</string>
+  <!--achievement Veteran-->
+  <string name="achievement_veteran" translatable="false">CgkI5NbknI4GEAIQMg</string>
+  <!--achievement Mass Extinction-->
+  <string name="achievement_mass_extinction" translatable="false">CgkI5NbknI4GEAIQMw</string>
+  <!--achievement Armageddon-->
+  <string name="achievement_armageddon" translatable="false">CgkI5NbknI4GEAIQNA</string>
+  <!--achievement Time Invested-->
+  <string name="achievement_time_invested" translatable="false">CgkI5NbknI4GEAIQNQ</string>
+  <!--achievement No-Lifer-->
+  <string name="achievement_nolifer" translatable="false">CgkI5NbknI4GEAIQNg</string>
+  <!--achievement Glass Cannon-->
+  <string name="achievement_glass_cannon" translatable="false">CgkI5NbknI4GEAIQNw</string>
+  <!--achievement Berserker-->
+  <string name="achievement_berserker" translatable="false">CgkI5NbknI4GEAIQOA</string>
+  <!--achievement Multiplier Maniac-->
+  <string name="achievement_multiplier_maniac" translatable="false">CgkI5NbknI4GEAIQOQ</string>
+  <!--achievement pacifist start-->
+  <string name="achievement_pacifist_start" translatable="false">CgkI5NbknI4GEAIQOg</string>
+  <!--leaderboard High Scores-->
+  <string name="leaderboard_high_scores" translatable="false">CgkI5NbknI4GEAIQAQ</string>
+</resources>
