@@ -23,7 +23,7 @@ const AdManager = (() => {
         // Real ad unit IDs from AdMob console:
         bannerAdUnitId:       'ca-app-pub-8519140628365141/6620194957',
         rewardedAdUnitId:     'ca-app-pub-8519140628365141/4115014216',
-        interstitialAdUnitId: '', // TODO: create interstitial unit in AdMob console and paste ID here
+        interstitialAdUnitId: 'ca-app-pub-8519140628365141/6574557959',
 
         // Google's official test ad unit IDs — used when testing is true
         testBannerId:        'ca-app-pub-3940256099942544/6300978111',
