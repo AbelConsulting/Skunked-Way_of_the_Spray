@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Skunked: Way of the Spray</string>
     <string name="title_activity_main">Skunked: Way of the Spray</string>
-    <string name="package_name">com.skunksquad.skunkfu</string>
     <string name="custom_url_scheme">com.skunksquad.skunkfu</string>
     <!-- Google Play Games Services App ID -->
     <string name="game_services_project_id" translatable="false">209976896356</string>
