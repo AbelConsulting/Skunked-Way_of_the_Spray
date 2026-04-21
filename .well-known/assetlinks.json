@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.abelconsulting.skunked",
+      "package_name": "com.skunksquad.skunkfu",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_YOUR_SIGNING_KEY_SHA256_FINGERPRINT"
+        "52:DA:24:C5:6D:4C:45:52:F5:E4:71:B3:71:E5:1F:DB:BF:4D:24:A8:2F:42:3C:64:A7:A1:55:0A:47:3B:C9:87"
       ]
     }
   }
