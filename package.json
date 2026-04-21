@@ -37,7 +37,6 @@
     "cap:run": "npx cap run android"
   },
   "devDependencies": {
-    "@esbuild/win32-x64": "^0.28.0",
     "esbuild": "^0.28.0",
     "playwright": "^1.59.1",
     "typescript": "^6.0.3"
