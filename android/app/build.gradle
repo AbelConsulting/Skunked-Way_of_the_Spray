@@ -6,17 +6,23 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+def releaseStoreFile = keystorePropertiesFile.exists() ? keystoreProperties['storeFile'] : System.getenv("ANDROID_STORE_FILE")
+def releaseStorePassword = keystorePropertiesFile.exists() ? keystoreProperties['storePassword'] : System.getenv("ANDROID_STORE_PASSWORD")
+def releaseKeyAlias = keystorePropertiesFile.exists() ? keystoreProperties['keyAlias'] : System.getenv("ANDROID_KEY_ALIAS")
+def releaseKeyPassword = keystorePropertiesFile.exists() ? keystoreProperties['keyPassword'] : System.getenv("ANDROID_KEY_PASSWORD")
+def hasReleaseSigning = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
+
 android {
     namespace = "com.skunksquad.skunkfu"
     compileSdk = rootProject.ext.compileSdkVersion
 
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
             }
         }
     }
@@ -25,8 +31,8 @@ android {
         applicationId "com.skunksquad.skunkfu"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.1.1"
+        versionCode 4
+        versionName "1.1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -39,8 +45,10 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (keystorePropertiesFile.exists()) {
+            if (hasReleaseSigning) {
                 signingConfig signingConfigs.release
+            } else {
+                throw new GradleException("Release signing is not configured. Add android/keystore.properties or set ANDROID_STORE_FILE, ANDROID_STORE_PASSWORD, ANDROID_KEY_ALIAS, and ANDROID_KEY_PASSWORD before running bundleRelease.")
             }
         }
     }

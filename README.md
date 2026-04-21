@@ -175,6 +175,25 @@ Replace any generated asset by dropping your own `.wav` / `.png` files with matc
 
 Works on any static host — GitHub Pages, Netlify, Vercel, S3 + CloudFront, or a basic web server. Just upload everything and point to `index.html`.
 
+### Android Release Builds
+
+The Android bundle is built from `android/app/build.gradle` with code shrinking and resource shrinking enabled for release builds.
+
+Release signing must be configured before running `bundleRelease`. You can provide it either with `android/keystore.properties` or with these environment variables:
+
+- `ANDROID_STORE_FILE`
+- `ANDROID_STORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+Then build the upload bundle from the `android/` directory:
+
+```bash
+./gradlew bundleRelease
+```
+
+If signing is missing, the release build now fails immediately instead of producing an unsigned `.aab`.
+
 ### Docker / CI
 
 ```Dockerfile
