@@ -1,7 +1,9 @@
 {
   "name": "skunked-functions",
   "description": "Firebase Cloud Functions for Skunked: Way of the Spray",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "main": "index.js",
   "scripts": {
     "serve": "firebase emulators:start --only functions",

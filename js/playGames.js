@@ -159,11 +159,13 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
    */
   async function submitScore(score) {
     const plugin = getPlugin();
-    if (!plugin) return;
+    if (!plugin) return false;
     try {
       await plugin.submitScore({ leaderboardId: LEADERBOARD_ID, score: Math.round(score) });
+      return true;
     } catch (e) {
       console.warn('[PlayGames] submitScore failed', e);
+      return false;
     }
   }
 

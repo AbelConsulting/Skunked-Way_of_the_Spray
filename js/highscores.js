@@ -340,12 +340,31 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
       const achievementIds = Object.keys(allUnlocked).filter(id => allUnlocked[id] && allUnlocked[id].unlocked);
       const prestige = getPrestigeScore(allUnlocked);
       const titleInfo = getPlayerTitle();
-      await submitAPIScore(name, score, achievementIds, {
+      const apiSubmitPromise = submitAPIScore(name, score, achievementIds, {
         prestige,
         title: titleInfo.title,
         achievementCount: titleInfo.count,
         level: gameStats ? (gameStats.levelsCompleted || 0) : 0
       });
+      const canSubmitPlayGames = !!(
+        window.PlayGamesServices &&
+        typeof PlayGamesServices.isAvailable === 'function' &&
+        PlayGamesServices.isAvailable() &&
+        typeof PlayGamesServices.submitScore === 'function'
+      );
+
+      const playGamesSubmitPromise = canSubmitPlayGames
+        ? PlayGamesServices.submitScore(score)
+        : Promise.resolve(false);
+
+      const [apiOk, playGamesOk] = await Promise.all([
+        apiSubmitPromise,
+        playGamesSubmitPromise,
+      ]);
+
+      if (!apiOk && !playGamesOk) {
+        console.error('Score submission failed for both Cloud Functions and Play Games');
+      }
       // Analytics: score submit
       try {
         if (typeof Analytics !== 'undefined') {

@@ -12,7 +12,7 @@
 // Direct Firebase Cloud Functions URL.
 // skunked.io is hosted on GitHub Pages so Firebase Hosting rewrites are
 // unavailable — we call the Cloud Functions directly from any host.
-const PROJECT_ID = 'wots-52349111-5060d';
+const PROJECT_ID = 'studio-3829586481-2a2cf';
 const API_BASE = 'https://us-central1-' + PROJECT_ID + '.cloudfunctions.net';
 
 /**
@@ -53,9 +53,12 @@ export async function submitScore(name, score, achievements, meta) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       console.error('Score submission rejected:', res.status, err);
+      return false;
     }
+    return true;
   } catch (e) {
     console.error('Error submitting score:', e);
+    return false;
   }
 }
 
