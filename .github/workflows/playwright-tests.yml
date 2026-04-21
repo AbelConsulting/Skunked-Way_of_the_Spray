@@ -34,10 +34,10 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         run: |
-          # Use the locally-installed playwright package so `require('playwright')` works
-          npx playwright install --with-deps
+          # Integration scripts use chromium only.
+          npx playwright install chromium
 
       - name: Run Playwright integration scripts
         run: |

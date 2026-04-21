@@ -41,7 +41,7 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Playwright Chromium
-        run: npx playwright install chromium --with-deps
+        run: npx playwright install chromium
 
       - name: Run sprite padding smoke test
         run: |
