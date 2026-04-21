@@ -25,19 +25,10 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Start static server
-        run: |
-          nohup python3 -m http.server 8000 &
-          # Wait up to 5s for the server to respond on port 8000
-          for i in 1 2 3 4 5; do
-            if curl -sSf http://localhost:8000/ >/dev/null; then
-              echo "Server is up"; break
-            fi
-            sleep 1
-          done
-
       - name: Run enemy missing-level telemetry test
-        run: node tools/run_enemy_missing_level_sim.js
+        run: |
+          chmod +x ./scripts/run_with_static_server.sh
+          ./scripts/run_with_static_server.sh "node tools/run_enemy_missing_level_sim.js"
 
       - name: Upload telemetry test results
         uses: actions/upload-artifact@v4

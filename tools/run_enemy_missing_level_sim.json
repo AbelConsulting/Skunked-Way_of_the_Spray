@@ -3,7 +3,7 @@
     {
       "url": "http://localhost:8000/__touch_log",
       "method": "POST",
-      "postData": "{\"logs\":[{\"ts\":1766260131521,\"event\":\"enemy.patrol_missing_level\",\"count\":5,\"ua\":\"Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1\"}]}"
+      "postData": "{\"logs\":[{\"ts\":1776806961272,\"event\":\"enemy.patrol_missing_level\",\"count\":5,\"ua\":\"Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Mobile/15E148 Safari/604.1\"}]}"
     }
   ],
   "result": {

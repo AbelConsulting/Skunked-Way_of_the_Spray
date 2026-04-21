@@ -39,34 +39,14 @@ jobs:
           # Use the locally-installed playwright package so `require('playwright')` works
           npx playwright install --with-deps
 
-      - name: Start static server
+      - name: Run Playwright integration scripts
         run: |
-          nohup python3 -m http.server 8000 &
-          # Wait up to 5s for the server to respond on port 8000
-          for i in 1 2 3 4 5; do
-            if curl -sSf http://localhost:8000/ >/dev/null; then
-              echo "Server is up"; break
-            fi
-            sleep 1
-          done
-
-      - name: Run touch controls landscape test
-        run: node tools/touch_controls_landscape_test.js
-
-      - name: Run touch controls immediate test
-        run: node tools/touch_controls_immediate_test.js
-
-      - name: Run touch controls concurrent requests test
-        run: node tools/touch_controls_concurrent_requests_test.js
-
-      - name: Run touch controls overlapping forced-requests test
-        run: node tools/touch_controls_overlapping_forces_test.js
-
-      - name: Run touch controls presence-on-start test
-        run: node tools/touch_controls_present_on_start_test.js
-
-      - name: Run slow-load pending-start test
-        run: node tools/integration_pending_start_slow_load.js
-
-      - name: Run second sprites presence test
-        run: node tools/second_sprites_presence_test.js
+          chmod +x ./scripts/run_with_static_server.sh
+          ./scripts/run_with_static_server.sh \
+            "node tools/touch_controls_landscape_test.js" \
+            "node tools/touch_controls_immediate_test.js" \
+            "node tools/touch_controls_concurrent_requests_test.js" \
+            "node tools/touch_controls_overlapping_forces_test.js" \
+            "node tools/touch_controls_present_on_start_test.js" \
+            "node tools/integration_pending_start_slow_load.js" \
+            "node tools/second_sprites_presence_test.js"
