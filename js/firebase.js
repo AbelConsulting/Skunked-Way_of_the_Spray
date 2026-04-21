@@ -9,9 +9,11 @@
 // Global leaderboard integration via skunked.io REST API (Firebase Cloud Functions + Firestore).
 // No external SDK required — pure fetch().
 
-// Relative URL — routes to whatever host is serving the page
-// (Firebase hosting rewrites /api/* to Cloud Functions).
-const API_BASE = '/api';
+// Direct Firebase Cloud Functions URL.
+// skunked.io is hosted on GitHub Pages so Firebase Hosting rewrites are
+// unavailable — we call the Cloud Functions directly from any host.
+const PROJECT_ID = 'wots-52349111-5060d';
+const API_BASE = 'https://us-central1-' + PROJECT_ID + '.cloudfunctions.net';
 
 /**
  * Checks if the leaderboard service is reachable.
@@ -35,7 +37,7 @@ export async function checkHealth() {
  */
 export async function submitScore(name, score, achievements, meta) {
   try {
-    const res = await fetch(`${API_BASE}/submit-score`, {
+    const res = await fetch(`${API_BASE}/submitScore`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -64,7 +66,7 @@ export async function submitScore(name, score, achievements, meta) {
  */
 export async function getHighScores(count = 10) {
   try {
-    const res = await fetch(`${API_BASE}/scores?count=${encodeURIComponent(count)}`);
+    const res = await fetch(`${API_BASE}/getLeaderboard?count=${encodeURIComponent(count)}`);
     if (!res.ok) return [];
     const scores = await res.json();
     if (!Array.isArray(scores)) return [];
