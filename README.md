@@ -194,6 +194,28 @@ Then build the upload bundle from the `android/` directory:
 
 If signing is missing, the release build now fails immediately instead of producing an unsigned `.aab`.
 
+Before release uploads, verify that your upload keystore SHA1 matches Play Console:
+
+```bash
+npm run android:check-upload-key
+```
+
+This checks against the expected fingerprint from your Play reset notice:
+
+- `F4:DB:65:73:65:1B:1F:8F:8D:3A:0F:DE:C1:3B:62:A8:D8:7D:45:E1`
+
+If Play rotates again, you can override at runtime:
+
+```bash
+EXPECTED_UPLOAD_SHA1="AA:BB:CC:..." npm run android:check-upload-key
+```
+
+You can also run a guarded release build that includes the fingerprint preflight first:
+
+```bash
+npm run android:bundle:release
+```
+
 ### Docker / CI
 
 ```Dockerfile
