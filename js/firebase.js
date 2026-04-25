@@ -74,9 +74,9 @@ export async function getHighScores(count = 10) {
     const scores = await res.json();
     if (!Array.isArray(scores)) return [];
     return scores.map(entry => ({
-      name: entry.initials || '???',
+      name: entry.name || entry.initials || '???',
       score: entry.score,
-      timestamp: entry.date ? new Date(entry.date) : null,
+      timestamp: entry.timestamp ? new Date(entry.timestamp) : (entry.date ? new Date(entry.date) : null),
       achievements: entry.achievements || [],
       prestige: entry.prestige || 0,
       title: entry.title || '',

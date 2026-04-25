@@ -72,6 +72,11 @@ exports.getLeaderboard = onRequest({ region: "us-central1" }, async (req, res) =
         name: d.initials || "???",
         score: d.score,
         timestamp: d.date ? d.date.toDate().toISOString() : null,
+        achievements: Array.isArray(d.achievements) ? d.achievements : [],
+        prestige: typeof d.prestige === "number" ? d.prestige : 0,
+        title: typeof d.title === "string" ? d.title : "",
+        achievementCount: typeof d.achievementCount === "number" ? d.achievementCount : 0,
+        level: typeof d.level === "number" ? d.level : 0,
       };
     });
     res.json(scores);
@@ -108,6 +113,26 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
     typeof body.initials === "string"
       ? body.initials.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3)
       : "---";
+  const achievements = Array.isArray(body.achievements)
+    ? body.achievements
+        .filter((a) => typeof a === "string")
+        .map((a) => a.slice(0, 64))
+        .slice(0, 100)
+    : [];
+  const prestige =
+    typeof body.prestige === "number" && body.prestige >= 0
+      ? Math.min(Math.floor(body.prestige), 9999)
+      : 0;
+  const title =
+    typeof body.title === "string" ? body.title.slice(0, 64) : "";
+  const achievementCount =
+    typeof body.achievementCount === "number" && body.achievementCount >= 0
+      ? Math.min(Math.floor(body.achievementCount), 9999)
+      : 0;
+  const level =
+    typeof body.level === "number" && body.level >= 0
+      ? Math.min(Math.floor(body.level), 9999)
+      : 0;
 
   if (score === null || score < 0) {
     res.status(400).json({ error: "bad_score" });
@@ -118,6 +143,11 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
     await db.collection(SCORES_COLLECTION).add({
       initials,
       score,
+      achievements,
+      prestige,
+      title,
+      achievementCount,
+      level,
       date: admin.firestore.FieldValue.serverTimestamp(),
     });
     res.json({ success: true });
