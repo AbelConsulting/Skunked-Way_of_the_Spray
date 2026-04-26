@@ -2713,13 +2713,15 @@ class Game {
             // appears AFTER the achievement breakdown animation finishes and
             // (if applicable) the high-score initials modal has been shown.
             // Mirrors the timing constants used in ui.js drawGameOver():
-            //   stats stagger: 1.2s base + 6 stats × 0.15s ≈ 2.1s
-            //   achievement header delay: stats end + 0.3s ≈ 2.4s
+            //   statsBaseDelay 1.6s + 6 stats × 0.15s + animDuration 0.35s ≈ 2.85s
+            //   achievement header delay: stats end + 0.3s ≈ 3.15s
             //   each badge animates in over ~0.4s, staggered 0.18s
             const numAch = (this._gameOverNewAchievements || []).length;
+            const statsEnd = 1.6 + 6 * 0.15 + 0.35; // ~2.85s
+            const achHeaderEnd = statsEnd + 0.3 + 0.45; // ~3.6s
             const achAnimEnd = numAch > 0
-                ? 2.4 + 0.35 + (numAch - 1) * 0.18 + 0.4   // header + first badge + stagger + animDuration
-                : 2.4;                                      // stats end + small buffer
+                ? achHeaderEnd + 0.35 + (numAch - 1) * 0.18 + 0.4
+                : statsEnd + 0.4;
 
             // Show high-score initials prompt right after the breakdown animation
             // completes, but before the restart/main-menu prompt becomes interactive.

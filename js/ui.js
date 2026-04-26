@@ -93,7 +93,11 @@ class UI {
 
     /** Clamp scroll offset to valid range. */
     _clampGameOverScroll() {
-        const maxScroll = Math.max(0, this._goContentH - this.height + 30);
+        // Reserve bottom strip for the pinned restart prompt (must match
+        // pinnedPromptH used in drawGameOver).
+        const pinnedPromptH = 92;
+        const usableH = Math.max(120, this.height - pinnedPromptH);
+        const maxScroll = Math.max(0, this._goContentH - usableH + 30);
         this._goScrollY = Math.max(0, Math.min(maxScroll, this._goScrollY));
     }
 
@@ -231,27 +235,35 @@ class UI {
         }
         this._updateGameOverScroll(1 / 60); // approximate dt
 
-        // ── Animated vignette background ──
+        // ── Animated vignette background — fades in over the first ~0.7s
+        // so the GameOverAnimation particle burst can pop visibly first. ──
+        const vignetteFade = Math.min(1, Math.max(0, (elapsed - 0.05) / 0.7));
         const gradient = ctx.createRadialGradient(cx, this.height * 0.3, 0, cx, this.height * 0.5, this.height);
-        gradient.addColorStop(0, 'rgba(60, 0, 0, 0.75)');
-        gradient.addColorStop(0.5, 'rgba(15, 0, 0, 0.92)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.97)');
+        gradient.addColorStop(0, `rgba(60, 0, 0, ${0.75 * vignetteFade})`);
+        gradient.addColorStop(0.5, `rgba(15, 0, 0, ${0.92 * vignetteFade})`);
+        gradient.addColorStop(1, `rgba(0, 0, 0, ${0.97 * vignetteFade})`);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, this.width, this.height);
 
-        // Faint horizontal scan-lines for grit
-        ctx.save();
-        ctx.globalAlpha = 0.04;
-        for (let y = 0; y < this.height; y += 4) {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, y, this.width, 2);
+        // Faint horizontal scan-lines for grit (also fade in)
+        if (vignetteFade > 0.4) {
+            ctx.save();
+            ctx.globalAlpha = 0.04 * vignetteFade;
+            for (let y = 0; y < this.height; y += 4) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, y, this.width, 2);
+            }
+            ctx.restore();
         }
-        ctx.restore();
 
         // ── Apply scroll offset for all content below ──
+        // The bottom strip is reserved for the always-visible restart prompt
+        // so the player never has to scroll to find how to continue.
+        const pinnedPromptH = 92;
+        const scrollViewH = Math.max(120, this.height - pinnedPromptH);
         ctx.save();
         ctx.beginPath();
-        ctx.rect(0, 0, this.width, this.height);
+        ctx.rect(0, 0, this.width, scrollViewH);
         ctx.clip();
         ctx.translate(0, -this._goScrollY);
 
@@ -356,8 +368,20 @@ class UI {
         }
 
         // ── Stats panel with staggered reveal ──
+        // Stats list is defined before the panel so we can size the panel to fit.
+        const stats = [
+            { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
+            { label: '\u23F1\uFE0F  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
+            { label: '\uD83D\uDD25 Max Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
+            { label: '\uD83D\uDCA5 Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
+            { label: '\uD83C\uDFAF Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
+            { label: '\uD83C\uDFFA Idols Collected', value: gameStats.idolsCollected || 0, color: '#F38181' }
+        ];
+
+        const lineHeight = 30;
         const boxW = Math.min(520, this.width - 60);
-        const boxH = 220;
+        // Dynamic height: header(34) + separator + stats + bottom padding
+        const boxH = 55 + stats.length * lineHeight + 14;
         const boxX = cx - boxW / 2;
         const boxY = scoreY + (extra.isHighScore ? 52 : 28);
 
@@ -409,19 +433,9 @@ class UI {
 
         // Stats — each row slides in and fades with a stagger
         const statsStartY = boxY + 55;
-        const lineHeight = 30;
         const staggerDelay = 0.15; // seconds between each stat appearing
-        const statsBaseDelay = 1.2; // seconds after game over before first stat
+        const statsBaseDelay = 1.6; // seconds after game over before first stat (lets death anim breathe)
         const statAnimDuration = 0.35; // each stat's entrance duration
-
-        const stats = [
-            { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
-            { label: '\u23F1\uFE0F  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
-            { label: '\uD83D\uDD25 Max Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
-            { label: '\uD83D\uDCA5 Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
-            { label: '\uD83C\uDFAF Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
-            { label: '\uD83C\uDFFA Idols Collected', value: gameStats.idolsCollected || 0, color: '#F38181' }
-        ];
 
         stats.forEach((stat, index) => {
             const statDelay = statsBaseDelay + index * staggerDelay;
@@ -616,11 +630,32 @@ class UI {
             }
         }
 
-        // ── Continue prompt with animated progress ring during lockout ──
+        // ── Continue prompt is rendered OUTSIDE the scroll transform so the
+        // player always sees the restart instructions and lockout countdown
+        // even if the stats panel is scrolled. (Drawn after ctx.restore below.)
         const instructY = achieveEndY + 28;
+
+        // ── Track total content height for scroll clamping ──
+        // Only stats/achievements live in the scroll region now; prompt is pinned.
+        const contentBottomY = achieveEndY + 12;
+        this._goContentH = contentBottomY;
+        this._clampGameOverScroll();
+
+        ctx.restore(); // end of scroll translate + clip
+
+        // ── Pinned restart prompt strip (always visible at bottom) ──
+        const pinnedCenterY = this.height - pinnedPromptH / 2;
         ctx.save();
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
+        // Subtle gradient backdrop so the pinned strip reads on busy art
+        const stripGrad = ctx.createLinearGradient(0, this.height - pinnedPromptH, 0, this.height);
+        stripGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        stripGrad.addColorStop(0.4, 'rgba(0,0,0,0.55)');
+        stripGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
+        ctx.fillStyle = stripGrad;
+        ctx.fillRect(0, this.height - pinnedPromptH, this.width, pinnedPromptH);
 
         if (lockoutRemaining > 0) {
             // Animated circular countdown
@@ -629,49 +664,53 @@ class UI {
                 : ((typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
                     ? Config.GAME_OVER_LOCKOUT : 3.0);
             const progress = 1 - (lockoutRemaining / lockoutTotal);
-            const ringRadius = 18;
+            const ringRadius = 22;
             const ringX = cx;
-            const ringY = instructY;
+            const ringY = pinnedCenterY;
 
             // Background ring
             ctx.beginPath();
             ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+            ctx.lineWidth = 4;
             ctx.stroke();
 
             // Progress arc
             ctx.beginPath();
             ctx.arc(ringX, ringY, ringRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
-            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+            ctx.lineWidth = 4;
             ctx.stroke();
 
             // Countdown number inside ring
             const secs = Math.ceil(lockoutRemaining);
-            ctx.font = "bold 16px 'Press Start 2P', monospace";
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = "bold 18px 'Press Start 2P', monospace";
+            ctx.fillStyle = 'rgba(255,255,255,0.65)';
             ctx.fillText(String(secs), ringX, ringY + 1);
+
+            // Tip text below ring
+            const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
+            if (tips) {
+                ctx.globalAlpha = 0.55;
+                ctx.font = "10px 'Press Start 2P', monospace";
+                ctx.fillStyle = '#AABBCC';
+                ctx.fillText(tips, cx, ringY + ringRadius + 16);
+                ctx.globalAlpha = 1;
+            }
         } else {
-            // ── Encouraging tip (fades in once lockout ends) ──
-            const tipFadeStart = 0; // show immediately after lockout
-            const tipProgress = Math.min(1, (elapsed - ((typeof Config !== 'undefined' && Config.GAME_OVER_LOCKOUT) || 3)) / 0.6);
-            if (tipProgress > 0) {
-                const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
-                if (tips) {
-                    ctx.save();
-                    ctx.globalAlpha = tipProgress * 0.65;
-                    ctx.font = "11px 'Press Start 2P', monospace";
-                    ctx.fillStyle = '#AABBCC';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(tips, cx, instructY - 8);
-                    ctx.restore();
-                }
+            // ── Encouraging tip ──
+            const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
+            if (tips) {
+                ctx.save();
+                ctx.globalAlpha = 0.6;
+                ctx.font = "10px 'Press Start 2P', monospace";
+                ctx.fillStyle = '#AABBCC';
+                ctx.fillText(tips, cx, pinnedCenterY - 22);
+                ctx.restore();
             }
 
             // "Watch Ad to Revive" option (only on native Android with ads available)
             const adAvailable = window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded();
-            const promptBaseY = instructY + 10;
             if (adAvailable) {
                 // Revive button — pulsing green
                 const revivePulse = Math.sin(now / 350) * 0.3 + 0.7;
@@ -680,74 +719,56 @@ class UI {
                 ctx.fillStyle = '#44FF44';
                 ctx.shadowColor = '#44FF44';
                 ctx.shadowBlur = 10;
-                ctx.fillText('\u25B6 WATCH AD TO REVIVE', cx, promptBaseY);
+                ctx.fillText('\u25B6 WATCH AD TO REVIVE', cx, pinnedCenterY);
                 ctx.shadowBlur = 0;
                 ctx.globalAlpha = 1;
 
-                // Restart option below
-                const restartY = promptBaseY + 30;
+                // Restart + ESC option compact
                 const blink = Math.sin(now / 400) * 0.3 + 0.5;
                 ctx.globalAlpha = blink;
-                ctx.font = "12px 'Press Start 2P', monospace";
+                ctx.font = "10px 'Press Start 2P', monospace";
                 ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.fillText('ENTER / TAP \u2192 RESTART', cx, restartY);
-
-                // Return to menu hint
-                ctx.globalAlpha = 0.4;
-                ctx.font = "9px 'Press Start 2P', monospace";
-                ctx.fillStyle = 'rgba(200,200,220,0.7)';
-                ctx.fillText('ESC \u2192 MENU', cx, restartY + 22);
+                ctx.fillText('ENTER / TAP \u2192 RESTART     \u2022     ESC \u2192 MENU', cx, pinnedCenterY + 22);
             } else {
-                // Standard restart prompt — animated entrance
-                const promptEntrance = Math.min(1, tipProgress);
+                // Standard restart prompt — pulsing
                 const blink = Math.sin(now / 400) * 0.4 + 0.6;
-                ctx.globalAlpha = blink * promptEntrance;
+                ctx.globalAlpha = blink;
                 ctx.font = "16px 'Press Start 2P', monospace";
                 ctx.fillStyle = '#FFFFFF';
                 ctx.shadowColor = '#FFFFFF';
                 ctx.shadowBlur = 6;
-                ctx.fillText('ENTER / TAP \u2192 RESTART', cx, promptBaseY);
+                ctx.fillText('ENTER / TAP \u2192 RESTART', cx, pinnedCenterY - 4);
                 ctx.shadowBlur = 0;
 
                 // Return to menu hint
-                ctx.globalAlpha = 0.4 * promptEntrance;
+                ctx.globalAlpha = 0.45;
                 ctx.font = "9px 'Press Start 2P', monospace";
                 ctx.fillStyle = 'rgba(200,200,220,0.7)';
-                ctx.fillText('ESC \u2192 MENU', cx, promptBaseY + 26);
+                ctx.fillText('ESC \u2192 MENU', cx, pinnedCenterY + 22);
             }
         }
-        ctx.restore(); // end of lockout/prompt section
-
-        // ── Track total content height for scroll clamping ──
-        const contentBottomY = (lockoutRemaining > 0) ? instructY + 30 :
-            (window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded())
-                ? instructY + 10 + 30 + 22 + 20
-                : instructY + 10 + 26 + 20;
-        this._goContentH = contentBottomY;
-        this._clampGameOverScroll();
-
-        ctx.restore(); // end of scroll translate + clip
+        ctx.restore(); // end of pinned prompt strip
 
         // ── Scroll indicators (drawn outside scroll transform) ──
-        const maxScroll = Math.max(0, this._goContentH - this.height + 30);
+        const usableH = Math.max(120, this.height - pinnedPromptH);
+        const maxScroll = Math.max(0, this._goContentH - usableH + 30);
         if (maxScroll > 5) {
-            // Bottom fade + arrow when content is below
+            // Bottom fade + arrow when content is below — sits ABOVE pinned strip
             if (this._goScrollY < maxScroll - 2) {
                 const fadePulse = 0.4 + Math.sin(now / 600) * 0.2;
-                // Bottom gradient fade
-                const botGrad = ctx.createLinearGradient(0, this.height - 50, 0, this.height);
+                const fadeBottom = this.height - pinnedPromptH;
+                const botGrad = ctx.createLinearGradient(0, fadeBottom - 36, 0, fadeBottom);
                 botGrad.addColorStop(0, 'rgba(0,0,0,0)');
                 botGrad.addColorStop(1, 'rgba(0,0,0,0.7)');
                 ctx.fillStyle = botGrad;
-                ctx.fillRect(0, this.height - 50, this.width, 50);
-                // Down arrow
+                ctx.fillRect(0, fadeBottom - 36, this.width, 36);
                 ctx.save();
                 ctx.globalAlpha = fadePulse;
-                ctx.font = "bold 18px 'Press Start 2P', monospace";
+                ctx.font = "bold 16px 'Press Start 2P', monospace";
                 ctx.fillStyle = 'rgba(255,255,255,0.6)';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('\u25BC', cx, this.height - 14);
+                ctx.fillText('\u25BC', cx, fadeBottom - 10);
                 ctx.restore();
             }
             // Top fade + arrow when scrolled down
@@ -767,10 +788,11 @@ class UI {
                 ctx.fillText('\u25B2', cx, 16);
                 ctx.restore();
             }
-            // Thin scroll track on the right edge
-            const trackH = this.height - 20;
-            const thumbH = Math.max(30, trackH * (this.height / this._goContentH));
-            const thumbY = 10 + (trackH - thumbH) * (this._goScrollY / maxScroll);
+            // Thin scroll track on the right edge (within scrollable region only)
+            const trackTop = 10;
+            const trackH = usableH - 20;
+            const thumbH = Math.max(30, trackH * (usableH / this._goContentH));
+            const thumbY = trackTop + (trackH - thumbH) * (this._goScrollY / maxScroll);
             ctx.save();
             ctx.globalAlpha = 0.2;
             ctx.fillStyle = 'rgba(255,255,255,0.4)';

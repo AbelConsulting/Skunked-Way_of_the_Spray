@@ -413,16 +413,18 @@ class GameOverAnimation {
     constructor(width, height, opts = {}) {
         this.width = width || 800;
         this.height = height || 600;
-        this.duration = opts.duration || 3.5; // total life in seconds
-        this.fadeDuration = opts.fadeDuration || 1.2; // seconds to reach full overlay
-        this.particleCount = opts.particleCount || 60;
+        this.duration = opts.duration || 4.0; // total life in seconds
+        this.fadeDuration = opts.fadeDuration || 1.4; // seconds to reach full overlay
+        this.particleCount = opts.particleCount || 110;
         this.gravity = opts.gravity || 900;
         this.elapsed = 0;
         this.particles = [];
         this.shake = null;
         this.active = false;
         this.finished = false;
-        this.colors = opts.colors || ['#FF2D55', '#FFAA00', '#FFFFFF'];
+        this.colors = opts.colors || ['#FF2D55', '#FFAA00', '#FFD700', '#FFFFFF', '#FF6B00'];
+        // Initial bright flash that fades out fast
+        this.flashAlpha = 0.85;
     }
 
     start() {
@@ -430,6 +432,7 @@ class GameOverAnimation {
         this.active = true;
         this.finished = false;
         this.particles.length = 0;
+        this.flashAlpha = 0.85;
 
         const cx = this.width / 2;
         const cy = this.height / 2 - 40;
@@ -437,26 +440,29 @@ class GameOverAnimation {
         const rand = (a, b) => (typeof Utils !== 'undefined' && Utils.randomFloat) ? Utils.randomFloat(a, b) : (Math.random() * (b - a) + a);
 
         for (let i = 0; i < this.particleCount; i++) {
-            const angle = rand(-Math.PI, 0);
-            const speed = rand(120, 520);
+            // Full 360° burst (was -π to 0). Wider speed range too.
+            const angle = rand(0, Math.PI * 2);
+            const speed = rand(180, 720);
             this.particles.push({
-                x: cx + rand(-40, 40),
+                x: cx + rand(-30, 30),
                 y: cy + rand(-20, 20),
-                vx: Math.cos(angle) * speed + rand(-60, 60),
-                vy: Math.sin(angle) * speed + rand(-300, -120),
-                size: rand(2, 6),
+                vx: Math.cos(angle) * speed + rand(-40, 40),
+                vy: Math.sin(angle) * speed + rand(-220, -80),
+                size: rand(2, 7),
                 color: this.colors[Math.floor(rand(0, this.colors.length))],
                 alpha: 1
             });
         }
 
-        // Initial screen shake
-        this.shake = new ScreenShake(this.duration * 0.6, 18);
+        // Heavier initial screen shake
+        this.shake = new ScreenShake(this.duration * 0.55, 26);
     }
 
     update(dt) {
         if (!this.active) return;
         this.elapsed += dt;
+        // Flash fades over ~0.35s
+        this.flashAlpha = Math.max(0, this.flashAlpha - dt * 2.4);
 
         // Update particles
         for (const p of this.particles) {
@@ -488,16 +494,17 @@ class GameOverAnimation {
             ctx.translate(this.shake.offsetX, this.shake.offsetY);
         }
 
-        // Overlay fade (0 -> 1)
-        const overlayAlpha = Math.min(1, Math.max(0, this.elapsed / this.fadeDuration));
-        ctx.fillStyle = `rgba(0,0,0,${overlayAlpha})`;
-        ctx.fillRect(0, 0, this.width, this.height);
+        // Initial white flash burst
+        if (this.flashAlpha > 0.01) {
+            ctx.fillStyle = `rgba(255, 235, 200, ${this.flashAlpha})`;
+            ctx.fillRect(0, 0, this.width, this.height);
+        }
 
-        // Draw particles (above overlay so they feel like foreground debris)
+        // Draw particles (above flash so they're vivid)
         for (const p of this.particles) {
             ctx.save();
             ctx.globalAlpha = p.alpha;
-            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5);
             grad.addColorStop(0, '#FFFFFF');
             grad.addColorStop(0.5, p.color);
             grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -509,9 +516,7 @@ class GameOverAnimation {
         }
 
         // GAME OVER text is rendered by ui.drawGameOver() which has a
-        // better animated version (slide-in + pulsing glow). Removed here
-        // to avoid duplicate text rendering.
-
+        // better animated version (slide-in + pulsing glow).
         ctx.restore();
     }
 
