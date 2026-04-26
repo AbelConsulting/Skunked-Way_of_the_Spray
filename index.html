@@ -2305,6 +2305,15 @@
                                 <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements"><span class="menu-btn-label">&#127894;&#65039; Achievements</span><span class="menu-btn-meta">Track mastery goals and completion progress.</span></button>
                                 <button id="menu-settings-btn" class="menu-btn menu-btn--settings"><span class="menu-btn-label">&#9881; Settings</span><span class="menu-btn-meta">Tune SFX, music, and tutorial resets from the hub.</span></button>
                             </div>
+                            <!-- Recently Unlocked on Play Games rail (auto-populated) -->
+                            <div id="recent-unlocks-rail" class="recent-unlocks-rail" style="display:none;">
+                                <div class="recent-unlocks-rail__head">
+                                    <p class="recent-unlocks-rail__title">&#127942; Recently Unlocked</p>
+                                    <span class="recent-unlocks-rail__pgs" id="recent-unlocks-rail-source">Play Games</span>
+                                    <button type="button" id="recent-unlocks-view-all" class="recent-unlocks-rail__view-all">View All</button>
+                                </div>
+                                <div id="recent-unlocks-rail-list" class="recent-unlocks-rail__list"></div>
+                            </div>
                         </div>
                     </div>
                     <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
@@ -2411,6 +2420,16 @@
                         <h3 class="menu-sub-section-title">Current Board</h3>
                         <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
                         <div id="menu-scores-board"></div>
+                    </div>
+                    <!-- Play Games time-window tabs (Android only — hidden on web) -->
+                    <div id="menu-pgs-leaderboard" class="menu-sub-section" style="display:none;">
+                        <h3 class="menu-sub-section-title">&#127918; Play Games Leaderboards</h3>
+                        <p class="menu-sub-section-copy">Compete on Google Play Games &mdash; today, this week, or all time.</p>
+                        <div class="lb-timespan-tabs" role="group" aria-label="Leaderboard time window">
+                            <button id="lb-tab-daily" type="button"><span class="lb-timespan-icon">&#9728;&#65039;</span>Today</button>
+                            <button id="lb-tab-weekly" type="button"><span class="lb-timespan-icon">&#128197;</span>This Week</button>
+                            <button id="lb-tab-alltime" type="button"><span class="lb-timespan-icon">&#127942;</span>All Time</button>
+                        </div>
                     </div>
                     <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
@@ -3438,12 +3457,186 @@
                             trapFocus(document.getElementById('menu-howtoplay-overlay'));
                         } catch (e) {}
 
+                        // ── Recently Unlocked rail (Play Games achievements) ──
+                        try {
+                            const railEl     = document.getElementById('recent-unlocks-rail');
+                            const railListEl = document.getElementById('recent-unlocks-rail-list');
+                            const railSrcEl  = document.getElementById('recent-unlocks-rail-source');
+                            const railViewAllBtn = document.getElementById('recent-unlocks-view-all');
+                            const MAX_RAIL = 5;
+
+                            function _formatRelativeTime(ts) {
+                                const dt = Date.now() - (ts || 0);
+                                if (!ts || dt < 0) return 'just now';
+                                const m = Math.floor(dt / 60000);
+                                if (m < 1) return 'just now';
+                                if (m < 60) return m + 'm ago';
+                                const h = Math.floor(m / 60);
+                                if (h < 24) return h + 'h ago';
+                                const d = Math.floor(h / 24);
+                                if (d < 30) return d + 'd ago';
+                                return Math.floor(d / 30) + 'mo ago';
+                            }
+
+                            function renderRecentUnlocksRail() {
+                                if (!railEl || !railListEl) return;
+                                if (!window.Highscores) { railEl.style.display = 'none'; return; }
+                                let defs = [];
+                                try { defs = (typeof Highscores.getAchievementDefinitions === 'function') ? Highscores.getAchievementDefinitions() : []; } catch(e){}
+                                const stored = (typeof Highscores.loadAchievements === 'function') ? Highscores.loadAchievements() : {};
+                                const rows = [];
+                                for (const d of defs) {
+                                    const a = stored && stored[d.id];
+                                    if (a && a.unlocked) {
+                                        rows.push({ id: d.id, name: d.name, desc: d.desc, icon: d.icon || '🏆', date: a.date || 0 });
+                                    }
+                                }
+                                rows.sort((a, b) => (b.date || 0) - (a.date || 0));
+                                const top = rows.slice(0, MAX_RAIL);
+
+                                if (top.length === 0) {
+                                    railEl.style.display = '';
+                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet — go bag your first kill!</div>';
+                                    if (railViewAllBtn) railViewAllBtn.style.display = 'none';
+                                    return;
+                                }
+
+                                railEl.style.display = '';
+                                if (railViewAllBtn) railViewAllBtn.style.display = '';
+                                railListEl.innerHTML = top.map(r => `
+                                    <div class="recent-unlocks-rail__card" data-ach-id="${r.id}">
+                                        <div class="recent-unlocks-rail__icon">${r.icon}</div>
+                                        <div class="recent-unlocks-rail__name">${r.name}</div>
+                                        <div class="recent-unlocks-rail__when">${_formatRelativeTime(r.date)}</div>
+                                    </div>
+                                `).join('');
+
+                                // Update source label based on PGS availability
+                                const pgsOn = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
+                                if (railSrcEl) railSrcEl.textContent = pgsOn ? '🎮 Play Games' : 'Local';
+                            }
+
+                            // Tap a card → open Play Games achievements UI when available
+                            if (railListEl) {
+                                railListEl.addEventListener('click', (ev) => {
+                                    const card = ev.target.closest('.recent-unlocks-rail__card');
+                                    if (!card) return;
+                                    try {
+                                        if (window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable()) {
+                                            PlayGamesServices.showAchievements();
+                                        } else {
+                                            // Fallback: open in-game achievements tab
+                                            const infoOv = document.getElementById('menu-info-overlay');
+                                            const startOv = document.getElementById('start-menu-overlay');
+                                            if (typeof activateInfoTab === 'function') activateInfoTab('achievements');
+                                            if (startOv) startOv.classList.add('hidden');
+                                            if (infoOv) infoOv.style.display = 'flex';
+                                        }
+                                    } catch(e) {}
+                                });
+                            }
+
+                            if (railViewAllBtn) {
+                                railViewAllBtn.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    try {
+                                        if (window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable()) {
+                                            PlayGamesServices.showAchievements();
+                                        } else {
+                                            const infoOv = document.getElementById('menu-info-overlay');
+                                            const startOv = document.getElementById('start-menu-overlay');
+                                            if (typeof activateInfoTab === 'function') activateInfoTab('achievements');
+                                            if (startOv) startOv.classList.add('hidden');
+                                            if (infoOv) infoOv.style.display = 'flex';
+                                        }
+                                    } catch(e) {}
+                                });
+                            }
+
+                            // Refresh rail whenever the start menu is shown or an achievement unlocks
+                            window._renderRecentUnlocksRail = renderRecentUnlocksRail;
+                            window.addEventListener('skunkfu-achievement-unlocked', renderRecentUnlocksRail);
+                            renderRecentUnlocksRail();
+                        } catch (e) { console.warn('recent unlocks rail wiring failed', e); }
+
+                        // ── Time-window leaderboard tabs (Play Games) ──
+                        try {
+                            const pgsLbSection = document.getElementById('menu-pgs-leaderboard');
+                            const lbDaily   = document.getElementById('lb-tab-daily');
+                            const lbWeekly  = document.getElementById('lb-tab-weekly');
+                            const lbAllTime = document.getElementById('lb-tab-alltime');
+                            const pgsAvail  = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
+                            if (pgsLbSection) pgsLbSection.style.display = pgsAvail ? '' : 'none';
+                            if (pgsAvail) {
+                                if (lbDaily)   lbDaily.addEventListener('click',   () => { try { PlayGamesServices.showDailyLeaderboard(); }   catch(e){} try { Analytics.trackMenuAction('lb_daily'); }   catch(e){} });
+                                if (lbWeekly)  lbWeekly.addEventListener('click',  () => { try { PlayGamesServices.showWeeklyLeaderboard(); }  catch(e){} try { Analytics.trackMenuAction('lb_weekly'); }  catch(e){} });
+                                if (lbAllTime) lbAllTime.addEventListener('click', () => { try { PlayGamesServices.showAllTimeLeaderboard(); } catch(e){} try { Analytics.trackMenuAction('lb_alltime'); } catch(e){} });
+                            }
+                        } catch (e) {}
+
+                        // ── Juicy achievement-unlock toast renderer ──
+                        try {
+                            // Stack container (created lazily on first toast)
+                            function _ensureToastStack() {
+                                let stack = document.getElementById('achievement-toast-stack');
+                                if (!stack) {
+                                    stack = document.createElement('div');
+                                    stack.id = 'achievement-toast-stack';
+                                    stack.className = 'achievement-toast-stack';
+                                    document.body.appendChild(stack);
+                                }
+                                return stack;
+                            }
+
+                            const TOAST_LIFETIME = 4200; // ms
+
+                            function _spawnAchievementToast(detail) {
+                                if (!detail) return;
+                                const stack = _ensureToastStack();
+                                const el = document.createElement('div');
+                                el.className = 'achievement-toast';
+                                const pgsAvail = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
+                                const safeName = String(detail.name || 'Achievement Unlocked').replace(/[<>]/g, '');
+                                const safeDesc = String(detail.desc || '').replace(/[<>]/g, '');
+                                const icon = detail.icon || '🏆';
+                                el.innerHTML = `
+                                    <div class="ach-icon">${icon}</div>
+                                    <div class="ach-body">
+                                        <p class="ach-eyebrow">Achievement Unlocked</p>
+                                        <p class="ach-name">${safeName}</p>
+                                        ${safeDesc ? `<p class="ach-desc">${safeDesc}</p>` : ''}
+                                    </div>
+                                    ${pgsAvail ? '<span class="ach-pgs-badge">🎮 Play Games</span>' : ''}
+                                `;
+                                stack.appendChild(el);
+                                // Trigger entrance animation on next frame
+                                requestAnimationFrame(() => el.classList.add('show'));
+                                // Play unlock sound (best-effort)
+                                try {
+                                    const am = window.game && window.game.audioManager;
+                                    if (am && am.playSound) am.playSound('achievement_unlock', { volume: 0.85, rate: 1.0 });
+                                } catch(e){}
+                                // Auto-dismiss
+                                setTimeout(() => {
+                                    el.classList.remove('show');
+                                    el.classList.add('hide');
+                                    setTimeout(() => { try { el.remove(); } catch(e){} }, 500);
+                                }, TOAST_LIFETIME);
+                            }
+
+                            window.addEventListener('skunkfu-achievement-unlocked', (ev) => {
+                                _spawnAchievementToast(ev && ev.detail);
+                            });
+                        } catch (e) { console.warn('achievement toast wiring failed', e); }
+
                         // Show the start menu again when returning to MENU state
                         window.addEventListener('gameStateChange', (ev) => {
                             try {
                                 const state = ev.detail && ev.detail.state;
                                 if (state === 'MENU') {
                                     showStartMenu();
+                                    try { window._renderRecentUnlocksRail && window._renderRecentUnlocksRail(); } catch(e){}
                                 } else {
                                     hideAllMenuOverlays();
                                 }

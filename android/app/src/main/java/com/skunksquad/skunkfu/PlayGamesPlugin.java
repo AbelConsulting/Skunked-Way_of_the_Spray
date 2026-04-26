@@ -20,6 +20,7 @@ import com.google.android.gms.games.GamesSignInClient;
 import com.google.android.gms.games.LeaderboardsClient;
 import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.PlayGamesSdk;
+import com.google.android.gms.games.leaderboard.LeaderboardVariant;
 
 /**
  * Capacitor plugin bridging Google Play Games Services v2 to the JS layer.
@@ -140,6 +141,7 @@ public class PlayGamesPlugin extends Plugin {
     @PluginMethod
     public void showLeaderboard(PluginCall call) {
         String leaderboardId = call.getString("leaderboardId");
+        String timeSpanStr = call.getString("timeSpan");
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -149,10 +151,28 @@ public class PlayGamesPlugin extends Plugin {
 
         LeaderboardsClient client = PlayGames.getLeaderboardsClient(activity);
 
+        // Map JS time-span string → PGS LeaderboardVariant constant.
+        Integer timeSpan = null;
+        if (timeSpanStr != null) {
+            switch (timeSpanStr.toUpperCase()) {
+                case "DAILY":    timeSpan = LeaderboardVariant.TIME_SPAN_DAILY; break;
+                case "WEEKLY":   timeSpan = LeaderboardVariant.TIME_SPAN_WEEKLY; break;
+                case "ALL_TIME":
+                case "ALLTIME":  timeSpan = LeaderboardVariant.TIME_SPAN_ALL_TIME; break;
+                default:         timeSpan = null;
+            }
+        }
+
         if (leaderboardId != null && !leaderboardId.isEmpty()) {
-            client.getLeaderboardIntent(leaderboardId)
-                .addOnSuccessListener(intent -> activity.startActivity(intent))
-                .addOnFailureListener(e -> call.reject("Failed to show leaderboard", e));
+            if (timeSpan != null) {
+                client.getLeaderboardIntent(leaderboardId, timeSpan, LeaderboardVariant.COLLECTION_PUBLIC)
+                    .addOnSuccessListener(intent -> activity.startActivity(intent))
+                    .addOnFailureListener(e -> call.reject("Failed to show leaderboard", e));
+            } else {
+                client.getLeaderboardIntent(leaderboardId)
+                    .addOnSuccessListener(intent -> activity.startActivity(intent))
+                    .addOnFailureListener(e -> call.reject("Failed to show leaderboard", e));
+            }
         } else {
             client.getAllLeaderboardsIntent()
                 .addOnSuccessListener(intent -> activity.startActivity(intent))

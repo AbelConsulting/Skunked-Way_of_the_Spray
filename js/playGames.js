@@ -169,16 +169,28 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
     }
   }
 
-  /** Show the native Play Games leaderboard UI. */
-  async function showLeaderboard() {
+  /** Show the native Play Games leaderboard UI.
+   * @param {string} [timeSpan]  Optional 'DAILY' | 'WEEKLY' | 'ALL_TIME'.
+   *                              If omitted, opens the player's last-used view.
+   */
+  async function showLeaderboard(timeSpan) {
     const plugin = getPlugin();
     if (!plugin) return;
     try {
-      await plugin.showLeaderboard({ leaderboardId: LEADERBOARD_ID });
+      const params = { leaderboardId: LEADERBOARD_ID };
+      if (typeof timeSpan === 'string') params.timeSpan = timeSpan.toUpperCase();
+      await plugin.showLeaderboard(params);
     } catch (e) {
       console.warn('[PlayGames] showLeaderboard failed', e);
     }
   }
+
+  /** Convenience: show the daily-window leaderboard. */
+  function showDailyLeaderboard() { return showLeaderboard('DAILY'); }
+  /** Convenience: show the weekly-window leaderboard. */
+  function showWeeklyLeaderboard() { return showLeaderboard('WEEKLY'); }
+  /** Convenience: show the all-time leaderboard. */
+  function showAllTimeLeaderboard() { return showLeaderboard('ALL_TIME'); }
 
   /**
    * Unlock a Play Games achievement by its internal game ID.
@@ -244,6 +256,9 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
     isAuthenticated,
     submitScore,
     showLeaderboard,
+    showDailyLeaderboard,
+    showWeeklyLeaderboard,
+    showAllTimeLeaderboard,
     unlockAchievement,
     syncAchievements,
     showAchievements,

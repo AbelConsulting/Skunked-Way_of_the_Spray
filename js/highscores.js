@@ -210,6 +210,26 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     }
     if (newAchievements.length > 0) {
       saveAchievements(achievements);
+
+      // ── Mirror unlocks to Google Play Games (best-effort, fire-and-forget) ──
+      try {
+        if (typeof window !== 'undefined' && window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable()) {
+          for (const ach of newAchievements) {
+            try { PlayGamesServices.unlockAchievement(ach.id); } catch(e){}
+          }
+        }
+      } catch(e) { /* GPGS mirroring must never break gameplay */ }
+
+      // ── Dispatch a CustomEvent so toast/rail UI can react ──
+      try {
+        if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+          for (const ach of newAchievements) {
+            window.dispatchEvent(new CustomEvent('skunkfu-achievement-unlocked', {
+              detail: { id: ach.id, name: ach.name, desc: ach.desc, icon: ach.icon, date: Date.now() }
+            }));
+          }
+        }
+      } catch(e) { /* event dispatch must never break gameplay */ }
     }
     return newAchievements;
   }
