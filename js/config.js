@@ -172,17 +172,17 @@ const Config = {
 
         // Tier thresholds for visual/audio escalation
         TIERS: [
-            { threshold: 3,  label: 'NICE!',       color: '#FFD93D', shake: 3  },
-            { threshold: 5,  label: 'GREAT!',      color: '#FF9500', shake: 4  },
-            { threshold: 10, label: 'AWESOME!',     color: '#FF4500', shake: 5  },
-            { threshold: 15, label: 'INCREDIBLE!',  color: '#FF00FF', shake: 6  },
-            { threshold: 20, label: 'UNSTOPPABLE!', color: '#00FFFF', shake: 7  },
-            { threshold: 30, label: 'LEGENDARY!',   color: '#FFD700', shake: 8  },
-            { threshold: 50, label: 'GOD MODE!',    color: '#FF0000', shake: 10 }
+            { threshold: 3,  label: 'NICE!',       color: '#FFD93D', shake: 5  },
+            { threshold: 5,  label: 'GREAT!',      color: '#FF9500', shake: 8  },
+            { threshold: 10, label: 'AWESOME!',     color: '#FF4500', shake: 12 },
+            { threshold: 15, label: 'INCREDIBLE!',  color: '#FF00FF', shake: 16 },
+            { threshold: 20, label: 'UNSTOPPABLE!', color: '#00FFFF', shake: 20 },
+            { threshold: 30, label: 'LEGENDARY!',   color: '#FFD700', shake: 24 },
+            { threshold: 50, label: 'GOD MODE!',    color: '#FF0000', shake: 28 }
         ],
 
         // Screen-shake at combo tier milestones
-        SHAKE_DURATION: 0.12
+        SHAKE_DURATION: 0.18
     },
 
     // Game Over screen lockout: seconds before restart/high-score input is allowed.

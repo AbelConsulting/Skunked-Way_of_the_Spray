@@ -116,6 +116,7 @@ class Game {
 
         // Visual effects
         this.screenShake = null;
+        this.screenFlash = null;
         this.hitPauseTimer = 0;
         this.damageNumbers = [];
         this.hitSparks = [];
@@ -1638,6 +1639,13 @@ class Game {
                     this.screenShake = null;
                 }
             }
+            // Update screen flash
+            if (this.screenFlash) {
+                this.screenFlash.update(dt);
+                if (!this.screenFlash.isActive()) {
+                    this.screenFlash = null;
+                }
+            }
 
         // If player is in death animation waiting to respawn, update only death
         // animation and delay the rest of the frame.
@@ -2014,6 +2022,13 @@ class Game {
             
             // Create visual feedback (limit on mobile)
             if (attackResult.enemiesHit > 0) {
+                // Pre-compute current combo tier so damage numbers can pick
+                // up the tier color & size boost for extra juice on chains.
+                const dnTier = (typeof this.player.getComboTier === 'function') ? this.player.getComboTier() : null;
+                const dnOpts = dnTier ? {
+                    color: dnTier.color,
+                    sizeBoost: 1 + Math.min(0.6, (dnTier.threshold || 0) * 0.015)
+                } : null;
                 for (const enemy of this.enemyManager.getEnemies()) {
                     if (this.player.hitEnemies.has(enemy)) {
                         // Limit damage numbers to reduce overdraw on mobile
@@ -2025,12 +2040,13 @@ class Game {
                                     enemy.x + enemy.width / 2,
                                     enemy.y,
                                     damagePerEnemy,
-                                    this.player.isShadowStriking
+                                    this.player.isShadowStriking,
+                                    dnOpts
                                 ));
                             }
-                        } catch (e) { 
+                        } catch (e) {
                             const damagePerEnemy = Math.floor(attackResult.totalDamage / attackResult.enemiesHit);
-                            this.damageNumbers.push(new DamageNumber(enemy.x + enemy.width / 2, enemy.y, damagePerEnemy, this.player.isShadowStriking)); 
+                            this.damageNumbers.push(new DamageNumber(enemy.x + enemy.width / 2, enemy.y, damagePerEnemy, this.player.isShadowStriking, dnOpts));
                         }
 
                         // Spawn hit sparks only if allowed by mobile config
@@ -2056,16 +2072,32 @@ class Game {
                 const tier = (typeof this.player.getComboTier === 'function') ? this.player.getComboTier() : null;
                 if (tier && tier.threshold > (this.player._lastComboTier || 0)) {
                     this.player._lastComboTier = tier.threshold;
-                    // Milestone floating text
+                    // Milestone floating text — bigger & glowier at higher tiers
+                    const toastSize = Math.min(56, 32 + tier.threshold * 0.6);
+                    const toastBlur = Math.min(40, 22 + tier.threshold * 0.35);
                     this._spawnComboToast(
                         this.player.x + (this.player.width || 48) / 2,
                         this.player.y,
                         `${tier.label} ${this.player.comboCount} HIT STREAK`,
-                        { color: tier.color, yOffset: -84, lifetime: 1.85, velocityY: -132, size: 30, shadowBlur: 22 }
+                        { color: tier.color, yOffset: -84, lifetime: 2.0, velocityY: -140, size: toastSize, shadowBlur: toastBlur }
                     );
                     // Tier screen shake
-                    const shakeDur = (Config.COMBO && Config.COMBO.SHAKE_DURATION) || 0.12;
+                    const shakeDur = (Config.COMBO && Config.COMBO.SHAKE_DURATION) || 0.18;
                     this.screenShake = new ScreenShake(shakeDur, tier.shake || 5);
+                    // Big-tier punctuation: full-screen color flash
+                    if (tier.threshold >= 10) {
+                        try {
+                            const c = tier.color || '#FFFFFF';
+                            // tier-color tinted flash, fades fast
+                            const flashAlpha = tier.threshold >= 30 ? 0.55 : (tier.threshold >= 20 ? 0.42 : 0.32);
+                            const flashDur = tier.threshold >= 30 ? 0.32 : 0.24;
+                            // Build rgba from hex
+                            const r = parseInt(c.slice(1, 3), 16) || 255;
+                            const g = parseInt(c.slice(3, 5), 16) || 255;
+                            const b = parseInt(c.slice(5, 7), 16) || 255;
+                            this.screenFlash = new ScreenFlash(`rgba(${r},${g},${b},${flashAlpha})`, flashDur);
+                        } catch (e) { __err('game', e); }
+                    }
                     this.audioManager.playSound('combo', 0.8 + Math.min(this.player.comboCount * 0.02, 0.2));
                     // Higher tiers get the level-up fanfare layered in
                     if (tier.threshold >= 10) {
@@ -2079,8 +2111,13 @@ class Game {
                 // Shadow Strike: no screen shake, no hit-pause (keeps the dash snappy)
                 this.screenShake = null;
                 this.hitPauseTimer = 0;
-            } else if (this.player.comboCount >= 3 && !(this.player._lastComboTier > (this.player._prevMilestoneTier || 0))) {
-                // Only do generic shake if we didn't just trigger a milestone shake
+            } else if (this.player.comboCount >= 5 && !(this.player._lastComboTier > (this.player._prevMilestoneTier || 0))) {
+                // Per-hit micro-rumble that grows with the combo (capped) so
+                // even non-milestone hits feel meatier as the chain builds.
+                const microIntensity = Math.min(2 + this.player.comboCount * 0.12, 6);
+                if (!this.screenShake || !this.screenShake.isActive() || this.screenShake.intensity < microIntensity) {
+                    this.screenShake = new ScreenShake(0.07, microIntensity);
+                }
             }
         }
 
@@ -3017,6 +3054,12 @@ class Game {
         }
         // Restore scale transform
         this.ctx.restore();
+
+        // Combo-tier screen flash (drawn over the world, under the UI) so the
+        // milestone color wash punctuates the moment without obscuring HUD.
+        if (this.screenFlash && this.screenFlash.isActive()) {
+            this.screenFlash.draw(this.ctx, this.ctx.canvas.width, this.ctx.canvas.height);
+        }
         // Render UI (always on top, no camera offset)
         // Draw UI in logical coordinates by reusing the same scale transform used for the world.
         // This prevents misalignment/cutoff on mobile/high-DPR canvases where the backing

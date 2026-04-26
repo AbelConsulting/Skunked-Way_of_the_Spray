@@ -9,21 +9,44 @@
  */
 
 class DamageNumber {
-    constructor(x, y, damage, critical = false) {
+    constructor(x, y, damage, critical = false, opts = null) {
         this.x = x;
         this.y = y;
         this.damage = damage;
         this.critical = critical;
-        this.lifetime = 1.0; // seconds
+        this.lifetime = critical ? 1.25 : 1.0;
         this.age = 0;
-        this.velocity_y = -100; // Float upward
+        // Arc: launch up & slightly sideways, then fall under gravity for
+        // that classic “pop” feeling.
+        this.velocity_y = critical ? -240 : -180;
+        this.velocity_x = (Math.random() - 0.5) * (critical ? 90 : 60);
+        this.gravity = 520;
         this.alpha = 1.0;
+        // Pop-in scale animation (overshoots to ~1.25, settles to 1.0)
+        this.scale = 0;
+        this.popDuration = 0.09;
+        // Combo-tier color tint (passed in via opts), overrides the default.
+        this.colorOverride = (opts && typeof opts.color === 'string') ? opts.color : null;
+        this.sizeBoost = (opts && typeof opts.sizeBoost === 'number') ? opts.sizeBoost : 1;
     }
 
     update(dt) {
         this.age += dt;
+        this.x += this.velocity_x * dt;
         this.y += this.velocity_y * dt;
-        this.alpha = 1.0 - (this.age / this.lifetime);
+        this.velocity_y += this.gravity * dt;
+        this.velocity_x *= 0.96; // air drag
+        // Scale: pop up to 1.25 by popDuration, then ease back toward 1.0
+        if (this.age < this.popDuration) {
+            const t = this.age / this.popDuration;
+            this.scale = t * 1.25;
+        } else {
+            const settled = (this.age - this.popDuration) / 0.12;
+            this.scale = 1.25 + (1.0 - 1.25) * Math.min(settled, 1);
+        }
+        // Hold full alpha for first 60% of lifetime, then fade.
+        const fadeStart = this.lifetime * 0.6;
+        this.alpha = this.age < fadeStart ? 1.0 : Math.max(0, 1 - (this.age - fadeStart) / (this.lifetime - fadeStart));
     }
 
     isAlive() {
@@ -33,15 +56,20 @@ class DamageNumber {
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = this.alpha;
-        ctx.font = this.critical ? 'bold 32px Arial' : 'bold 24px Arial';
-        ctx.fillStyle = this.critical ? '#FFD700' : '#FF4444';
+        const baseSize = this.critical ? 40 : 28;
+        const fontSize = Math.max(12, Math.floor(baseSize * this.scale * this.sizeBoost));
+        ctx.font = `bold ${fontSize}px Arial`;
+        const fillColor = this.colorOverride || (this.critical ? '#FFD700' : '#FF4444');
+        ctx.fillStyle = fillColor;
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3;
-        
+        ctx.lineWidth = 4;
+        ctx.shadowColor = fillColor;
+        ctx.shadowBlur = this.critical ? 18 : 10;
+
         const text = this.damage.toString();
         const metrics = ctx.measureText(text);
         const textX = this.x - metrics.width / 2;
-        
+
         ctx.strokeText(text, textX, this.y);
         ctx.fillText(text, textX, this.y);
         ctx.restore();
@@ -113,27 +141,29 @@ class HitSpark {
         this.x = x;
         this.y = y;
         this.particles = [];
-        this.lifetime = 0.3;
+        this.lifetime = 0.45;
         this.age = 0;
 
-        // Create particles
-        let particleCount = 8;
-        let speedMin = 100;
-        let speedMax = 200;
+        // Create particles — default count/speed bumped for more punch.
+        let particleCount = 14;
+        let speedMin = 130;
+        let speedMax = 280;
         if (opts && typeof opts === 'object') {
             if (typeof opts.particleCount === 'number') particleCount = opts.particleCount;
             if (typeof opts.speedMin === 'number') speedMin = opts.speedMin;
             if (typeof opts.speedMax === 'number') speedMax = opts.speedMax;
+            if (typeof opts.lifetime === 'number') this.lifetime = opts.lifetime;
         }
         for (let i = 0; i < particleCount; i++) {
-            const angle = (Math.PI * 2 * i) / particleCount;
+            // Slight randomness in angle so it doesn't look mechanical.
+            const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.4;
             const speed = Utils.randomFloat(speedMin, speedMax);
             this.particles.push({
                 x: 0,
                 y: 0,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                size: Utils.randomFloat(2, 4)
+                size: Utils.randomFloat(3, 6)
             });
         }
     }
@@ -143,8 +173,9 @@ class HitSpark {
         for (const particle of this.particles) {
             particle.x += particle.vx * dt;
             particle.y += particle.vy * dt;
-            particle.vx *= 0.95; // Friction
-            particle.vy *= 0.95;
+            particle.vx *= 0.94; // Friction
+            particle.vy *= 0.94;
+            particle.vy += 380 * dt; // light gravity for arc
         }
     }
 
@@ -187,10 +218,34 @@ class HitSpark {
     }
 }
 
+/**
+ * ScreenFlash — full-screen color wash that fades out quickly.
+ * Used to punctuate big combo milestones and special hits.
+ */
+class ScreenFlash {
+    constructor(color = 'rgba(255, 255, 255, 0.5)', duration = 0.22) {
+        this.color = color;
+        this.duration = duration;
+        this.age = 0;
+    }
+    update(dt) { this.age += dt; }
+    isActive() { return this.age < this.duration; }
+    draw(ctx, w, h) {
+        if (!this.isActive()) return;
+        const t = 1 - (this.age / this.duration);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, t);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+    }
+}
+
 class ScreenShake {
     constructor(duration, intensity) {
+        // Cap intensity to avoid disorienting the player on extreme combos.
         this.duration = duration;
-        this.intensity = intensity;
+        this.intensity = Math.min(intensity, 28);
         this.timer = duration;
         this.offsetX = 0;
         this.offsetY = 0;
