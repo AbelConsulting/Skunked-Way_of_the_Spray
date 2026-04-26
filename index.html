@@ -1,4 +1,4 @@
-<!--
+ï»¿<!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
   Proprietary and confidential Ã¢â‚¬â€ unauthorized copying, distribution, or use
@@ -223,7 +223,7 @@
             filter: brightness(1.18);
             transform: scale(0.92);
         }
-        /* Tutorial pulse — pulsing glow + caption to teach controls.
+        /* Tutorial pulse ï¿½ pulsing glow + caption to teach controls.
            Auto-removed once the corresponding input fires once. */
         .touch-btn.tutorial-pulse {
             position: relative;
@@ -508,13 +508,25 @@
             margin: 0 auto;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4× the tile. */
+               first (idle) frame by widening the background to 4Ã— the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+        }
+        .start-menu-stat--boss .stat-portrait-caption {
+            display: block;
+            margin-top: 6px;
+            text-align: center;
+            color: rgba(226, 236, 244, 0.78);
+            font: 600 10px/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .start-menu-stat--boss {
+            flex-direction: column;
         }
 
         .start-menu-divider {
@@ -563,6 +575,20 @@
             box-shadow:
                 0 14px 28px rgba(0,0,0,0.35),
                 0 0 20px rgba(180,180,255,0.10) !important;
+            grid-column: 1 / -1;
+            min-height: 64px !important;
+            padding: 12px 18px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+        }
+        .menu-btn--settings .menu-btn-label {
+            font-size: clamp(14px, 1.9vw, 17px) !important;
+        }
+        .menu-btn--settings .menu-btn-meta {
+            text-align: right;
+            color: rgba(226, 236, 244, 0.6) !important;
         }
 
         .start-menu-hub {
@@ -689,6 +715,19 @@
             font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             flex-shrink: 0;
             text-align: center;
+        }
+
+        .start-menu-footer-link {
+            color: rgba(170, 180, 195, 0.65);
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: color 140ms ease;
+        }
+        .start-menu-footer-link:hover,
+        .start-menu-footer-link:focus-visible {
+            color: rgba(122, 255, 219, 0.95);
+            text-decoration: underline;
+            outline: none;
         }
 
         /* Sub-screen overlays (Info / Scores / Settings / How to Play from main menu) */
@@ -1037,7 +1076,7 @@
             margin: 0 auto 6px;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4× the tile. */
+               first (idle) frame by widening the background to 4ï¿½ the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
@@ -1892,6 +1931,8 @@
             }
             .start-menu-stat strong { font-size: clamp(16px, 5vw, 22px); }
             .start-menu-stat span { font-size: 10px; }
+            .start-menu-stat--boss .stat-portrait { max-width: 56px; }
+            .start-menu-stat--boss .stat-portrait-caption { font-size: 9px; margin-top: 4px; letter-spacing: 0.05em; }
             .start-menu-divider { margin: 2px 0; }
             .start-menu-tagline { font-size: clamp(9px, 2.5vw, 12px); }
             .start-menu-eyebrow { font-size: 10px; }
@@ -2297,12 +2338,15 @@
                             <div class="start-menu-meta">
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss2_idle.png');" role="img" aria-label="Iron Claw"></div>
+                                    <span class="stat-portrait-caption">Iron Claw</span>
                                 </div>
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait" style="background-image:url('assets/sprites/characters/ninja_idle.png');" role="img" aria-label="Ninja Skunk"></div>
+                                    <span class="stat-portrait-caption">Ninja Skunk</span>
                                 </div>
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss4_idle.png');" role="img" aria-label="Malodor"></div>
+                                    <span class="stat-portrait-caption">Malodor</span>
                                 </div>
                             </div>
                         </div>
@@ -2311,7 +2355,7 @@
                                 <h3 class="start-menu-hub-title">Choose Your Route</h3>
                                 <p class="start-menu-hub-note">Play is instant. Everything else lives here.</p>
                             </div>
-                            <div class="start-menu-actions">
+                            <div class="start-menu-actions" role="navigation" aria-label="Main menu">
                                 <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label">&#9654; Launch Run</span><span class="menu-btn-meta">Drop straight into Stage 1 and keep momentum.</span></button>
                                 <button id="menu-howtoplay-btn" class="menu-btn menu-btn--howtoplay"><span class="menu-btn-label">&#128214; How to Play</span><span class="menu-btn-meta">Learn scoring, idols, time attack, and combat.</span></button>
                                 <button id="menu-scores-btn" class="menu-btn menu-btn--scores"><span class="menu-btn-label">&#127942; High Scores</span><span class="menu-btn-meta">Check the board and chase the next target score.</span></button>
@@ -2322,7 +2366,7 @@
                         </div>
                     </div>
                     <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
-                    <p class="start-menu-footer">&#169; 2026 Mephitideus Interactive &mdash; skunked.io &mdash; <a href="/privacy" style="color:#666;text-decoration:none;font-size:0.8em;" target="_blank">Privacy</a> &bull; <a href="/terms" style="color:#666;text-decoration:none;font-size:0.8em;" target="_blank">Terms</a></p>
+                    <p class="start-menu-footer">&#169; 2026 Mephitideus Interactive &mdash; skunked.io &mdash; <a href="/privacy" class="start-menu-footer-link" target="_blank" rel="noopener">Privacy</a> &bull; <a href="/terms" class="start-menu-footer-link" target="_blank" rel="noopener">Terms</a></p>
                 </div>
             </div>
 
@@ -2426,7 +2470,7 @@
                         <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
                         <div id="menu-scores-board"></div>
                     </div>
-                    <!-- Play Games time-window tabs (Android only — hidden on web) -->
+                    <!-- Play Games time-window tabs (Android only ï¿½ hidden on web) -->
                     <div id="menu-pgs-leaderboard" class="menu-sub-section" style="display:none;">
                         <h3 class="menu-sub-section-title">&#127918; Play Games Leaderboards</h3>
                         <p class="menu-sub-section-copy">Compete on Google Play Games &mdash; today, this week, or all time.</p>
@@ -2941,7 +2985,7 @@
 
                             box.appendChild(close);
                             const boardHost = document.createElement('div');
-                            boardHost.textContent = 'Loading global scores…';
+                            boardHost.textContent = 'Loading global scoresï¿½';
                             boardHost.style.color = '#ccc';
                             boardHost.style.textAlign = 'center';
                             boardHost.style.padding = '20px';
@@ -3269,9 +3313,9 @@
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 // Populate scoreboard
                                 if (scoresBoardEl) {
-                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores…</p>';
+                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scoresï¿½</p>';
                                     if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
-                                        // renderScoreboard is async — render directly into the container
+                                        // renderScoreboard is async ï¿½ render directly into the container
                                         Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
                                             .catch((e) => {
                                                 console.warn('renderScoreboard failed', e);
@@ -3465,12 +3509,12 @@
                             trapFocus(document.getElementById('menu-howtoplay-overlay'));
                         } catch (e) {}
 
-                        // -- Recently Unlocked rail (Play Games achievements) — REMOVED from main menu --
+                        // -- Recently Unlocked rail (Play Games achievements) ï¿½ REMOVED from main menu --
                         // The rail was retired to keep the start screen uncluttered.
                         // Achievements remain accessible via Intel ? Achievements and the Play Games UI.
                         // Provide a no-op stub so any external callers don't crash.
                         window._renderRecentUnlocksRail = function () {};
-                        if (false) { // eslint-disable-line no-constant-condition — dead block, retained for diff clarity; safe to delete
+                        if (false) { // eslint-disable-line no-constant-condition ï¿½ dead block, retained for diff clarity; safe to delete
                             const railEl     = document.getElementById('recent-unlocks-rail');
                             const railListEl = document.getElementById('recent-unlocks-rail-list');
                             const railSrcEl  = document.getElementById('recent-unlocks-rail-source');
@@ -3508,7 +3552,7 @@
 
                                 if (top.length === 0) {
                                     railEl.style.display = '';
-                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet — go bag your first kill!</div>';
+                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet ï¿½ go bag your first kill!</div>';
                                     if (railViewAllBtn) railViewAllBtn.style.display = 'none';
                                     return;
                                 }
@@ -3622,7 +3666,7 @@
                                         const auth = await PlayGamesServices.isAuthenticated();
                                         if (auth && auth.isAuthenticated) return true;
                                     } catch (e) { /* fall through to sign-in */ }
-                                    _setStatus('Signing in to Play Games…', 'info');
+                                    _setStatus('Signing in to Play Gamesï¿½', 'info');
                                     try {
                                         const signed = await PlayGamesServices.signIn();
                                         return !!(signed && signed.isAuthenticated);
@@ -3635,7 +3679,7 @@
                                     if (busy) return;
                                     _setBusy(true);
                                     _setActive(tab.span);
-                                    _setStatus('Opening ' + tab.label + '…', 'info');
+                                    _setStatus('Opening ' + tab.label + 'ï¿½', 'info');
                                     try { localStorage.setItem(LB_LAST_KEY, tab.span); } catch (e) {}
                                     try {
                                         const ok = await _ensureSignedIn();
@@ -3662,7 +3706,7 @@
                                     lbSignIn.addEventListener('click', async () => {
                                         if (busy) return;
                                         _setBusy(true);
-                                        _setStatus('Signing in to Play Games…', 'info');
+                                        _setStatus('Signing in to Play Gamesï¿½', 'info');
                                         try {
                                             const ok = await _ensureSignedIn();
                                             if (ok) {
@@ -4045,7 +4089,7 @@
             if (resumeBtn) {
                 const invokeResume = () => {
                     try {
-                        // Only act when actually paused — prevents double-toggle
+                        // Only act when actually paused ï¿½ prevents double-toggle
                         // during the 240ms overlay fade-out transition.
                         if (!window.game || window.game.state !== 'PAUSED') return;
                         // Attempt fullscreen on resume (same user gesture as resume click)
