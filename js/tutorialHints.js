@@ -231,6 +231,93 @@ class TutorialHints {
     }
 
     /**
+     * Enable pulsing tutorial labels on the on-screen touch buttons.
+     * Each pulse stays until the matching input fires once, then auto-removes.
+     * Idempotent: safe to call repeatedly.
+     */
+    enableButtonGlyphs() {
+        if (this._done) return;
+        if (!this.isMobile) return;
+        if (this._glyphsActive) return;
+        this._glyphsActive = true;
+
+        const KEY = 'skunkfu_glyphs_seen_v1';
+        let seen = {};
+        try { seen = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { seen = {}; }
+
+        const map = [
+            { id: 'btn-left',   label: 'MOVE',   actions: ['left'] },
+            { id: 'btn-right',  label: 'MOVE',   actions: ['right'] },
+            { id: 'btn-jump',   label: 'JUMP',   actions: ['jump'] },
+            { id: 'btn-attack', label: 'ATTACK', actions: ['attack'] }
+        ];
+
+        const cleared = {};
+        const applyTo = [];
+        for (const m of map) {
+            if (seen[m.id]) continue;
+            const el = document.getElementById(m.id);
+            if (!el) continue;
+            el.setAttribute('data-pulse-label', m.label);
+            el.classList.add('tutorial-pulse');
+            applyTo.push(Object.assign({}, m, { el }));
+        }
+        if (applyTo.length === 0) {
+            this._glyphsActive = false;
+            return;
+        }
+
+        const self = this;
+        const clearOne = (entry) => {
+            if (cleared[entry.id]) return;
+            cleared[entry.id] = true;
+            seen[entry.id] = true;
+            entry.el.classList.remove('tutorial-pulse');
+            entry.el.removeAttribute('data-pulse-label');
+            try { localStorage.setItem(KEY, JSON.stringify(seen)); } catch (_) {}
+        };
+
+        // Attach a one-shot direct press listener per button. This works for
+        // both the TouchControls class and the static HTML fallback.
+        const perBtnHandlers = [];
+        for (const entry of applyTo) {
+            const handler = () => clearOne(entry);
+            entry.el.addEventListener('pointerdown', handler, { once: true });
+            entry.el.addEventListener('touchstart', handler, { once: true, passive: true });
+            perBtnHandlers.push({ entry, handler });
+        }
+
+        // Also listen for the synthesized `touchcontrol` event in case the
+        // input arrives from a non-press path (e.g. swipe-to-attack).
+        const onTouchControl = (e) => {
+            try {
+                const action = e && e.detail && e.detail.action;
+                if (!action) return;
+                for (const m of applyTo) {
+                    if (!cleared[m.id] && m.actions.indexOf(action) !== -1) clearOne(m);
+                }
+                if (applyTo.every(m => cleared[m.id])) {
+                    window.removeEventListener('touchcontrol', onTouchControl);
+                    self._glyphsActive = false;
+                }
+            } catch (_) { /* ignore */ }
+        };
+        window.addEventListener('touchcontrol', onTouchControl);
+
+        // Auto-clear after 30s so the UI doesn't pulse forever.
+        setTimeout(() => {
+            try {
+                for (const m of applyTo) {
+                    m.el.classList.remove('tutorial-pulse');
+                    m.el.removeAttribute('data-pulse-label');
+                }
+                window.removeEventListener('touchcontrol', onTouchControl);
+                self._glyphsActive = false;
+            } catch (_) {}
+        }, 30000);
+    }
+
+    /**
      * Force-show a hint even if it has been seen (but still respect _done).
      * Used by pity prompts (e.g. player died in level 1 without attacking).
      */

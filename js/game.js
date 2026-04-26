@@ -841,6 +841,9 @@ class Game {
                     setTimeout(() => {
                         if (this.tutorialHints) this.tutorialHints.trigger('objective');
                     }, 10000);
+                    // Pulsing glyphs on touch buttons (mobile only) — teaches
+                    // brand-new players which buttons matter without text.
+                    try { this.tutorialHints.enableButtonGlyphs(); } catch (e) { __err('game', e); }
                 }
             }
         }
