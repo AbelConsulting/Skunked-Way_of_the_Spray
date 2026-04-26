@@ -8,7 +8,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
@@ -61,8 +61,8 @@
             height: 100%;
             background-color: #000;
             overflow: hidden; /* Prevent scroll */
-            user-select: none; /* Prevent text selection */
             -webkit-user-select: none;
+            user-select: none; /* Prevent text selection */
         }
 
         #main-wrapper {
@@ -156,11 +156,13 @@
             justify-content: center;
             align-items: center;
             margin: 5px;
+            -webkit-user-select: none;
             user-select: none;
             outline: none;
             /* Disable browser touch actions */
             touch-action: none; 
             -webkit-tap-highlight-color: transparent;
+            -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
             box-shadow:
                 0 12px 22px rgba(0,0,0,0.35),
@@ -301,6 +303,7 @@
             border-radius: 14px;
             text-transform: uppercase;
             letter-spacing: 0.06em;
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 24px rgba(0,255,120,0.14);
             transition: transform 120ms ease, filter 180ms ease;
@@ -385,6 +388,7 @@
                 linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01)),
                 radial-gradient(circle at top left, rgba(20, 61, 54, 0.45), rgba(10, 12, 18, 0) 42%),
                 linear-gradient(180deg, rgba(7, 10, 17, 0.96), rgba(4, 6, 12, 0.88));
+            -webkit-backdrop-filter: blur(16px);
             backdrop-filter: blur(16px);
             box-shadow:
                 0 0 100px rgba(0,255,120,0.10),
@@ -508,6 +512,7 @@
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
+            image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
         }
@@ -791,6 +796,7 @@
                 radial-gradient(circle at top left, rgba(63, 143, 255, 0.12), rgba(10, 14, 24, 0) 38%),
                 linear-gradient(180deg, rgba(9,12,18,0.96), rgba(3,5,10,0.90));
             box-shadow: 0 26px 80px rgba(0,0,0,0.6);
+            -webkit-backdrop-filter: blur(12px);
             backdrop-filter: blur(12px);
             width: min(440px, 90vw);
             max-height: 85vh;
@@ -1035,6 +1041,7 @@
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
+            image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
         }
@@ -1134,6 +1141,7 @@
             background-position: 0 0;
             background-repeat: no-repeat;
             image-rendering: pixelated;
+            image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             border-radius: 6px;
             background-color: rgba(0,0,0,0.25);
@@ -1196,6 +1204,7 @@
             background-position: 0 0;
             background-repeat: no-repeat;
             image-rendering: pixelated;
+            image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             border-radius: 6px;
             background-color: rgba(0,0,0,0.3);
@@ -1428,6 +1437,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
             box-shadow: 0 10px 22px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.25) inset;
             transition: transform 120ms ease, filter 180ms ease, box-shadow 180ms ease;
@@ -1450,6 +1460,7 @@
             border: 1px solid rgba(80,255,244,0.25);
             display: none; /* shown via JS only on mobile */
             cursor: pointer;
+            -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
             box-shadow: 0 10px 18px rgba(0,0,0,0.25);
             transition: transform 120ms ease, filter 180ms ease;
@@ -1471,12 +1482,14 @@
             font-weight: 700;
             letter-spacing: 0.02em;
             cursor: pointer;
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             box-shadow:
                 0 14px 28px rgba(0,0,0,0.35),
                 0 0 0 1px rgba(0,0,0,0.25) inset;
             transition: transform 120ms ease, filter 180ms ease, box-shadow 180ms ease;
             -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
             user-select: none;
         }
 
@@ -1519,6 +1532,7 @@
             border: 1px solid rgba(255,255,255,0.12);
             background: linear-gradient(180deg, rgba(9,12,18,0.96), rgba(3,6,12,0.88));
             box-shadow: 0 22px 64px rgba(0,0,0,0.58);
+            -webkit-backdrop-filter: blur(12px);
             backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
@@ -1817,8 +1831,8 @@
             background: linear-gradient(180deg, rgba(0,255,120,0.18), rgba(0,60,20,0.55));
             color: rgba(255,255,255,0.9);
             cursor: pointer;
-            backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
             box-shadow: 0 10px 24px rgba(0,0,0,0.35), 0 0 18px rgba(0,255,120,0.10);
             transition: transform 120ms ease, filter 180ms ease, box-shadow 180ms ease;
             text-transform: uppercase;
