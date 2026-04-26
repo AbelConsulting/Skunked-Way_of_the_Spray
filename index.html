@@ -456,6 +456,9 @@
            Iron Claw, Malodor, and Kyle while keeping identical tile size. */
         .start-menu-stat--boss {
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background:
                 radial-gradient(circle at 50% 30%, rgba(255,160,30,0.18), transparent 60%),
                 rgba(255,255,255,0.045);
@@ -463,8 +466,8 @@
         .start-menu-stat--boss .stat-portrait {
             width: 100%;
             aspect-ratio: 1 / 1;
-            max-width: 72px;
-            margin: 0 auto 6px;
+            max-width: 96px;
+            margin: 0 auto;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
                first (idle) frame by widening the background to 4× the tile. */
@@ -473,15 +476,6 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
-        }
-        .start-menu-stat--boss strong {
-            font-size: clamp(13px, 1.6vw, 16px);
-            color: #F6D770;
-            letter-spacing: 0.5px;
-        }
-        .start-menu-stat--boss span {
-            font-size: 11px;
-            color: rgba(255,255,255,0.78);
         }
 
         .start-menu-divider {
@@ -2255,18 +2249,12 @@
                             <div class="start-menu-meta">
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss2_idle.png');" role="img" aria-label="Iron Claw"></div>
-                                    <strong>IRON CLAW</strong>
-                                    <span>Enforcer of Skunk City</span>
                                 </div>
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss4_idle.png');" role="img" aria-label="Malodor"></div>
-                                    <strong>MALODOR</strong>
-                                    <span>Enemy Kingpin</span>
                                 </div>
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss7_idle.png');" role="img" aria-label="Kyle"></div>
-                                    <strong>KYLE</strong>
-                                    <span>Crystal Flower Chief</span>
                                 </div>
                             </div>
                         </div>
