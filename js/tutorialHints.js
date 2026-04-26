@@ -70,6 +70,14 @@ class TutorialHints {
                 touch: ['Tap 🗡 to Attack enemies!',
                         'Chain hits within 2s for combos!']
             },
+            attack_pity: {
+                id: 'attack_pity',
+                duration: 14,
+                kb:    ['You can ATTACK enemies!',
+                        'Press X — they can\'t hurt you if they\'re down.'],
+                touch: ['You can ATTACK enemies!',
+                        'Tap 🗡 — they can\'t hurt you if they\'re down.']
+            },
             shadow_strike: {
                 id: 'shadow_strike',
                 duration: 10,
@@ -202,9 +210,7 @@ class TutorialHints {
         if (this._done) return;
         const def = this.HINTS[id];
         if (!def) return;
-        if (this._seen[id]) return;
-
-        // If a hint is already active, queue this one
+        if (this._seen[id]) return;        // If a hint is already active, queue this one
         if (this._active && !this._active.dismissed) {
             // Don't queue duplicates
             if (this._active.id === id) return;
@@ -221,6 +227,28 @@ class TutorialHints {
             return;
         }
 
+        this._show(def);
+    }
+
+    /**
+     * Force-show a hint even if it has been seen (but still respect _done).
+     * Used by pity prompts (e.g. player died in level 1 without attacking).
+     */
+    forceShow(id) {
+        if (this._done) return;
+        const def = this.HINTS[id];
+        if (!def) return;
+        // Bypass the initial delay and replace any active hint.
+        this._initialDelay = 0;
+        this._interHintDelay = 0;
+        if (this._active && !this._active.dismissed) {
+            this._active.dismissed = true;
+            this._active.alpha = 0;
+            this._active = null;
+        }
+        // Clear seen so it can replay
+        delete this._seen[id];
+        try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this._seen)); } catch (e) {}
         this._show(def);
     }
 
@@ -368,6 +396,8 @@ class TutorialHints {
                 return { label: 'MOVEMENT', accent: '#58F3FF', accentSoft: 'rgba(88, 243, 255, 0.18)', accentGlow: 'rgba(88, 243, 255, 0.35)' };
             case 'attack':
                 return { label: 'COMBAT', accent: '#FF8F6B', accentSoft: 'rgba(255, 143, 107, 0.18)', accentGlow: 'rgba(255, 143, 107, 0.34)' };
+            case 'attack_pity':
+                return { label: 'TIP', accent: '#FFB347', accentSoft: 'rgba(255, 179, 71, 0.20)', accentGlow: 'rgba(255, 179, 71, 0.40)' };
             case 'shadow_strike':
                 return { label: 'ABILITY', accent: '#B98BFF', accentSoft: 'rgba(185, 139, 255, 0.18)', accentGlow: 'rgba(185, 139, 255, 0.34)' };
             case 'skunk_shot':

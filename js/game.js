@@ -2128,6 +2128,51 @@ class Game {
         const prevDefeated = this.gameStats.enemiesDefeated || 0;
         this.gameStats.enemiesDefeated = this.enemyManager.enemiesDefeated || 0;
         const killsDelta = this.gameStats.enemiesDefeated - prevDefeated;
+        // First-kill celebration: huge dopamine moment for new players. Fires
+        // once ever (persisted), then never again.
+        if (killsDelta > 0) {
+            try {
+                const seenFirstKill = (() => {
+                    try { return localStorage.getItem('skunkfu_first_kill_seen') === '1'; } catch (e) { return false; }
+                })();
+                if (!seenFirstKill) {
+                    try { localStorage.setItem('skunkfu_first_kill_seen', '1'); } catch (e) {}
+                    const px = this.player.x + (this.player.width || 48) / 2;
+                    const py = this.player.y;
+                    // Big juicy toast
+                    this._spawnComboToast(px, py, 'FIRST KILL!', {
+                        color: '#FFD700',
+                        yOffset: -96,
+                        lifetime: 2.4,
+                        velocityY: -120,
+                        size: 52,
+                        shadowBlur: 36
+                    });
+                    this._spawnComboToast(px, py, '+ Keep the chain alive!', {
+                        color: '#FFFFFF',
+                        yOffset: -64,
+                        lifetime: 2.6,
+                        velocityY: -90,
+                        size: 22,
+                        shadowBlur: 14,
+                        shadowColor: '#FFD700'
+                    });
+                    // Slow-mo punch
+                    this.hitPauseTimer = Math.max(this.hitPauseTimer || 0, 0.2);
+                    // Gold flash
+                    try { this.screenFlash = new ScreenFlash('rgba(255, 215, 0, 0.42)', 0.32); } catch (e) {}
+                    // Big shake (capped by ScreenShake)
+                    this.screenShake = new ScreenShake(0.28, 14);
+                    // Audio cue (reuse combo level-up if available)
+                    try {
+                        if (this.audioManager && this.audioManager.playSound) {
+                            this.audioManager.playSound('combo_level_up', { volume: 0.85 });
+                        }
+                    } catch (e) {}
+                    try { if (typeof Analytics !== 'undefined') Analytics.trackTutorialStep('first_kill'); } catch (e) {}
+                }
+            } catch (e) { __err('game', e); }
+        }
         // Attribute kills to shadow strike or air attacks if applicable
         if (killsDelta > 0) {
             try {
@@ -2508,6 +2553,18 @@ class Game {
         // Player died - check for remaining lives
         this.lives--;
         this.gameStats.deathsThisRun = (this.gameStats.deathsThisRun || 0) + 1;
+
+        // Pity hint: if a brand-new player dies on level 1 without ever
+        // tapping attack, surface a stronger prompt so they don't bounce
+        // off the game thinking it's broken.
+        try {
+            if (this.tutorialHints && !this.tutorialHints._done
+                && this.currentLevelIndex === 0
+                && (this.gameStats.attacksAttempted || 0) === 0
+                && this.lives > 0) {
+                this.tutorialHints.forceShow('attack_pity');
+            }
+        } catch (e) { __err('game', e); }
 
         // Analytics: player death
         try {
