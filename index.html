@@ -2788,10 +2788,18 @@
                             close.addEventListener('click', () => { try { document.body.removeChild(overlay); } catch(e){} });
 
                             box.appendChild(close);
-                            const board = Highscores.renderScoreboard(null, true);
-                            box.appendChild(board);
+                            const boardHost = document.createElement('div');
+                            boardHost.textContent = 'Loading global scores…';
+                            boardHost.style.color = '#ccc';
+                            boardHost.style.textAlign = 'center';
+                            boardHost.style.padding = '20px';
+                            box.appendChild(boardHost);
                             overlay.appendChild(box);
                             document.body.appendChild(overlay);
+                            Promise.resolve(Highscores.renderScoreboard(boardHost, true)).catch((err) => {
+                                console.warn('renderScoreboard failed', err);
+                                boardHost.textContent = 'Could not load scores';
+                            });
                         }
                     } catch (e) { console.warn('showHighscoresOverlay failed', e); }
                 }
@@ -3109,16 +3117,16 @@
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 // Populate scoreboard
                                 if (scoresBoardEl) {
-                                    scoresBoardEl.innerHTML = '';
-                                    try {
-                                        if (window.Highscores) {
-                                            const board = Highscores.renderScoreboard(null, true);
-                                            scoresBoardEl.appendChild(board);
-                                        } else {
-                                            scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Scores not yet available</p>';
-                                        }
-                                    } catch (e) {
-                                        scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Could not load scores</p>';
+                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores…</p>';
+                                    if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
+                                        // renderScoreboard is async — render directly into the container
+                                        Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
+                                            .catch((e) => {
+                                                console.warn('renderScoreboard failed', e);
+                                                scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Could not load scores</p>';
+                                            });
+                                    } else {
+                                        scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Scores not yet available</p>';
                                     }
                                 }
                                 try { Analytics.trackMenuAction('high_scores'); } catch(e) {}
