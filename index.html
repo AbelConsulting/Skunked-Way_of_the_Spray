@@ -3553,8 +3553,14 @@
                 pauseBtn.style.display = 'flex';
                 const invokePause = () => {
                     try {
+                        // Only act on transitions originating from the expected state.
+                        // Prevents the multi-event handler (touchstart+touchend+pointerup+click)
+                        // from re-toggling during the overlay fade.
+                        if (!window.game) return;
+                        const st = window.game.state;
+                        if (st !== 'PLAYING' && st !== 'PAUSED') return;
                         // If resuming from pause, attempt fullscreen on the same gesture
-                        const wasPaused = !!(window.game && window.game.state === 'PAUSED');
+                        const wasPaused = (st === 'PAUSED');
                         if (wasPaused && typeof requestFullscreen === 'function') {
                             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
                             if (!isFs) requestFullscreen();
@@ -3592,6 +3598,9 @@
             if (resumeBtn) {
                 const invokeResume = () => {
                     try {
+                        // Only act when actually paused — prevents double-toggle
+                        // during the 240ms overlay fade-out transition.
+                        if (!window.game || window.game.state !== 'PAUSED') return;
                         // Attempt fullscreen on resume (same user gesture as resume click)
                         if (typeof requestFullscreen === 'function') {
                             const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
