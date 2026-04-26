@@ -565,6 +565,13 @@ class Player {
         this.skunkShotTimer = 0;
         this.attackTimer = 0;
         this.attackCooldownTimer = 0;
+        // Skunk Shot ammo: clear leftover ammo from the previous run and
+        // grant one starting charge so every fresh game begins with one
+        // available Skunk Shot. (reset() is only called on new-game start,
+        // not on mid-run respawn, so collected ammo is not wiped between
+        // life losses.)
+        this.skunkAmmo = 1;
+        this.skunkCooldownTimer = 0;
         try { this.hitEnemies && this.hitEnemies.clear && this.hitEnemies.clear(); } catch (e) { __err('player', e); }
         this._prevAttackHitbox = null;
         this.jumpBufferTimer = 0;
