@@ -2319,15 +2319,6 @@
                                 <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements"><span class="menu-btn-label">&#127894;&#65039; Achievements</span><span class="menu-btn-meta">Track mastery goals and completion progress.</span></button>
                                 <button id="menu-settings-btn" class="menu-btn menu-btn--settings"><span class="menu-btn-label">&#9881; Settings</span><span class="menu-btn-meta">Tune SFX, music, and tutorial resets from the hub.</span></button>
                             </div>
-                            <!-- Recently Unlocked on Play Games rail (auto-populated) -->
-                            <div id="recent-unlocks-rail" class="recent-unlocks-rail" style="display:none;">
-                                <div class="recent-unlocks-rail__head">
-                                    <p class="recent-unlocks-rail__title">&#127942; Recently Unlocked</p>
-                                    <span class="recent-unlocks-rail__pgs" id="recent-unlocks-rail-source">Play Games</span>
-                                    <button type="button" id="recent-unlocks-view-all" class="recent-unlocks-rail__view-all">View All</button>
-                                </div>
-                                <div id="recent-unlocks-rail-list" class="recent-unlocks-rail__list"></div>
-                            </div>
                         </div>
                     </div>
                     <p class="start-menu-enter-hint">PRESS ENTER TO PLAY</p>
@@ -3471,8 +3462,10 @@
                             trapFocus(document.getElementById('menu-howtoplay-overlay'));
                         } catch (e) {}
 
-                        // ── Recently Unlocked rail (Play Games achievements) ──
-                        try {
+                        // ── Recently Unlocked rail (Play Games achievements) — REMOVED from main menu ──
+                        // The rail was retired to keep the start screen uncluttered.
+                        // Achievements remain accessible via Intel ▸ Achievements and the Play Games UI.
+                        if (false) { // eslint-disable-line no-constant-condition
                             const railEl     = document.getElementById('recent-unlocks-rail');
                             const railListEl = document.getElementById('recent-unlocks-rail-list');
                             const railSrcEl  = document.getElementById('recent-unlocks-rail-source');
@@ -3572,7 +3565,7 @@
                             window._renderRecentUnlocksRail = renderRecentUnlocksRail;
                             window.addEventListener('skunkfu-achievement-unlocked', renderRecentUnlocksRail);
                             renderRecentUnlocksRail();
-                        } catch (e) { console.warn('recent unlocks rail wiring failed', e); }
+                        }
 
                         // ── Time-window leaderboard tabs (Play Games) ──
                         try {
@@ -3583,9 +3576,27 @@
                             const pgsAvail  = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
                             if (pgsLbSection) pgsLbSection.style.display = pgsAvail ? '' : 'none';
                             if (pgsAvail) {
-                                if (lbDaily)   lbDaily.addEventListener('click',   () => { try { PlayGamesServices.showDailyLeaderboard(); }   catch(e){} try { Analytics.trackMenuAction('lb_daily'); }   catch(e){} });
-                                if (lbWeekly)  lbWeekly.addEventListener('click',  () => { try { PlayGamesServices.showWeeklyLeaderboard(); }  catch(e){} try { Analytics.trackMenuAction('lb_weekly'); }  catch(e){} });
-                                if (lbAllTime) lbAllTime.addEventListener('click', () => { try { PlayGamesServices.showAllTimeLeaderboard(); } catch(e){} try { Analytics.trackMenuAction('lb_alltime'); } catch(e){} });
+                                // Ensure the player is signed in before opening the native UI;
+                                // otherwise getLeaderboardIntent() rejects silently and the button appears dead.
+                                async function _openLb(timeSpan, action) {
+                                    try {
+                                        const auth = await PlayGamesServices.isAuthenticated();
+                                        if (!auth || !auth.isAuthenticated) {
+                                            const signed = await PlayGamesServices.signIn();
+                                            if (!signed || !signed.isAuthenticated) {
+                                                console.warn('[PlayGames] Sign-in required to open leaderboard');
+                                                return;
+                                            }
+                                        }
+                                        await PlayGamesServices.showLeaderboard(timeSpan);
+                                        try { Analytics.trackMenuAction(action); } catch(e){}
+                                    } catch (err) {
+                                        console.warn('[PlayGames] open leaderboard failed', err);
+                                    }
+                                }
+                                if (lbDaily)   lbDaily.addEventListener('click',   () => _openLb('DAILY',    'lb_daily'));
+                                if (lbWeekly)  lbWeekly.addEventListener('click',  () => _openLb('WEEKLY',   'lb_weekly'));
+                                if (lbAllTime) lbAllTime.addEventListener('click', () => _openLb('ALL_TIME', 'lb_alltime'));
                             }
                         } catch (e) {}
 
