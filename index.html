@@ -1,7 +1,7 @@
 ﻿<!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
-  Proprietary and confidential â€” unauthorized copying, distribution, or use
+  Proprietary and confidential — unauthorized copying, distribution, or use
   of this file, via any medium, is strictly prohibited. See LICENSE for terms.
 -->
 <!DOCTYPE html>
@@ -22,7 +22,7 @@
     <!-- End Google Tag Manager -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a1a2e">
-    <meta name="description" content="Lightning-fast 2D beat 'em up platformer â€” be the Ninja Skunk, chain combos, and master the Shadow Strike!">
+    <meta name="description" content="Lightning-fast 2D beat 'em up platformer — be the Ninja Skunk, chain combos, and master the Shadow Strike!">
     <link rel="canonical" href="https://skunked.io/">
     <meta property="og:url" content="https://skunked.io/">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
@@ -41,8 +41,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <!-- Hidden element to force-load canvas fonts before the game loop starts -->
         <span style="font-family:'Bangers','Press Start 2P','Space Grotesk';position:absolute;left:-9999px;font-size:0;pointer-events:none" aria-hidden="true">.</span>
-    <link rel="stylesheet" href="styles.css?v=1.0.1">
-    <link rel="stylesheet" href="achievements.css?v=1.0.1">
+    <link rel="stylesheet" href="styles.css?v=1.0.2">
+    <link rel="stylesheet" href="achievements.css?v=1.0.2">
 
     <style>
         /* expose safe-area insets as CSS variables so JS can read them */
@@ -223,7 +223,7 @@
             filter: brightness(1.18);
             transform: scale(0.92);
         }
-        /* Tutorial pulse � pulsing glow + caption to teach controls.
+        /* Tutorial pulse ? pulsing glow + caption to teach controls.
            Auto-removed once the corresponding input fires once. */
         .touch-btn.tutorial-pulse {
             position: relative;
@@ -327,9 +327,9 @@
             transform: translateY(0);
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ═══════════════════════════════════════════════════════
            START MENU SPLASH PAGE
-           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+           ═══════════════════════════════════════════════════════ */
         #start-menu-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -508,7 +508,7 @@
             margin: 0 auto;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4× the tile. */
+               first (idle) frame by widening the background to 4� the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
@@ -976,9 +976,9 @@
             font-style: italic;
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ═══════════════════════════════════════════════════════
            TABBED INFO PAGE
-           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+           ═══════════════════════════════════════════════════════ */
         .info-tabs {
             display: flex;
             gap: 8px;
@@ -1076,7 +1076,7 @@
             margin: 0 auto 6px;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4� the tile. */
+               first (idle) frame by widening the background to 4? the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
@@ -1896,7 +1896,7 @@
             }
             #start-menu-overlay.hidden { display: none !important; }
 
-            /* ── Portrait-optimised start menu ── */
+            /* -- Portrait-optimised start menu -- */
             .start-menu-panel {
                 width: min(480px, 94vw);
                 max-height: 92vh;
@@ -1986,7 +1986,7 @@
             }
         }
 
-        /* ── Compact pause panel for short landscape screens ── */
+        /* -- Compact pause panel for short landscape screens -- */
         @media screen and (max-height: 500px) {
             #pause-overlay {
                 align-items: flex-start;
@@ -2016,7 +2016,7 @@
             .pause-title { font-size: clamp(15px, 3.5vw, 20px) !important; }
         }
 
-        /* â”€â”€ Landscape with limited height (mobile landscape) â”€â”€ */
+        /* ── Landscape with limited height (mobile landscape) ── */
         @media screen and (max-height: 500px) {
             .start-menu-panel {
                 gap: 8px;
@@ -2024,7 +2024,7 @@
                 max-height: 96vh;
                 width: min(980px, 96vw);
             }
-            /* Keep side-by-side layout — mobile landscape is wide, not tall */
+            /* Keep side-by-side layout � mobile landscape is wide, not tall */
             .start-menu-layout {
                 grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr);
                 gap: 16px;
@@ -2090,7 +2090,7 @@
             }
         }
 
-        /* â”€â”€ Very short landscape (e.g. phone landscape with keyboard/nav bar) â”€â”€ */
+        /* ── Very short landscape (e.g. phone landscape with keyboard/nav bar) ── */
         @media screen and (max-height: 380px) {
             .start-menu-panel {
                 gap: 4px;
@@ -2318,13 +2318,13 @@
                 <div id="score-container" style="position:absolute; right:12px; top:88px; z-index:900; max-width:320px; color:#fff; display:none;"></div>
             </div>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                 UI OVERLAYS â€” placed outside #game-container so they
+            <!-- ══════════════════════════════════════════════════════
+                 UI OVERLAYS — placed outside #game-container so they
                  are never hidden by portrait orientation rules.
                  All use position:fixed and high z-index.
-                 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+                 ══════════════════════════════════════════════════════ -->
 
-            <!-- â•â•â•â•â•â• START MENU SPLASH PAGE â•â•â•â•â•â• -->
+            <!-- ══════ START MENU SPLASH PAGE ══════ -->
             <div id="start-menu-overlay">
                 <div class="start-menu-panel">
                     <div class="start-menu-layout">
@@ -2456,7 +2456,7 @@
                     <button id="menu-howtoplay-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
-            <!-- â•â•â•â•â•â• HIGH SCORES SCREEN (from main menu) â•â•â•â•â•â• -->
+            <!-- ══════ HIGH SCORES SCREEN (from main menu) ══════ -->
             <div id="menu-scores-overlay" style="display:none;">
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
@@ -2470,7 +2470,7 @@
                         <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
                         <div id="menu-scores-board"></div>
                     </div>
-                    <!-- Play Games time-window tabs (Android only � hidden on web) -->
+                    <!-- Play Games time-window tabs (Android only ? hidden on web) -->
                     <div id="menu-pgs-leaderboard" class="menu-sub-section" style="display:none;">
                         <h3 class="menu-sub-section-title">&#127918; Play Games Leaderboards</h3>
                         <p class="menu-sub-section-copy">Compete on Google Play Games &mdash; today, this week, or all time.</p>
@@ -2486,7 +2486,7 @@
                 </div>
             </div>
 
-            <!-- â•â•â•â•â•â• INFO SCREEN (from main menu) â€” Tabbed â•â•â•â•â•â• -->
+            <!-- ══════ INFO SCREEN (from main menu) — Tabbed ══════ -->
             <div id="menu-info-overlay" style="display:none;">
                 <div class="menu-sub-panel menu-sub-panel--info">
                     <div class="menu-sub-header">
@@ -2506,7 +2506,7 @@
                         <button class="info-tab" data-info-tab="achievements">Achievements</button>
                     </div>
 
-                    <!-- â”€â”€ TAB: About â”€â”€ -->
+                    <!-- ── TAB: About ── -->
                     <div class="info-tab-content active" data-info-panel="about">
                         <div class="info-section info-story">
                             <h3 class="info-heading">&#128220; Story</h3>
@@ -2555,7 +2555,7 @@
                         <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.35);">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
                     </div>
 
-                    <!-- â”€â”€ TAB: Controls â”€â”€ -->
+                    <!-- ── TAB: Controls ── -->
                     <div class="info-tab-content" data-info-panel="controls">
                         <div class="info-ctrl-group">
                             <h4>&#9000; Keyboard</h4>
@@ -2625,7 +2625,7 @@
                         </div>
                     </div>
 
-                    <!-- â”€â”€ TAB: Enemies â”€â”€ -->
+                    <!-- ── TAB: Enemies ── -->
                     <div class="info-tab-content" data-info-panel="enemies">
                         <h3 class="info-heading">&#128126; Enemy Types</h3>
                         <div class="info-enemies-grid">
@@ -2684,14 +2684,14 @@
                         <div class="info-boss-row" id="info-boss-row"></div>
                     </div>
 
-                    <!-- â”€â”€ TAB: Stages â”€â”€ -->
+                    <!-- ── TAB: Stages ── -->
                     <div class="info-tab-content" data-info-panel="stages">
                         <h3 class="info-heading">&#127759; All 10 Stages</h3>
                         <p id="info-stages-summary" style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">The campaign escalates through 10 stages with remixed bosses and increasingly punishing enemy rosters.</p>
                         <div class="info-stages-grid" id="info-stages-grid"></div>
                     </div>
 
-                    <!-- â”€â”€ TAB: Items â”€â”€ -->
+                    <!-- ── TAB: Items ── -->
                     <div class="info-tab-content" data-info-panel="items">
                         <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
                         <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
@@ -2724,7 +2724,7 @@
 
                     </div>
 
-                    <!-- â”€â”€ TAB: Achievements â”€â”€ -->
+                    <!-- ── TAB: Achievements ── -->
                     <div class="info-tab-content" data-info-panel="achievements">
                         <h3 class="info-heading">&#127942; Achievements</h3>
                         <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 10px;">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
@@ -2736,7 +2736,7 @@
                 </div>
             </div>
 
-            <!-- â•â•â•â•â•â• SETTINGS SCREEN (from main menu) â•â•â•â•â•â• -->
+            <!-- ══════ SETTINGS SCREEN (from main menu) ══════ -->
             <div id="menu-settings-overlay" style="display:none;">
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
@@ -2772,7 +2772,7 @@
                 </div>
             </div>
 
-            <!-- â•â•â•â•â•â• PAUSE OVERLAY â•â•â•â•â•â• -->
+            <!-- ══════ PAUSE OVERLAY ══════ -->
             <div id="pause-overlay" style="display:none;">
                 <div class="pause-panel">
                     <h1 class="pause-title">PAUSED</h1>
@@ -2797,30 +2797,30 @@
                 </div>
             </div>
 
-            <script src="js/errorHandler.js?v=1.0.1"></script>
-            <script src="js/firebase.js?v=1.0.1" type="module"></script>
-            <script src="js/config.js?v=1.0.1"></script>
-            <script src="js/analytics.js?v=1.0.1"></script>
-            <script src="js/utils.js?v=1.0.1"></script>
-            <script src="js/highscores.js?v=1.0.1" type="module"></script>
-            <script src="js/playGames.js?v=1.0.1"></script>
-            <script src="js/spriteLoader.js?v=1.0.1"></script>
-            <script src="js/audioManager.js?v=1.0.1"></script>
-            <script src="js/visualEffects.js?v=1.0.1"></script>
-            <script src="js/levelData.js?v=1.0.1"></script>
-            <script src="js/level.js?v=1.0.1"></script>
-            <script src="js/levelEditor.js?v=1.0.1"></script>
-            <script src="js/player.js?v=1.0.1"></script>
-            <script src="js/enemy.js?v=1.0.1"></script>
-            <script src="js/enemyManager.js?v=1.0.1"></script>
-            <script src="js/itemManager.js?v=1.0.1"></script>
-            <script src="js/touchControls.js?v=1.0.1"></script>
-            <script src="js/ui.js?v=1.0.1"></script>
-            <script src="js/achievements.js?v=1.0.1"></script>
-            <script src="js/tutorialHints.js?v=1.0.1"></script>
-            <script src="js/game.js?v=1.0.1"></script>
-            <script src="js/adManager.js?v=1.0.1"></script>
-            <script src="js/main.js?v=1.0.1" type="module"></script>
+            <script src="js/errorHandler.js?v=1.0.2"></script>
+            <script src="js/firebase.js?v=1.0.2" type="module"></script>
+            <script src="js/config.js?v=1.0.2"></script>
+            <script src="js/analytics.js?v=1.0.2"></script>
+            <script src="js/utils.js?v=1.0.2"></script>
+            <script src="js/highscores.js?v=1.0.2" type="module"></script>
+            <script src="js/playGames.js?v=1.0.2"></script>
+            <script src="js/spriteLoader.js?v=1.0.2"></script>
+            <script src="js/audioManager.js?v=1.0.2"></script>
+            <script src="js/visualEffects.js?v=1.0.2"></script>
+            <script src="js/levelData.js?v=1.0.2"></script>
+            <script src="js/level.js?v=1.0.2"></script>
+            <script src="js/levelEditor.js?v=1.0.2"></script>
+            <script src="js/player.js?v=1.0.2"></script>
+            <script src="js/enemy.js?v=1.0.2"></script>
+            <script src="js/enemyManager.js?v=1.0.2"></script>
+            <script src="js/itemManager.js?v=1.0.2"></script>
+            <script src="js/touchControls.js?v=1.0.2"></script>
+            <script src="js/ui.js?v=1.0.2"></script>
+            <script src="js/achievements.js?v=1.0.2"></script>
+            <script src="js/tutorialHints.js?v=1.0.2"></script>
+            <script src="js/game.js?v=1.0.2"></script>
+            <script src="js/adManager.js?v=1.0.2"></script>
+            <script src="js/main.js?v=1.0.2" type="module"></script>
             <script nonce="%CSP_NONCE%">
         // --- UTILITIES ---
             // Touch-control visibility debug helper
@@ -2985,7 +2985,7 @@
 
                             box.appendChild(close);
                             const boardHost = document.createElement('div');
-                            boardHost.textContent = 'Loading global scores�';
+                            boardHost.textContent = 'Loading global scores?';
                             boardHost.style.color = '#ccc';
                             boardHost.style.textAlign = 'center';
                             boardHost.style.padding = '20px';
@@ -3052,7 +3052,7 @@
 
                 // Attach handler to the new button once DOM is ready
                 document.addEventListener('DOMContentLoaded', () => {
-                    // â•â•â•â•â•â• START MENU SPLASH PAGE WIRING â•â•â•â•â•â•
+                    // ══════ START MENU SPLASH PAGE WIRING ══════
                     try {
                         // Track whether the start menu overlay is visible
                         window._startMenuVisible = true;
@@ -3176,7 +3176,7 @@
                                 card.className = 'info-stage-card';
 
                                 const heading = document.createElement('h4');
-                                heading.textContent = `${stageIndex + 1} — ${stageConfig.name}`;
+                                heading.textContent = `${stageIndex + 1} � ${stageConfig.name}`;
 
                                 const body = document.createElement('p');
                                 const bossBits = [];
@@ -3228,7 +3228,7 @@
                         renderInfoStages();
                         renderInfoAchievements();
 
-                        // â”€â”€ Shared Helper: hide all menu overlays â”€â”€
+                        // ── Shared Helper: hide all menu overlays ──
                         function hideAllMenuOverlays() {
                             if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                             if (scoresOverlay) scoresOverlay.style.display = 'none';
@@ -3244,7 +3244,7 @@
                         function startGameFromMenu() {
                             if (!startMenuOverlay) return;
 
-                            // â”€â”€ Gate: wait for game engine to be ready â”€â”€
+                            // ── Gate: wait for game engine to be ready ──
                             if (!window.gameReady || !window.game) {
                                 if (playBtn) {
                                     playBtn.disabled = true;
@@ -3313,9 +3313,9 @@
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 // Populate scoreboard
                                 if (scoresBoardEl) {
-                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores�</p>';
+                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores?</p>';
                                     if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
-                                        // renderScoreboard is async � render directly into the container
+                                        // renderScoreboard is async ? render directly into the container
                                         Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
                                             .catch((e) => {
                                                 console.warn('renderScoreboard failed', e);
@@ -3461,7 +3461,7 @@
                             });
                         }
 
-                        // â”€â”€ INFO TABS wiring â”€â”€
+                        // ── INFO TABS wiring ──
                         {
                             infoTabs.forEach(tab => {
                                 tab.addEventListener('click', (ev) => {
@@ -3471,7 +3471,7 @@
                             });
                         }
 
-                        // â”€â”€ BUTTON HOVER SFX â”€â”€
+                        // ── BUTTON HOVER SFX ──
                         try {
                             const hoverBtns = document.querySelectorAll('.menu-btn');
                             hoverBtns.forEach(btn => {
@@ -3485,7 +3485,7 @@
                             });
                         } catch (e) {}
 
-                        // â”€â”€ FOCUS TRAP for overlays â”€â”€
+                        // ── FOCUS TRAP for overlays ──
                         try {
                             function trapFocus(overlayEl) {
                                 if (!overlayEl) return;
@@ -3509,12 +3509,12 @@
                             trapFocus(document.getElementById('menu-howtoplay-overlay'));
                         } catch (e) {}
 
-                        // -- Recently Unlocked rail (Play Games achievements) � REMOVED from main menu --
+                        // -- Recently Unlocked rail (Play Games achievements) ? REMOVED from main menu --
                         // The rail was retired to keep the start screen uncluttered.
                         // Achievements remain accessible via Intel ? Achievements and the Play Games UI.
                         // Provide a no-op stub so any external callers don't crash.
                         window._renderRecentUnlocksRail = function () {};
-                        if (false) { // eslint-disable-line no-constant-condition � dead block, retained for diff clarity; safe to delete
+                        if (false) { // eslint-disable-line no-constant-condition ? dead block, retained for diff clarity; safe to delete
                             const railEl     = document.getElementById('recent-unlocks-rail');
                             const railListEl = document.getElementById('recent-unlocks-rail-list');
                             const railSrcEl  = document.getElementById('recent-unlocks-rail-source');
@@ -3552,7 +3552,7 @@
 
                                 if (top.length === 0) {
                                     railEl.style.display = '';
-                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet � go bag your first kill!</div>';
+                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet ? go bag your first kill!</div>';
                                     if (railViewAllBtn) railViewAllBtn.style.display = 'none';
                                     return;
                                 }
@@ -3666,7 +3666,7 @@
                                         const auth = await PlayGamesServices.isAuthenticated();
                                         if (auth && auth.isAuthenticated) return true;
                                     } catch (e) { /* fall through to sign-in */ }
-                                    _setStatus('Signing in to Play Games�', 'info');
+                                    _setStatus('Signing in to Play Games?', 'info');
                                     try {
                                         const signed = await PlayGamesServices.signIn();
                                         return !!(signed && signed.isAuthenticated);
@@ -3679,7 +3679,7 @@
                                     if (busy) return;
                                     _setBusy(true);
                                     _setActive(tab.span);
-                                    _setStatus('Opening ' + tab.label + '�', 'info');
+                                    _setStatus('Opening ' + tab.label + '?', 'info');
                                     try { localStorage.setItem(LB_LAST_KEY, tab.span); } catch (e) {}
                                     try {
                                         const ok = await _ensureSignedIn();
@@ -3706,7 +3706,7 @@
                                     lbSignIn.addEventListener('click', async () => {
                                         if (busy) return;
                                         _setBusy(true);
-                                        _setStatus('Signing in to Play Games�', 'info');
+                                        _setStatus('Signing in to Play Games?', 'info');
                                         try {
                                             const ok = await _ensureSignedIn();
                                             if (ok) {
@@ -3991,7 +3991,7 @@
                 }, { passive: false });
             }
 
-            // Show/hide restart on game state â€” delay showing during lockout
+            // Show/hide restart on game state — delay showing during lockout
             window.addEventListener('gameStateChange', (e) => {
                 const isGameOver = e.detail && e.detail.state === 'GAME_OVER';
                 if (isGameOver) {
@@ -4089,7 +4089,7 @@
             if (resumeBtn) {
                 const invokeResume = () => {
                     try {
-                        // Only act when actually paused � prevents double-toggle
+                        // Only act when actually paused ? prevents double-toggle
                         // during the 240ms overlay fade-out transition.
                         if (!window.game || window.game.state !== 'PAUSED') return;
                         // Attempt fullscreen on resume (same user gesture as resume click)
@@ -4231,7 +4231,7 @@
                 if (result && typeof result.then === 'function') {
                     result.then(() => {}, (err) => {
                         // Expected failure when not in a user-gesture context.
-                        // Swallow silently â€” the game works fine without fullscreen.
+                        // Swallow silently — the game works fine without fullscreen.
                         console.log('[Fullscreen] Request denied (expected on VR/Edge):', String(err).slice(0, 120));
                     });
                 }
@@ -4880,7 +4880,7 @@
                     return;
                 }
                 
-                // Suppress fullscreen / user-gesture / autoplay errors â€” these are
+                // Suppress fullscreen / user-gesture / autoplay errors — these are
                 // expected on browsers like Oculus, Edge, and Safari when the page
                 // tries to enter fullscreen without a fresh user gesture. They are
                 // non-fatal and should not block the game.
@@ -4931,7 +4931,7 @@
                 const safeLeft = readSafe('left');
                 const safeRight = readSafe('right');
 
-                info.innerHTML = `CSS: ${cssW} Ã— ${cssH}<br>Internal: ${intW} Ã— ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
+                info.innerHTML = `CSS: ${cssW} × ${cssH}<br>Internal: ${intW} × ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
                 rafId = requestAnimationFrame(render);
             }
 
@@ -4969,7 +4969,7 @@
 <!-- Service Worker registration for PWA / offline support -->
 <script>
 if ('serviceWorker' in navigator) {
-    // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
+    // Skip SW on native Capacitor � the app bundle IS the cache, and a SW
     // can serve stale assets after an app update.
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
     if (!isNative) {
