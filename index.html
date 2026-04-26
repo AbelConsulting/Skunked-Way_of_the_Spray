@@ -945,6 +945,50 @@
             margin-bottom: 4px;
         }
 
+        /* Boss showcase (Iron Claw / Malodor / Kyle portraits) */
+        .info-bosses {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .info-boss {
+            position: relative;
+            padding: 12px 12px 10px;
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 50% 28%, rgba(255,160,30,0.18), transparent 60%),
+                rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+            overflow: hidden;
+        }
+        .info-boss .boss-portrait {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 6px;
+            background-repeat: no-repeat;
+            /* Sprite sheets are 4 frames laid out horizontally; show only the
+               first (idle) frame by widening the background to 4× the tile. */
+            background-size: 400% 100%;
+            background-position: 0 0;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+        }
+        .info-boss .boss-name {
+            display: block;
+            color: #F6D770;
+            font: 700 15px 'Space Grotesk', 'Segoe UI', sans-serif;
+            margin-bottom: 2px;
+        }
+        .info-boss .boss-title {
+            display: block;
+            color: rgba(255,255,255,0.8);
+            font: 500 12px/1.4 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+
         /* Move cards (attack types) */
         .info-moves {
             display: grid;
@@ -2335,10 +2379,25 @@
                         </div>
 
                         <h3 class="info-heading" style="margin-top:12px;">&#11088; Key Features</h3>
+                        <div class="info-bosses" aria-label="Featured bosses">
+                            <div class="info-boss">
+                                <div class="boss-portrait" style="background-image:url('assets/sprites/enemies/boss2_idle.png');" role="img" aria-label="Iron Claw"></div>
+                                <span class="boss-name">IRON CLAW</span>
+                                <span class="boss-title">Enforcer of Skunk City</span>
+                            </div>
+                            <div class="info-boss">
+                                <div class="boss-portrait" style="background-image:url('assets/sprites/enemies/boss4_idle.png');" role="img" aria-label="Malodor"></div>
+                                <span class="boss-name">MALODOR</span>
+                                <span class="boss-title">Enemy Kingpin</span>
+                            </div>
+                            <div class="info-boss">
+                                <div class="boss-portrait" style="background-image:url('assets/sprites/enemies/boss7_idle.png');" role="img" aria-label="Kyle"></div>
+                                <span class="boss-name">KYLE</span>
+                                <span class="boss-title">Crystal Flower Chief</span>
+                            </div>
+                        </div>
                         <div class="info-features">
-                            <div class="info-feature"><strong>10 Stages</strong>Forests, caverns, neon cities &amp; more</div>
                             <div class="info-feature"><strong>6 Enemy Types</strong>Each with unique AI behaviour</div>
-                            <div class="info-feature"><strong>7 Bosses</strong>Named rivals with unique special attacks</div>
                             <div class="info-feature"><strong>Combo System</strong>Chain hits for up to 10&times; score</div>
                             <div class="info-feature"><strong>3 Attack Types</strong>Melee, Shadow Strike &amp; Skunk Shot</div>
                             <div class="info-feature"><strong>6 Power-ups</strong>Health, lives, speed &amp; damage boosts</div>
