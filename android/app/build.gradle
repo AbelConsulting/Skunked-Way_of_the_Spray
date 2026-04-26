@@ -33,6 +33,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 7
         versionName "1.1.5"
+        // Use a versioned archive name so concurrent file locks (e.g. Defender / OneDrive
+        // scanning a previously built artifact) don't block the new bundle output.
+        setProperty("archivesBaseName", "skunkfu-${versionName}-${versionCode}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
