@@ -1,7 +1,7 @@
-﻿<!--
+<!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
-  Proprietary and confidential Ã¢â‚¬â€ unauthorized copying, distribution, or use
+  Proprietary and confidential â€” unauthorized copying, distribution, or use
   of this file, via any medium, is strictly prohibited. See LICENSE for terms.
 -->
 <!DOCTYPE html>
@@ -22,7 +22,7 @@
     <!-- End Google Tag Manager -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a1a2e">
-    <meta name="description" content="Lightning-fast 2D beat 'em up platformer Ã¢â‚¬â€ be the Ninja Skunk, chain combos, and master the Shadow Strike!">
+    <meta name="description" content="Lightning-fast 2D beat 'em up platformer â€” be the Ninja Skunk, chain combos, and master the Shadow Strike!">
     <link rel="canonical" href="https://skunked.io/">
     <meta property="og:url" content="https://skunked.io/">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
@@ -41,8 +41,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <!-- Hidden element to force-load canvas fonts before the game loop starts -->
         <span style="font-family:'Bangers','Press Start 2P','Space Grotesk';position:absolute;left:-9999px;font-size:0;pointer-events:none" aria-hidden="true">.</span>
-    <link rel="stylesheet" href="styles.css?v=1.0.0">
-    <link rel="stylesheet" href="achievements.css?v=1.0.0">
+    <link rel="stylesheet" href="styles.css?v=1.0.1">
+    <link rel="stylesheet" href="achievements.css?v=1.0.1">
 
     <style>
         /* expose safe-area insets as CSS variables so JS can read them */
@@ -223,7 +223,7 @@
             filter: brightness(1.18);
             transform: scale(0.92);
         }
-        /* Tutorial pulse — pulsing glow + caption to teach controls.
+        /* Tutorial pulse � pulsing glow + caption to teach controls.
            Auto-removed once the corresponding input fires once. */
         .touch-btn.tutorial-pulse {
             position: relative;
@@ -327,9 +327,9 @@
             transform: translateY(0);
         }
 
-        /* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
            START MENU SPLASH PAGE
-           Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         #start-menu-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -508,7 +508,7 @@
             margin: 0 auto;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4× the tile. */
+               first (idle) frame by widening the background to 4� the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
@@ -937,9 +937,9 @@
             font-style: italic;
         }
 
-        /* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
            TABBED INFO PAGE
-           Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         .info-tabs {
             display: flex;
             gap: 8px;
@@ -1037,7 +1037,7 @@
             margin: 0 auto 6px;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4× the tile. */
+               first (idle) frame by widening the background to 4� the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: pixelated;
@@ -1857,7 +1857,7 @@
             }
             #start-menu-overlay.hidden { display: none !important; }
 
-            /* â”€â”€ Portrait-optimised start menu â”€â”€ */
+            /* ── Portrait-optimised start menu ── */
             .start-menu-panel {
                 width: min(480px, 94vw);
                 max-height: 92vh;
@@ -1945,7 +1945,7 @@
             }
         }
 
-        /* â”€â”€ Compact pause panel for short landscape screens â”€â”€ */
+        /* ── Compact pause panel for short landscape screens ── */
         @media screen and (max-height: 500px) {
             #pause-overlay {
                 align-items: flex-start;
@@ -1975,7 +1975,7 @@
             .pause-title { font-size: clamp(15px, 3.5vw, 20px) !important; }
         }
 
-        /* Ã¢â€â‚¬Ã¢â€â‚¬ Landscape with limited height (mobile landscape) Ã¢â€â‚¬Ã¢â€â‚¬ */
+        /* â”€â”€ Landscape with limited height (mobile landscape) â”€â”€ */
         @media screen and (max-height: 500px) {
             .start-menu-panel {
                 gap: 8px;
@@ -1983,7 +1983,7 @@
                 max-height: 96vh;
                 width: min(980px, 96vw);
             }
-            /* Keep side-by-side layout â€” mobile landscape is wide, not tall */
+            /* Keep side-by-side layout — mobile landscape is wide, not tall */
             .start-menu-layout {
                 grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr);
                 gap: 16px;
@@ -2049,7 +2049,7 @@
             }
         }
 
-        /* Ã¢â€â‚¬Ã¢â€â‚¬ Very short landscape (e.g. phone landscape with keyboard/nav bar) Ã¢â€â‚¬Ã¢â€â‚¬ */
+        /* â”€â”€ Very short landscape (e.g. phone landscape with keyboard/nav bar) â”€â”€ */
         @media screen and (max-height: 380px) {
             .start-menu-panel {
                 gap: 4px;
@@ -2277,13 +2277,13 @@
                 <div id="score-container" style="position:absolute; right:12px; top:88px; z-index:900; max-width:320px; color:#fff; display:none;"></div>
             </div>
 
-            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
-                 UI OVERLAYS Ã¢â‚¬â€ placed outside #game-container so they
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                 UI OVERLAYS â€” placed outside #game-container so they
                  are never hidden by portrait orientation rules.
                  All use position:fixed and high z-index.
-                 Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+                 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
-            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â START MENU SPLASH PAGE Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+            <!-- â•â•â•â•â•â• START MENU SPLASH PAGE â•â•â•â•â•â• -->
             <div id="start-menu-overlay">
                 <div class="start-menu-panel">
                     <div class="start-menu-layout">
@@ -2412,7 +2412,7 @@
                     <button id="menu-howtoplay-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
-            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â HIGH SCORES SCREEN (from main menu) Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+            <!-- â•â•â•â•â•â• HIGH SCORES SCREEN (from main menu) â•â•â•â•â•â• -->
             <div id="menu-scores-overlay" style="display:none;">
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
@@ -2426,21 +2426,23 @@
                         <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
                         <div id="menu-scores-board"></div>
                     </div>
-                    <!-- Play Games time-window tabs (Android only — hidden on web) -->
+                    <!-- Play Games time-window tabs (Android only � hidden on web) -->
                     <div id="menu-pgs-leaderboard" class="menu-sub-section" style="display:none;">
                         <h3 class="menu-sub-section-title">&#127918; Play Games Leaderboards</h3>
                         <p class="menu-sub-section-copy">Compete on Google Play Games &mdash; today, this week, or all time.</p>
                         <div class="lb-timespan-tabs" role="group" aria-label="Leaderboard time window">
-                            <button id="lb-tab-daily" type="button"><span class="lb-timespan-icon">&#9728;&#65039;</span>Today</button>
-                            <button id="lb-tab-weekly" type="button"><span class="lb-timespan-icon">&#128197;</span>This Week</button>
-                            <button id="lb-tab-alltime" type="button"><span class="lb-timespan-icon">&#127942;</span>All Time</button>
+                            <button id="lb-tab-daily"   type="button" aria-pressed="false"><span class="lb-timespan-icon">&#9728;&#65039;</span>Today</button>
+                            <button id="lb-tab-weekly"  type="button" aria-pressed="false"><span class="lb-timespan-icon">&#128197;</span>This Week</button>
+                            <button id="lb-tab-alltime" type="button" aria-pressed="true"><span class="lb-timespan-icon">&#127942;</span>All Time</button>
                         </div>
+                        <p id="lb-status" class="lb-status" role="status" aria-live="polite"></p>
+                        <button id="lb-signin-btn" type="button" class="menu-btn" style="display:none;">&#128272; Sign in to Play Games</button>
                     </div>
                     <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
 
-            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â INFO SCREEN (from main menu) Ã¢â‚¬â€ Tabbed Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+            <!-- â•â•â•â•â•â• INFO SCREEN (from main menu) â€” Tabbed â•â•â•â•â•â• -->
             <div id="menu-info-overlay" style="display:none;">
                 <div class="menu-sub-panel menu-sub-panel--info">
                     <div class="menu-sub-header">
@@ -2460,7 +2462,7 @@
                         <button class="info-tab" data-info-tab="achievements">Achievements</button>
                     </div>
 
-                    <!-- Ã¢â€â‚¬Ã¢â€â‚¬ TAB: About Ã¢â€â‚¬Ã¢â€â‚¬ -->
+                    <!-- â”€â”€ TAB: About â”€â”€ -->
                     <div class="info-tab-content active" data-info-panel="about">
                         <div class="info-section info-story">
                             <h3 class="info-heading">&#128220; Story</h3>
@@ -2509,7 +2511,7 @@
                         <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.35);">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
                     </div>
 
-                    <!-- Ã¢â€â‚¬Ã¢â€â‚¬ TAB: Controls Ã¢â€â‚¬Ã¢â€â‚¬ -->
+                    <!-- â”€â”€ TAB: Controls â”€â”€ -->
                     <div class="info-tab-content" data-info-panel="controls">
                         <div class="info-ctrl-group">
                             <h4>&#9000; Keyboard</h4>
@@ -2579,7 +2581,7 @@
                         </div>
                     </div>
 
-                    <!-- Ã¢â€â‚¬Ã¢â€â‚¬ TAB: Enemies Ã¢â€â‚¬Ã¢â€â‚¬ -->
+                    <!-- â”€â”€ TAB: Enemies â”€â”€ -->
                     <div class="info-tab-content" data-info-panel="enemies">
                         <h3 class="info-heading">&#128126; Enemy Types</h3>
                         <div class="info-enemies-grid">
@@ -2638,14 +2640,14 @@
                         <div class="info-boss-row" id="info-boss-row"></div>
                     </div>
 
-                    <!-- Ã¢â€â‚¬Ã¢â€â‚¬ TAB: Stages Ã¢â€â‚¬Ã¢â€â‚¬ -->
+                    <!-- â”€â”€ TAB: Stages â”€â”€ -->
                     <div class="info-tab-content" data-info-panel="stages">
                         <h3 class="info-heading">&#127759; All 10 Stages</h3>
                         <p id="info-stages-summary" style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">The campaign escalates through 10 stages with remixed bosses and increasingly punishing enemy rosters.</p>
                         <div class="info-stages-grid" id="info-stages-grid"></div>
                     </div>
 
-                    <!-- Ã¢â€â‚¬Ã¢â€â‚¬ TAB: Items Ã¢â€â‚¬Ã¢â€â‚¬ -->
+                    <!-- â”€â”€ TAB: Items â”€â”€ -->
                     <div class="info-tab-content" data-info-panel="items">
                         <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
                         <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
@@ -2678,7 +2680,7 @@
 
                     </div>
 
-                    <!-- Ã¢â€â‚¬Ã¢â€â‚¬ TAB: Achievements Ã¢â€â‚¬Ã¢â€â‚¬ -->
+                    <!-- â”€â”€ TAB: Achievements â”€â”€ -->
                     <div class="info-tab-content" data-info-panel="achievements">
                         <h3 class="info-heading">&#127942; Achievements</h3>
                         <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 10px;">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
@@ -2690,7 +2692,7 @@
                 </div>
             </div>
 
-            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â SETTINGS SCREEN (from main menu) Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+            <!-- â•â•â•â•â•â• SETTINGS SCREEN (from main menu) â•â•â•â•â•â• -->
             <div id="menu-settings-overlay" style="display:none;">
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
@@ -2726,7 +2728,7 @@
                 </div>
             </div>
 
-            <!-- Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â PAUSE OVERLAY Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â -->
+            <!-- â•â•â•â•â•â• PAUSE OVERLAY â•â•â•â•â•â• -->
             <div id="pause-overlay" style="display:none;">
                 <div class="pause-panel">
                     <h1 class="pause-title">PAUSED</h1>
@@ -2751,30 +2753,30 @@
                 </div>
             </div>
 
-            <script src="js/errorHandler.js?v=1.0.0"></script>
-            <script src="js/firebase.js?v=1.0.0" type="module"></script>
-            <script src="js/config.js?v=1.0.0"></script>
-            <script src="js/analytics.js?v=1.0.0"></script>
-            <script src="js/utils.js?v=1.0.0"></script>
-            <script src="js/highscores.js?v=1.0.0" type="module"></script>
-            <script src="js/playGames.js?v=1.0.0"></script>
-            <script src="js/spriteLoader.js?v=1.0.0"></script>
-            <script src="js/audioManager.js?v=1.0.0"></script>
-            <script src="js/visualEffects.js?v=1.0.0"></script>
-            <script src="js/levelData.js?v=1.0.0"></script>
-            <script src="js/level.js?v=1.0.0"></script>
-            <script src="js/levelEditor.js?v=1.0.0"></script>
-            <script src="js/player.js?v=1.0.0"></script>
-            <script src="js/enemy.js?v=1.0.0"></script>
-            <script src="js/enemyManager.js?v=1.0.0"></script>
-            <script src="js/itemManager.js?v=1.0.0"></script>
-            <script src="js/touchControls.js?v=1.0.0"></script>
-            <script src="js/ui.js?v=1.0.0"></script>
-            <script src="js/achievements.js?v=1.0.0"></script>
-            <script src="js/tutorialHints.js?v=1.0.0"></script>
-            <script src="js/game.js?v=1.0.0"></script>
-            <script src="js/adManager.js?v=1.0.0"></script>
-            <script src="js/main.js?v=1.0.0" type="module"></script>
+            <script src="js/errorHandler.js?v=1.0.1"></script>
+            <script src="js/firebase.js?v=1.0.1" type="module"></script>
+            <script src="js/config.js?v=1.0.1"></script>
+            <script src="js/analytics.js?v=1.0.1"></script>
+            <script src="js/utils.js?v=1.0.1"></script>
+            <script src="js/highscores.js?v=1.0.1" type="module"></script>
+            <script src="js/playGames.js?v=1.0.1"></script>
+            <script src="js/spriteLoader.js?v=1.0.1"></script>
+            <script src="js/audioManager.js?v=1.0.1"></script>
+            <script src="js/visualEffects.js?v=1.0.1"></script>
+            <script src="js/levelData.js?v=1.0.1"></script>
+            <script src="js/level.js?v=1.0.1"></script>
+            <script src="js/levelEditor.js?v=1.0.1"></script>
+            <script src="js/player.js?v=1.0.1"></script>
+            <script src="js/enemy.js?v=1.0.1"></script>
+            <script src="js/enemyManager.js?v=1.0.1"></script>
+            <script src="js/itemManager.js?v=1.0.1"></script>
+            <script src="js/touchControls.js?v=1.0.1"></script>
+            <script src="js/ui.js?v=1.0.1"></script>
+            <script src="js/achievements.js?v=1.0.1"></script>
+            <script src="js/tutorialHints.js?v=1.0.1"></script>
+            <script src="js/game.js?v=1.0.1"></script>
+            <script src="js/adManager.js?v=1.0.1"></script>
+            <script src="js/main.js?v=1.0.1" type="module"></script>
             <script nonce="%CSP_NONCE%">
         // --- UTILITIES ---
             // Touch-control visibility debug helper
@@ -2939,7 +2941,7 @@
 
                             box.appendChild(close);
                             const boardHost = document.createElement('div');
-                            boardHost.textContent = 'Loading global scores…';
+                            boardHost.textContent = 'Loading global scores�';
                             boardHost.style.color = '#ccc';
                             boardHost.style.textAlign = 'center';
                             boardHost.style.padding = '20px';
@@ -3006,7 +3008,7 @@
 
                 // Attach handler to the new button once DOM is ready
                 document.addEventListener('DOMContentLoaded', () => {
-                    // Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â START MENU SPLASH PAGE WIRING Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+                    // â•â•â•â•â•â• START MENU SPLASH PAGE WIRING â•â•â•â•â•â•
                     try {
                         // Track whether the start menu overlay is visible
                         window._startMenuVisible = true;
@@ -3130,7 +3132,7 @@
                                 card.className = 'info-stage-card';
 
                                 const heading = document.createElement('h4');
-                                heading.textContent = `${stageIndex + 1} â€” ${stageConfig.name}`;
+                                heading.textContent = `${stageIndex + 1} — ${stageConfig.name}`;
 
                                 const body = document.createElement('p');
                                 const bossBits = [];
@@ -3182,7 +3184,7 @@
                         renderInfoStages();
                         renderInfoAchievements();
 
-                        // Ã¢â€â‚¬Ã¢â€â‚¬ Shared Helper: hide all menu overlays Ã¢â€â‚¬Ã¢â€â‚¬
+                        // â”€â”€ Shared Helper: hide all menu overlays â”€â”€
                         function hideAllMenuOverlays() {
                             if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                             if (scoresOverlay) scoresOverlay.style.display = 'none';
@@ -3198,7 +3200,7 @@
                         function startGameFromMenu() {
                             if (!startMenuOverlay) return;
 
-                            // Ã¢â€â‚¬Ã¢â€â‚¬ Gate: wait for game engine to be ready Ã¢â€â‚¬Ã¢â€â‚¬
+                            // â”€â”€ Gate: wait for game engine to be ready â”€â”€
                             if (!window.gameReady || !window.game) {
                                 if (playBtn) {
                                     playBtn.disabled = true;
@@ -3267,9 +3269,9 @@
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 // Populate scoreboard
                                 if (scoresBoardEl) {
-                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores…</p>';
+                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores�</p>';
                                     if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
-                                        // renderScoreboard is async — render directly into the container
+                                        // renderScoreboard is async � render directly into the container
                                         Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
                                             .catch((e) => {
                                                 console.warn('renderScoreboard failed', e);
@@ -3281,6 +3283,7 @@
                                 }
                                 try { Analytics.trackMenuAction('high_scores'); } catch(e) {}
                                 if (scoresOverlay) scoresOverlay.style.display = 'flex';
+                                try { if (typeof window._refreshLbAuthState === 'function') window._refreshLbAuthState(); } catch (e) {}
                             });
                         }
 
@@ -3414,7 +3417,7 @@
                             });
                         }
 
-                        // Ã¢â€â‚¬Ã¢â€â‚¬ INFO TABS wiring Ã¢â€â‚¬Ã¢â€â‚¬
+                        // â”€â”€ INFO TABS wiring â”€â”€
                         {
                             infoTabs.forEach(tab => {
                                 tab.addEventListener('click', (ev) => {
@@ -3424,7 +3427,7 @@
                             });
                         }
 
-                        // Ã¢â€â‚¬Ã¢â€â‚¬ BUTTON HOVER SFX Ã¢â€â‚¬Ã¢â€â‚¬
+                        // â”€â”€ BUTTON HOVER SFX â”€â”€
                         try {
                             const hoverBtns = document.querySelectorAll('.menu-btn');
                             hoverBtns.forEach(btn => {
@@ -3438,7 +3441,7 @@
                             });
                         } catch (e) {}
 
-                        // Ã¢â€â‚¬Ã¢â€â‚¬ FOCUS TRAP for overlays Ã¢â€â‚¬Ã¢â€â‚¬
+                        // â”€â”€ FOCUS TRAP for overlays â”€â”€
                         try {
                             function trapFocus(overlayEl) {
                                 if (!overlayEl) return;
@@ -3462,10 +3465,12 @@
                             trapFocus(document.getElementById('menu-howtoplay-overlay'));
                         } catch (e) {}
 
-                        // ── Recently Unlocked rail (Play Games achievements) — REMOVED from main menu ──
+                        // -- Recently Unlocked rail (Play Games achievements) � REMOVED from main menu --
                         // The rail was retired to keep the start screen uncluttered.
-                        // Achievements remain accessible via Intel ▸ Achievements and the Play Games UI.
-                        if (false) { // eslint-disable-line no-constant-condition
+                        // Achievements remain accessible via Intel ? Achievements and the Play Games UI.
+                        // Provide a no-op stub so any external callers don't crash.
+                        window._renderRecentUnlocksRail = function () {};
+                        if (false) { // eslint-disable-line no-constant-condition � dead block, retained for diff clarity; safe to delete
                             const railEl     = document.getElementById('recent-unlocks-rail');
                             const railListEl = document.getElementById('recent-unlocks-rail-list');
                             const railSrcEl  = document.getElementById('recent-unlocks-rail-source');
@@ -3495,7 +3500,7 @@
                                 for (const d of defs) {
                                     const a = stored && stored[d.id];
                                     if (a && a.unlocked) {
-                                        rows.push({ id: d.id, name: d.name, desc: d.desc, icon: d.icon || '🏆', date: a.date || 0 });
+                                        rows.push({ id: d.id, name: d.name, desc: d.desc, icon: d.icon || '??', date: a.date || 0 });
                                     }
                                 }
                                 rows.sort((a, b) => (b.date || 0) - (a.date || 0));
@@ -3503,7 +3508,7 @@
 
                                 if (top.length === 0) {
                                     railEl.style.display = '';
-                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet — go bag your first kill!</div>';
+                                    railListEl.innerHTML = '<div class="recent-unlocks-rail__empty">No achievements yet � go bag your first kill!</div>';
                                     if (railViewAllBtn) railViewAllBtn.style.display = 'none';
                                     return;
                                 }
@@ -3520,10 +3525,10 @@
 
                                 // Update source label based on PGS availability
                                 const pgsOn = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
-                                if (railSrcEl) railSrcEl.textContent = pgsOn ? '🎮 Play Games' : 'Local';
+                                if (railSrcEl) railSrcEl.textContent = pgsOn ? '?? Play Games' : 'Local';
                             }
 
-                            // Tap a card → open Play Games achievements UI when available
+                            // Tap a card ? open Play Games achievements UI when available
                             if (railListEl) {
                                 railListEl.addEventListener('click', (ev) => {
                                     const card = ev.target.closest('.recent-unlocks-rail__card');
@@ -3567,40 +3572,130 @@
                             renderRecentUnlocksRail();
                         }
 
-                        // ── Time-window leaderboard tabs (Play Games) ──
+                        // -- Time-window leaderboard tabs (Play Games) --
                         try {
                             const pgsLbSection = document.getElementById('menu-pgs-leaderboard');
                             const lbDaily   = document.getElementById('lb-tab-daily');
                             const lbWeekly  = document.getElementById('lb-tab-weekly');
                             const lbAllTime = document.getElementById('lb-tab-alltime');
+                            const lbStatus  = document.getElementById('lb-status');
+                            const lbSignIn  = document.getElementById('lb-signin-btn');
                             const pgsAvail  = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
                             if (pgsLbSection) pgsLbSection.style.display = pgsAvail ? '' : 'none';
+
                             if (pgsAvail) {
-                                // Ensure the player is signed in before opening the native UI;
-                                // otherwise getLeaderboardIntent() rejects silently and the button appears dead.
-                                async function _openLb(timeSpan, action) {
+                                const LB_LAST_KEY = 'skunkfu.lb.lastSpan';
+                                const tabs = [
+                                    { btn: lbDaily,   span: 'DAILY',    action: 'lb_daily',   label: 'Today' },
+                                    { btn: lbWeekly,  span: 'WEEKLY',   action: 'lb_weekly',  label: 'This Week' },
+                                    { btn: lbAllTime, span: 'ALL_TIME', action: 'lb_alltime', label: 'All Time' },
+                                ];
+
+                                let busy = false;
+                                function _setStatus(msg, kind) {
+                                    if (!lbStatus) return;
+                                    lbStatus.textContent = msg || '';
+                                    lbStatus.dataset.kind = kind || '';
+                                }
+                                function _setActive(span) {
+                                    tabs.forEach(t => {
+                                        if (!t.btn) return;
+                                        const on = (t.span === span);
+                                        t.btn.classList.toggle('is-active', on);
+                                        t.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                                    });
+                                }
+                                function _setBusy(on) {
+                                    busy = on;
+                                    tabs.forEach(t => { if (t.btn) t.btn.disabled = on; });
+                                }
+
+                                // Restore last-selected window (visual only).
+                                try {
+                                    const saved = localStorage.getItem(LB_LAST_KEY);
+                                    if (saved && tabs.some(t => t.span === saved)) _setActive(saved);
+                                    else _setActive('ALL_TIME');
+                                } catch (e) { _setActive('ALL_TIME'); }
+
+                                async function _ensureSignedIn() {
                                     try {
                                         const auth = await PlayGamesServices.isAuthenticated();
-                                        if (!auth || !auth.isAuthenticated) {
-                                            const signed = await PlayGamesServices.signIn();
-                                            if (!signed || !signed.isAuthenticated) {
-                                                console.warn('[PlayGames] Sign-in required to open leaderboard');
-                                                return;
-                                            }
-                                        }
-                                        await PlayGamesServices.showLeaderboard(timeSpan);
-                                        try { Analytics.trackMenuAction(action); } catch(e){}
-                                    } catch (err) {
-                                        console.warn('[PlayGames] open leaderboard failed', err);
+                                        if (auth && auth.isAuthenticated) return true;
+                                    } catch (e) { /* fall through to sign-in */ }
+                                    _setStatus('Signing in to Play Games�', 'info');
+                                    try {
+                                        const signed = await PlayGamesServices.signIn();
+                                        return !!(signed && signed.isAuthenticated);
+                                    } catch (e) {
+                                        return false;
                                     }
                                 }
-                                if (lbDaily)   lbDaily.addEventListener('click',   () => _openLb('DAILY',    'lb_daily'));
-                                if (lbWeekly)  lbWeekly.addEventListener('click',  () => _openLb('WEEKLY',   'lb_weekly'));
-                                if (lbAllTime) lbAllTime.addEventListener('click', () => _openLb('ALL_TIME', 'lb_alltime'));
+
+                                async function _openLb(tab) {
+                                    if (busy) return;
+                                    _setBusy(true);
+                                    _setActive(tab.span);
+                                    _setStatus('Opening ' + tab.label + '�', 'info');
+                                    try { localStorage.setItem(LB_LAST_KEY, tab.span); } catch (e) {}
+                                    try {
+                                        const ok = await _ensureSignedIn();
+                                        if (!ok) {
+                                            _setStatus('Sign in to Play Games to view leaderboards.', 'warn');
+                                            if (lbSignIn) lbSignIn.style.display = '';
+                                            return;
+                                        }
+                                        if (lbSignIn) lbSignIn.style.display = 'none';
+                                        await PlayGamesServices.showLeaderboard(tab.span);
+                                        _setStatus('', '');
+                                        try { Analytics.trackMenuAction(tab.action); } catch (e) {}
+                                    } catch (err) {
+                                        console.warn('[PlayGames] open leaderboard failed', err);
+                                        _setStatus('Could not open Play Games. Try again in a moment.', 'error');
+                                    } finally {
+                                        _setBusy(false);
+                                    }
+                                }
+
+                                tabs.forEach(t => { if (t.btn) t.btn.addEventListener('click', () => _openLb(t)); });
+
+                                if (lbSignIn) {
+                                    lbSignIn.addEventListener('click', async () => {
+                                        if (busy) return;
+                                        _setBusy(true);
+                                        _setStatus('Signing in to Play Games�', 'info');
+                                        try {
+                                            const ok = await _ensureSignedIn();
+                                            if (ok) {
+                                                lbSignIn.style.display = 'none';
+                                                _setStatus('Signed in. Pick a time window above.', 'info');
+                                                try { PlayGamesServices.syncAchievements(); } catch (e) {}
+                                            } else {
+                                                _setStatus('Sign-in was cancelled or failed.', 'warn');
+                                            }
+                                        } finally { _setBusy(false); }
+                                    });
+                                }
+
+                                // When the High Scores screen is opened, surface auth state so the user
+                                // isn't surprised by a silent failure when they tap a tab.
+                                async function _refreshLbAuthState() {
+                                    try {
+                                        const auth = await PlayGamesServices.isAuthenticated();
+                                        if (auth && auth.isAuthenticated) {
+                                            if (lbSignIn) lbSignIn.style.display = 'none';
+                                            if (lbStatus && lbStatus.dataset.kind === 'warn') _setStatus('', '');
+                                        } else {
+                                            _setStatus('Sign in to Play Games to view leaderboards.', 'warn');
+                                            if (lbSignIn) lbSignIn.style.display = '';
+                                        }
+                                    } catch (e) {}
+                                }
+                                window._refreshLbAuthState = _refreshLbAuthState;
+                                _refreshLbAuthState();
                             }
                         } catch (e) {}
 
-                        // ── Juicy achievement-unlock toast renderer ──
+                        // -- Juicy achievement-unlock toast renderer --
                         try {
                             // Stack container (created lazily on first toast)
                             function _ensureToastStack() {
@@ -3624,7 +3719,7 @@
                                 const pgsAvail = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
                                 const safeName = String(detail.name || 'Achievement Unlocked').replace(/[<>]/g, '');
                                 const safeDesc = String(detail.desc || '').replace(/[<>]/g, '');
-                                const icon = detail.icon || '🏆';
+                                const icon = detail.icon || '??';
                                 el.innerHTML = `
                                     <div class="ach-icon">${icon}</div>
                                     <div class="ach-body">
@@ -3632,7 +3727,7 @@
                                         <p class="ach-name">${safeName}</p>
                                         ${safeDesc ? `<p class="ach-desc">${safeDesc}</p>` : ''}
                                     </div>
-                                    ${pgsAvail ? '<span class="ach-pgs-badge">🎮 Play Games</span>' : ''}
+                                    ${pgsAvail ? '<span class="ach-pgs-badge">?? Play Games</span>' : ''}
                                 `;
                                 stack.appendChild(el);
                                 // Trigger entrance animation on next frame
@@ -3852,7 +3947,7 @@
                 }, { passive: false });
             }
 
-            // Show/hide restart on game state Ã¢â‚¬â€ delay showing during lockout
+            // Show/hide restart on game state â€” delay showing during lockout
             window.addEventListener('gameStateChange', (e) => {
                 const isGameOver = e.detail && e.detail.state === 'GAME_OVER';
                 if (isGameOver) {
@@ -3950,7 +4045,7 @@
             if (resumeBtn) {
                 const invokeResume = () => {
                     try {
-                        // Only act when actually paused — prevents double-toggle
+                        // Only act when actually paused � prevents double-toggle
                         // during the 240ms overlay fade-out transition.
                         if (!window.game || window.game.state !== 'PAUSED') return;
                         // Attempt fullscreen on resume (same user gesture as resume click)
@@ -4092,7 +4187,7 @@
                 if (result && typeof result.then === 'function') {
                     result.then(() => {}, (err) => {
                         // Expected failure when not in a user-gesture context.
-                        // Swallow silently Ã¢â‚¬â€ the game works fine without fullscreen.
+                        // Swallow silently â€” the game works fine without fullscreen.
                         console.log('[Fullscreen] Request denied (expected on VR/Edge):', String(err).slice(0, 120));
                     });
                 }
@@ -4741,7 +4836,7 @@
                     return;
                 }
                 
-                // Suppress fullscreen / user-gesture / autoplay errors Ã¢â‚¬â€ these are
+                // Suppress fullscreen / user-gesture / autoplay errors â€” these are
                 // expected on browsers like Oculus, Edge, and Safari when the page
                 // tries to enter fullscreen without a fresh user gesture. They are
                 // non-fatal and should not block the game.
@@ -4792,7 +4887,7 @@
                 const safeLeft = readSafe('left');
                 const safeRight = readSafe('right');
 
-                info.innerHTML = `CSS: ${cssW} Ãƒâ€” ${cssH}<br>Internal: ${intW} Ãƒâ€” ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
+                info.innerHTML = `CSS: ${cssW} Ã— ${cssH}<br>Internal: ${intW} Ã— ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
                 rafId = requestAnimationFrame(render);
             }
 
@@ -4830,7 +4925,7 @@
 <!-- Service Worker registration for PWA / offline support -->
 <script>
 if ('serviceWorker' in navigator) {
-    // Skip SW on native Capacitor â€” the app bundle IS the cache, and a SW
+    // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
     // can serve stale assets after an app update.
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
     if (!isNative) {
