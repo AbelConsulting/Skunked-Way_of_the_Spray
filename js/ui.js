@@ -624,8 +624,10 @@ class UI {
 
         if (lockoutRemaining > 0) {
             // Animated circular countdown
-            const lockoutTotal = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
-                ? Config.GAME_OVER_LOCKOUT : 3.0;
+            const lockoutTotal = (typeof window !== 'undefined' && window.game && typeof window.game._gameOverLockoutMs === 'number')
+                ? (window.game._gameOverLockoutMs / 1000)
+                : ((typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                    ? Config.GAME_OVER_LOCKOUT : 3.0);
             const progress = 1 - (lockoutRemaining / lockoutTotal);
             const ringRadius = 18;
             const ringX = cx;

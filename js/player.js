@@ -882,7 +882,7 @@ class Player {
         }
     }
 
-    startDeath() {
+    startDeath(opts) {
         if (this.isDying) return;
         this.isDying = true;
         this.deathTimer = this.deathDuration;
@@ -892,15 +892,26 @@ class Player {
         this.isShadowStriking = false;
         this.hitStunTimer = 0;
         this.invulnerableTimer = 0;
+        const isFinal = !!(opts && opts.final);
         try {
             if (this.audioManager && typeof this.audioManager.playDeathSequence === 'function') {
-                this.audioManager.playDeathSequence({
-                    oof: 'player_death',
-                    follow: 'game_over',
-                    delayMs: 1000,
-                    oofVolume: 0.9,
-                    followVolume: 0.95
-                });
+                if (isFinal) {
+                    // Long, drawn-out final-death stinger: louder oof + longer
+                    // delay before the game-over musical cue.
+                    this.audioManager.playDeathSequence({
+                        oof: 'player_death',
+                        follow: 'game_over',
+                        delayMs: 1400,
+                        oofVolume: 1.0,
+                        followVolume: 1.0,
+                        finalTail: true
+                    });
+                } else {
+                    // Non-final death: short oof only, no game-over stinger.
+                    if (this.audioManager.playSound) {
+                        this.audioManager.playSound('player_death', 0.9);
+                    }
+                }
             } else if (this.audioManager && this.audioManager.playSound) {
                 // Fallback for older AudioManager
                 this.audioManager.playSound('player_death', 0.9);

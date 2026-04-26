@@ -295,6 +295,7 @@ class AudioManager {
 
     cancelDeathSequence() {
         this._cancelScheduledSfx('death_followup');
+        this._cancelScheduledSfx('death_tail');
     }
 
     /**
@@ -309,6 +310,7 @@ class AudioManager {
             const oofVolume = (opts && typeof opts.oofVolume === 'number') ? opts.oofVolume : 0.9;
             const followVolume = (opts && typeof opts.followVolume === 'number') ? opts.followVolume : 0.95;
             const delayMs = (opts && typeof opts.delayMs === 'number') ? opts.delayMs : 1000;
+            const finalTail = !!(opts && opts.finalTail);
 
             // Immediate “oof”
             if (this.playSound) this.playSound(oof, oofVolume);
@@ -320,10 +322,66 @@ class AudioManager {
                 } catch (e) { __err('audio', e); }
                 delete this._scheduledSfx.death_followup;
             }, Math.max(0, Math.floor(delayMs)));
+
+            // Optional long, drawn-out tail for final death — synthesized so it
+            // doesn't depend on shipping an extra audio asset. Plays a slow
+            // descending low tone that fades out over ~2.5s, layered behind
+            // the stinger.
+            if (finalTail) {
+                this._scheduledSfx.death_tail = setTimeout(() => {
+                    try { this._playFinalDeathTail(); } catch (e) { __err('audio', e); }
+                    delete this._scheduledSfx.death_tail;
+                }, Math.max(0, Math.floor(delayMs + 350)));
+            }
         } catch (e) {
             // Fallback: at least play the initial sound
             try { this.playSound && this.playSound('player_death', 0.9); } catch (err) { __err('audio', err); }
         }
+    }
+
+    /**
+     * Synthesize a low, slowly-decaying tone for the final-death tail.
+     * Independent of any audio asset; runs through the SFX gain bus.
+     */
+    _playFinalDeathTail() {
+        if (!this._ensureContext || !this._ensureContext()) return;
+        const ctx = this.audioCtx;
+        if (!ctx || ctx.state === 'closed') return;
+        try {
+            const now = ctx.currentTime;
+            const dur = 2.6;
+
+            // Low-frequency sine sweep (110 Hz → 55 Hz) for the somber drone
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + dur);
+
+            // Slight detune partial for warmth
+            const osc2 = ctx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(220, now);
+            osc2.frequency.exponentialRampToValueAtTime(110, now + dur);
+
+            const tailGain = ctx.createGain();
+            tailGain.gain.setValueAtTime(0, now);
+            tailGain.gain.linearRampToValueAtTime(0.32, now + 0.18);
+            tailGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+            const partialGain = ctx.createGain();
+            partialGain.gain.setValueAtTime(0, now);
+            partialGain.gain.linearRampToValueAtTime(0.10, now + 0.25);
+            partialGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+            const dest = this.sfxGain || this.masterGain || ctx.destination;
+            osc.connect(tailGain).connect(dest);
+            osc2.connect(partialGain).connect(dest);
+
+            osc.start(now);
+            osc2.start(now);
+            osc.stop(now + dur + 0.05);
+            osc2.stop(now + dur + 0.05);
+        } catch (e) { __err('audio', e); }
     }
 
     /**

@@ -2490,7 +2490,7 @@ class Game {
             // Trigger death animation first, then respawn after delay
             try {
                 if (this.player && typeof this.player.startDeath === 'function') {
-                    this.player.startDeath();
+                    this.player.startDeath({ final: false });
                 }
             } catch (e) { __err('game', e); }
 
@@ -2502,7 +2502,7 @@ class Game {
             // Game Over
             try {
                 if (this.player && typeof this.player.startDeath === 'function') {
-                    this.player.startDeath();
+                    this.player.startDeath({ final: true });
                 }
             } catch (e) { __err('game', e); }
             this.state = "GAME_OVER";
@@ -2612,9 +2612,38 @@ class Game {
                 }
             } catch (e) { /* ignore */ }
 
-            // Delay high score prompt to allow player to see game over screen
-            const hsDelay = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_HIGHSCORE_DELAY === 'number')
-                ? Config.GAME_OVER_HIGHSCORE_DELAY * 1000 : 5000;
+            // Compute dynamic timings so the restart/main-menu prompt only
+            // appears AFTER the achievement breakdown animation finishes and
+            // (if applicable) the high-score initials modal has been shown.
+            // Mirrors the timing constants used in ui.js drawGameOver():
+            //   stats stagger: 1.2s base + 6 stats × 0.15s ≈ 2.1s
+            //   achievement header delay: stats end + 0.3s ≈ 2.4s
+            //   each badge animates in over ~0.4s, staggered 0.18s
+            const numAch = (this._gameOverNewAchievements || []).length;
+            const achAnimEnd = numAch > 0
+                ? 2.4 + 0.35 + (numAch - 1) * 0.18 + 0.4   // header + first badge + stagger + animDuration
+                : 2.4;                                      // stats end + small buffer
+
+            // Show high-score initials prompt right after the breakdown animation
+            // completes, but before the restart/main-menu prompt becomes interactive.
+            const hsDelay = Math.max(
+                Math.round((achAnimEnd + 0.4) * 1000),
+                (typeof Config !== 'undefined' && typeof Config.GAME_OVER_HIGHSCORE_DELAY === 'number')
+                    ? Math.min(Config.GAME_OVER_HIGHSCORE_DELAY * 1000, 9000)
+                    : 5000
+            );
+            this._gameOverHsDelayMs = hsDelay;
+
+            // Lockout = full breakdown duration (+ small buffer). If a high
+            // score is suspected, extend so initials modal is given time to
+            // appear before any restart input is accepted.
+            const lockoutSec = achAnimEnd + 0.6 + (this._gameOverIsHighScore ? 0.8 : 0);
+            this._gameOverLockoutMs = Math.max(
+                Math.round(lockoutSec * 1000),
+                (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                    ? Config.GAME_OVER_LOCKOUT * 1000 : 3000
+            );
+
             setTimeout(() => {
                 // Only show high score prompt if still in game over state
                 if (this.state !== 'GAME_OVER') return;
@@ -2655,8 +2684,16 @@ class Game {
      */
     _isGameOverLocked() {
         if (this.state !== 'GAME_OVER') return false;
-        const lockout = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
-            ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+        // Block input while the high-score initials modal is visible.
+        try {
+            if (typeof document !== 'undefined' && document.querySelector('.highscore-prompt-overlay')) {
+                return true;
+            }
+        } catch (e) { /* ignore */ }
+        const lockout = (typeof this._gameOverLockoutMs === 'number')
+            ? this._gameOverLockoutMs
+            : ((typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                ? Config.GAME_OVER_LOCKOUT * 1000 : 3000);
         return (Date.now() - this._gameOverTime) < lockout;
     }
 
@@ -2665,8 +2702,10 @@ class Game {
      */
     _gameOverLockoutRemaining() {
         if (this.state !== 'GAME_OVER') return 0;
-        const lockout = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
-            ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+        const lockout = (typeof this._gameOverLockoutMs === 'number')
+            ? this._gameOverLockoutMs
+            : ((typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                ? Config.GAME_OVER_LOCKOUT * 1000 : 3000);
         return Math.max(0, (lockout - (Date.now() - this._gameOverTime)) / 1000);
     }
 
