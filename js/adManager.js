@@ -7,7 +7,7 @@
  * Ad Unit IDs (Mephitideus — pub-8519140628365141):
  *   Banner:       ca-app-pub-8519140628365141/6620194957
  *   Rewarded:     ca-app-pub-8519140628365141/4115014216
- *   Interstitial: PLACEHOLDER — replace with real unit once created in AdMob console
+ *   Interstitial: ca-app-pub-8519140628365141/6574557959
  *
  * Google AdMob test ad unit IDs (used when testing = true):
  *   Banner:       ca-app-pub-3940256099942544/6300978111
