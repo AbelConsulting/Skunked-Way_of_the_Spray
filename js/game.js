@@ -727,7 +727,7 @@ class Game {
                 totalPlayTime: parseFloat(localStorage.getItem('skunkfu_totalPlayTime') || '0')
             };
             // Persist incremented run count
-            try { localStorage.setItem('skunkfu_totalRuns', String(this.gameStats.totalRuns)); } catch (e) { /* ignore */ }
+            try { localStorage.setItem('skunkfu_totalRuns', String(this.gameStats.totalRuns)); } catch (e) { __err('game:totalRuns', e); }
 
             // Reset idol tracking for a new run
             this.idolProgress = {};
@@ -869,7 +869,7 @@ class Game {
             try {
                 const ev = new CustomEvent('scoreChange', { detail: { score: this.score } });
                 window.dispatchEvent(ev);
-            } catch (e) { /* ignore */ }
+            } catch (e) { __err('game:scoreChange', e); }
         }
 
         _spawnComboToast(x, y, text, opts = null) {

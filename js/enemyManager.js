@@ -149,7 +149,7 @@ class EnemyManager {
                 }
                 sy = (typeof sp.y === 'number') ? sp.y : (300 + Utils.randomInt(-50, 50));
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { __err('enemyManager:spawn', e); }
 
         // Fallback spawn right if none selected
         if (sx === null) sx = level.width + 50;
@@ -293,7 +293,7 @@ class EnemyManager {
             if (typeof player.isAttackDamageActive === 'function' && !player.isAttackDamageActive()) {
                 return { hit: false, enemiesHit: 0, totalDamage: 0 };
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { __err('enemyManager:isAttackDamageActive', e); }
 
         // Prefer a swept/expanded hitbox for fast dash attacks.
         let attackBox = player.attackHitbox;
@@ -302,7 +302,7 @@ class EnemyManager {
                 const hb = player.getAttackHitboxForCollision();
                 if (hb) attackBox = hb;
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { __err('enemyManager:getAttackHitbox', e); }
 
         let enemiesHit = 0;
         let totalDamage = 0;
@@ -345,7 +345,7 @@ class EnemyManager {
                     if (typeof enemy.isAttackDamageActive === 'function' && !enemy.isAttackDamageActive()) {
                         continue;
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) { __err('enemyManager:enemyIsAttackDamageActive', e); }
                 if (Utils.rectCollision(enemy.attackHitbox, player.getRect())) {
                     const result = player.takeDamage(enemy.attackDamage, enemy);
                     // Return damage taken for stat tracking

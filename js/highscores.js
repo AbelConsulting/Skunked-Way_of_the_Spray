@@ -16,13 +16,13 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
   const PLAYER_NAME_KEY = 'skunkfu.playerName'; // Last submitted name (for own-row highlight).
 
   function _savePlayerName(name) {
-    try {
-      if (typeof name === 'string' && name.trim()) {
-        localStorage.setItem(PLAYER_NAME_KEY, name.trim().slice(0, 16));
-      }
-    } catch (e) { /* private mode */ }
+    if (typeof name !== 'string' || !name.trim()) return;
+    const trimmed = name.trim().slice(0, 16);
+    if (window.safeStorage) window.safeStorage.set(PLAYER_NAME_KEY, trimmed);
+    else { try { localStorage.setItem(PLAYER_NAME_KEY, trimmed); } catch (e) { /* private mode */ } }
   }
   function _loadPlayerName() {
+    if (window.safeStorage) return window.safeStorage.get(PLAYER_NAME_KEY, '') || '';
     try { return localStorage.getItem(PLAYER_NAME_KEY) || ''; }
     catch (e) { return ''; }
   }
@@ -211,6 +211,11 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
 
   // --- Achievement logic (uses local storage, unchanged) ---
   function loadAchievements(){
+    if (window.safeStorage) {
+      const data = window.safeStorage.getJSON(ACHIEVEMENTS_KEY, {});
+      return (data && typeof data === 'object') ? data : {};
+    }
+    // Legacy fallback if safeStorage isn't loaded yet
     try {
       const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
       return raw ? JSON.parse(raw) : {};
@@ -218,6 +223,7 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
   }
 
   function saveAchievements(achievements){
+    if (window.safeStorage) { window.safeStorage.setJSON(ACHIEVEMENTS_KEY, achievements); return; }
     try { localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(achievements)); }
     catch(e){ console.warn('Failed to save achievements', e); }
   }
