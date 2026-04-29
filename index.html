@@ -4830,26 +4830,107 @@
 
 <!-- Service Worker registration for PWA / offline support -->
 <script>
-if ('serviceWorker' in navigator) {
-    // Skip SW on native Capacitor � the app bundle IS the cache, and a SW
+(function () {
+    if (!('serviceWorker' in navigator)) return;
+    // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
     // can serve stale assets after an app update.
-    const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-    if (!isNative) {
-        window.addEventListener('load', () => {
-            // Use relative path for better compatibility with different deployment contexts
-            const swPath = './sw.js';
-            navigator.serviceWorker.register(swPath)
-                .then((reg) => {
-                    console.log('[PWA] Service Worker registered successfully, scope:', reg.scope);
-                })
-                .catch((err) => {
-                    // Service worker registration can fail if sw.js isn't deployed
-                    // or if the server doesn't serve it with correct MIME type
-                    console.log('[PWA] Service Worker registration skipped:', err.message);
-                });
+    var isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+    if (isNative) return;
+
+    // Cache-recovery helper exposed for the preflight overlay.
+    // Unregisters all service workers and deletes every cache entry, then
+    // hard-reloads. This is the "get me back to a working build" escape hatch.
+    window.__cacheRecovery = async function (reason) {
+        try { console.warn('[PWA] Cache recovery requested:', reason || ''); } catch (_) {}
+        try {
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+                var regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(function (r) { return r.unregister().catch(function () {}); }));
+            }
+        } catch (_) {}
+        try {
+            if (window.caches && caches.keys) {
+                var keys = await caches.keys();
+                await Promise.all(keys.map(function (k) { return caches.delete(k).catch(function () {}); }));
+            }
+        } catch (_) {}
+        try { location.reload(); } catch (_) { location.href = location.href; }
+    };
+
+    // Build a small "Update ready" banner that the user can dismiss.
+    function showUpdateBanner(reg) {
+        if (document.getElementById('sw-update-banner')) return;
+        var bar = document.createElement('div');
+        bar.id = 'sw-update-banner';
+        bar.setAttribute('role', 'status');
+        bar.style.cssText = [
+            'position:fixed', 'left:50%', 'bottom:18px', 'transform:translateX(-50%)',
+            'z-index:99999', 'background:#1f2937', 'color:#f9fafb',
+            'padding:10px 14px', 'border-radius:10px',
+            'box-shadow:0 6px 20px rgba(0,0,0,0.35)',
+            'font:600 13px/1.3 system-ui,sans-serif',
+            'display:flex', 'gap:10px', 'align-items:center',
+            'border:1px solid #374151'
+        ].join(';');
+        bar.innerHTML =
+            '<span>New version available</span>' +
+            '<button id="sw-update-reload" style="background:#10b981;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-weight:700;cursor:pointer">Reload</button>' +
+            '<button id="sw-update-dismiss" aria-label="Dismiss" style="background:transparent;color:#9ca3af;border:0;cursor:pointer;font-size:18px;line-height:1">&times;</button>';
+        document.body.appendChild(bar);
+
+        var reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (reloaded) return;
+            reloaded = true;
+            location.reload();
+        });
+
+        document.getElementById('sw-update-reload').addEventListener('click', function () {
+            try {
+                if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            } catch (_) {}
+        });
+        document.getElementById('sw-update-dismiss').addEventListener('click', function () {
+            try { bar.remove(); } catch (_) {}
         });
     }
-}
+
+    function trackInstalling(reg, worker) {
+        if (!worker) return;
+        worker.addEventListener('statechange', function () {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                // A new SW is waiting and there's an existing controller —
+                // i.e. this is an update, not a first install. Prompt user.
+                showUpdateBanner(reg);
+            }
+        });
+    }
+
+    window.addEventListener('load', function () {
+        var swPath = './sw.js';
+        navigator.serviceWorker.register(swPath)
+            .then(function (reg) {
+                console.log('[PWA] Service Worker registered, scope:', reg.scope);
+
+                // If a worker is already waiting on first registration, surface it.
+                if (reg.waiting && navigator.serviceWorker.controller) {
+                    showUpdateBanner(reg);
+                }
+
+                reg.addEventListener('updatefound', function () {
+                    trackInstalling(reg, reg.installing);
+                });
+
+                // Periodic background check for new versions (hourly while open).
+                setInterval(function () {
+                    try { reg.update(); } catch (_) {}
+                }, 60 * 60 * 1000);
+            })
+            .catch(function (err) {
+                console.log('[PWA] Service Worker registration skipped:', err && err.message);
+            });
+    });
+})();
 </script>
 </body>
 </html>
