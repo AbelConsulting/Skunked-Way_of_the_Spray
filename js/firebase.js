@@ -15,13 +15,59 @@
 const PROJECT_ID = 'studio-3829586481-2a2cf';
 const API_BASE = 'https://us-central1-' + PROJECT_ID + '.cloudfunctions.net';
 
+// ── Network reliability tunables ──
+const REQUEST_TIMEOUT_MS = 8000;        // Hard cap so the UI never spins forever.
+const RETRY_ATTEMPTS     = 2;           // 1 retry on transient failures (so 2 total tries).
+const RETRY_BACKOFF_MS   = 600;         // Initial backoff; doubled per attempt.
+
+/**
+ * fetch() wrapper with timeout, retry-with-backoff for transient failures,
+ * and AbortController plumbing. Caller-supplied AbortSignal is respected.
+ */
+async function fetchWithRetry(url, opts = {}, attempts = RETRY_ATTEMPTS) {
+  const externalSignal = opts.signal;
+  let lastErr = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const ctrl = new AbortController();
+    const onAbort = () => ctrl.abort(externalSignal && externalSignal.reason);
+    if (externalSignal) {
+      if (externalSignal.aborted) { ctrl.abort(externalSignal.reason); }
+      else { externalSignal.addEventListener('abort', onAbort, { once: true }); }
+    }
+    const timer = setTimeout(() => ctrl.abort(new DOMException('Timeout', 'AbortError')), REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url, { ...opts, signal: ctrl.signal });
+      // Retry only on 5xx (transient server errors). 4xx is a real client error.
+      if (!res.ok && res.status >= 500 && attempt < attempts) {
+        lastErr = new Error('HTTP ' + res.status);
+      } else {
+        return res;
+      }
+    } catch (e) {
+      lastErr = e;
+      // Caller cancelled — don't retry.
+      if (externalSignal && externalSignal.aborted) throw e;
+      if (attempt >= attempts) throw e;
+    } finally {
+      clearTimeout(timer);
+      if (externalSignal) externalSignal.removeEventListener('abort', onAbort);
+    }
+
+    // Backoff before next attempt (only reached on transient retryable failure).
+    await new Promise(r => setTimeout(r, RETRY_BACKOFF_MS * attempt));
+  }
+  throw lastErr || new Error('fetchWithRetry: exhausted attempts');
+}
+
 /**
  * Checks if the leaderboard service is reachable.
  * @returns {Promise<boolean>}
  */
 export async function checkHealth() {
   try {
-    const res = await fetch(`${API_BASE}/health`, { method: 'GET' });
+    const res = await fetchWithRetry(`${API_BASE}/health`, { method: 'GET' }, 1);
     return res.ok;
   } catch {
     return false;
@@ -33,22 +79,27 @@ export async function checkHealth() {
  * @param {string} name  The player name / gamer tag.
  * @param {number} score The score achieved.
  * @param {string[]} [achievements] Achievement names earned this run.
- * @returns {Promise<void>}
+ * @param {object} [meta] Extra metadata (prestige, title, level, runId for dedupe).
+ * @returns {Promise<boolean>}
  */
 export async function submitScore(name, score, achievements, meta) {
   try {
-    const res = await fetch(`${API_BASE}/submitScore`, {
+    const payload = {
+      initials: name,
+      score: score,
+      achievements: Array.isArray(achievements) ? achievements : [],
+      prestige: (meta && typeof meta.prestige === 'number') ? meta.prestige : 0,
+      title: (meta && typeof meta.title === 'string') ? meta.title : '',
+      achievementCount: (meta && typeof meta.achievementCount === 'number') ? meta.achievementCount : 0,
+      level: (meta && typeof meta.level === 'number') ? meta.level : 0
+    };
+    if (meta && typeof meta.runId === 'string' && meta.runId) {
+      payload.runId = meta.runId;
+    }
+    const res = await fetchWithRetry(`${API_BASE}/submitScore`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initials: name,
-        score: score,
-        achievements: Array.isArray(achievements) ? achievements : [],
-        prestige: (meta && typeof meta.prestige === 'number') ? meta.prestige : 0,
-        title: (meta && typeof meta.title === 'string') ? meta.title : '',
-        achievementCount: (meta && typeof meta.achievementCount === 'number') ? meta.achievementCount : 0,
-        level: (meta && typeof meta.level === 'number') ? meta.level : 0
-      })
+      body: JSON.stringify(payload)
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -63,26 +114,40 @@ export async function submitScore(name, score, achievements, meta) {
 }
 
 /**
+ * Validates a single leaderboard entry shape returned by the API.
+ * Drops malformed rows so a single bad record can't crash the renderer.
+ */
+function _isValidEntry(e) {
+  return e && typeof e === 'object'
+    && typeof e.score === 'number'
+    && Number.isFinite(e.score)
+    && e.score >= 0;
+}
+
+/**
  * Fetches the top scores from the leaderboard, ordered by score descending.
  * @param {number} [count=10] How many top scores to retrieve.
  * @returns {Promise<Array<{name: string, score: number, timestamp?: Date, achievements?: string[]}>>}
  */
 export async function getHighScores(count = 10) {
   try {
-    const res = await fetch(`${API_BASE}/getLeaderboard?count=${encodeURIComponent(count)}`);
+    const safeCount = Math.max(1, Math.min(100, Number(count) || 10));
+    const res = await fetchWithRetry(`${API_BASE}/getLeaderboard?count=${encodeURIComponent(safeCount)}`);
     if (!res.ok) return [];
-    const scores = await res.json();
+    const scores = await res.json().catch(() => null);
     if (!Array.isArray(scores)) return [];
-    return scores.map(entry => ({
-      name: entry.name || entry.initials || '???',
-      score: entry.score,
-      timestamp: entry.timestamp ? new Date(entry.timestamp) : (entry.date ? new Date(entry.date) : null),
-      achievements: entry.achievements || [],
-      prestige: entry.prestige || 0,
-      title: entry.title || '',
-      achievementCount: entry.achievementCount || 0,
-      level: entry.level || 0,
-    }));
+    return scores
+      .filter(_isValidEntry)
+      .map(entry => ({
+        name: entry.name || entry.initials || '???',
+        score: entry.score,
+        timestamp: entry.timestamp ? new Date(entry.timestamp) : (entry.date ? new Date(entry.date) : null),
+        achievements: Array.isArray(entry.achievements) ? entry.achievements : [],
+        prestige: Number(entry.prestige) || 0,
+        title: entry.title || '',
+        achievementCount: Number(entry.achievementCount) || 0,
+        level: Number(entry.level) || 0,
+      }));
   } catch (e) {
     console.error('Error fetching scores:', e);
     return [];

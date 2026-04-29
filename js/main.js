@@ -1532,6 +1532,33 @@ class GameApp {
     gameLoop(currentTime) {
         if (!this.running) return;
 
+        // ── Top-level error boundary ─────────────────────────────────────
+        // Wraps the entire frame so any thrown subsystem error can't
+        // soft-freeze the canvas. Tracks consecutive failures and surfaces
+        // a recoverable overlay if errors persist across many frames.
+        try {
+            this._frameBody(currentTime);
+            this._consecutiveFrameErrors = 0;
+        } catch (e) {
+            try { __err('main:gameLoop', e); } catch (_) { /* */ }
+            this._consecutiveFrameErrors = (this._consecutiveFrameErrors || 0) + 1;
+
+            // 30 consecutive thrown frames ≈ ~½s at 60 fps. At that point the
+            // game is almost certainly stuck in a broken state — pause and
+            // ask the player whether to resume or restart.
+            if (this._consecutiveFrameErrors >= 30 && !this._frameErrorOverlayShown) {
+                this._frameErrorOverlayShown = true;
+                this._showFrameErrorOverlay(e);
+                this.running = false;
+                return; // Stop the loop; resume() relaunches it.
+            }
+        }
+
+        requestAnimationFrame((time) => this.gameLoop(time));
+    }
+
+    /** The original per-frame work, extracted so gameLoop can wrap it. */
+    _frameBody(currentTime) {
         // Poll gamepads once per frame before update
         try { this._handleGamepadInput(); } catch (e) { __err('main', e); }
         // Also poll XR input sources if the WebXR bridge is active
@@ -1549,13 +1576,12 @@ class GameApp {
         const maxSteps = 5;
         let steps = 0;
         while (this._accumulator >= step && steps < maxSteps) {
-            if (this.game) this.game.update(step);
-            this._accumulator -= step;
             try {
-                // Place any code that might throw here, or remove try if not needed
+                if (this.game) this.game.update(step);
             } catch (e) {
-                console.error('Error during game update:', e);
+                __err('main:update', e);
             }
+            this._accumulator -= step;
             steps++;
         }
 
@@ -1567,13 +1593,57 @@ class GameApp {
             const renderFps = (this.isMobile) ? Math.min(30, Config.FPS || 30) : (Config.FPS || 60);
             const minRenderDt = 1000 / renderFps; // ms
             if (!this.lastRenderTime || (now - this.lastRenderTime) >= minRenderDt) {
-                this.game.render();
+                try {
+                    this.game.render();
+                } catch (e) {
+                    __err('main:render', e);
+                }
                 this.lastRenderTime = now;
             }
         }
-
-        requestAnimationFrame((time) => this.gameLoop(time));
     }
+
+    /**
+     * Show a recoverable overlay when the frame loop has crashed repeatedly.
+     * Offers Resume (re-arm the loop) and Restart (full reload).
+     */
+    _showFrameErrorOverlay(err) {
+        try {
+            const overlay = document.getElementById('error-overlay');
+            const content = document.getElementById('error-content');
+            const closeBtn = document.getElementById('error-close');
+            const copyBtn = document.getElementById('error-copy');
+            if (!overlay || !content) return;
+
+            const msg = (err && err.message) ? err.message : String(err);
+            const stack = (err && err.stack) ? err.stack : '';
+            content.textContent =
+                'The game hit an error and paused to keep your progress safe.\n\n' +
+                'Details: ' + msg + (stack ? '\n\n' + stack : '');
+
+            // Re-label the existing buttons for the recovery flow.
+            if (closeBtn) {
+                closeBtn.textContent = 'Resume';
+                closeBtn.onclick = () => {
+                    overlay.style.display = 'none';
+                    this._frameErrorOverlayShown = false;
+                    this._consecutiveFrameErrors = 0;
+                    // Reset RAF clock so the dt isn't huge after the pause.
+                    this.lastTime = performance.now();
+                    if (!this.running) {
+                        this.running = true;
+                        requestAnimationFrame((t) => this.gameLoop(t));
+                    }
+                };
+            }
+            if (copyBtn) {
+                copyBtn.textContent = 'Restart';
+                copyBtn.onclick = () => { try { location.reload(); } catch (_) { /* */ } };
+            }
+            overlay.style.display = 'block';
+        } catch (_) { /* never throw from the error UI */ }
+    }
+
 }
 
 // Start the game when DOM is loaded

@@ -372,12 +372,55 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
    * @param {string} name The player's name/initials.
    * @param {object} [gameStats] Game session stats for achievement checks.
    */
+  // ── Dedupe state for score submissions ──
+  // Prevents the rapid game-over → "Save" → onclick path from firing twice,
+  // and prevents network retries from creating duplicate leaderboard rows.
+  const _submitInflight = new Map();   // runId → in-flight promise
+  const _submitCompleted = new Set();  // runIds that have already succeeded
+
+  function _generateRunId() {
+    try {
+      if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    } catch (e) { /* fall through */ }
+    return 'run-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
+  /**
+   * Returns a stable run ID for the current session, generating + caching one
+   * onto gameStats if missing. Callers (e.g. game.js) can also pre-set
+   * gameStats.runId at run start.
+   */
+  function _runIdFor(gameStats) {
+    if (gameStats && typeof gameStats.runId === 'string' && gameStats.runId) {
+      return gameStats.runId;
+    }
+    const id = _generateRunId();
+    if (gameStats && typeof gameStats === 'object') {
+      try { gameStats.runId = id; } catch (e) { /* frozen object */ }
+    }
+    return id;
+  }
+
   async function addScore(score, name, gameStats) {
     if (!validateScore(score)) {
       console.warn('Invalid score rejected', score);
-      return;
+      return false;
     }
-    try {
+
+    const runId = _runIdFor(gameStats);
+
+    // Already submitted successfully — short-circuit (idempotent).
+    if (_submitCompleted.has(runId)) {
+      return true;
+    }
+    // Submission in flight for this run — return the existing promise so
+    // overlapping callers all observe the same outcome instead of double-posting.
+    if (_submitInflight.has(runId)) {
+      return _submitInflight.get(runId);
+    }
+
+    const work = (async () => {
+      try {
       // Remember this name so we can highlight the player's own row on the board.
       _savePlayerName(name);
       // Run achievement checks for this run (may unlock new ones)
@@ -391,7 +434,8 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
         prestige,
         title: titleInfo.title,
         achievementCount: titleInfo.count,
-        level: gameStats ? (gameStats.levelsCompleted || 0) : 0
+        level: gameStats ? (gameStats.levelsCompleted || 0) : 0,
+        runId
       });
       const canSubmitPlayGames = !!(
         window.PlayGamesServices &&
@@ -411,6 +455,9 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
 
       if (!apiOk && !playGamesOk) {
         console.error('Score submission failed for both Cloud Functions and Play Games');
+      } else {
+        // Mark this runId so a follow-up retry can't double-post.
+        _submitCompleted.add(runId);
       }
       // Analytics: score submit
       try {
@@ -423,9 +470,17 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
           });
         }
       } catch (e) { /* */ }
-    } catch (e) {
-      console.error("Failed to submit score to skunked.io", e);
-    }
+      return apiOk || playGamesOk;
+      } catch (e) {
+        console.error("Failed to submit score to skunked.io", e);
+        return false;
+      } finally {
+        _submitInflight.delete(runId);
+      }
+    })();
+
+    _submitInflight.set(runId, work);
+    return work;
   }
 
   /**
