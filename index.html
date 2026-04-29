@@ -40,7 +40,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <!-- Hidden element to force-load canvas fonts before the game loop starts -->
-        <span style="font-family:'Bangers','Press Start 2P','Space Grotesk';position:absolute;left:-9999px;font-size:0;pointer-events:none" aria-hidden="true">.</span>
+        <span class="font-preload" aria-hidden="true">.</span>
     <link rel="stylesheet" href="styles.css?v=1.0.2">
     <link rel="stylesheet" href="achievements.css?v=1.0.2">
 
@@ -396,7 +396,6 @@
             width: min(980px, 92vw);
             max-height: 90vh;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             animation: menuFadeIn 0.6s cubic-bezier(.2,.9,.2,1) both;
         }
 
@@ -1581,7 +1580,6 @@
             transition: transform 220ms cubic-bezier(.2,.9,.2,1);
             max-height: 90vh;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
         }
 
         #pause-overlay.visible .pause-panel {
@@ -1918,6 +1916,7 @@
                 font-size: 13px;
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
+                line-clamp: 2;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             }
@@ -1953,6 +1952,7 @@
                 font-size: 10px;
                 display: -webkit-box;
                 -webkit-line-clamp: 1;
+                line-clamp: 1;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             }
@@ -2070,6 +2070,7 @@
                 font-size: 9px;
                 display: -webkit-box;
                 -webkit-line-clamp: 1;
+                line-clamp: 1;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             }
@@ -2176,18 +2177,211 @@
                 top: 6px; right: 6px;
             }
         }
+
+        /* ───── Inline-style cleanup utility classes / id rules ─────
+           These rules replace inline style attributes that the linter
+           flagged. JS-managed display:none toggles intentionally remain
+           inline because the corresponding JS sets el.style.display
+           directly to show the element. */
+
+        .font-preload {
+            font-family: 'Bangers', 'Press Start 2P', 'Space Grotesk';
+            position: absolute;
+            left: -9999px;
+            font-size: 0;
+            pointer-events: none;
+        }
+        .gtm-noscript-iframe {
+            display: none;
+            visibility: hidden;
+        }
+        ins.adsbygoogle.adsense-banner-160 {
+            display: inline-block;
+            width: 160px;
+            height: 600px;
+        }
+        #canvas-rotator {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #score-container {
+            position: absolute;
+            right: 12px;
+            top: 88px;
+            z-index: 900;
+            max-width: 320px;
+            color: #fff;
+        }
+
+        /* Error / file-protocol overlay shared layout (display:none kept inline
+           because main.js toggles them via overlay.style.display = 'block'). */
+        #error-overlay,
+        #file-protocol-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            color: #fff;
+            padding: 20px;
+            overflow: auto;
+        }
+        #error-overlay { z-index: 4000; }
+        #file-protocol-overlay { z-index: 4001; }
+        #error-overlay h2,
+        #file-protocol-overlay h2 { margin-bottom: 8px; }
+        #error-content {
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .overlay-actions { margin-top: 12px; }
+        .overlay-btn {
+            padding: 8px 12px;
+        }
+        #error-close { margin-right: 8px; }
+        #file-protocol-overlay p {
+            font-size: 14px;
+            max-width: 800px;
+        }
+        .overlay-help-link { color: #9ad; }
+        #file-overlay-start {
+            background: #ffcc33;
+            color: #000;
+            border-radius: 6px;
+        }
+        #file-overlay-close {
+            background: #2ecc71;
+            color: #000;
+            border-radius: 6px;
+            margin-left: 8px;
+        }
+
+        /* Hr spacing variant used inside menu sub-panels */
+        .pause-divider--space-top { margin-top: 12px; }
+
+        /* Info-heading vertical-rhythm modifiers (replace inline margin-top) */
+        .info-heading--mt-10 { margin-top: 10px; }
+        .info-heading--mt-12 { margin-top: 12px; }
+        .info-heading--mt-14 { margin-top: 14px; }
+
+        /* Boss / stat portrait sprite backgrounds (one rule per portrait) */
+        .stat-portrait--ironclaw    { background-image: url('assets/sprites/enemies/boss2_idle.png'); }
+        .stat-portrait--ninja       { background-image: url('assets/sprites/characters/ninja_idle.png'); }
+        .stat-portrait--malodor     { background-image: url('assets/sprites/enemies/boss4_idle.png'); }
+        .boss-portrait--ironclaw    { background-image: url('assets/sprites/enemies/boss2_idle.png'); }
+        .boss-portrait--malodor     { background-image: url('assets/sprites/enemies/boss4_idle.png'); }
+        .boss-portrait--kyle        { background-image: url('assets/sprites/enemies/boss7_idle.png'); }
+
+        .enemy-sprite-preview--basic  { background-image: url('assets/sprites/enemies/basic_idle.png'); }
+        .enemy-sprite-preview--second { background-image: url('assets/sprites/enemies/second_idle.png'); }
+        .enemy-sprite-preview--third  { background-image: url('assets/sprites/enemies/third_idle.png'); }
+        .enemy-sprite-preview--fourth { background-image: url('assets/sprites/enemies/fourth_idle.png'); }
+        .enemy-sprite-preview--fifth  { background-image: url('assets/sprites/enemies/fifth_idle.png'); }
+
+        /* Combo tier color tags */
+        .combo-tier--nice        { color: #FFD93D; }
+        .combo-tier--great       { color: #FF9500; }
+        .combo-tier--awesome     { color: #FF4500; }
+        .combo-tier--incredible  { color: #FF00FF; }
+        .combo-tier--unstoppable { color: #00FFFF; }
+        .combo-tier--legendary   { color: #FFD700; }
+        .combo-tier--godmode     { color: #FF0000; }
+
+        /* Item card heading colors */
+        .item-name--health  { color: #4dff4d; }
+        .item-name--life    { color: #ff4d4d; }
+        .item-name--idol    { color: #FFD700; }
+        .item-name--speed   { color: #00CCFF; }
+        .item-name--damage  { color: #FF8844; }
+        .item-name--skunk   { color: #00FF77; }
+
+        /* Small descriptive paragraphs in the info / how-to-play tabs */
+        .info-summary {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0 0 6px;
+        }
+        .info-summary--dim {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            margin: 0 0 8px;
+        }
+        .info-summary--dim-tight {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            margin: 0 0 10px;
+        }
+        .info-credit {
+            margin-top: 14px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Settings reset button compact variant */
+        #reset-tutorial-btn.menu-btn {
+            font-size: 13px;
+            padding: 10px 16px;
+        }
+
+        /* Service-worker update banner inner buttons (built dynamically) */
+        .sw-update-reload-btn {
+            background: #10b981;
+            color: #fff;
+            border: 0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .sw-update-dismiss-btn {
+            background: transparent;
+            color: #9ca3af;
+            border: 0;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        /* Empty-state placeholder shown when the scoreboard has no rows */
+        .scoreboard-empty-msg {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 20px;
+        }
+
+        /*
+         * [hidden] overrides for elements that author CSS otherwise sets to display:flex/block.
+         * JS still toggles visibility via el.style.display = 'flex'/'none' (inline beats author).
+         * The id+attribute selectors below are (1,0,1) which beats the (1,0,0) id-only rules
+         * elsewhere in the stylesheet, so the hidden attribute alone correctly hides on load.
+         */
+        #pause-btn[hidden],
+        #mobile-start-overlay[hidden],
+        #error-overlay[hidden],
+        #file-protocol-overlay[hidden],
+        #menu-howtoplay-overlay[hidden],
+        #menu-scores-overlay[hidden],
+        #menu-info-overlay[hidden],
+        #menu-settings-overlay[hidden],
+        #pause-overlay[hidden] {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P6RZPFLG"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    height="0" width="0" class="gtm-noscript-iframe"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <div id="main-wrapper">
         <div id="ad-container-right">
             <!-- SkunkedBanner -->
-            <ins class="adsbygoogle"
-                 style="display:inline-block;width:160px;height:600px"
+            <ins class="adsbygoogle adsense-banner-160"
                  data-ad-client="ca-app-pub-8519140628365141"
                  data-ad-slot="4631220272"
                  data-ad-format="auto"
@@ -2265,7 +2459,7 @@
             </div>
 
             <div id="game-container">
-                <div id="canvas-rotator" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                <div id="canvas-rotator">
                     <canvas id="game-canvas" width="1280" height="720"></canvas>
                 </div>
                 
@@ -2287,35 +2481,35 @@
                 <!-- Touch controls moved out of #game-container to avoid transform/layout issues -->
 
                 <!-- Pause Button (desktop & mobile) -->
-                <button id="pause-btn" aria-label="Pause game" title="Pause" style="display:none;">&#9208;</button>
+                <button id="pause-btn" aria-label="Pause game" title="Pause" hidden>&#9208;</button>
                 <button id="perf-mode-btn" title="Performance mode">Perf</button>
 
-                <div id="mobile-start-overlay" style="display:none;">
+                <div id="mobile-start-overlay" hidden>
                     <button id="mobile-start-btn">Tap to Start</button>
                 </div>
 
                 <!-- Error overlay (shown when runtime errors occur) -->
-                <div id="error-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4000; padding:20px; overflow:auto;">
-                    <h2 style="margin-bottom:8px;">Runtime Error</h2>
-                    <pre id="error-content" style="white-space:pre-wrap; font-size:13px; line-height:1.4;"></pre>
-                    <div style="margin-top:12px;">
-                        <button id="error-close" style="padding:8px 12px; margin-right:8px;">Close</button>
-                        <button id="error-copy" style="padding:8px 12px;">Copy</button>
+                <div id="error-overlay" hidden>
+                    <h2>Runtime Error</h2>
+                    <pre id="error-content"></pre>
+                    <div class="overlay-actions">
+                        <button id="error-close" class="overlay-btn">Close</button>
+                        <button id="error-copy" class="overlay-btn">Copy</button>
                     </div>
                 </div>
 
                 <!-- Informational overlay shown when running from file:// to explain fetch/CORS issues -->
-                <div id="file-protocol-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); color:#fff; z-index:4001; padding:20px; overflow:auto;">
-                    <h2 style="margin-bottom:8px;">Serving over HTTP is recommended</h2>
-                    <p style="font-size:14px; max-width:800px;">It looks like you opened the game directly from the file system (file://). Modern browsers block some cross-origin resource requests when the page is loaded from file:// which may prevent audio and other assets from loading. To run locally, run <code>python -m http.server 8000</code> in the project root and open <a href="http://localhost:8000" style="color:#9ad;">http://localhost:8000</a>.</p>
-                    <div style="margin-top:12px;">
-                        <button id="file-overlay-start" style="padding:8px 12px; background:#ffcc33; color:#000; border-radius:6px;">Start Anyway (limited)</button>
-                        <button id="file-overlay-close" style="padding:8px 12px; background:#2ecc71; color:#000; border-radius:6px; margin-left:8px;">Close</button>
+                <div id="file-protocol-overlay" hidden>
+                    <h2>Serving over HTTP is recommended</h2>
+                    <p>It looks like you opened the game directly from the file system (file://). Modern browsers block some cross-origin resource requests when the page is loaded from file:// which may prevent audio and other assets from loading. To run locally, run <code>python -m http.server 8000</code> in the project root and open <a href="http://localhost:8000" class="overlay-help-link">http://localhost:8000</a>.</p>
+                    <div class="overlay-actions">
+                        <button id="file-overlay-start" class="overlay-btn">Start Anyway (limited)</button>
+                        <button id="file-overlay-close" class="overlay-btn">Close</button>
                     </div>
                 </div>
 
                 <!-- legacy mobile restart overlay removed; on-screen touch controls provide restart -->
-                <div id="score-container" style="position:absolute; right:12px; top:88px; z-index:900; max-width:320px; color:#fff; display:none;"></div>
+                <div id="score-container" hidden></div>
             </div>
 
             <!-- ══════════════════════════════════════════════════════
@@ -2337,15 +2531,15 @@
                             <p class="start-menu-copy">Storm the city, study every boss, chase leaderboard runs, and tune your loadout from one clean hub instead of burying navigation inside gameplay.</p>
                             <div class="start-menu-meta">
                                 <div class="start-menu-stat start-menu-stat--boss">
-                                    <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss2_idle.png');" role="img" aria-label="Iron Claw"></div>
+                                    <div class="stat-portrait stat-portrait--ironclaw" role="img" aria-label="Iron Claw"></div>
                                     <span class="stat-portrait-caption">Iron Claw</span>
                                 </div>
                                 <div class="start-menu-stat start-menu-stat--boss">
-                                    <div class="stat-portrait" style="background-image:url('assets/sprites/characters/ninja_idle.png');" role="img" aria-label="Ninja Skunk"></div>
+                                    <div class="stat-portrait stat-portrait--ninja" role="img" aria-label="Ninja Skunk"></div>
                                     <span class="stat-portrait-caption">Ninja Skunk</span>
                                 </div>
                                 <div class="start-menu-stat start-menu-stat--boss">
-                                    <div class="stat-portrait" style="background-image:url('assets/sprites/enemies/boss4_idle.png');" role="img" aria-label="Malodor"></div>
+                                    <div class="stat-portrait stat-portrait--malodor" role="img" aria-label="Malodor"></div>
                                     <span class="stat-portrait-caption">Malodor</span>
                                 </div>
                             </div>
@@ -2372,7 +2566,7 @@
 
 
             <!-- HOW TO PLAY SCREEN (from main menu) -->
-            <div id="menu-howtoplay-overlay" style="display:none;">
+            <div id="menu-howtoplay-overlay" hidden>
                 <div class="menu-sub-panel menu-sub-panel--wide">
                     <div class="menu-sub-header">
                         <p class="menu-sub-eyebrow">Field Manual</p>
@@ -2452,12 +2646,12 @@
                         </ul>
                     </div>
 
-                    <hr class="pause-divider" style="margin-top:12px;">
+                    <hr class="pause-divider pause-divider--space-top">
                     <button id="menu-howtoplay-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
             <!-- ══════ HIGH SCORES SCREEN (from main menu) ══════ -->
-            <div id="menu-scores-overlay" style="display:none;">
+            <div id="menu-scores-overlay" hidden>
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
                         <p class="menu-sub-eyebrow">Leaderboard Hub</p>
@@ -2475,7 +2669,7 @@
             </div>
 
             <!-- ══════ INFO SCREEN (from main menu) — Tabbed ══════ -->
-            <div id="menu-info-overlay" style="display:none;">
+            <div id="menu-info-overlay" hidden>
                 <div class="menu-sub-panel menu-sub-panel--info">
                     <div class="menu-sub-header">
                         <p class="menu-sub-eyebrow">Run Intel</p>
@@ -2503,20 +2697,20 @@
                             <p class="info-lore">You are the last heir to the Stink-Jutsu tradition. As the final Ninja Skunk, you must journey through the corrupted heart of the realm to reclaim the Three Golden Idols of Purity. Only by mastering the lethal Shadow Strike and the legendary Skunk Shot can you purge the toxic corruption and restore the forest's true scent... of freedom.</p>
                         </div>
 
-                        <h3 class="info-heading" style="margin-top:12px;">&#11088; Key Features</h3>
+                        <h3 class="info-heading info-heading--mt-12">&#11088; Key Features</h3>
                         <div class="info-bosses" aria-label="Featured bosses">
                             <div class="info-boss">
-                                <div class="boss-portrait" style="background-image:url('assets/sprites/enemies/boss2_idle.png');" role="img" aria-label="Iron Claw"></div>
+                                <div class="boss-portrait boss-portrait--ironclaw" role="img" aria-label="Iron Claw"></div>
                                 <span class="boss-name">IRON CLAW</span>
                                 <span class="boss-title">Enforcer of Skunk City</span>
                             </div>
                             <div class="info-boss">
-                                <div class="boss-portrait" style="background-image:url('assets/sprites/enemies/boss4_idle.png');" role="img" aria-label="Malodor"></div>
+                                <div class="boss-portrait boss-portrait--malodor" role="img" aria-label="Malodor"></div>
                                 <span class="boss-name">MALODOR</span>
                                 <span class="boss-title">Enemy Kingpin</span>
                             </div>
                             <div class="info-boss">
-                                <div class="boss-portrait" style="background-image:url('assets/sprites/enemies/boss7_idle.png');" role="img" aria-label="Kyle"></div>
+                                <div class="boss-portrait boss-portrait--kyle" role="img" aria-label="Kyle"></div>
                                 <span class="boss-name">KYLE</span>
                                 <span class="boss-title">Crystal Flower Chief</span>
                             </div>
@@ -2530,7 +2724,7 @@
                             <div class="info-feature"><strong>Online Scores</strong>Compete on the global leaderboard</div>
                         </div>
 
-                        <h3 class="info-heading" style="margin-top:12px;">&#128161; Pro Tips</h3>
+                        <h3 class="info-heading info-heading--mt-12">&#128161; Pro Tips</h3>
                         <ul class="info-tips">
                             <li>Chain combos within 2 seconds &mdash; multiplier caps at 10&times;</li>
                             <li>Collect all 3 Golden Idols per stage for a huge +30% damage &amp; +25% speed set bonus</li>
@@ -2540,7 +2734,7 @@
                             <li>Double-jump lets you platform over the Jumper enemy&rsquo;s arc</li>
                         </ul>
 
-                        <p style="margin-top:14px;font-size:11px;color:rgba(255,255,255,0.35);">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
+                        <p class="info-credit">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
                     </div>
 
                     <!-- ── TAB: Controls ── -->
@@ -2581,7 +2775,7 @@
                             </table>
                         </div>
 
-                        <h3 class="info-heading" style="margin-top:10px;">&#9876; Combat Moves</h3>
+                        <h3 class="info-heading info-heading--mt-10">&#9876; Combat Moves</h3>
                         <div class="info-moves">
                             <div class="info-move-card">
                                 <h4>&#128481; Basic Attack</h4>
@@ -2600,16 +2794,16 @@
                             </div>
                         </div>
 
-                        <h3 class="info-heading" style="margin-top:10px;">&#128293; Combo Tiers</h3>
-                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Hit enemies within 2s windows. Multiplier = 1 + (hits &times; 0.25), max 10&times;</p>
+                        <h3 class="info-heading info-heading--mt-10">&#128293; Combo Tiers</h3>
+                        <p class="info-summary">Hit enemies within 2s windows. Multiplier = 1 + (hits &times; 0.25), max 10&times;</p>
                         <div class="info-combo-tiers">
-                            <span class="combo-tier" style="color:#FFD93D;">3+ NICE!</span>
-                            <span class="combo-tier" style="color:#FF9500;">5+ GREAT!</span>
-                            <span class="combo-tier" style="color:#FF4500;">10+ AWESOME!</span>
-                            <span class="combo-tier" style="color:#FF00FF;">15+ INCREDIBLE!</span>
-                            <span class="combo-tier" style="color:#00FFFF;">20+ UNSTOPPABLE!</span>
-                            <span class="combo-tier" style="color:#FFD700;">30+ LEGENDARY!</span>
-                            <span class="combo-tier" style="color:#FF0000;">50+ GOD MODE!</span>
+                            <span class="combo-tier combo-tier--nice">3+ NICE!</span>
+                            <span class="combo-tier combo-tier--great">5+ GREAT!</span>
+                            <span class="combo-tier combo-tier--awesome">10+ AWESOME!</span>
+                            <span class="combo-tier combo-tier--incredible">15+ INCREDIBLE!</span>
+                            <span class="combo-tier combo-tier--unstoppable">20+ UNSTOPPABLE!</span>
+                            <span class="combo-tier combo-tier--legendary">30+ LEGENDARY!</span>
+                            <span class="combo-tier combo-tier--godmode">50+ GOD MODE!</span>
                         </div>
                     </div>
 
@@ -2618,7 +2812,7 @@
                         <h3 class="info-heading">&#128126; Enemy Types</h3>
                         <div class="info-enemies-grid">
                             <div class="info-enemy-card">
-                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/basic_idle.png');"></div>
+                                <div class="enemy-sprite-preview enemy-sprite-preview--basic"></div>
                                 <div class="enemy-card-text">
                                     <h4>&#128128; Grunt</h4>
                                     <div class="enemy-stats">HP 50 &bull; SPD 150 &bull; 100 pts</div>
@@ -2626,7 +2820,7 @@
                                 </div>
                             </div>
                             <div class="info-enemy-card">
-                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/basic_idle.png');"></div>
+                                <div class="enemy-sprite-preview enemy-sprite-preview--basic"></div>
                                 <div class="enemy-card-text">
                                     <h4>&#128168; Speedster</h4>
                                     <div class="enemy-stats">HP 40 &bull; SPD 225 &bull; 120 pts</div>
@@ -2634,7 +2828,7 @@
                                 </div>
                             </div>
                             <div class="info-enemy-card">
-                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/second_idle.png');"></div>
+                                <div class="enemy-sprite-preview enemy-sprite-preview--second"></div>
                                 <div class="enemy-card-text">
                                     <h4>&#128737; Shield Tank</h4>
                                     <div class="enemy-stats">HP 75 &bull; SPD 105 &bull; 150 pts</div>
@@ -2642,7 +2836,7 @@
                                 </div>
                             </div>
                             <div class="info-enemy-card">
-                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/third_idle.png');"></div>
+                                <div class="enemy-sprite-preview enemy-sprite-preview--third"></div>
                                 <div class="enemy-card-text">
                                     <h4>&#128165; Kamikaze</h4>
                                     <div class="enemy-stats">HP 25 &bull; SPD 300 &bull; 200 pts</div>
@@ -2650,7 +2844,7 @@
                                 </div>
                             </div>
                             <div class="info-enemy-card">
-                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/fourth_idle.png');"></div>
+                                <div class="enemy-sprite-preview enemy-sprite-preview--fourth"></div>
                                 <div class="enemy-card-text">
                                     <h4>&#128640; Jumper</h4>
                                     <div class="enemy-stats">HP 60 &bull; Stationary &bull; 200 pts</div>
@@ -2658,7 +2852,7 @@
                                 </div>
                             </div>
                             <div class="info-enemy-card">
-                                <div class="enemy-sprite-preview" style="background-image:url('assets/sprites/enemies/fifth_idle.png');"></div>
+                                <div class="enemy-sprite-preview enemy-sprite-preview--fifth"></div>
                                 <div class="enemy-card-text">
                                     <h4>&#127919; Thrower</h4>
                                     <div class="enemy-stats">HP 60 &bull; SPD 128 &bull; 250 pts</div>
@@ -2667,45 +2861,45 @@
                             </div>
                         </div>
 
-                        <h3 class="info-heading" style="margin-top:14px;">&#128081; Bosses</h3>
-                        <p id="info-boss-summary" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">The campaign rotates through named boss archetypes with escalating health and rematches later in the run.</p>
+                        <h3 class="info-heading info-heading--mt-14">&#128081; Bosses</h3>
+                        <p id="info-boss-summary" class="info-summary">The campaign rotates through named boss archetypes with escalating health and rematches later in the run.</p>
                         <div class="info-boss-row" id="info-boss-row"></div>
                     </div>
 
                     <!-- ── TAB: Stages ── -->
                     <div class="info-tab-content" data-info-panel="stages">
                         <h3 class="info-heading">&#127759; All 10 Stages</h3>
-                        <p id="info-stages-summary" style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">The campaign escalates through 10 stages with remixed bosses and increasingly punishing enemy rosters.</p>
+                        <p id="info-stages-summary" class="info-summary--dim">The campaign escalates through 10 stages with remixed bosses and increasingly punishing enemy rosters.</p>
                         <div class="info-stages-grid" id="info-stages-grid"></div>
                     </div>
 
                     <!-- ── TAB: Items ── -->
                     <div class="info-tab-content" data-info-panel="items">
                         <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
-                        <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 8px;">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
+                        <p class="info-summary--dim">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
                         <div class="info-items-grid">
                             <div class="info-item-card">
-                                <h4 style="color:#4dff4d;">&#128154; Health Regen</h4>
+                                <h4 class="item-name--health">&#128154; Health Regen</h4>
                                 <p>Heals 10 HP/s for 6 seconds. 20% enemy drop chance.</p>
                             </div>
                             <div class="info-item-card">
-                                <h4 style="color:#ff4d4d;">&#10084; Extra Life</h4>
+                                <h4 class="item-name--life">&#10084; Extra Life</h4>
                                 <p>+1 life instantly. Rare 3% enemy drop chance.</p>
                             </div>
                             <div class="info-item-card">
-                                <h4 style="color:#FFD700;">&#128081; Golden Idol</h4>
+                                <h4 class="item-name--idol">&#128081; Golden Idol</h4>
                                 <p>+250 score, +30 HP, 2s invulnerability. Collect all 3 per stage for +25% speed &amp; +30% damage set bonus + 2000 pts!</p>
                             </div>
                             <div class="info-item-card">
-                                <h4 style="color:#00CCFF;">&#9889; Speed Boost</h4>
+                                <h4 class="item-name--speed">&#9889; Speed Boost</h4>
                                 <p>1.5&times; movement speed for 8 seconds.</p>
                             </div>
                             <div class="info-item-card">
-                                <h4 style="color:#FF8844;">&#128165; Damage Boost</h4>
+                                <h4 class="item-name--damage">&#128165; Damage Boost</h4>
                                 <p>1.75&times; attack damage for 10 seconds.</p>
                             </div>
                             <div class="info-item-card">
-                                <h4 style="color:#00FF77;">&#128163; Skunk Powerup</h4>
+                                <h4 class="item-name--skunk">&#128163; Skunk Powerup</h4>
                                 <p>+2 Skunk Shot ammo. 2 placed per level.</p>
                             </div>
                         </div>
@@ -2715,17 +2909,17 @@
                     <!-- ── TAB: Achievements ── -->
                     <div class="info-tab-content" data-info-panel="achievements">
                         <h3 class="info-heading">&#127942; Achievements</h3>
-                        <p style="font-size:12px;color:rgba(255,255,255,0.55);margin:0 0 10px;">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
+                        <p class="info-summary--dim-tight">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
                         <div class="info-achieve-grid" id="info-achieve-grid"></div>
                     </div>
 
-                    <hr class="pause-divider" style="margin-top:12px;">
+                    <hr class="pause-divider pause-divider--space-top">
                     <button id="menu-info-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
 
             <!-- ══════ SETTINGS SCREEN (from main menu) ══════ -->
-            <div id="menu-settings-overlay" style="display:none;">
+            <div id="menu-settings-overlay" hidden>
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
                         <p class="menu-sub-eyebrow">Loadout Tuning</p>
@@ -2753,7 +2947,7 @@
                         <div class="menu-settings-card">
                             <h3>Tutorial Flow</h3>
                             <p>Replay onboarding hints from scratch if you want another guided first-stage pass.</p>
-                            <button id="reset-tutorial-btn" class="menu-btn" style="font-size:13px;padding:10px 16px;">&#128161; Reset Tutorial Hints</button>
+                            <button id="reset-tutorial-btn" class="menu-btn">&#128161; Reset Tutorial Hints</button>
                         </div>
                     </div>
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
@@ -2761,7 +2955,7 @@
             </div>
 
             <!-- ══════ PAUSE OVERLAY ══════ -->
-            <div id="pause-overlay" style="display:none;">
+            <div id="pause-overlay" hidden>
                 <div class="pause-panel">
                     <h1 class="pause-title">PAUSED</h1>
                     <p class="pause-subtitle">Quick Pause</p>
@@ -3308,7 +3502,7 @@
                                                 console.warn('renderScoreboard failed', e);
                                             });
                                     } else {
-                                        scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Scores not yet available</p>';
+                                        scoresBoardEl.innerHTML = '<p class="scoreboard-empty-msg">Scores not yet available</p>';
                                     }
                                 }
                                 try { Analytics.trackMenuAction('high_scores'); } catch(e) {}
@@ -4874,8 +5068,8 @@
         ].join(';');
         bar.innerHTML =
             '<span>New version available</span>' +
-            '<button id="sw-update-reload" style="background:#10b981;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-weight:700;cursor:pointer">Reload</button>' +
-            '<button id="sw-update-dismiss" aria-label="Dismiss" style="background:transparent;color:#9ca3af;border:0;cursor:pointer;font-size:18px;line-height:1">&times;</button>';
+            '<button id="sw-update-reload" class="sw-update-reload-btn">Reload</button>' +
+            '<button id="sw-update-dismiss" class="sw-update-dismiss-btn" aria-label="Dismiss">&times;</button>';
         document.body.appendChild(bar);
 
         var reloaded = false;
