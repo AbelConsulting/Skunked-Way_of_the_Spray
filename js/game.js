@@ -904,9 +904,13 @@ class Game {
                 this.state = 'PAUSED';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PLAYING', to: 'PAUSED' }); } catch (e) { __err('game', e); }
                 try { if (typeof Analytics !== 'undefined') Analytics.trackPause({ level: (this.currentLevelIndex || 0) + 1, score: this.score || 0 }); } catch (e) { /* */ }
-                this.audioManager.playSound && this.audioManager.playSound('pause');
-                this.audioManager.pauseMusic && this.audioManager.pauseMusic();
-                this.audioManager.pauseAmbient && this.audioManager.pauseAmbient();
+                // Audio calls wrapped: on Android Capacitor the AudioContext can be
+                // in a bad state after backgrounding; an unhandled throw here would
+                // abort the function before the overlay is shown / state change
+                // event is dispatched, leaving the UI desynced from `this.state`.
+                try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('pause'); } catch (e) { __err('game', e); }
+                try { this.audioManager && this.audioManager.pauseMusic && this.audioManager.pauseMusic(); } catch (e) { __err('game', e); }
+                try { this.audioManager && this.audioManager.pauseAmbient && this.audioManager.pauseAmbient(); } catch (e) { __err('game', e); }
                 // Show pause overlay when available (keeps gameplay UI clean; hosts pause actions)
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) {
@@ -948,10 +952,12 @@ class Game {
                 this.state = 'PLAYING';
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('togglePause', { from: 'PAUSED', to: 'PLAYING' }); } catch (e) { __err('game', e); }
                 try { if (typeof Analytics !== 'undefined') Analytics.trackResume({ level: (this.currentLevelIndex || 0) + 1 }); } catch (e) { /* */ }
-                this.audioManager.playSound && this.audioManager.playSound('ui_back');
-                this.audioManager.unpauseMusic && this.audioManager.unpauseMusic();
-                this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient();
-                // Hide pause overlay with transition
+                // Hide pause overlay FIRST so the user gets immediate feedback even
+                // if the audio layer throws (Android WebView can leave AudioContext
+                // in a broken state after backgrounding). Previously a throw here
+                // would abort the function leaving the overlay stuck on screen
+                // while `this.state` was already 'PLAYING' — making subsequent
+                // Resume taps no-op due to the `state !== 'PAUSED'` guard.
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) {
                     overlay.classList.remove('visible');
@@ -961,6 +967,15 @@ class Game {
                         overlay._hideTimer = null;
                     }, 240);
                 }
+                // Resume audio context if it was suspended while backgrounded.
+                try {
+                    if (this.audioManager && this.audioManager.audioCtx && this.audioManager.audioCtx.state === 'suspended') {
+                        this.audioManager.audioCtx.resume();
+                    }
+                } catch (e) { __err('game', e); }
+                try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('ui_back'); } catch (e) { __err('game', e); }
+                try { this.audioManager && this.audioManager.unpauseMusic && this.audioManager.unpauseMusic(); } catch (e) { __err('game', e); }
+                try { this.audioManager && this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient(); } catch (e) { __err('game', e); }
                 this.dispatchGameStateChange();
             }
         }
