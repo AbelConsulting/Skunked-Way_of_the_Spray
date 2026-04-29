@@ -5021,6 +5021,25 @@
 <!-- Service Worker registration for PWA / offline support -->
 <script>
 (function () {
+    // ── Suppress browser PWA "Install app" prompt ──────────────────────
+    // Going forward we want users to install via the Google Play listing
+    // (com.skunksquad.skunkfu) rather than as a standalone PWA from the
+    // website. Capturing beforeinstallprompt + preventDefault stops Chrome's
+    // native install banner / address-bar install icon on Android & desktop.
+    //
+    // TODO(post-launch): once the Play listing is public AND
+    // prefer_related_applications is flipped to true in manifest.json,
+    // Chrome on Android will automatically defer to the Play Store entry
+    // declared in `related_applications`. At that point this suppression
+    // becomes redundant but is still safe to keep (it only affects the
+    // generic install banner, not the Play Store hand-off).
+    try {
+        window.addEventListener('beforeinstallprompt', function (e) {
+            try { e.preventDefault(); } catch (_) {}
+            try { console.log('[PWA] install prompt suppressed — use Google Play listing instead'); } catch (_) {}
+        });
+    } catch (_) {}
+
     if (!('serviceWorker' in navigator)) return;
     // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
     // can serve stale assets after an app update.

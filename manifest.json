@@ -83,5 +83,12 @@
       "label": "Mobile gameplay with touch controls"
     }
   ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu",
+      "id": "com.skunksquad.skunkfu"
+    }
+  ],
   "prefer_related_applications": false
 }
