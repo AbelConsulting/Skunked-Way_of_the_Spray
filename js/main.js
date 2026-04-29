@@ -1003,7 +1003,7 @@ class GameApp {
 
             // Load all assets
             this._startLoadingTips();
-            await this.loadAssets();
+            await this._loadAssetsWithWatchdog();
 
             // Smooth fade-out instead of abrupt hide
             this._stopLoadingTips();
@@ -1308,6 +1308,10 @@ class GameApp {
             this.loadingText.textContent = 'Error loading game. Please refresh.';
             window.gameReady = false;
 
+            // If the asset-watchdog already showed its recovery overlay,
+            // don't clobber it with the legacy "Start Anyway" UI.
+            if (this._recoveryOverlayShown) return;
+
             // Show error overlay if available and include a "Start Anyway" button
             try {
                 const overlay = document.getElementById('error-overlay');
@@ -1358,6 +1362,84 @@ class GameApp {
                 }
             } catch (e) { console.warn('Failed to show start-anyway UI', e); }
         }
+    }
+
+    /**
+     * Wraps loadAssets() with a watchdog timer. If asset loading hangs (the
+     * usual symptom of a stale or partial service-worker cache after a
+     * deploy), we surface a "Recovery" overlay with a one-click button that
+     * unregisters the SW, clears all caches, and reloads — bringing the user
+     * back to a working build instead of a frozen loading screen.
+     *
+     * Throws on hard failure so the existing init() catch block runs too.
+     */
+    async _loadAssetsWithWatchdog() {
+        const TIMEOUT_MS = 30000; // 30s — generous even on slow mobile networks
+        let watchdog;
+        const watchdogPromise = new Promise((_, reject) => {
+            watchdog = setTimeout(() => {
+                reject(new Error('Asset loading timed out after ' + (TIMEOUT_MS / 1000) + 's'));
+            }, TIMEOUT_MS);
+        });
+
+        try {
+            await Promise.race([this.loadAssets(), watchdogPromise]);
+        } catch (err) {
+            try { this._showAssetRecoveryOverlay(err); } catch (_) { /* */ }
+            throw err;
+        } finally {
+            clearTimeout(watchdog);
+        }
+    }
+
+    /** Recovery overlay shown when asset loading times out or fails hard. */
+    _showAssetRecoveryOverlay(err) {
+        try { __err('main:preflight', err); } catch (_) {}
+        const overlay = document.getElementById('error-overlay');
+        const content = document.getElementById('error-content');
+        if (!overlay || !content) return;
+
+        // Mark so the init() catch block knows not to overwrite this UI.
+        this._recoveryOverlayShown = true;
+
+        overlay.style.display = 'block';
+        content.innerHTML = '';
+
+        const heading = document.createElement('div');
+        heading.style.cssText = 'font-weight:700;font-size:16px;margin-bottom:8px;';
+        heading.textContent = 'Loading failed';
+
+        const body = document.createElement('div');
+        body.style.cssText = 'margin-bottom:12px;line-height:1.4;';
+        body.textContent = 'The game is having trouble loading its assets. This usually means the cached files are out of date. Click below to clear the cache and reload.';
+
+        const detail = document.createElement('div');
+        detail.style.cssText = 'font-size:11px;color:#9ca3af;margin-bottom:12px;font-family:monospace;word-break:break-word;';
+        detail.textContent = String(err && err.message ? err.message : err);
+
+        const recoverBtn = document.createElement('button');
+        recoverBtn.textContent = 'Clear Cache & Reload';
+        recoverBtn.style.cssText = 'background:#10b981;color:#fff;border:0;padding:10px 16px;border-radius:8px;font-weight:700;cursor:pointer;margin-right:8px;';
+        recoverBtn.addEventListener('click', async () => {
+            recoverBtn.disabled = true;
+            recoverBtn.textContent = 'Clearing…';
+            if (typeof window.__cacheRecovery === 'function') {
+                await window.__cacheRecovery('asset-preflight');
+            } else {
+                try { location.reload(); } catch (_) {}
+            }
+        });
+
+        const reloadBtn = document.createElement('button');
+        reloadBtn.textContent = 'Reload';
+        reloadBtn.style.cssText = 'background:#374151;color:#f9fafb;border:0;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer;';
+        reloadBtn.addEventListener('click', () => { try { location.reload(); } catch (_) {} });
+
+        content.appendChild(heading);
+        content.appendChild(body);
+        content.appendChild(detail);
+        content.appendChild(recoverBtn);
+        content.appendChild(reloadBtn);
     }
 
     async loadAssets() {
