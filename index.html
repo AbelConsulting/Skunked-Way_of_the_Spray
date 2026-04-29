@@ -3301,13 +3301,11 @@
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                                 // Populate scoreboard
                                 if (scoresBoardEl) {
-                                    scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Loading scores?</p>';
                                     if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
-                                        // renderScoreboard is async ? render directly into the container
+                                        // renderScoreboard manages its own loading/error/empty states.
                                         Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
                                             .catch((e) => {
                                                 console.warn('renderScoreboard failed', e);
-                                                scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Could not load scores</p>';
                                             });
                                     } else {
                                         scoresBoardEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:20px;">Scores not yet available</p>';

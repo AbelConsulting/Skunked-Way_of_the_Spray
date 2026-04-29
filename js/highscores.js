@@ -13,6 +13,31 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
 (function(window){
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
   const MAX_SCORES = 10; // The number of scores to show on the leaderboard.
+  const PLAYER_NAME_KEY = 'skunkfu.playerName'; // Last submitted name (for own-row highlight).
+
+  function _savePlayerName(name) {
+    try {
+      if (typeof name === 'string' && name.trim()) {
+        localStorage.setItem(PLAYER_NAME_KEY, name.trim().slice(0, 16));
+      }
+    } catch (e) { /* private mode */ }
+  }
+  function _loadPlayerName() {
+    try { return localStorage.getItem(PLAYER_NAME_KEY) || ''; }
+    catch (e) { return ''; }
+  }
+  function _formatAgo(ms) {
+    if (!ms || ms < 0) return '';
+    const s = Math.floor(ms / 1000);
+    if (s < 5)   return 'just now';
+    if (s < 60)  return s + 's ago';
+    const m = Math.floor(s / 60);
+    if (m < 60)  return m + 'm ago';
+    const h = Math.floor(m / 60);
+    if (h < 24)  return h + 'h ago';
+    const d = Math.floor(h / 24);
+    return d + 'd ago';
+  }
   const ACHIEVEMENT_DEFINITIONS = Object.freeze([
     // ── Combat Basics ──
     { id: 'first_kill', name: 'First Blood', desc: 'Defeat your first enemy', icon: '🩸', check: (stats) => statNumber(stats.enemiesDefeated) >= 1 },
@@ -353,6 +378,8 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
       return;
     }
     try {
+      // Remember this name so we can highlight the player's own row on the board.
+      _savePlayerName(name);
       // Run achievement checks for this run (may unlock new ones)
       if (gameStats) checkAchievements(gameStats);
       // Build rich payload: all unlocked achievement IDs, prestige, title
@@ -508,39 +535,109 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
    */
   async function renderScoreboard(target, showDetails = false){
     const container = target || document.createElement('div');
-    container.innerHTML = '<p style="text-align:center; color: #ccc;">Loading global scores...</p>';
-    
-    // Add basic styling if it's a new element
-    if (!target) {
-        container.className = 'scoreboard-container';
+    if (!target) container.className = 'scoreboard-container';
+
+    // ── Build chrome (header + list shell) once, then refill list on each load ──
+    if (!container.querySelector('.scoreboard-header')) {
+      container.innerHTML = '';
+
+      const header = document.createElement('div');
+      header.className = 'scoreboard-header';
+
+      const title = document.createElement('h3');
+      title.textContent = '🏆 GLOBAL LEADERBOARD';
+      title.className = 'scoreboard-title';
+      header.appendChild(title);
+
+      const meta = document.createElement('div');
+      meta.className = 'scoreboard-meta';
+
+      const updated = document.createElement('span');
+      updated.className = 'scoreboard-updated';
+      updated.textContent = '';
+      meta.appendChild(updated);
+
+      const refreshBtn = document.createElement('button');
+      refreshBtn.type = 'button';
+      refreshBtn.className = 'scoreboard-refresh';
+      refreshBtn.setAttribute('aria-label', 'Refresh leaderboard');
+      refreshBtn.innerHTML = '<span class="scoreboard-refresh-icon" aria-hidden="true">↻</span><span class="scoreboard-refresh-label">Refresh</span>';
+      meta.appendChild(refreshBtn);
+
+      header.appendChild(meta);
+      container.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'scoreboard-list';
+      container.appendChild(list);
+
+      refreshBtn.addEventListener('click', () => { renderScoreboard(container, showDetails); });
     }
 
-    const scores = await loadScores();
+    const list = container.querySelector('.scoreboard-list');
+    const updatedEl = container.querySelector('.scoreboard-updated');
+    const refreshBtn = container.querySelector('.scoreboard-refresh');
 
-    container.innerHTML = ''; // Clear loading message
+    // Loading state (preserves header so the refresh control stays visible)
+    if (refreshBtn) refreshBtn.disabled = true;
+    list.innerHTML = '<div class="scoreboard-state scoreboard-state--loading">Loading global scores…</div>';
+    if (updatedEl) updatedEl.textContent = '';
 
-    const title = document.createElement('h3');
-    title.textContent = '🏆 GLOBAL LEADERBOARD';
-    title.className = 'scoreboard-title';
-    container.appendChild(title);
+    let scores = null;
+    let loadFailed = false;
+    try {
+      scores = await loadScores();
+    } catch (e) {
+      loadFailed = true;
+      console.warn('renderScoreboard: loadScores threw', e);
+    }
+    if (refreshBtn) refreshBtn.disabled = false;
 
-    const list = document.createElement('div');
-    list.className = 'scoreboard-list';
+    list.innerHTML = '';
+
+    if (loadFailed || !Array.isArray(scores)) {
+      const err = document.createElement('div');
+      err.className = 'scoreboard-state scoreboard-state--error';
+      err.textContent = "Couldn't reach the leaderboard. Tap Refresh to try again.";
+      list.appendChild(err);
+      return container;
+    }
+
+    // Stamp + auto-tick the "updated Xs ago" label.
+    const fetchedAt = Date.now();
+    function _tickUpdated() {
+      if (!updatedEl || !updatedEl.isConnected) return;
+      updatedEl.textContent = 'Updated ' + _formatAgo(Date.now() - fetchedAt);
+    }
+    _tickUpdated();
+    if (container._scoreboardTimer) {
+      clearInterval(container._scoreboardTimer);
+    }
+    container._scoreboardTimer = setInterval(() => {
+      if (!updatedEl || !updatedEl.isConnected) {
+        clearInterval(container._scoreboardTimer);
+        container._scoreboardTimer = null;
+        return;
+      }
+      _tickUpdated();
+    }, 10000);
 
     if (scores.length === 0) {
-        const noScores = document.createElement('div');
-        noScores.className = 'scoreboard-entry';
-        noScores.textContent = 'No scores yet. Be the first!';
-        noScores.style.textAlign = 'center';
-        noScores.style.opacity = '0.7';
-        list.appendChild(noScores);
+        const empty = document.createElement('div');
+        empty.className = 'scoreboard-state scoreboard-state--empty';
+        empty.textContent = 'No scores yet — set the bar.';
+        list.appendChild(empty);
     } else {
+        const myName = _loadPlayerName().toLowerCase();
         scores.forEach((scoreData, i) => {
             const entry = document.createElement('div');
             entry.className = 'scoreboard-entry';
             if (i === 0) entry.classList.add('gold');
             if (i === 1) entry.classList.add('silver');
             if (i === 2) entry.classList.add('bronze');
+            if (myName && scoreData.name && scoreData.name.toLowerCase() === myName) {
+              entry.classList.add('scoreboard-entry--me');
+            }
 
             const rank = document.createElement('div');
             rank.className = 'scoreboard-rank';
@@ -628,7 +725,6 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
             list.appendChild(entry);
         });
     }
-    container.appendChild(list);
     return container;
   }
 
