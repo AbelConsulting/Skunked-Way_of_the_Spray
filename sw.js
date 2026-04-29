@@ -13,8 +13,13 @@
  * Bump CACHE_VERSION when you deploy new code/assets to bust the cache.
  */
 
-const CACHE_VERSION = 'skunked-v8';
+const CACHE_VERSION = 'skunked-v9';
 const CACHE_NAME = `${CACHE_VERSION}`;
+
+// Build identifier published to clients via the GET_VERSION message.
+// Bump CACHE_VERSION above whenever the SW or any precached asset changes —
+// the activate handler will then purge older caches.
+const SW_BUILD = CACHE_VERSION;
 
 // Determine base path from service worker location
 // This allows the SW to work in subdirectories like /SkunkFU/
@@ -150,30 +155,62 @@ const CORE_ASSETS_RELATIVE = [
   'assets/audio/sfx/pause.ogg'
 ];
 
+// CRITICAL_ASSETS — if any of these fail to cache during install, the install
+// is REJECTED so the new SW never activates. The browser keeps the previous
+// (working) SW serving the old cache until the deployment is healthy. This is
+// the main defense against the "white screen on stale cache" failure mode,
+// where a partial precache used to overwrite a working install.
+const CRITICAL_ASSETS_RELATIVE = [
+  '',
+  'index.html',
+  'styles.css',
+  'js/config.js',
+  'js/utils.js',
+  'js/main.js',
+  'js/game.js',
+  'js/spriteLoader.js',
+  'js/audioManager.js'
+];
+
 // ────────────────────────────────────────────────────────────
 // INSTALL — pre-cache core assets
 // ────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing', CACHE_NAME);
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // Resolve all relative paths to full URLs based on SW scope
-      const fullUrls = CORE_ASSETS_RELATIVE.map(path => resolveUrl(path));
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const criticalSet = new Set(CRITICAL_ASSETS_RELATIVE.map(resolveUrl));
+      const fullUrls = CORE_ASSETS_RELATIVE.map((path) => resolveUrl(path));
       console.log('[SW] Caching', fullUrls.length, 'assets from scope:', getBasePath());
-      
-      // Use addAll with individual error handling so one missing
-      // asset doesn't block the entire install.
-      return Promise.all(
+
+      const failedCritical = [];
+
+      // Cache each asset individually so one missing optional asset doesn't
+      // tank the entire install. Critical failures are collected and thrown
+      // at the end, which causes waitUntil to reject and the SW to be
+      // discarded — the existing SW (if any) stays active.
+      await Promise.all(
         fullUrls.map((url) =>
           cache.add(url).catch((err) => {
-            console.warn('[SW] Failed to cache:', url, err.message || err);
+            const isCritical = criticalSet.has(url);
+            const tag = isCritical ? '[SW] CRITICAL precache failed:' : '[SW] Failed to cache:';
+            console.warn(tag, url, (err && err.message) || err);
+            if (isCritical) failedCritical.push({ url, err: (err && err.message) || String(err) });
           })
         )
       );
-    }).then(() => {
-      // Activate immediately without waiting for tabs to close
-      return self.skipWaiting();
+
+      if (failedCritical.length > 0) {
+        // Reject install — the browser will retain the previous SW. The page
+        // will remain on the working version and we won't ship a half-cached
+        // build that would white-screen on next reload.
+        const msg = 'Critical asset precache failed: ' + failedCritical.map((f) => f.url).join(', ');
+        throw new Error(msg);
+      }
     })
+    // NOTE: skipWaiting() is intentionally NOT called here. The page
+    // controls activation via the SKIP_WAITING message (see message handler
+    // below) so users finishing a level aren't interrupted by an asset swap.
   );
 });
 
@@ -244,4 +281,22 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+// ────────────────────────────────────────────────────────────
+// MESSAGE — page-driven control channel
+// ────────────────────────────────────────────────────────────
+// SKIP_WAITING : page tells the new SW it's safe to activate now.
+// GET_VERSION  : page asks the active SW which build it is. Used by the
+//                preflight in main.js to detect version skew.
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+  if (data.type === 'GET_VERSION') {
+    const port = event.ports && event.ports[0];
+    if (port) port.postMessage({ version: SW_BUILD });
+  }
 });
