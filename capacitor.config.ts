@@ -27,7 +27,10 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#0f0f1a',
+      // Edge-to-edge: let the WebView draw behind the status bar instead of
+      // tinting it via the deprecated Window.setStatusBarColor API.
+      // Safe-area insets are honored via CSS env(safe-area-inset-*).
+      overlaysWebView: true,
     },
     ScreenOrientation: {
       defaultOrientation: 'landscape',

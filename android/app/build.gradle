@@ -31,8 +31,8 @@ android {
         applicationId "com.skunksquad.skunkfu"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 26
-        versionName "1.2.12"
+        versionCode 27
+        versionName "1.2.13"
         // Use a versioned archive name so concurrent file locks (e.g. Defender / OneDrive
         // scanning a previously built artifact) don't block the new bundle output.
         setProperty("archivesBaseName", "skunkfu-${versionName}-${versionCode}")
@@ -69,6 +69,7 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.activity:activity:$androidxActivityVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')

@@ -29,7 +29,18 @@
             android:launchMode="singleTask"
             android:exported="true"
             android:screenOrientation="sensorLandscape"
+            android:resizeableActivity="true"
             android:keepScreenOn="true">
+
+            <!-- Allow users to override aspect ratio / orientation on large screens & foldables (Android 14+).
+                 Combined with resizeableActivity=true, this satisfies Play Console's large-screen quality
+                 guidance without unlocking portrait for the gameplay. -->
+            <property
+                android:name="android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_OVERRIDE"
+                android:value="true" />
+            <property
+                android:name="android.window.PROPERTY_COMPAT_ALLOW_ORIENTATION_OVERRIDE"
+                android:value="true" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
