@@ -3102,6 +3102,10 @@
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status</h3>
                             <p id="founder-status-text">Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.</p>
+                            <label id="founder-gold-skin-row" hidden style="display:flex; align-items:center; gap:10px; margin:10px 0 4px; font-size:14px; cursor:pointer;">
+                                <input id="founder-gold-skin-toggle" type="checkbox" style="width:18px; height:18px; accent-color:#FFC857; cursor:pointer;" />
+                                <span>Use gold ninja skin <span style="opacity:0.6; font-weight:400;">(uncheck for the original look)</span></span>
+                            </label>
                             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center;">
                                 <input id="founder-code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Redeem code" style="flex:1 1 180px; min-width:140px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.35); color:#fff; font:600 14px 'Space Grotesk','Segoe UI',sans-serif; letter-spacing:0.06em; text-transform:uppercase;" />
                                 <button id="founder-code-btn" class="menu-btn" type="button">&#127873; Redeem</button>
@@ -3171,6 +3175,7 @@
             <script src="js/game.js?v=1.0.2"></script>
             <script src="js/purchaseManager.js?v=1.0.2"></script>
             <script src="js/founderManager.js?v=1.0.2"></script>
+            <script src="js/goldenSkin.js?v=1.0.2"></script>
             <script src="js/adManager.js?v=1.0.2"></script>
             <script src="js/main.js?v=1.0.2" type="module"></script>
             <script nonce="%CSP_NONCE%">
@@ -3845,6 +3850,8 @@
                             const codeInput         = document.getElementById('founder-code-input');
                             const codeBtn           = document.getElementById('founder-code-btn');
                             const codeStatus        = document.getElementById('founder-code-status');
+                            const goldSkinRow       = document.getElementById('founder-gold-skin-row');
+                            const goldSkinToggle    = document.getElementById('founder-gold-skin-toggle');
 
                             function _renderFounderState() {
                                 const isF = !!(window.FounderManager && FounderManager.isFounder());
@@ -3857,6 +3864,22 @@
                                         founderStatusText.textContent = 'Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.';
                                     }
                                 }
+                                // Show the gold-skin toggle only for Founders.
+                                if (goldSkinRow) {
+                                    if (isF) goldSkinRow.removeAttribute('hidden');
+                                    else     goldSkinRow.setAttribute('hidden', '');
+                                }
+                                if (goldSkinToggle && window.FounderManager && typeof FounderManager.isGoldSkinEnabled === 'function') {
+                                    goldSkinToggle.checked = !!FounderManager.isGoldSkinEnabled();
+                                }
+                            }
+
+                            if (goldSkinToggle) {
+                                goldSkinToggle.addEventListener('change', () => {
+                                    if (window.FounderManager && typeof FounderManager.setGoldSkinEnabled === 'function') {
+                                        FounderManager.setGoldSkinEnabled(!!goldSkinToggle.checked);
+                                    }
+                                });
                             }
 
                             if (codeBtn && codeInput) {

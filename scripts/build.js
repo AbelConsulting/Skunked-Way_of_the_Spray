@@ -22,6 +22,7 @@ const filesInOrder = [
   'ui.js',
   'purchaseManager.js',
   'founderManager.js',
+  'goldenSkin.js',
   'adManager.js',
   'game.js',
   'main.js'

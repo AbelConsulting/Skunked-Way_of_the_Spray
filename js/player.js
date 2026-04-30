@@ -1015,7 +1015,11 @@ class Player {
             // Founder cosmetic aura (early-access supporters). Subtle, permanent
             // golden shimmer — distinct from the idol glow because it does not
             // scale with idol count and uses a thinner blur.
-            if (typeof FounderManager !== 'undefined' && FounderManager.isFounder()) {
+            const _founderGold = (typeof FounderManager !== 'undefined' &&
+                FounderManager.isFounder() &&
+                (typeof FounderManager.isGoldSkinEnabled !== 'function' ||
+                 FounderManager.isGoldSkinEnabled()));
+            if (_founderGold) {
                 ctx.save();
                 ctx.shadowColor = '#FFC857';
                 ctx.shadowBlur = 8 + Math.sin(Date.now() / 220) * 3;
@@ -1024,7 +1028,16 @@ class Player {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
                 ctx.restore();
             }
-            this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+            // Final base-sprite blit. Founders get the gold-tinted skin
+            // generated procedurally by GoldenSkin from the same source
+            // sprite sheet — silhouette and animation frames are identical.
+            if (_founderGold &&
+                typeof GoldenSkin !== 'undefined' &&
+                typeof GoldenSkin.drawAnimation === 'function') {
+                GoldenSkin.drawAnimation(this.currentAnimation, ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+            } else {
+                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+            }
         } else {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
