@@ -20,6 +20,9 @@ const filesInOrder = [
   'enemyManager.js',
   'touchControls.js',
   'ui.js',
+  'purchaseManager.js',
+  'founderManager.js',
+  'adManager.js',
   'game.js',
   'main.js'
 ];

@@ -1012,6 +1012,18 @@ class Player {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
                 ctx.restore();
             }
+            // Founder cosmetic aura (early-access supporters). Subtle, permanent
+            // golden shimmer — distinct from the idol glow because it does not
+            // scale with idol count and uses a thinner blur.
+            if (typeof FounderManager !== 'undefined' && FounderManager.isFounder()) {
+                ctx.save();
+                ctx.shadowColor = '#FFC857';
+                ctx.shadowBlur = 8 + Math.sin(Date.now() / 220) * 3;
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.55;
+                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                ctx.restore();
+            }
             this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
         } else {
             ctx.fillStyle = this.color;
