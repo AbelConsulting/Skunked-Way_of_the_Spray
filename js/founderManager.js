@@ -40,9 +40,24 @@ const FounderManager = (() => {
     // but anyone already granted keeps it forever.
     const EARLY_ACCESS_END_ISO = '2026-12-31T23:59:59Z';
 
+    // Promo / press / community codes. Codes are case-insensitive and stripped
+    // of whitespace before comparison. Each redemption is one-shot per device:
+    // once a code has been used on this install it is recorded in
+    // `skunkfu.founderCodesUsed` (a JSON array) and cannot be re-used.
+    //
+    // NOTE: client-side codes are easy to share — keep this list short and
+    // rotate values for paid campaigns. For high-value drops, gate redemption
+    // through the Firebase function instead and call FounderManager.grant().
+    const VALID_REDEEM_CODES = Object.freeze([
+        'SKUNKED-FOUNDER',
+        'DAY-ONE-SKUNK',
+        'WAY-OF-THE-SPRAY'
+    ]);
+
     const STORAGE_KEY_FOUNDER       = 'skunkfu.founder';
     const STORAGE_KEY_FOUNDER_SINCE = 'skunkfu.founderSince';
     const STORAGE_KEY_AD_FREE       = 'skunkfu.adFree';
+    const STORAGE_KEY_CODES_USED    = 'skunkfu.founderCodesUsed';
 
     let _isFounder = _read();
     let _initialized = false;
@@ -171,6 +186,51 @@ const FounderManager = (() => {
         return () => _listeners.delete(fn);
     }
 
+    // ── Redeem-code support ────────────────────────────────────────────────
+    function _normalizeCode(raw) {
+        if (typeof raw !== 'string') return '';
+        return raw.trim().toUpperCase().replace(/\s+/g, '-');
+    }
+
+    function _readCodesUsed() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_CODES_USED);
+            const parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) { return []; }
+    }
+
+    function _writeCodesUsed(arr) {
+        try { localStorage.setItem(STORAGE_KEY_CODES_USED, JSON.stringify(arr)); } catch (e) {}
+    }
+
+    /**
+     * Redeem a client-side promo code. Returns:
+     *   { ok: true,  status: 'granted' }   — code accepted, founder granted
+     *   { ok: true,  status: 'already' }   — code valid but already a founder
+     *   { ok: false, status: 'used' }      — code valid but already redeemed on this device
+     *   { ok: false, status: 'invalid' }   — code unknown
+     *   { ok: false, status: 'empty' }     — empty input
+     */
+    function redeemCode(rawCode) {
+        const code = _normalizeCode(rawCode);
+        if (!code) return { ok: false, status: 'empty' };
+        if (!VALID_REDEEM_CODES.includes(code)) {
+            return { ok: false, status: 'invalid' };
+        }
+        const used = _readCodesUsed();
+        if (used.includes(code)) {
+            return { ok: false, status: 'used' };
+        }
+        used.push(code);
+        _writeCodesUsed(used);
+        if (_isFounder) {
+            return { ok: true, status: 'already' };
+        }
+        _grantInternal('redeem-code:' + code);
+        return { ok: true, status: 'granted' };
+    }
+
     return {
         initialize,
         isFounder,
@@ -178,6 +238,7 @@ const FounderManager = (() => {
         revoke,
         onChange,
         getFounderSince,
+        redeemCode,
         EARLY_ACCESS_END_ISO
     };
 })();

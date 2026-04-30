@@ -3099,6 +3099,15 @@
                             </div>
                             <p id="remove-ads-status" style="margin-top:8px; font-size:12px; color: rgba(255,255,255,0.6);"></p>
                         </div>
+                        <div class="menu-settings-card" id="founder-card">
+                            <h3>&#11088; Founder Status</h3>
+                            <p id="founder-status-text">Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.</p>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center;">
+                                <input id="founder-code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Redeem code" style="flex:1 1 180px; min-width:140px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.35); color:#fff; font:600 14px 'Space Grotesk','Segoe UI',sans-serif; letter-spacing:0.06em; text-transform:uppercase;" />
+                                <button id="founder-code-btn" class="menu-btn" type="button">&#127873; Redeem</button>
+                            </div>
+                            <p id="founder-code-status" style="margin-top:8px; font-size:12px; color: rgba(255,255,255,0.6); min-height: 1em;"></p>
+                        </div>
                     </div>
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
@@ -3829,6 +3838,59 @@
                             }
                             _renderAdFreeState();
                         } catch (e) { try { console.warn('[RemoveAds UI]', e); } catch(_) {} }
+
+                        // ─── Founder / Redeem Code wiring ──────────────────
+                        try {
+                            const founderStatusText = document.getElementById('founder-status-text');
+                            const codeInput         = document.getElementById('founder-code-input');
+                            const codeBtn           = document.getElementById('founder-code-btn');
+                            const codeStatus        = document.getElementById('founder-code-status');
+
+                            function _renderFounderState() {
+                                const isF = !!(window.FounderManager && FounderManager.isFounder());
+                                if (founderStatusText) {
+                                    if (isF) {
+                                        const since = window.FounderManager.getFounderSince && FounderManager.getFounderSince();
+                                        const sinceLabel = since ? new Date(since).toLocaleDateString() : '';
+                                        founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for supporting early access' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. The gold aura, "FOUNDER" badge, and Day-One achievement are yours forever.';
+                                    } else {
+                                        founderStatusText.textContent = 'Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.';
+                                    }
+                                }
+                            }
+
+                            if (codeBtn && codeInput) {
+                                codeBtn.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    if (!window.FounderManager || typeof FounderManager.redeemCode !== 'function') {
+                                        if (codeStatus) codeStatus.textContent = 'Redeem system not available.';
+                                        return;
+                                    }
+                                    const res = FounderManager.redeemCode(codeInput.value);
+                                    if (codeStatus) {
+                                        switch (res.status) {
+                                            case 'granted': codeStatus.style.color = '#7CFFB2'; codeStatus.textContent = '\u2728 Founder status granted. Welcome to the early-access crew!'; break;
+                                            case 'already': codeStatus.style.color = '#FFD75A'; codeStatus.textContent = 'Code accepted, but you were already a Founder.'; break;
+                                            case 'used':    codeStatus.style.color = '#FFB060'; codeStatus.textContent = 'That code has already been redeemed on this device.'; break;
+                                            case 'invalid': codeStatus.style.color = '#FF8080'; codeStatus.textContent = 'Code not recognized. Check spelling and try again.'; break;
+                                            case 'empty':   codeStatus.style.color = '#FF8080'; codeStatus.textContent = 'Enter a code first.'; break;
+                                            default:        codeStatus.style.color = '#FF8080'; codeStatus.textContent = 'Redeem failed.';
+                                        }
+                                    }
+                                    if (res.ok) codeInput.value = '';
+                                    _renderFounderState();
+                                });
+                                codeInput.addEventListener('keydown', (ev) => {
+                                    if (ev.key === 'Enter') { ev.preventDefault(); codeBtn.click(); }
+                                });
+                            }
+
+                            if (window.FounderManager && FounderManager.onChange) {
+                                FounderManager.onChange(_renderFounderState);
+                            }
+                            _renderFounderState();
+                        } catch (e) { try { console.warn('[Founder UI]', e); } catch(_) {} }
 
                         // Back buttons
                         if (scoresBackBtn) {

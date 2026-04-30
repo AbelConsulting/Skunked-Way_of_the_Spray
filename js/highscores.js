@@ -118,6 +118,15 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
     { id: 'mass_extinction', name: 'Mass Extinction', desc: 'Defeat 1,000 enemies across all runs', icon: '🪦', check: (stats) => statNumber(stats.totalEnemiesDefeated) >= 1000 },
     { id: 'armageddon', name: 'Armageddon', desc: 'Defeat 5,000 enemies across all runs', icon: '🔱', check: (stats) => statNumber(stats.totalEnemiesDefeated) >= 5000 },
     { id: 'time_invested', name: 'Time Invested', desc: 'Play for 1 hour total', icon: '⏳', check: (stats) => statNumber(stats.totalPlayTime) >= 3600 },
+
+    // ── Founder / Early Access ──
+    // Granted automatically the first time a Founder finishes a run —
+    // gating it on `world_saver_or_run_count >= 1` so it doesn't pop in the
+    // tutorial. The actual entitlement check lives in FounderManager.
+    { id: 'day_one_skunk', name: 'Day-One Skunk', desc: 'Supported the game during early access', icon: '🌟', check: (stats) => {
+        try { return !!(window.FounderManager && FounderManager.isFounder()); }
+        catch (e) { return false; }
+    } },
     { id: 'no_lifer', name: 'No-Lifer', desc: 'Play for 5 hours total', icon: '🌙', check: (stats) => statNumber(stats.totalPlayTime) >= 18000 },
 
     // ── Damage & Efficiency ──
@@ -711,6 +720,22 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
             const nameRow = document.createElement('div');
             nameRow.className = 'scoreboard-name';
             nameRow.textContent = scoreData.name || '???';
+
+            // FOUNDER badge — only shown on the player's own row when they hold
+            // the early-access entitlement. The leaderboard API doesn't yet
+            // carry a founder flag for other players, so this is local-only.
+            const isOwnRow = myName && scoreData.name && scoreData.name.toLowerCase() === myName;
+            const isFounder = (() => {
+              try { return !!(window.FounderManager && FounderManager.isFounder()); }
+              catch (e) { return false; }
+            })();
+            if (isOwnRow && isFounder) {
+              const founderBadge = document.createElement('span');
+              founderBadge.className = 'scoreboard-founder-badge';
+              founderBadge.textContent = 'FOUNDER';
+              nameRow.appendChild(document.createTextNode(' '));
+              nameRow.appendChild(founderBadge);
+            }
 
             // Title badge (derived from achievement count)
             const achCount = (Array.isArray(scoreData.achievements) ? scoreData.achievements.length : 0);

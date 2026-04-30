@@ -292,6 +292,21 @@
     opacity: 0.9;
 }
 
+/* Founder marker on the player's own leaderboard row. */
+.scoreboard-founder-badge {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #FFD75A 0%, #FF9E1B 100%);
+    color: #1a0e00;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 8px rgba(255, 200, 87, 0.55);
+    vertical-align: middle;
+}
+
 .scoreboard-score {
     font-size: 18px;
     font-weight: bold;
