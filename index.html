@@ -3942,7 +3942,7 @@
                                 const pgsAvail = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
                                 const safeName = String(detail.name || 'Achievement Unlocked').replace(/[<>]/g, '');
                                 const safeDesc = String(detail.desc || '').replace(/[<>]/g, '');
-                                const icon = detail.icon || '??';
+                                const icon = detail.icon || '🏆';
                                 el.innerHTML = `
                                     <div class="ach-icon">${icon}</div>
                                     <div class="ach-body">
@@ -3950,7 +3950,7 @@
                                         <p class="ach-name">${safeName}</p>
                                         ${safeDesc ? `<p class="ach-desc">${safeDesc}</p>` : ''}
                                     </div>
-                                    ${pgsAvail ? '<span class="ach-pgs-badge">?? Play Games</span>' : ''}
+                                    ${pgsAvail ? '<span class="ach-pgs-badge">🎮 Play Games</span>' : ''}
                                 `;
                                 stack.appendChild(el);
                                 // Trigger entrance animation on next frame

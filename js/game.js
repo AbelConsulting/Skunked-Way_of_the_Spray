@@ -1654,6 +1654,23 @@ class Game {
             
             this.gameStats.timeSurvived += dt;
 
+            // ── Mid-run achievement check (throttled) ──
+            // Most achievements are gameplay-driven (kills, combos, accuracy,
+            // time survived). Without a periodic check they only trigger at
+            // level-clear / game-over, hiding the toast feedback during play.
+            // checkAchievements is idempotent (skips already-unlocked) and
+            // dispatches `skunkfu-achievement-unlocked` for the toast UI.
+            this._achCheckAccum = (this._achCheckAccum || 0) + dt;
+            if (this._achCheckAccum >= 1.0) {
+                this._achCheckAccum = 0;
+                try {
+                    if (window.Highscores && typeof Highscores.checkAchievements === 'function') {
+                        this.gameStats.score = this.score;
+                        Highscores.checkAchievements(this.gameStats);
+                    }
+                } catch (e) { __err('game', e); }
+            }
+
             // Update screen shake
             if (this.screenShake) {
                 this.screenShake.update(dt);
