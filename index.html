@@ -1518,6 +1518,65 @@
         #pause-btn:active { transform: scale(0.96); }
         #perf-mode-btn:active { transform: scale(0.96); }
 
+        /* ── Game-over Leaderboard CTA ──
+           Shown when GAME_OVER state engages and the input lockout expires.
+           Sits above the canvas-rendered "pinned restart prompt" strip
+           (~92px tall in ui.js drawGameOver), centered horizontally. */
+        .game-over-cta {
+            position: absolute;
+            left: 50%;
+            bottom: 110px;
+            transform: translateX(-50%) translateY(8px);
+            z-index: 150;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 22px;
+            font: 700 15px 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.04em;
+            color: #FFE07A;
+            background: linear-gradient(180deg, rgba(255,215,0,0.22), rgba(60,40,0,0.78));
+            border: 1px solid rgba(255,215,0,0.55);
+            border-radius: 14px;
+            cursor: pointer;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            box-shadow:
+                0 12px 28px rgba(0,0,0,0.45),
+                0 0 22px rgba(255,215,0,0.18);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 240ms ease, transform 240ms cubic-bezier(.2,.9,.2,1), filter 160ms ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .game-over-cta[hidden] { display: none; }
+        .game-over-cta.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .game-over-cta:hover {
+            filter: brightness(1.15);
+        }
+        .game-over-cta:active {
+            transform: translateX(-50%) translateY(0) scale(0.97);
+        }
+        .game-over-cta:focus-visible {
+            outline: 2px solid rgba(255,215,0,0.95);
+            outline-offset: 3px;
+        }
+        .game-over-cta-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+        @media (max-width: 520px) {
+            .game-over-cta {
+                bottom: 116px;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+
         /* Reusable neon button styles */
         .menu-btn {
             appearance: none;
@@ -1664,6 +1723,36 @@
         .pause-actions .menu-btn--primary {
             padding: 18px 18px;
             font-size: 19px;
+        }
+
+        /* Secondary row: Restart / Quit — side-by-side, smaller than Resume. */
+        .pause-secondary-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+        .menu-btn--pause-secondary {
+            padding: 12px 14px !important;
+            font-size: 14px !important;
+            min-height: 50px;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.35)) !important;
+            color: rgba(245,250,255,0.92) !important;
+            border-radius: 12px !important;
+            cursor: pointer;
+            transition: filter 160ms ease, transform 120ms ease, border-color 160ms ease;
+        }
+        .menu-btn--pause-secondary:hover {
+            filter: brightness(1.18);
+            transform: translateY(-1px);
+        }
+        .menu-btn--pause-secondary:focus-visible {
+            outline: 2px solid rgba(255,215,0,0.85);
+            outline-offset: 2px;
+        }
+        .menu-btn--pause-quit {
+            border-color: rgba(255,160,80,0.35) !important;
         }
 
         .pause-volume-controls {
@@ -2499,6 +2588,16 @@
                 <button id="pause-btn" aria-label="Pause game" title="Pause" hidden>&#9208;</button>
                 <button id="perf-mode-btn" title="Performance mode">Perf</button>
 
+                <!-- Game-over leaderboard CTA (shown when state === GAME_OVER and lockout expired) -->
+                <button id="game-over-leaderboard-btn"
+                        type="button"
+                        class="game-over-cta"
+                        aria-label="View leaderboard"
+                        hidden>
+                    <span class="game-over-cta-icon" aria-hidden="true">&#127942;</span>
+                    <span class="game-over-cta-label">View Leaderboard</span>
+                </button>
+
                 <div id="mobile-start-overlay" hidden>
                     <button id="mobile-start-btn">Tap to Start</button>
                 </div>
@@ -2993,7 +3092,11 @@
                     </div>
                     <div class="pause-actions">
                         <button id="resume-btn" class="menu-btn menu-btn--primary">&#9654; Resume</button>
-                        <p class="pause-helper">Hub features stay on the main menu so pause stays fast, stable, and easy to exit.</p>
+                        <div class="pause-secondary-actions">
+                            <button id="pause-restart-btn" class="menu-btn menu-btn--pause-secondary" type="button">&#8635; Restart Stage</button>
+                            <button id="pause-quit-btn" class="menu-btn menu-btn--pause-secondary menu-btn--pause-quit" type="button">&#8617; Main Menu</button>
+                        </div>
+                        <p class="pause-helper">Restart wipes your current run. Main Menu returns to the title screen.</p>
                     </div>
                     <p class="pause-esc-hint">PRESS ESC TO RESUME</p>
                 </div>
@@ -4089,7 +4192,56 @@
                     if (menuBtn) menuBtn.style.display = 'none';
                 }
             });
-            
+
+            // ── Game-over Leaderboard CTA ──
+            // Reveal a "View Leaderboard" button after the game-over input lockout
+            // expires. Click opens the existing #menu-scores-overlay so we reuse
+            // the populated scoreboard rendering instead of duplicating UI.
+            (function wireGameOverLeaderboardCta() {
+                const btn = document.getElementById('game-over-leaderboard-btn');
+                if (!btn) return;
+                let revealTimer = null;
+                const hide = () => {
+                    btn.classList.remove('visible');
+                    btn.setAttribute('hidden', '');
+                    if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+                };
+                const show = () => {
+                    btn.removeAttribute('hidden');
+                    requestAnimationFrame(() => btn.classList.add('visible'));
+                };
+                window.addEventListener('gameStateChange', (e) => {
+                    const isGameOver = e && e.detail && e.detail.state === 'GAME_OVER';
+                    if (!isGameOver) { hide(); return; }
+                    hide();
+                    const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                        ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+                    revealTimer = setTimeout(() => {
+                        try {
+                            if (window.game && window.game.state === 'GAME_OVER') show();
+                        } catch (ex) {}
+                    }, lockoutMs + 200);
+                });
+                btn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    try {
+                        const scoresOverlay = document.getElementById('menu-scores-overlay');
+                        const scoresBoardEl = document.getElementById('menu-scores-board');
+                        if (scoresBoardEl && window.Highscores && typeof Highscores.renderScoreboard === 'function') {
+                            Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
+                                .catch((err) => console.warn('renderScoreboard failed', err));
+                        } else if (scoresBoardEl) {
+                            scoresBoardEl.innerHTML = '<p class="scoreboard-empty-msg">Scores not yet available</p>';
+                        }
+                        if (scoresOverlay) scoresOverlay.style.display = 'flex';
+                        try { Analytics.trackMenuAction('high_scores_gameover'); } catch (e) {}
+                    } catch (e) {
+                        console.warn('game-over leaderboard CTA failed', e);
+                    }
+                });
+            })();
+
             // Update skunk button availability based on ammo
             const updateSkunkButton = () => {
                 try {
@@ -4200,6 +4352,84 @@
                     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                     if (resumeBtn._lastResumePress && (now - resumeBtn._lastResumePress) < 350) return;
                     onResumePress(e);
+                });
+            }
+        } catch (e) {}
+
+        // Wire pause-overlay backdrop click to resume (matches mobile UX expectations).
+        // Clicking the dark area outside the .pause-panel resumes the game.
+        try {
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (pauseOverlay) {
+                pauseOverlay.addEventListener('click', (e) => {
+                    // Only react if the click landed on the overlay itself, not bubbled
+                    // up from the panel (panel children should retain their own behavior).
+                    if (e.target !== pauseOverlay) return;
+                    if (!window.game || window.game.state !== 'PAUSED') return;
+                    try { window && window.logTouchControlEvent && window.logTouchControlEvent('pauseBackdrop_dismiss', {}); } catch (_) {}
+                    try {
+                        if (window.game && typeof window.game.togglePause === 'function') {
+                            window.game.togglePause();
+                        }
+                    } catch (err) { console.warn('pause backdrop dismiss failed', err); }
+                });
+            }
+        } catch (e) {}
+
+        // Wire pause secondary actions: Restart Stage + Main Menu
+        try {
+            const restartBtn = document.getElementById('pause-restart-btn');
+            const quitBtn = document.getElementById('pause-quit-btn');
+
+            const closePauseOverlay = () => {
+                const overlay = document.getElementById('pause-overlay');
+                if (!overlay) return;
+                overlay.classList.remove('visible');
+                if (overlay._hideTimer) clearTimeout(overlay._hideTimer);
+                overlay._hideTimer = setTimeout(() => { overlay.style.display = 'none'; }, 240);
+            };
+
+            if (restartBtn) {
+                restartBtn.addEventListener('click', (ev) => {
+                    try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
+                    if (!window.game || window.game.state !== 'PAUSED') return;
+                    try { window && window.logTouchControlEvent && window.logTouchControlEvent('pauseRestart', {}); } catch (_) {}
+                    try {
+                        // Restart the current stage from the start.
+                        // startGame() resets score & lives and rebuilds the level.
+                        const idx = (window.game && window.game.currentLevelIndex) || 0;
+                        // Flip state out of PAUSED so startGame's transition logic runs cleanly.
+                        window.game.state = 'PLAYING';
+                        closePauseOverlay();
+                        // Resume music context after pause-mute
+                        try { window.game.audioManager && window.game.audioManager.unpauseMusic && window.game.audioManager.unpauseMusic(); } catch (_) {}
+                        if (typeof window.game.startGame === 'function') {
+                            window.game.startGame(idx);
+                        }
+                    } catch (err) { console.warn('pause restart failed', err); }
+                });
+            }
+
+            if (quitBtn) {
+                quitBtn.addEventListener('click', (ev) => {
+                    try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
+                    if (!window.game || window.game.state !== 'PAUSED') return;
+                    try { window && window.logTouchControlEvent && window.logTouchControlEvent('pauseQuit', {}); } catch (_) {}
+                    try {
+                        window.game.state = 'MENU';
+                        closePauseOverlay();
+                        // Stop music & ambient when leaving gameplay.
+                        try { window.game.audioManager && window.game.audioManager.stopMusic && window.game.audioManager.stopMusic(); } catch (_) {}
+                        try { window.game.audioManager && window.game.audioManager.stopAmbient && window.game.audioManager.stopAmbient(); } catch (_) {}
+                        try { window.game.dispatchGameStateChange && window.game.dispatchGameStateChange(); } catch (_) {}
+                        // Reveal the start menu overlay.
+                        const smo = document.getElementById('start-menu-overlay');
+                        if (smo) {
+                            smo.classList.remove('hidden');
+                            smo.style.display = '';
+                            window._startMenuVisible = true;
+                        }
+                    } catch (err) { console.warn('pause quit failed', err); }
                 });
             }
         } catch (e) {}
