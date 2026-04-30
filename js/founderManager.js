@@ -63,6 +63,7 @@ const FounderManager = (() => {
     const STORAGE_KEY_GOLD_SKIN     = 'skunkfu.useGoldSkin';
 
     let _isFounder = _read();
+    let _goldSkinEnabled = _readGoldSkinPref();
     let _initialized = false;
     const _listeners = new Set();
 
@@ -71,6 +72,12 @@ const FounderManager = (() => {
     function _read() {
         try { return localStorage.getItem(STORAGE_KEY_FOUNDER) === '1'; }
         catch (e) { return false; }
+    }
+
+    function _readGoldSkinPref() {
+        // Default to enabled; only an explicit '0' opts out.
+        try { return localStorage.getItem(STORAGE_KEY_GOLD_SKIN) !== '0'; }
+        catch (e) { return true; }
     }
 
     function _write(v) {
@@ -171,17 +178,19 @@ const FounderManager = (() => {
     function getFounderSince() { return _readSince(); }
 
     // ── Gold-skin cosmetic toggle ──────────────────────────────────────────
-    // Stored as '0' for opt-out; missing/anything-else means enabled. This way
-    // existing Founders default to gold without a migration.
+    // The pref is cached in `_goldSkinEnabled` so the per-frame render path
+    // never hits localStorage. Persisted as '0' for opt-out; absence == on,
+    // so existing Founders default to gold without a migration.
     function isGoldSkinEnabled() {
-        if (!_isFounder) return false;
-        try { return localStorage.getItem(STORAGE_KEY_GOLD_SKIN) !== '0'; }
-        catch (e) { return true; }
+        return _isFounder && _goldSkinEnabled;
     }
     function setGoldSkinEnabled(on) {
+        const next = !!on;
+        if (_goldSkinEnabled === next) return;
+        _goldSkinEnabled = next;
         try {
-            if (on) localStorage.removeItem(STORAGE_KEY_GOLD_SKIN);
-            else    localStorage.setItem(STORAGE_KEY_GOLD_SKIN, '0');
+            if (next) localStorage.removeItem(STORAGE_KEY_GOLD_SKIN);
+            else      localStorage.setItem(STORAGE_KEY_GOLD_SKIN, '0');
         } catch (e) {}
         _notify();
     }

@@ -3102,9 +3102,9 @@
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status</h3>
                             <p id="founder-status-text">Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.</p>
-                            <label id="founder-gold-skin-row" hidden style="display:flex; align-items:center; gap:10px; margin:10px 0 4px; font-size:14px; cursor:pointer;">
-                                <input id="founder-gold-skin-toggle" type="checkbox" style="width:18px; height:18px; accent-color:#FFC857; cursor:pointer;" />
-                                <span>Use gold ninja skin <span style="opacity:0.6; font-weight:400;">(uncheck for the original look)</span></span>
+                            <label id="founder-gold-skin-row" class="founder-gold-skin-row is-hidden">
+                                <input id="founder-gold-skin-toggle" type="checkbox" class="founder-gold-skin-toggle" />
+                                <span>Use gold ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
                             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center;">
                                 <input id="founder-code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Redeem code" style="flex:1 1 180px; min-width:140px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.35); color:#fff; font:600 14px 'Space Grotesk','Segoe UI',sans-serif; letter-spacing:0.06em; text-transform:uppercase;" />
@@ -3855,22 +3855,25 @@
 
                             function _renderFounderState() {
                                 const isF = !!(window.FounderManager && FounderManager.isFounder());
+                                const goldOn = isF && !!(window.FounderManager && typeof FounderManager.isGoldSkinEnabled === 'function' && FounderManager.isGoldSkinEnabled());
                                 if (founderStatusText) {
                                     if (isF) {
                                         const since = window.FounderManager.getFounderSince && FounderManager.getFounderSince();
                                         const sinceLabel = since ? new Date(since).toLocaleDateString() : '';
-                                        founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for supporting early access' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. The gold aura, "FOUNDER" badge, and Day-One achievement are yours forever.';
+                                        const skinLine = goldOn
+                                            ? 'The gold ninja skin, "FOUNDER" badge, and Day-One achievement are yours forever.'
+                                            : 'The "FOUNDER" badge and Day-One achievement are yours forever. Gold skin is currently off.';
+                                        founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for supporting early access' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else {
                                         founderStatusText.textContent = 'Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.';
                                     }
                                 }
                                 // Show the gold-skin toggle only for Founders.
                                 if (goldSkinRow) {
-                                    if (isF) goldSkinRow.removeAttribute('hidden');
-                                    else     goldSkinRow.setAttribute('hidden', '');
+                                    goldSkinRow.classList.toggle('is-hidden', !isF);
                                 }
-                                if (goldSkinToggle && window.FounderManager && typeof FounderManager.isGoldSkinEnabled === 'function') {
-                                    goldSkinToggle.checked = !!FounderManager.isGoldSkinEnabled();
+                                if (goldSkinToggle) {
+                                    goldSkinToggle.checked = goldOn;
                                 }
                             }
 

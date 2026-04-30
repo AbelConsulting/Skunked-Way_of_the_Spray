@@ -292,6 +292,29 @@
     opacity: 0.9;
 }
 
+/* Founder gold-skin opt-in toggle in Settings → Founder Status. */
+.founder-gold-skin-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 4px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.founder-gold-skin-row.is-hidden {
+    display: none;
+}
+.founder-gold-skin-toggle {
+    width: 18px;
+    height: 18px;
+    accent-color: #FFC857;
+    cursor: pointer;
+}
+.founder-gold-skin-hint {
+    opacity: 0.6;
+    font-weight: 400;
+}
+
 /* Founder marker on the player's own leaderboard row. */
 .scoreboard-founder-badge {
     font-size: 9px;
