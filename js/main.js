@@ -1093,6 +1093,10 @@ class GameApp {
                 if (typeof window.gameReady === 'undefined') window.gameReady = true;
             } catch (e) { __err('main', e); }
 
+            // Initialize PurchaseManager FIRST so AdManager can read the ad-free flag
+            // before deciding whether to show banners/interstitials.
+            try { if (window.PurchaseManager && typeof PurchaseManager.initialize === 'function') PurchaseManager.initialize(); } catch (e) { __err('main', e); }
+
             // Initialize AdMob (no-ops on web, only runs on native Android)
             try { if (window.AdManager && typeof AdManager.initialize === 'function') AdManager.initialize(); } catch (e) { __err('main', e); }
 

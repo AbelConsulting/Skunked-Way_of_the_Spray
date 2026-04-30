@@ -75,6 +75,10 @@ const AdManager = (() => {
         console.warn('[AdManager]', ...args);
     }
 
+    function _isAdFree() {
+        try { return !!(window.PurchaseManager && window.PurchaseManager.isAdFree && window.PurchaseManager.isAdFree()); } catch (e) { return false; }
+    }
+
     // ── Initialization ─────────────────────────────────────────────
     async function initialize() {
         if (_initialized) return;
@@ -127,6 +131,7 @@ const AdManager = (() => {
      * Safe to call multiple times — no-ops if already visible.
      */
     async function showBanner() {
+        if (_isAdFree()) return;
         if (!_available || !_plugin || _bannerVisible) return;
         try {
             const BannerAdSize = (await import('@capacitor-community/admob')).BannerAdSize;
@@ -213,6 +218,10 @@ const AdManager = (() => {
      * @returns {boolean}
      */
     function canShowRewarded() {
+        // Rewarded ads remain available for everyone, including Remove-Ads owners.
+        // The Remove-Ads SKU only suppresses banner + interstitial. Rewarded is
+        // an opt-in trade ("watch a 30s ad to revive") that ad-free players can
+        // still choose to use for the extra life.
         return _available && _rewardedReady && _revivesUsed < CONFIG.maxRevivesPerSession;
     }
 
@@ -267,6 +276,7 @@ const AdManager = (() => {
      * @returns {Promise<void>}
      */
     async function onStageComplete() {
+        if (_isAdFree()) return;
         if (!_available || CONFIG.interstitialEveryNStages <= 0) return;
 
         _stagesSinceAd++;

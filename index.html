@@ -3067,6 +3067,15 @@
                             <p>Replay onboarding hints from scratch if you want another guided first-stage pass.</p>
                             <button id="reset-tutorial-btn" class="menu-btn">&#128161; Reset Tutorial Hints</button>
                         </div>
+                        <div class="menu-settings-card" id="remove-ads-card">
+                            <h3>&#128293; Remove Ads</h3>
+                            <p id="remove-ads-desc">One-time purchase. Removes the banner and between-stage ads. Supports the dev.</p>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+                                <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Remove Ads &mdash; <span id="remove-ads-price">$1.99</span></button>
+                                <button id="remove-ads-restore-btn" class="menu-btn" type="button" style="opacity:0.85;">&#8635; Restore Purchase</button>
+                            </div>
+                            <p id="remove-ads-status" style="margin-top:8px; font-size:12px; color: rgba(255,255,255,0.6);"></p>
+                        </div>
                     </div>
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
@@ -3128,6 +3137,7 @@
             <script src="js/achievements.js?v=1.0.2"></script>
             <script src="js/tutorialHints.js?v=1.0.2"></script>
             <script src="js/game.js?v=1.0.2"></script>
+            <script src="js/purchaseManager.js?v=1.0.2"></script>
             <script src="js/adManager.js?v=1.0.2"></script>
             <script src="js/main.js?v=1.0.2" type="module"></script>
             <script nonce="%CSP_NONCE%">
@@ -3716,6 +3726,85 @@
                                 });
                             }
                         } catch (e) {}
+
+                        // ─── Remove Ads (IAP) wiring ───────────────────────
+                        try {
+                            const buyBtn      = document.getElementById('remove-ads-buy-btn');
+                            const restoreBtn  = document.getElementById('remove-ads-restore-btn');
+                            const priceEl     = document.getElementById('remove-ads-price');
+                            const statusEl    = document.getElementById('remove-ads-status');
+                            const card        = document.getElementById('remove-ads-card');
+
+                            function _renderAdFreeState() {
+                                const owned = !!(window.PurchaseManager && PurchaseManager.isAdFree && PurchaseManager.isAdFree());
+                                if (owned) {
+                                    if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = '\u2713 Ads Removed \u2014 Thank You!'; buyBtn.style.opacity = '0.7'; }
+                                    if (statusEl) statusEl.textContent = 'Ad-free is active on this device. Tap "Restore" on a new device after re-installing.';
+                                    if (priceEl) priceEl.style.display = 'none';
+                                } else {
+                                    if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = '1'; }
+                                    if (priceEl) {
+                                        priceEl.style.display = '';
+                                        const live = window.PurchaseManager && PurchaseManager.getPriceString && PurchaseManager.getPriceString();
+                                        if (live) priceEl.textContent = live;
+                                    }
+                                }
+                                // Web build: explain politely instead of failing silently
+                                const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                if (!isNative && card && !owned) {
+                                    if (statusEl) statusEl.textContent = 'Available on the Android app. Visit the Play Store version for ad-free.';
+                                    if (buyBtn) { buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; }
+                                    if (restoreBtn) { restoreBtn.disabled = true; restoreBtn.style.opacity = '0.5'; }
+                                }
+                            }
+
+                            if (buyBtn) {
+                                buyBtn.addEventListener('click', async (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    if (!window.PurchaseManager) return;
+                                    if (statusEl) statusEl.textContent = 'Opening Google Play\u2026';
+                                    buyBtn.disabled = true;
+                                    try {
+                                        const res = await PurchaseManager.purchaseRemoveAds();
+                                        if (statusEl) {
+                                            if (res.ok) statusEl.textContent = res.reason === 'pending' ? 'Completing purchase\u2026' : 'Already owned. Thank you!';
+                                            else if (res.reason === 'web-not-supported') statusEl.textContent = 'Available only on the Android app.';
+                                            else statusEl.textContent = 'Purchase did not complete: ' + res.reason;
+                                        }
+                                    } catch (e) {
+                                        if (statusEl) statusEl.textContent = 'Purchase error.';
+                                    } finally {
+                                        setTimeout(_renderAdFreeState, 500);
+                                    }
+                                });
+                            }
+                            if (restoreBtn) {
+                                restoreBtn.addEventListener('click', async (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    if (!window.PurchaseManager) return;
+                                    if (statusEl) statusEl.textContent = 'Restoring previous purchases\u2026';
+                                    try {
+                                        const res = await PurchaseManager.restorePurchases();
+                                        if (statusEl) {
+                                            if (res.ok) statusEl.textContent = 'Restore complete.';
+                                            else if (res.reason === 'web-not-supported') statusEl.textContent = 'Restore only available on the Android app.';
+                                            else statusEl.textContent = 'Could not restore: ' + res.reason;
+                                        }
+                                    } catch (e) {
+                                        if (statusEl) statusEl.textContent = 'Restore error.';
+                                    } finally {
+                                        setTimeout(_renderAdFreeState, 500);
+                                    }
+                                });
+                            }
+
+                            if (window.PurchaseManager && PurchaseManager.onChange) {
+                                PurchaseManager.onChange(() => _renderAdFreeState());
+                            }
+                            _renderAdFreeState();
+                        } catch (e) { try { console.warn('[RemoveAds UI]', e); } catch(_) {} }
 
                         // Back buttons
                         if (scoresBackBtn) {

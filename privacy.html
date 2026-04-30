@@ -105,11 +105,11 @@
         <h1>Privacy Policy</h1>
         <p class="subtitle">
             Skunked: Way of the Spray &mdash;
-            Effective: March 1, 2026 &mdash; Last updated: March 12, 2026
+            Effective: March 1, 2026 &mdash; Last updated: April 30, 2026
         </p>
 
         <div class="notice-box">
-            <p><strong>Summary:</strong> We do not run our own user-account system or collect personal data on our own servers. Game progress is saved locally on your device. The Game uses Google advertising services (AdSense / AdMob), which may collect device and usage data under Google's own privacy policies. This Game is intended for users <strong>13 years of age and older</strong>.</p>
+            <p><strong>Summary:</strong> We do not run our own user-account system or collect personal data on our own servers. Game progress is saved locally on your device. The Game uses Google advertising services (AdSense / AdMob), which may collect device and usage data under Google's own privacy policies. The Android version supports an optional one-time in-app purchase ("Remove Ads") processed by Google Play Billing &mdash; we do not see your payment details. This Game is intended for users <strong>13 years of age and older</strong>.</p>
         </div>
 
         <nav class="toc">
@@ -119,6 +119,7 @@
                 <li><a href="#data-we-collect">Information We Collect</a></li>
                 <li><a href="#local-storage">Local Storage</a></li>
                 <li><a href="#advertising">Third-Party Advertising &amp; Cookies</a></li>
+                <li><a href="#iap">In-App Purchases (Android)</a></li>
                 <li><a href="#hosting">Hosting Providers</a></li>
                 <li><a href="#coppa">Age Requirements &amp; Children's Privacy (COPPA)</a></li>
                 <li><a href="#gdpr">Your Rights — European Users (GDPR)</a></li>
@@ -144,7 +145,7 @@
         <!-- 2 -->
         <h2 id="data-we-collect">2. Information We Collect</h2>
         <p>Mephitideus Interactive does <strong>not</strong> directly collect, transmit, or store personal information, gameplay telemetry, or account data on our own servers through the Game client.</p>
-        <p>We do not use our own analytics tracking, advertising identifiers, login systems, or crash-reporting pipelines. Any data described in this policy is either stored exclusively on your device (<a href="#local-storage">Section 3</a>) or processed by third-party services (<a href="#advertising">Section 4</a>, <a href="#hosting">Section 5</a>) under their own policies.</p>
+        <p>We do not use our own analytics tracking, advertising identifiers, login systems, or crash-reporting pipelines. Any data described in this policy is either stored exclusively on your device (<a href="#local-storage">Section 3</a>) or processed by third-party services (<a href="#advertising">Section 4</a>, <a href="#iap">Section 4b</a>, <a href="#hosting">Section 5</a>) under their own policies.</p>
 
         <!-- 3 -->
         <h2 id="local-storage">3. Local Storage</h2>
@@ -175,6 +176,22 @@
 
         <h3>Google's policies</h3>
         <p>Google's handling of data is governed by the <a href="https://policies.google.com/privacy" rel="noopener">Google Privacy Policy</a> and <a href="https://policies.google.com/technologies/ads" rel="noopener">How Google uses information from sites or apps that use its services</a>.</p>
+
+        <!-- 4b -->
+        <h2 id="iap">4b. In-App Purchases (Android)</h2>
+        <p>The Android version of the Game offers an optional one-time in-app purchase titled <strong>Remove Ads</strong> (product ID <code>remove_ads</code>, $1.99 USD or local equivalent). The purchase removes banner and between-stage interstitial advertisements within the Game on the device used to make the purchase. Optional rewarded video ads (used to revive after a defeat) remain available and are never auto-played.</p>
+        <h3>How the purchase is processed</h3>
+        <ul>
+            <li>Payments are handled exclusively by <strong>Google Play Billing</strong>. Mephitideus Interactive does <strong>not</strong> receive, see, or store your name, billing address, credit-card number, or other payment-instrument data.</li>
+            <li>Google Play provides the Game with a digital receipt indicating that the <code>remove_ads</code> product is owned by your Google account. The Game uses this receipt only to enable the ad-free state.</li>
+            <li>Your entitlement is mirrored locally on your device (<code>localStorage</code> key <code>skunkfu.adFree</code>) so the Game can apply it offline. No purchase information is transmitted to Mephitideus Interactive servers.</li>
+        </ul>
+        <h3>Restoring purchases</h3>
+        <p>If you reinstall the Game or switch devices using the same Google account, you can restore your Remove Ads entitlement at any time via <em>Settings &rarr; Restore Purchase</em> in-game. This action queries Google Play for your purchase history; no personal data is sent to us.</p>
+        <h3>Refunds and disputes</h3>
+        <p>Refund requests for in-app purchases are handled by Google Play under their <a href="https://support.google.com/googleplay/answer/2479637" rel="noopener">refund policy</a>. We do not process refunds directly.</p>
+        <h3>Google's policies for purchases</h3>
+        <p>Use of Google Play Billing is governed by the <a href="https://play.google.com/intl/en-us_us/about/play-terms/" rel="noopener">Google Play Terms of Service</a> and the <a href="https://policies.google.com/privacy" rel="noopener">Google Privacy Policy</a>.</p>
 
         <!-- 5 -->
         <h2 id="hosting">5. Hosting Providers</h2>
