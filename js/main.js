@@ -1117,6 +1117,16 @@ class GameApp {
                         am.setSoundVolume && am.setSoundVolume(v / 100);
                     }
                 }
+                const savedMusic = localStorage.getItem('musicVolume');
+                if (savedMusic !== null) {
+                    const v = parseInt(savedMusic, 10);
+                    if (!isNaN(v)) {
+                        if (musicSlider) musicSlider.value = v;
+                        if (musicValSpan) musicValSpan.textContent = v + '%';
+                        am.setMusicVolume && am.setMusicVolume(v / 100);
+                        am.setAmbientVolume && am.setAmbientVolume(v / 100 * 0.20);
+                    }
+                }
 
                 if (sfxSlider) {
                     sfxSlider.addEventListener('input', (e) => {

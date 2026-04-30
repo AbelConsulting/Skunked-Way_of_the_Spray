@@ -6,6 +6,24 @@
  */
 /* styles.css */
 
+/* ─── Accessibility: Reduced motion ────────────────────────────────
+   Honor the OS-level "reduce motion" preference. We strip continuous
+   decorative animations (pulses, glows, background drifts, shimmers)
+   and shorten purposeful transitions so the UI remains responsive but
+   stops moving on its own. Game-canvas animation is unaffected since
+   it runs through requestAnimationFrame, not CSS keyframes. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* Highscore Prompt */
 .highscore-prompt-overlay {
     position: fixed;

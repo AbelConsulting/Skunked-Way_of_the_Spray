@@ -938,6 +938,10 @@ class Game {
                     if (sfxSlider) sfxSlider.value = Math.round((this.audioManager._pendingSfxVol != null ? this.audioManager._pendingSfxVol : 0.7) * 100);
                     const sfxVal = document.getElementById('sfx-volume-value');
                     if (sfxVal && sfxSlider) sfxVal.textContent = sfxSlider.value + '%';
+                    const musicSlider = document.getElementById('music-volume');
+                    if (musicSlider) musicSlider.value = Math.round((this.audioManager._pendingMusicVol != null ? this.audioManager._pendingMusicVol : 0.5) * 100);
+                    const musicVal = document.getElementById('music-volume-value');
+                    if (musicVal && musicSlider) musicVal.textContent = musicSlider.value + '%';
                 } catch (e) { __err('game', e); }
                 // Trap focus inside pause panel
                 try {

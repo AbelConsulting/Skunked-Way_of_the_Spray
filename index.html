@@ -158,7 +158,9 @@
             margin: 5px;
             -webkit-user-select: none;
             user-select: none;
-            outline: none;
+            /* No default outline; keyboard users get a visible ring via :focus-visible (below). */
+            outline: 2px solid transparent;
+            outline-offset: 2px;
             /* Disable browser touch actions */
             touch-action: none; 
             -webkit-tap-highlight-color: transparent;
@@ -222,6 +224,12 @@
         .touch-btn:active {
             filter: brightness(1.18);
             transform: scale(0.92);
+        }
+        /* Visible focus ring for keyboard users (gamepads / external keyboards on mobile). */
+        .touch-btn:focus-visible {
+            outline: 2px solid rgba(255, 215, 0, 0.95);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.18), 0 12px 22px rgba(0,0,0,0.35);
         }
         /* Tutorial pulse ? pulsing glow + caption to teach controls.
            Auto-removed once the corresponding input fires once. */
@@ -554,17 +562,18 @@
         .start-menu-enter-hint {
             margin: 2px 0 0;
             font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-            font-size: clamp(10px, 1.3vw, 12px);
-            font-weight: 500;
-            color: rgba(255,255,255,0.45);
+            font-size: clamp(11px, 1.3vw, 13px);
+            font-weight: 600;
+            /* Bumped from 0.45 → 0.72 alpha for WCAG AA contrast on the dark menu panel. */
+            color: rgba(235, 240, 248, 0.72);
             letter-spacing: 0.08em;
             text-transform: uppercase;
             animation: hintBlink 2s ease-in-out infinite;
         }
 
         @keyframes hintBlink {
-            0%, 100% { opacity: 0.35; }
-            50%      { opacity: 0.7; }
+            0%, 100% { opacity: 0.6; }
+            50%      { opacity: 0.95; }
         }
 
         .menu-btn--settings {
@@ -716,16 +725,21 @@
         }
 
         .start-menu-footer-link {
-            color: rgba(170, 180, 195, 0.65);
+            color: rgba(190, 200, 215, 0.78);
             text-decoration: none;
             font-size: 0.95em;
             transition: color 140ms ease;
         }
-        .start-menu-footer-link:hover,
+        .start-menu-footer-link:hover {
+            color: rgba(122, 255, 219, 0.95);
+            text-decoration: underline;
+        }
         .start-menu-footer-link:focus-visible {
             color: rgba(122, 255, 219, 0.95);
             text-decoration: underline;
-            outline: none;
+            outline: 2px solid rgba(122, 255, 219, 0.85);
+            outline-offset: 2px;
+            border-radius: 3px;
         }
 
         /* Sub-screen overlays (Info / Scores / Settings / How to Play from main menu) */
@@ -2964,11 +2978,16 @@
                     <hr class="pause-divider">
                     <div class="pause-volume-controls">
                         <div class="pause-volume-card">
-                            <p class="pause-volume-kicker">&#128266; SFX Mix</p>
+                            <p class="pause-volume-kicker">&#128266; Audio Mix</p>
                             <div class="volume-row">
-                                <label for="sfx-volume">SFX</label>
-                                <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                                <label for="sfx-volume">&#128266; SFX</label>
+                                <input type="range" id="sfx-volume" min="0" max="100" value="70" aria-label="Sound effects volume">
                                 <span class="volume-value" id="sfx-volume-value">70%</span>
+                            </div>
+                            <div class="volume-row">
+                                <label for="music-volume">&#127925; Music</label>
+                                <input type="range" id="music-volume" min="0" max="100" value="50" aria-label="Music volume">
+                                <span class="volume-value" id="music-volume-value">50%</span>
                             </div>
                         </div>
                     </div>
