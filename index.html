@@ -3104,8 +3104,14 @@
                             <p id="founder-status-text">Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.</p>
                             <label id="founder-gold-skin-row" class="founder-gold-skin-row is-hidden">
                                 <input id="founder-gold-skin-toggle" type="checkbox" class="founder-gold-skin-toggle" />
-                                <span>Use gold ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
+                                <span>Use Founder ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
+                            <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Founder skin colour">
+                                <button type="button" class="founder-swatch founder-swatch--gold"     data-variant="gold"     role="radio" aria-checked="true"  title="Gold"></button>
+                                <button type="button" class="founder-swatch founder-swatch--sapphire" data-variant="sapphire" role="radio" aria-checked="false" title="Sapphire"></button>
+                                <button type="button" class="founder-swatch founder-swatch--amethyst" data-variant="amethyst" role="radio" aria-checked="false" title="Amethyst"></button>
+                                <button type="button" class="founder-swatch founder-swatch--steel"    data-variant="steel"    role="radio" aria-checked="false" title="Steel"></button>
+                            </div>
                             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center;">
                                 <input id="founder-code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Redeem code" style="flex:1 1 180px; min-width:140px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.35); color:#fff; font:600 14px 'Space Grotesk','Segoe UI',sans-serif; letter-spacing:0.06em; text-transform:uppercase;" />
                                 <button id="founder-code-btn" class="menu-btn" type="button">&#127873; Redeem</button>
@@ -3852,35 +3858,56 @@
                             const codeStatus        = document.getElementById('founder-code-status');
                             const goldSkinRow       = document.getElementById('founder-gold-skin-row');
                             const goldSkinToggle    = document.getElementById('founder-gold-skin-toggle');
+                            const variantsRow       = document.getElementById('founder-skin-variants');
+                            const variantBtns       = variantsRow ? Array.from(variantsRow.querySelectorAll('.founder-swatch')) : [];
 
                             function _renderFounderState() {
                                 const isF = !!(window.FounderManager && FounderManager.isFounder());
                                 const goldOn = isF && !!(window.FounderManager && typeof FounderManager.isGoldSkinEnabled === 'function' && FounderManager.isGoldSkinEnabled());
+                                const variant = (window.FounderManager && typeof FounderManager.getSkinVariant === 'function')
+                                    ? FounderManager.getSkinVariant() : 'gold';
                                 if (founderStatusText) {
                                     if (isF) {
                                         const since = window.FounderManager.getFounderSince && FounderManager.getFounderSince();
                                         const sinceLabel = since ? new Date(since).toLocaleDateString() : '';
                                         const skinLine = goldOn
-                                            ? 'The gold ninja skin, "FOUNDER" badge, and Day-One achievement are yours forever.'
-                                            : 'The "FOUNDER" badge and Day-One achievement are yours forever. Gold skin is currently off.';
+                                            ? 'The Founder ninja skin, "FOUNDER" badge, and Day-One achievement are yours forever.'
+                                            : 'The "FOUNDER" badge and Day-One achievement are yours forever. Founder skin is currently off.';
                                         founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for supporting early access' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else {
                                         founderStatusText.textContent = 'Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.';
                                     }
                                 }
-                                // Show the gold-skin toggle only for Founders.
                                 if (goldSkinRow) {
                                     goldSkinRow.classList.toggle('is-hidden', !isF);
                                 }
                                 if (goldSkinToggle) {
                                     goldSkinToggle.checked = goldOn;
                                 }
+                                if (variantsRow) {
+                                    // Variant swatches show only when Founder AND skin is on.
+                                    variantsRow.classList.toggle('is-hidden', !goldOn);
+                                }
+                                for (const btn of variantBtns) {
+                                    const active = btn.dataset.variant === variant;
+                                    btn.classList.toggle('is-active', active);
+                                    btn.setAttribute('aria-checked', active ? 'true' : 'false');
+                                }
                             }
+
 
                             if (goldSkinToggle) {
                                 goldSkinToggle.addEventListener('change', () => {
                                     if (window.FounderManager && typeof FounderManager.setGoldSkinEnabled === 'function') {
                                         FounderManager.setGoldSkinEnabled(!!goldSkinToggle.checked);
+                                    }
+                                });
+                            }
+                            for (const btn of variantBtns) {
+                                btn.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    if (window.FounderManager && typeof FounderManager.setSkinVariant === 'function') {
+                                        FounderManager.setSkinVariant(btn.dataset.variant);
                                     }
                                 });
                             }

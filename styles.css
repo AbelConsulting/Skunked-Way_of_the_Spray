@@ -315,6 +315,50 @@
     font-weight: 400;
 }
 
+/* Founder skin colour variant swatches. */
+.founder-skin-variants {
+    display: flex;
+    gap: 10px;
+    margin: 6px 0 4px 28px;
+    flex-wrap: wrap;
+}
+.founder-skin-variants.is-hidden {
+    display: none;
+}
+.founder-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.founder-swatch:hover {
+    transform: scale(1.08);
+}
+.founder-swatch.is-active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px currentColor;
+    transform: scale(1.08);
+}
+.founder-swatch--gold {
+    background: linear-gradient(180deg, #FFE08A 0%, #C4881A 100%);
+    color: #FFC857;
+}
+.founder-swatch--sapphire {
+    background: linear-gradient(180deg, #8FD0FF 0%, #14478A 100%);
+    color: #5AB8FF;
+}
+.founder-swatch--amethyst {
+    background: linear-gradient(180deg, #DDB4FF 0%, #5E2695 100%);
+    color: #C66BFF;
+}
+.founder-swatch--steel {
+    background: linear-gradient(180deg, #DCE4EE 0%, #4A5260 100%);
+    color: #C8D4E2;
+}
+
 /* Founder marker on the player's own leaderboard row. */
 .scoreboard-founder-badge {
     font-size: 9px;

@@ -61,9 +61,15 @@ const FounderManager = (() => {
     // Cosmetic preference — Founders may opt out of the gold ninja skin and
     // play with the original look. Defaults to enabled (no entry == on).
     const STORAGE_KEY_GOLD_SKIN     = 'skunkfu.useGoldSkin';
+    // Founder skin colour variant (gold | sapphire | amethyst | steel).
+    // Default 'gold' if missing or unknown.
+    const STORAGE_KEY_SKIN_VARIANT  = 'skunkfu.skinVariant';
+    const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'sapphire', 'amethyst', 'steel']);
+    const DEFAULT_SKIN_VARIANT = 'gold';
 
     let _isFounder = _read();
     let _goldSkinEnabled = _readGoldSkinPref();
+    let _skinVariant = _readSkinVariant();
     let _initialized = false;
     const _listeners = new Set();
 
@@ -78,6 +84,13 @@ const FounderManager = (() => {
         // Default to enabled; only an explicit '0' opts out.
         try { return localStorage.getItem(STORAGE_KEY_GOLD_SKIN) !== '0'; }
         catch (e) { return true; }
+    }
+
+    function _readSkinVariant() {
+        try {
+            const v = localStorage.getItem(STORAGE_KEY_SKIN_VARIANT);
+            return VALID_SKIN_VARIANTS.includes(v) ? v : DEFAULT_SKIN_VARIANT;
+        } catch (e) { return DEFAULT_SKIN_VARIANT; }
     }
 
     function _write(v) {
@@ -195,6 +208,24 @@ const FounderManager = (() => {
         _notify();
     }
 
+    /**
+     * Founder skin colour variant. Always returns a valid id from
+     * VALID_SKIN_VARIANTS, regardless of Founder status (so callers can
+     * preview the variant in UI even before grant).
+     */
+    function getSkinVariant() { return _skinVariant; }
+    function getSkinVariants() { return VALID_SKIN_VARIANTS.slice(); }
+    function setSkinVariant(id) {
+        const next = VALID_SKIN_VARIANTS.includes(id) ? id : DEFAULT_SKIN_VARIANT;
+        if (_skinVariant === next) return;
+        _skinVariant = next;
+        try {
+            if (next === DEFAULT_SKIN_VARIANT) localStorage.removeItem(STORAGE_KEY_SKIN_VARIANT);
+            else                                localStorage.setItem(STORAGE_KEY_SKIN_VARIANT, next);
+        } catch (e) {}
+        _notify();
+    }
+
     function grant(source) { return _grantInternal(source || 'manual'); }
 
     function revoke() {
@@ -269,6 +300,9 @@ const FounderManager = (() => {
         redeemCode,
         isGoldSkinEnabled,
         setGoldSkinEnabled,
+        getSkinVariant,
+        getSkinVariants,
+        setSkinVariant,
         EARLY_ACCESS_END_ISO
     };
 })();

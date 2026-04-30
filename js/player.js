@@ -1013,28 +1013,34 @@ class Player {
                 ctx.restore();
             }
             // Founder cosmetic aura (early-access supporters). Subtle, permanent
-            // golden shimmer — distinct from the idol glow because it does not
-            // scale with idol count and uses a thinner blur.
+            // shimmer in the player's chosen colour — distinct from the idol
+            // glow because it does not scale with idol count.
             const _founderGold = (typeof FounderManager !== 'undefined' &&
                 FounderManager.isFounder() &&
                 (typeof FounderManager.isGoldSkinEnabled !== 'function' ||
                  FounderManager.isGoldSkinEnabled()));
+            const _founderVariant = (_founderGold && typeof FounderManager.getSkinVariant === 'function')
+                ? FounderManager.getSkinVariant()
+                : 'gold';
+            const _founderAuraColor = (_founderGold && typeof GoldenSkin !== 'undefined' && typeof GoldenSkin.getAuraColor === 'function')
+                ? GoldenSkin.getAuraColor(_founderVariant)
+                : '#FFC857';
             if (_founderGold) {
                 ctx.save();
-                ctx.shadowColor = '#FFC857';
+                ctx.shadowColor = _founderAuraColor;
                 ctx.shadowBlur = 8 + Math.sin(Date.now() / 220) * 3;
                 ctx.globalCompositeOperation = 'lighter';
                 ctx.globalAlpha = 0.55;
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
                 ctx.restore();
             }
-            // Final base-sprite blit. Founders get the gold-tinted skin
-            // generated procedurally by GoldenSkin from the same source
+            // Final base-sprite blit. Founders get the chosen colour-tinted
+            // skin generated procedurally by GoldenSkin from the same source
             // sprite sheet — silhouette and animation frames are identical.
             if (_founderGold &&
                 typeof GoldenSkin !== 'undefined' &&
                 typeof GoldenSkin.drawAnimation === 'function') {
-                GoldenSkin.drawAnimation(this.currentAnimation, ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                GoldenSkin.drawAnimation(this.currentAnimation, ctx, this.x, this.y, this.width, this.height, !this.facingRight, _founderVariant);
             } else {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
             }
