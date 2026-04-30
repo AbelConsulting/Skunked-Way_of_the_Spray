@@ -3933,10 +3933,26 @@
                             }
 
                             const TOAST_LIFETIME = 4200; // ms
+                            const MAX_VISIBLE_TOASTS = 3; // cap stack so the screen can't be overrun
+                            const STAGGER_MS = 220; // when multiple unlock in the same tick, ease them in
+                            let _spawnSeq = 0;
+                            const _prefersReducedMotion = (() => {
+                                try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+                                catch(e) { return false; }
+                            })();
 
                             function _spawnAchievementToast(detail) {
                                 if (!detail) return;
                                 const stack = _ensureToastStack();
+                                // Evict oldest toasts beyond the cap so the stack never grows unbounded.
+                                const existing = stack.querySelectorAll('.achievement-toast:not(.hide)');
+                                for (let i = 0; i <= existing.length - MAX_VISIBLE_TOASTS; i++) {
+                                    const old = existing[i];
+                                    if (!old) continue;
+                                    old.classList.remove('show');
+                                    old.classList.add('hide');
+                                    setTimeout(() => { try { old.remove(); } catch(e){} }, 500);
+                                }
                                 const el = document.createElement('div');
                                 el.className = 'achievement-toast';
                                 const pgsAvail = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
@@ -3953,19 +3969,22 @@
                                     ${pgsAvail ? '<span class="ach-pgs-badge">🎮 Play Games</span>' : ''}
                                 `;
                                 stack.appendChild(el);
-                                // Trigger entrance animation on next frame
-                                requestAnimationFrame(() => el.classList.add('show'));
-                                // Play unlock sound (best-effort)
+                                // Stagger reveal when several toasts queue up in the same tick.
+                                const delay = _prefersReducedMotion ? 0 : (STAGGER_MS * (_spawnSeq++ % MAX_VISIBLE_TOASTS));
+                                setTimeout(() => requestAnimationFrame(() => el.classList.add('show')), delay);
+                                // Play unlock sound (best-effort, only on the first of a burst to avoid overlap)
                                 try {
                                     const am = window.game && window.game.audioManager;
-                                    if (am && am.playSound) am.playSound('achievement_unlock', { volume: 0.85, rate: 1.0 });
+                                    if (am && am.playSound && delay === 0) {
+                                        am.playSound('achievement_unlock', { volume: 0.85, rate: 1.0 });
+                                    }
                                 } catch(e){}
                                 // Auto-dismiss
                                 setTimeout(() => {
                                     el.classList.remove('show');
                                     el.classList.add('hide');
                                     setTimeout(() => { try { el.remove(); } catch(e){} }, 500);
-                                }, TOAST_LIFETIME);
+                                }, TOAST_LIFETIME + delay);
                             }
 
                             window.addEventListener('skunkfu-achievement-unlocked', (ev) => {
