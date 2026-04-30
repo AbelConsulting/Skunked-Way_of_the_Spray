@@ -34,7 +34,9 @@ const AdManager = (() => {
         testing: false,
 
         // Show an interstitial every N stages (0 = never)
-        interstitialEveryNStages: 0,
+        interstitialEveryNStages: 3,
+        // Minimum seconds between interstitials (frequency cap)
+        interstitialMinIntervalSec: 90,
 
         // Max rewarded revives per session (prevent abuse)
         maxRevivesPerSession: 2,
@@ -50,6 +52,7 @@ const AdManager = (() => {
     let _bannerLoaded       = false;
     let _revivesUsed        = 0;
     let _stagesSinceAd      = 0;
+    let _lastInterstitialAt = 0;
 
     // ── Helpers ────────────────────────────────────────────────────
     function _getBannerId() {
@@ -270,8 +273,16 @@ const AdManager = (() => {
         if (_stagesSinceAd < CONFIG.interstitialEveryNStages) return;
         if (!_interstitialReady) return;
 
+        // Frequency cap: don't show two interstitials within N seconds
+        const now = Date.now();
+        const minMs = (CONFIG.interstitialMinIntervalSec || 0) * 1000;
+        if (minMs > 0 && _lastInterstitialAt && (now - _lastInterstitialAt) < minMs) {
+            return;
+        }
+
         try {
             _stagesSinceAd = 0;
+            _lastInterstitialAt = now;
             await _plugin.showInterstitial();
             _log('Interstitial shown.');
             try { Analytics.trackAdImpression({ type: 'interstitial', placement: 'stage_complete' }); } catch(e) {}
@@ -282,7 +293,8 @@ const AdManager = (() => {
         _interstitialReady = false;
         _prepareInterstitial();
     }
-
+    _lastInterstitialAt = 0;
+    
     // ── Session Reset ──────────────────────────────────────────────
     /**
      * Reset per-session counters (call on fresh game start from menu).

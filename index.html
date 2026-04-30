@@ -35,7 +35,9 @@
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
     <script>
-        window.SKUNK_WEB_AD_CLIENT = 'ca-app-pub-8519140628365141';
+        // AdSense (web) publisher ID — must use ca-pub- prefix (NOT ca-app-pub-, which is AdMob).
+        // Verify this matches the publisher ID shown in https://www.google.com/adsense/ → Account → Settings.
+        window.SKUNK_WEB_AD_CLIENT = 'ca-pub-8519140628365141';
     </script>
     <!-- Arcade / ninja title fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2488,7 +2490,7 @@
         <div id="ad-container-right">
             <!-- SkunkedBanner -->
             <ins class="adsbygoogle adsense-banner-160"
-                 data-ad-client="ca-app-pub-8519140628365141"
+                 data-ad-client="ca-pub-8519140628365141"
                  data-ad-slot="4631220272"
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
