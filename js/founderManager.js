@@ -58,6 +58,9 @@ const FounderManager = (() => {
     const STORAGE_KEY_FOUNDER_SINCE = 'skunkfu.founderSince';
     const STORAGE_KEY_AD_FREE       = 'skunkfu.adFree';
     const STORAGE_KEY_CODES_USED    = 'skunkfu.founderCodesUsed';
+    // Cosmetic preference — Founders may opt out of the gold ninja skin and
+    // play with the original look. Defaults to enabled (no entry == on).
+    const STORAGE_KEY_GOLD_SKIN     = 'skunkfu.useGoldSkin';
 
     let _isFounder = _read();
     let _initialized = false;
@@ -167,6 +170,22 @@ const FounderManager = (() => {
     function isFounder() { return _isFounder; }
     function getFounderSince() { return _readSince(); }
 
+    // ── Gold-skin cosmetic toggle ──────────────────────────────────────────
+    // Stored as '0' for opt-out; missing/anything-else means enabled. This way
+    // existing Founders default to gold without a migration.
+    function isGoldSkinEnabled() {
+        if (!_isFounder) return false;
+        try { return localStorage.getItem(STORAGE_KEY_GOLD_SKIN) !== '0'; }
+        catch (e) { return true; }
+    }
+    function setGoldSkinEnabled(on) {
+        try {
+            if (on) localStorage.removeItem(STORAGE_KEY_GOLD_SKIN);
+            else    localStorage.setItem(STORAGE_KEY_GOLD_SKIN, '0');
+        } catch (e) {}
+        _notify();
+    }
+
     function grant(source) { return _grantInternal(source || 'manual'); }
 
     function revoke() {
@@ -239,6 +258,8 @@ const FounderManager = (() => {
         onChange,
         getFounderSince,
         redeemCode,
+        isGoldSkinEnabled,
+        setGoldSkinEnabled,
         EARLY_ACCESS_END_ISO
     };
 })();
