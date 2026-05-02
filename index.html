@@ -69,6 +69,12 @@
             -webkit-user-select: none;
             user-select: none; /* Prevent text selection */
         }
+        html {
+            /* Belt-and-suspenders: also set on the root element so any
+               area outside <body> (e.g. behind status bar / gesture nav
+               on Android edge-to-edge) reads black, not WebView white. */
+            background-color: #000;
+        }
 
         #main-wrapper {
             display: flex;

@@ -4,4 +4,8 @@
     <color name="colorPrimary">#1a1a2e</color>
     <color name="colorPrimaryDark">#0f0f1a</color>
     <color name="colorAccent">#e94560</color>
+    <!-- Used as the Activity / WebView background so safe-area zones
+         (status bar overlay, gesture nav strip) read black instead of
+         the WebView's default white. -->
+    <color name="appBackground">#000000</color>
 </resources>
