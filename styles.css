@@ -388,6 +388,26 @@
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
     pointer-events: none;
 }
+/* Live walk-cycle preview canvas — sits on top of the gradient disc once
+   the sprite sheet is ready. The emoji ninja stays as a graceful fallback
+   until then (and is hidden by JS when the canvas takes over). */
+.founder-swatch__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.founder-swatch__canvas.is-ready {
+    opacity: 1;
+}
+.founder-swatch__canvas.is-ready ~ .founder-swatch__ninja {
+    opacity: 0;
+}
 .founder-swatch__shine {
     position: absolute;
     inset: 0;

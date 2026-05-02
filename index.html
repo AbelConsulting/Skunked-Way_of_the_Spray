@@ -3220,6 +3220,7 @@
                             <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin colour">
                                 <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold — Founder exclusive">
                                     <span class="founder-swatch__preview" aria-hidden="true">
+                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
                                         <span class="founder-swatch__ninja">🥷</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
@@ -3228,6 +3229,7 @@
                                 </button>
                                 <button type="button" class="founder-swatch founder-swatch--sapphire" data-variant="sapphire" role="radio" aria-checked="false" title="Sapphire">
                                     <span class="founder-swatch__preview" aria-hidden="true">
+                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
                                         <span class="founder-swatch__ninja">🥷</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
@@ -3236,6 +3238,7 @@
                                 </button>
                                 <button type="button" class="founder-swatch founder-swatch--amethyst" data-variant="amethyst" role="radio" aria-checked="false" title="Amethyst">
                                     <span class="founder-swatch__preview" aria-hidden="true">
+                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
                                         <span class="founder-swatch__ninja">🥷</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
@@ -3244,6 +3247,7 @@
                                 </button>
                                 <button type="button" class="founder-swatch founder-swatch--steel" data-variant="steel" role="radio" aria-checked="false" title="Steel">
                                     <span class="founder-swatch__preview" aria-hidden="true">
+                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
                                         <span class="founder-swatch__ninja">🥷</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
@@ -4139,6 +4143,116 @@
                             const goldSkinToggle    = document.getElementById('founder-gold-skin-toggle');
                             const variantsRow       = document.getElementById('founder-skin-variants');
                             const variantBtns       = variantsRow ? Array.from(variantsRow.querySelectorAll('.founder-swatch')) : [];
+
+                            // ─── Live walk-cycle preview inside each tile ──
+                            // Renders an animated, palette-tinted ninja walk
+                            // sprite into each tile's <canvas>. Uses the same
+                            // `ninja_walk` sheet + GoldenSkin tinting pipeline
+                            // as gameplay, so previews exactly match what the
+                            // player will see in-game. The loop only runs when
+                            // the Settings overlay is on screen.
+                            const _skinPreview = (function () {
+                                const FRAME_COUNT = 4;
+                                const FRAME_MS = 130; // ~7.7 fps walk cycle
+                                let _rafId = null;
+                                let _lastT = 0;
+                                let _frame = 0;
+                                let _started = false;
+                                let _ready = false;
+                                let _frameW = 0;
+                                let _stride = 0;
+                                let _sheet = null;
+
+                                function _resolveSheet() {
+                                    if (_ready) return true;
+                                    try {
+                                        const sl = window.spriteLoader;
+                                        const img = sl && sl.getSprite ? sl.getSprite('ninja_walk') : null;
+                                        if (!img) return false;
+                                        const w = img.naturalWidth || img.width;
+                                        const h = img.naturalHeight || img.height;
+                                        if (!w || !h) return false;
+                                        _frameW = img._detectedFrameWidth || Math.floor(w / FRAME_COUNT);
+                                        _stride = img._detectedFrameStride || _frameW;
+                                        _sheet  = img;
+                                        _ready  = true;
+                                        return true;
+                                    } catch (e) { return false; }
+                                }
+
+                                function _drawTile(btn) {
+                                    const canvas = btn.querySelector('.founder-swatch__canvas');
+                                    if (!canvas) return;
+                                    const ctx = canvas.getContext('2d');
+                                    if (!ctx) return;
+                                    const id = btn.dataset.variant;
+                                    let src = _sheet;
+                                    try {
+                                        if (window.GoldenSkin && typeof GoldenSkin.getTintedFor === 'function') {
+                                            src = GoldenSkin.getTintedFor(_sheet, id) || _sheet;
+                                        }
+                                    } catch (e) {}
+                                    const cw = canvas.width, ch = canvas.height;
+                                    ctx.imageSmoothingEnabled = false;
+                                    ctx.clearRect(0, 0, cw, ch);
+                                    const sx = _frame * _stride;
+                                    const sw = _frameW;
+                                    const sh = _sheet.naturalHeight || _sheet.height;
+                                    // Fit the frame into the disc, leaving a small margin so the
+                                    // ninja silhouette doesn't kiss the disc edge.
+                                    const margin = 4;
+                                    const dst = Math.min(cw, ch) - margin * 2;
+                                    const dx = (cw - dst) / 2;
+                                    const dy = (ch - dst) / 2;
+                                    try {
+                                        ctx.drawImage(src, sx, 0, sw, sh, dx, dy, dst, dst);
+                                    } catch (e) { /* tainted canvas — silently skip */ }
+                                    canvas.classList.add('is-ready');
+                                }
+
+                                function _tick(t) {
+                                    if (!_started) return;
+                                    if (!_resolveSheet()) {
+                                        // Not ready yet — try again next frame.
+                                        _rafId = requestAnimationFrame(_tick);
+                                        return;
+                                    }
+                                    if (t - _lastT >= FRAME_MS) {
+                                        _lastT = t;
+                                        _frame = (_frame + 1) % FRAME_COUNT;
+                                        for (const btn of variantBtns) _drawTile(btn);
+                                    }
+                                    _rafId = requestAnimationFrame(_tick);
+                                }
+
+                                function start() {
+                                    if (_started) return;
+                                    _started = true;
+                                    _lastT = 0;
+                                    _frame = 0;
+                                    _rafId = requestAnimationFrame(_tick);
+                                }
+                                function stop() {
+                                    _started = false;
+                                    if (_rafId) cancelAnimationFrame(_rafId);
+                                    _rafId = null;
+                                }
+                                return { start, stop };
+                            })();
+
+                            // Start/stop the preview loop when Settings opens/closes.
+                            try {
+                                const _settingsOverlay = document.getElementById('menu-settings-overlay');
+                                if (_settingsOverlay && typeof MutationObserver !== 'undefined') {
+                                    const obs = new MutationObserver(() => {
+                                        const visible = _settingsOverlay.style.display === 'flex' && !_settingsOverlay.hidden;
+                                        if (visible) _skinPreview.start(); else _skinPreview.stop();
+                                    });
+                                    obs.observe(_settingsOverlay, { attributes: true, attributeFilter: ['style', 'hidden'] });
+                                    // Also kick once in case it's already open.
+                                    if (_settingsOverlay.style.display === 'flex') _skinPreview.start();
+                                }
+                            } catch (e) {}
 
                             function _renderFounderState() {
                                 const FM = window.FounderManager;
