@@ -21,6 +21,7 @@
     })(window,document,'script','dataLayer','GTM-P6RZPFLG');</script>
     <!-- End Google Tag Manager -->
     <link rel="manifest" href="manifest.json">
+    <!-- webhint-disable compat-api/html — theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
     <meta name="msapplication-TileColor" content="#1a1a2e">
@@ -3197,11 +3198,11 @@
                         <div class="menu-settings-card" id="remove-ads-card">
                             <h3>&#128293; Remove Ads &amp; Unlock Skins</h3>
                             <p id="remove-ads-desc">One-time purchase. Removes banner &amp; between-stage ads <strong>and unlocks 3 ninja skins</strong> (Sapphire, Amethyst, Steel). Supports the dev.</p>
-                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+                            <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Remove Ads &mdash; <span id="remove-ads-price">$1.99</span></button>
-                                <button id="remove-ads-restore-btn" class="menu-btn" type="button" style="opacity:0.85;">&#8635; Restore Purchase</button>
+                                <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
                             </div>
-                            <p id="remove-ads-status" style="margin-top:8px; font-size:12px; color: rgba(255,255,255,0.6);"></p>
+                            <p id="remove-ads-status" class="settings-card-status"></p>
                         </div>
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status &amp; Skins</h3>
@@ -3216,11 +3217,11 @@
                                 <button type="button" class="founder-swatch founder-swatch--amethyst" data-variant="amethyst" role="radio" aria-checked="false" title="Amethyst"></button>
                                 <button type="button" class="founder-swatch founder-swatch--steel"    data-variant="steel"    role="radio" aria-checked="false" title="Steel"></button>
                             </div>
-                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; align-items:center;">
-                                <input id="founder-code-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Redeem code" style="flex:1 1 180px; min-width:140px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.35); color:#fff; font:600 14px 'Space Grotesk','Segoe UI',sans-serif; letter-spacing:0.06em; text-transform:uppercase;" />
+                            <div class="founder-redeem-row">
+                                <input id="founder-code-input" type="text" autocomplete="off" spellcheck="false" maxlength="24" placeholder="Redeem code" />
                                 <button id="founder-code-btn" class="menu-btn" type="button">&#127873; Redeem</button>
                             </div>
-                            <p id="founder-code-status" style="margin-top:8px; font-size:12px; color: rgba(255,255,255,0.6); min-height: 1em;"></p>
+                            <p id="founder-code-status" class="settings-card-status"></p>
                         </div>
                     </div>
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>

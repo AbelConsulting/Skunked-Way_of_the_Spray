@@ -617,3 +617,35 @@
     color: rgba(255,255,255,0.2);
     font-family: sans-serif;
 }
+
+/* ───────── Settings card layout helpers (extracted from inline styles) ───── */
+.remove-ads-actions,
+.founder-redeem-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.founder-redeem-row {
+    gap: 8px;
+    align-items: center;
+}
+#remove-ads-restore-btn { opacity: 0.85; }
+.settings-card-status {
+    margin-top: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    min-height: 1em;
+}
+#founder-code-input {
+    flex: 1 1 180px;
+    min-width: 140px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font: 600 14px 'Space Grotesk', 'Segoe UI', sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
