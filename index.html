@@ -2532,6 +2532,80 @@
         /* Hr spacing variant used inside menu sub-panels */
         .pause-divider--space-top { margin-top: 12px; }
 
+        /* ── Pause-menu quick skin switcher ────────────────── */
+        .pause-skin-shortcut {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px 12px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(20,26,40,0.55), rgba(8,11,18,0.55));
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .pause-skin-shortcut[hidden] { display: none; }
+        .pause-skin-shortcut__kicker {
+            margin: 0;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(221,232,241,0.72);
+        }
+        .pause-skin-shortcut__row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .pause-skin-chip {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 4px 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(8,12,20,0.55);
+            color: #dde8f1;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-size: 0.66rem;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .pause-skin-chip:active { transform: scale(0.96); }
+        .pause-skin-chip__disc {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--chip-grad, linear-gradient(135deg, #d4af37, #f8d36b));
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset,
+                        0 4px 10px var(--chip-glow, rgba(212,175,55,0.45));
+        }
+        .pause-skin-chip[data-variant="gold"]      { --chip-grad: linear-gradient(135deg,#b88a18,#f5d36b 50%,#fff2b0); --chip-glow: rgba(245,211,107,0.50); }
+        .pause-skin-chip[data-variant="sapphire"]  { --chip-grad: linear-gradient(135deg,#1e3c8a,#3a78ff 55%,#a9c8ff); --chip-glow: rgba(58,120,255,0.50); }
+        .pause-skin-chip[data-variant="amethyst"]  { --chip-grad: linear-gradient(135deg,#4a1f7a,#9a52d8 55%,#e2c0ff); --chip-glow: rgba(154,82,216,0.50); }
+        .pause-skin-chip[data-variant="steel"]     { --chip-grad: linear-gradient(135deg,#3a4756,#8a99aa 55%,#dfe7ee); --chip-glow: rgba(138,153,170,0.50); }
+        .pause-skin-chip.is-active {
+            border-color: rgba(255,255,255,0.55);
+            background: rgba(20,30,46,0.85);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.20) inset,
+                        0 6px 14px rgba(0,0,0,0.40);
+        }
+        .pause-skin-chip.is-active .pause-skin-chip__disc {
+            box-shadow: 0 0 0 2px #fff inset,
+                        0 0 0 1px var(--chip-glow, rgba(212,175,55,0.6)),
+                        0 6px 16px var(--chip-glow, rgba(212,175,55,0.55));
+        }
+        .pause-skin-chip__name { opacity: 0.85; }
+        @media (max-width: 380px) {
+            .pause-skin-chip { font-size: 0.60rem; padding: 6px 2px 5px; }
+            .pause-skin-chip__disc { width: 26px; height: 26px; }
+        }
+
         /* Info-heading vertical-rhythm modifiers (replace inline margin-top) */
         .info-heading--mt-10 { margin-top: 10px; }
         .info-heading--mt-12 { margin-top: 12px; }
@@ -3329,6 +3403,12 @@
                                 <input type="range" id="music-volume" min="0" max="100" value="50" aria-label="Music volume">
                                 <span class="volume-value" id="music-volume-value">50%</span>
                             </div>
+                        </div>
+                    </div>
+                    <div id="pause-skin-shortcut" class="pause-skin-shortcut" hidden aria-label="Quick skin switcher">
+                        <p class="pause-skin-shortcut__kicker">&#129399; Skin</p>
+                        <div class="pause-skin-shortcut__row" role="radiogroup" aria-label="Choose skin">
+                            <!-- Filled in dynamically when overlay opens. -->
                         </div>
                     </div>
                     <div class="pause-actions">
@@ -5257,6 +5337,83 @@
                 });
             }
         } catch (e) {}
+
+        // ── Pause-menu quick skin switcher ─────────────────
+        // Lets a Founder / variant-buyer flip skins mid-run without diving into
+        // Settings → Skins. Only renders if 2+ skins are unlocked. Re-renders
+        // every time the pause overlay is shown so unlocks reflect immediately.
+        (function wirePauseSkinShortcut() {
+            const overlay = document.getElementById('pause-overlay');
+            const wrap = document.getElementById('pause-skin-shortcut');
+            if (!overlay || !wrap) return;
+            const row = wrap.querySelector('.pause-skin-shortcut__row');
+            if (!row) return;
+
+            const VARIANT_NAMES = {
+                gold: 'Gold', sapphire: 'Sapphire',
+                amethyst: 'Amethyst', steel: 'Steel'
+            };
+
+            function render() {
+                const FM = window.FounderManager;
+                if (!FM || typeof FM.getUnlockedSkinVariants !== 'function') {
+                    wrap.setAttribute('hidden', '');
+                    return;
+                }
+                const unlocked = FM.getUnlockedSkinVariants() || [];
+                if (unlocked.length < 2) {
+                    wrap.setAttribute('hidden', '');
+                    return;
+                }
+                wrap.removeAttribute('hidden');
+                const active = (typeof FM.getSkinVariant === 'function')
+                    ? FM.getSkinVariant() : 'gold';
+                row.innerHTML = '';
+                unlocked.forEach((id) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'pause-skin-chip';
+                    btn.dataset.variant = id;
+                    btn.setAttribute('role', 'radio');
+                    btn.setAttribute('aria-checked', String(id === active));
+                    if (id === active) btn.classList.add('is-active');
+                    btn.innerHTML =
+                        '<span class="pause-skin-chip__disc" aria-hidden="true"></span>' +
+                        '<span class="pause-skin-chip__name">' + (VARIANT_NAMES[id] || id) + '</span>';
+                    btn.addEventListener('click', (e) => {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
+                        try {
+                            if (typeof FM.setSkinVariant === 'function') {
+                                if (FM.setSkinVariant(id)) {
+                                    try { Analytics.trackEvent && Analytics.trackEvent('pause_skin_switch', { id }); } catch (_) {}
+                                    render();
+                                }
+                            }
+                        } catch (err) { console.warn('pause skin switch failed', err); }
+                    });
+                    row.appendChild(btn);
+                });
+            }
+
+            // Re-render when overlay becomes visible (display flips none ↔ flex
+            // and `.visible` class is toggled).
+            const mo = new MutationObserver(() => {
+                const shown = overlay.style.display !== 'none' && !overlay.hasAttribute('hidden');
+                if (shown) render();
+            });
+            mo.observe(overlay, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
+
+            // Also re-render on Founder/skin state changes so the chip count
+            // updates the moment a purchase or redeem completes.
+            try {
+                if (window.FounderManager && typeof window.FounderManager.onChange === 'function') {
+                    window.FounderManager.onChange(() => {
+                        const shown = overlay.style.display !== 'none' && !overlay.hasAttribute('hidden');
+                        if (shown) render();
+                    });
+                }
+            } catch (_) {}
+        })();
 
         // Wire pause secondary actions: Restart Stage + Main Menu
         try {
