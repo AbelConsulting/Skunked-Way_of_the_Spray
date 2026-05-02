@@ -36,7 +36,7 @@
     "cap:open": "npx cap open android",
     "cap:run": "npx cap run android",
     "android:check-upload-key": "node tools/check_upload_key_fingerprint.js",
-    "android:bundle:release": "npm run android:check-upload-key && cd android && gradlew.bat bundleRelease"
+    "android:bundle:release": "npm run cap:sync && npm run android:check-upload-key && cd android && gradlew.bat bundleRelease"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",
