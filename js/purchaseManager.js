@@ -1,5 +1,5 @@
 /**
- * purchaseManager.js — In-App Purchase manager for "Remove Ads + Skins" ($2.99).
+ * purchaseManager.js — In-App Purchase manager for "Remove Ads + Skins" ($1.99).
  *
  * Strategy:
  *   • Android (Capacitor native): uses cordova-plugin-purchase (CdvPurchase) v13+
@@ -22,7 +22,7 @@
  *   2. Create a managed product in Google Play Console:
  *        Product ID: remove_ads
  *        Type: One-time (managed)
- *        Price: $2.99
+ *        Price: $1.99
  *   3. npx cap sync android
  *   4. Upload a signed bundle to a Play Console internal testing track and add
  *      yourself as a license tester so the purchase flow works in test mode.
