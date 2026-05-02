@@ -718,6 +718,49 @@
             font-size: 11.5px;
             color: rgba(255, 255, 255, 0.55);
         }
+        /* Compact 4-up skin-tile preview inside the soft purchase prompt.
+           Reuses the .founder-swatch tiles from the Skins panel but shrinks
+           them so they fit cleanly inside the modal card. Tiles are static
+           previews here (non-interactive) — clicking the BUY button is the
+           call-to-action. */
+        .soft-purchase-skin-preview {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 4px 0 16px;
+            padding: 0;
+            pointer-events: none; /* purely visual — actions live in the buttons below */
+        }
+        .soft-purchase-skin-preview .founder-swatch {
+            min-height: 96px;
+            padding: 8px 4px 6px;
+            cursor: default;
+        }
+        .soft-purchase-skin-preview .founder-swatch:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .soft-purchase-skin-preview .founder-swatch__preview {
+            width: 44px;
+            height: 44px;
+        }
+        .soft-purchase-skin-preview .founder-swatch__ninja {
+            font-size: 22px;
+        }
+        .soft-purchase-skin-preview .founder-swatch__name {
+            font-size: 11px;
+            letter-spacing: 0.04em;
+        }
+        .soft-purchase-skin-preview .founder-swatch__status {
+            font-size: 9px;
+            padding: 1px 6px;
+        }
+        .soft-purchase-skin-preview .founder-swatch.is-locked .founder-swatch__preview::after {
+            font-size: 16px;
+        }
+        @media (max-width: 380px) {
+            .soft-purchase-skin-preview .founder-swatch__name { font-size: 10px; }
+            .soft-purchase-skin-preview .founder-swatch { min-height: 88px; }
+        }
 
         .start-menu-hub {
             display: flex;
@@ -3310,6 +3353,44 @@
                     <p class="soft-purchase-body">
                         Tired of ads breaking your flow? <strong>Remove Ads</strong> for <strong id="soft-purchase-price">$1.99</strong> also unlocks <strong>3 ninja skins</strong> (Sapphire, Amethyst, Steel) <span id="soft-purchase-founder-line">— plus the exclusive <strong>Gold</strong> skin and Founder badge during early access.</span>
                     </p>
+                    <div id="soft-purchase-skin-preview" class="founder-skin-variants soft-purchase-skin-preview" aria-hidden="true">
+                        <div class="founder-swatch founder-swatch--gold is-locked" data-variant="gold">
+                            <span class="founder-swatch__preview">
+                                <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
+                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__shine"></span>
+                            </span>
+                            <span class="founder-swatch__name">Gold</span>
+                            <span class="founder-swatch__status">Founder</span>
+                        </div>
+                        <div class="founder-swatch founder-swatch--sapphire is-locked" data-variant="sapphire">
+                            <span class="founder-swatch__preview">
+                                <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
+                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__shine"></span>
+                            </span>
+                            <span class="founder-swatch__name">Sapphire</span>
+                            <span class="founder-swatch__status">$1.99</span>
+                        </div>
+                        <div class="founder-swatch founder-swatch--amethyst is-locked" data-variant="amethyst">
+                            <span class="founder-swatch__preview">
+                                <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
+                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__shine"></span>
+                            </span>
+                            <span class="founder-swatch__name">Amethyst</span>
+                            <span class="founder-swatch__status">$1.99</span>
+                        </div>
+                        <div class="founder-swatch founder-swatch--steel is-locked" data-variant="steel">
+                            <span class="founder-swatch__preview">
+                                <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
+                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__shine"></span>
+                            </span>
+                            <span class="founder-swatch__name">Steel</span>
+                            <span class="founder-swatch__status">$1.99</span>
+                        </div>
+                    </div>
                     <div class="soft-purchase-actions">
                         <button id="soft-purchase-buy-btn"  class="menu-btn menu-btn--primary" type="button">&#128722; Remove Ads</button>
                         <button id="soft-purchase-skip-btn" class="menu-btn" type="button">Not now</button>
@@ -4053,6 +4134,7 @@
                                 if (!promptEl) return;
                                 promptEl.setAttribute('hidden', '');
                                 promptEl.classList.remove('is-visible');
+                                _stopSkinPreview();
                             }
                             function _showPrompt() {
                                 if (!promptEl) return;
@@ -4065,13 +4147,96 @@
                                 if (promptFounderEl) {
                                     promptFounderEl.style.display = _isWithinEarlyAccess() ? '' : 'none';
                                 }
+                                // Hide the Gold tile after early-access ends — only the
+                                // 3 colour skins remain part of the offer.
+                                try {
+                                    const goldTile = promptEl.querySelector('.founder-swatch--gold');
+                                    if (goldTile) {
+                                        goldTile.style.display = _isWithinEarlyAccess() ? '' : 'none';
+                                    }
+                                    const previewGrid = promptEl.querySelector('.soft-purchase-skin-preview');
+                                    if (previewGrid) {
+                                        previewGrid.style.gridTemplateColumns =
+                                            _isWithinEarlyAccess() ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)';
+                                    }
+                                } catch (e) {}
                                 promptEl.removeAttribute('hidden');
                                 // Force reflow before adding the visible class so the
                                 // CSS transition runs from opacity 0.
                                 void promptEl.offsetWidth;
                                 promptEl.classList.add('is-visible');
                                 _shownThisSession = true;
+                                _startSkinPreview();
                                 try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_shown', { deaths: _sessionDeaths }); } catch (_) {}
+                            }
+
+                            // ─── Skin tile walk-cycle preview (modal copy) ──
+                            // Reuses the same ninja_walk sheet + GoldenSkin pipeline as
+                            // the Skins panel. Only animates while the prompt is shown
+                            // so it costs nothing during gameplay.
+                            const _promptTiles = promptEl
+                                ? Array.from(promptEl.querySelectorAll('.founder-swatch'))
+                                : [];
+                            let _ppRaf = null, _ppLastT = 0, _ppFrame = 0;
+                            let _ppSheet = null, _ppFW = 0, _ppStride = 0;
+                            function _ppResolveSheet() {
+                                if (_ppSheet) return true;
+                                try {
+                                    const sl = window.spriteLoader;
+                                    const img = sl && sl.getSprite ? sl.getSprite('ninja_walk') : null;
+                                    if (!img) return false;
+                                    const w = img.naturalWidth || img.width;
+                                    if (!w) return false;
+                                    _ppFW = img._detectedFrameWidth || Math.floor(w / 4);
+                                    _ppStride = img._detectedFrameStride || _ppFW;
+                                    _ppSheet = img;
+                                    return true;
+                                } catch (e) { return false; }
+                            }
+                            function _ppDrawTile(btn) {
+                                const canvas = btn.querySelector('.founder-swatch__canvas');
+                                if (!canvas) return;
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) return;
+                                const id = btn.dataset.variant;
+                                let src = _ppSheet;
+                                try {
+                                    if (window.GoldenSkin && typeof GoldenSkin.getTintedFor === 'function') {
+                                        src = GoldenSkin.getTintedFor(_ppSheet, id) || _ppSheet;
+                                    }
+                                } catch (e) {}
+                                const cw = canvas.width, ch = canvas.height;
+                                ctx.imageSmoothingEnabled = false;
+                                ctx.clearRect(0, 0, cw, ch);
+                                const sx = _ppFrame * _ppStride;
+                                const sh = _ppSheet.naturalHeight || _ppSheet.height;
+                                const margin = 4;
+                                const dst = Math.min(cw, ch) - margin * 2;
+                                const dx = (cw - dst) / 2;
+                                const dy = (ch - dst) / 2;
+                                try { ctx.drawImage(src, sx, 0, _ppFW, sh, dx, dy, dst, dst); } catch (e) {}
+                                canvas.classList.add('is-ready');
+                            }
+                            function _ppTick(t) {
+                                if (!_ppRaf) return;
+                                if (!_ppResolveSheet()) {
+                                    _ppRaf = requestAnimationFrame(_ppTick);
+                                    return;
+                                }
+                                if (t - _ppLastT >= 130) {
+                                    _ppLastT = t;
+                                    _ppFrame = (_ppFrame + 1) % 4;
+                                    for (const btn of _promptTiles) _ppDrawTile(btn);
+                                }
+                                _ppRaf = requestAnimationFrame(_ppTick);
+                            }
+                            function _startSkinPreview() {
+                                if (_ppRaf || _promptTiles.length === 0) return;
+                                _ppLastT = 0; _ppFrame = 0;
+                                _ppRaf = requestAnimationFrame(_ppTick);
+                            }
+                            function _stopSkinPreview() {
+                                if (_ppRaf) { cancelAnimationFrame(_ppRaf); _ppRaf = null; }
                             }
                             function _shouldShow() {
                                 if (_shownThisSession) return false;
