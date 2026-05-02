@@ -1012,13 +1012,14 @@ class Player {
                 this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
                 ctx.restore();
             }
-            // Founder cosmetic aura (early-access supporters). Subtle, permanent
-            // shimmer in the player's chosen colour — distinct from the idol
-            // glow because it does not scale with idol count.
+            // Cosmetic skin aura. Gold = early-access Founder exclusive;
+            // sapphire/amethyst/steel = unlocked by Remove Ads ($2.99). The
+            // gating lives entirely inside FounderManager.isGoldSkinEnabled(),
+            // which now returns true for any player with an unlocked variant
+            // and the cosmetic toggle on.
             const _founderGold = (typeof FounderManager !== 'undefined' &&
-                FounderManager.isFounder() &&
-                (typeof FounderManager.isGoldSkinEnabled !== 'function' ||
-                 FounderManager.isGoldSkinEnabled()));
+                typeof FounderManager.isGoldSkinEnabled === 'function' &&
+                FounderManager.isGoldSkinEnabled());
             const _founderVariant = (_founderGold && typeof FounderManager.getSkinVariant === 'function')
                 ? FounderManager.getSkinVariant()
                 : 'gold';

@@ -7,9 +7,14 @@
  *   purchase on Android, or directly via FounderManager.grant() on web/promo).
  *
  * Founder rewards (cosmetic, no gameplay imbalance):
- *   • Gold "Founder" aura on the Ninja Skunk sprite (rendered by player.js).
+ *   • Exclusive GOLD ninja skin (only obtainable during early-access window).
  *   • "FOUNDER" badge displayed on the start menu and game-over leaderboard row.
  *   • "Day-One Skunk" achievement (granted on first detection).
+ *
+ * Remove Ads ($2.99) entitlement (separate from Founder, no time limit):
+ *   • Removes banner + interstitial ads.
+ *   • Unlocks the SAPPHIRE, AMETHYST, and STEEL ninja skins.
+ *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
  * Persistence:
  *   localStorage key  → skunkfu.founder        ('1' if granted, otherwise absent)
@@ -66,6 +71,10 @@ const FounderManager = (() => {
     const STORAGE_KEY_SKIN_VARIANT  = 'skunkfu.skinVariant';
     const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'sapphire', 'amethyst', 'steel']);
     const DEFAULT_SKIN_VARIANT = 'gold';
+    // Skins that anyone with the Remove Ads purchase can use, regardless of
+    // Founder status. Gold is intentionally excluded — it remains the
+    // permanent early-access exclusive.
+    const AD_FREE_SKIN_VARIANTS = Object.freeze(['sapphire', 'amethyst', 'steel']);
 
     let _isFounder = _read();
     let _goldSkinEnabled = _readGoldSkinPref();
@@ -159,13 +168,22 @@ const FounderManager = (() => {
             _grantInternal('early-access-purchase');
         }
 
-        // 2. Listen for future purchases — if PurchaseManager is wired, react when
-        //    the ad-free entitlement flips to true during the early-access window.
+        // 2. Listen for future Remove Ads purchases — if PurchaseManager is
+        //    wired, react when the ad-free entitlement flips to true.
+        //      • During the early-access window → also grant Founder (gold).
+        //      • After early-access ends → only the 3 colour skins unlock
+        //        (handled implicitly by isSkinUnlocked); we still notify so
+        //        the Settings UI re-renders the swatches as unlocked.
         try {
             if (window.PurchaseManager && typeof PurchaseManager.onChange === 'function') {
                 PurchaseManager.onChange(adFree => {
-                    if (adFree && !_isFounder && _isWithinEarlyAccess()) {
+                    if (!adFree) return;
+                    if (!_isFounder && _isWithinEarlyAccess()) {
                         _grantInternal('purchase-during-early-access');
+                    } else {
+                        // Skin entitlement just expanded (sapphire/amethyst/steel
+                        // became unlockable). Refresh listeners.
+                        _notify();
                     }
                 });
             }
@@ -190,12 +208,50 @@ const FounderManager = (() => {
     function isFounder() { return _isFounder; }
     function getFounderSince() { return _readSince(); }
 
-    // ── Gold-skin cosmetic toggle ──────────────────────────────────────────
+    // ── Skin entitlement ───────────────────────────────────────────────────
+    /**
+     * Returns true if the player is entitled to use the given skin variant.
+     *   gold     → Founder only (early-access exclusive)
+     *   sapphire/amethyst/steel → Founder OR Remove Ads owner
+     */
+    function isSkinUnlocked(variantId) {
+        if (!VALID_SKIN_VARIANTS.includes(variantId)) return false;
+        if (variantId === 'gold') return _isFounder;
+        if (_isFounder) return true;
+        return _hasRemoveAds();
+    }
+
+    /** Convenience: true if at least one variant is unlocked. */
+    function hasAnyUnlockedSkin() {
+        return _isFounder || _hasRemoveAds();
+    }
+
+    /** Returns the list of variant ids currently unlocked for this player. */
+    function getUnlockedSkinVariants() {
+        return VALID_SKIN_VARIANTS.filter(isSkinUnlocked);
+    }
+
+    /**
+     * Picks a sensible default variant from the unlocked set.
+     * Preference order: gold (if unlocked) → sapphire → amethyst → steel.
+     */
+    function _firstUnlockedVariant() {
+        const unlocked = getUnlockedSkinVariants();
+        if (unlocked.includes('gold')) return 'gold';
+        return unlocked[0] || DEFAULT_SKIN_VARIANT;
+    }
+
+    // ── Skin display toggle ────────────────────────────────────────────────
     // The pref is cached in `_goldSkinEnabled` so the per-frame render path
     // never hits localStorage. Persisted as '0' for opt-out; absence == on,
-    // so existing Founders default to gold without a migration.
+    // so users default to skin-on without a migration.
+    // Note: kept the function name `isGoldSkinEnabled` for backwards-compat;
+    // it now means "render the chosen unlocked skin" (any colour).
     function isGoldSkinEnabled() {
-        return _isFounder && _goldSkinEnabled;
+        if (!_goldSkinEnabled) return false;
+        if (!hasAnyUnlockedSkin()) return false;
+        // Only enable if the *current* variant is one we're entitled to.
+        return isSkinUnlocked(_skinVariant);
     }
     function setGoldSkinEnabled(on) {
         const next = !!on;
@@ -213,17 +269,32 @@ const FounderManager = (() => {
      * VALID_SKIN_VARIANTS, regardless of Founder status (so callers can
      * preview the variant in UI even before grant).
      */
-    function getSkinVariant() { return _skinVariant; }
+    /**
+     * Returns the player's selected skin variant, clamped to one they
+     * are actually entitled to. If the saved variant is locked (e.g.
+     * "gold" for a non-founder), falls back to the first unlocked variant
+     * so render code never tries to display a locked skin.
+     */
+    function getSkinVariant() {
+        if (isSkinUnlocked(_skinVariant)) return _skinVariant;
+        return _firstUnlockedVariant();
+    }
     function getSkinVariants() { return VALID_SKIN_VARIANTS.slice(); }
+    /**
+     * Attempt to set the active skin variant. Rejects unknown ids and
+     * variants the player has not unlocked. Returns true on success.
+     */
     function setSkinVariant(id) {
-        const next = VALID_SKIN_VARIANTS.includes(id) ? id : DEFAULT_SKIN_VARIANT;
-        if (_skinVariant === next) return;
-        _skinVariant = next;
+        if (!VALID_SKIN_VARIANTS.includes(id)) return false;
+        if (!isSkinUnlocked(id)) return false;
+        if (_skinVariant === id) return true;
+        _skinVariant = id;
         try {
-            if (next === DEFAULT_SKIN_VARIANT) localStorage.removeItem(STORAGE_KEY_SKIN_VARIANT);
-            else                                localStorage.setItem(STORAGE_KEY_SKIN_VARIANT, next);
+            if (id === DEFAULT_SKIN_VARIANT) localStorage.removeItem(STORAGE_KEY_SKIN_VARIANT);
+            else                              localStorage.setItem(STORAGE_KEY_SKIN_VARIANT, id);
         } catch (e) {}
         _notify();
+        return true;
     }
 
     function grant(source) { return _grantInternal(source || 'manual'); }
@@ -303,6 +374,9 @@ const FounderManager = (() => {
         getSkinVariant,
         getSkinVariants,
         setSkinVariant,
+        isSkinUnlocked,
+        hasAnyUnlockedSkin,
+        getUnlockedSkinVariants,
         EARLY_ACCESS_END_ISO
     };
 })();
