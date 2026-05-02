@@ -625,6 +625,87 @@
             color: rgba(226, 236, 244, 0.6) !important;
         }
 
+        /* "Skins & Remove Ads" main-menu shortcut button. Same horizontal
+           layout as the Settings shortcut, with a warm gold accent so the
+           shopfront stands out without being aggressive. */
+        .menu-btn--skins {
+            border-color: rgba(255, 200, 87, 0.45) !important;
+            background: linear-gradient(180deg, rgba(255, 200, 87, 0.16), rgba(60, 28, 6, 0.6)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 22px rgba(255, 200, 87, 0.18) !important;
+            grid-column: 1 / -1;
+            min-height: 64px !important;
+            padding: 12px 18px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 14px !important;
+        }
+        .menu-btn--skins .menu-btn-label {
+            font-size: clamp(14px, 1.9vw, 17px) !important;
+        }
+        .menu-btn--skins .menu-btn-meta {
+            text-align: right;
+            color: rgba(255, 233, 188, 0.72) !important;
+        }
+
+        /* Soft purchase prompt modal — dark backdrop, centred card. Hidden
+           initially via [hidden]; transition driven by .is-visible. */
+        .soft-purchase-prompt {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(8, 6, 18, 0.78);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.22s ease-out;
+        }
+        .soft-purchase-prompt[hidden] { display: none; }
+        .soft-purchase-prompt.is-visible { opacity: 1; }
+        .soft-purchase-card {
+            max-width: 460px;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(40, 26, 10, 0.96), rgba(18, 12, 28, 0.96));
+            border: 1px solid rgba(255, 200, 87, 0.45);
+            border-radius: 16px;
+            padding: 22px 22px 18px;
+            box-shadow: 0 22px 60px rgba(0,0,0,0.55), 0 0 32px rgba(255, 200, 87, 0.18);
+            color: #fff;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            text-align: center;
+        }
+        .soft-purchase-title {
+            margin: 0 0 8px;
+            font-size: clamp(20px, 4vw, 26px);
+            color: #FFD75A;
+            letter-spacing: 0.02em;
+        }
+        .soft-purchase-body {
+            margin: 0 0 18px;
+            font-size: 14.5px;
+            line-height: 1.55;
+            color: rgba(255, 255, 255, 0.92);
+        }
+        .soft-purchase-body strong { color: #FFE08A; }
+        .soft-purchase-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .soft-purchase-actions .menu-btn { min-width: 140px; }
+        .soft-purchase-hint {
+            margin: 14px 0 0;
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
         .start-menu-hub {
             display: flex;
             flex-direction: column;
@@ -2696,6 +2777,7 @@
                                 <button id="menu-scores-btn" class="menu-btn menu-btn--scores"><span class="menu-btn-label">&#127942; High Scores</span><span class="menu-btn-meta">Check the board and chase the next target score.</span></button>
                                 <button id="menu-info-btn" class="menu-btn menu-btn--info"><span class="menu-btn-label">&#9432; Intel</span><span class="menu-btn-meta">Review controls, stages, enemies, and boss info.</span></button>
                                 <button id="menu-achievements-btn" class="menu-btn menu-btn--achievements"><span class="menu-btn-label">&#127894;&#65039; Achievements</span><span class="menu-btn-meta">Track mastery goals and completion progress.</span></button>
+                                <button id="menu-skins-btn" class="menu-btn menu-btn--skins"><span class="menu-btn-label">&#127912; Skins &amp; Remove Ads</span><span class="menu-btn-meta">Pick your ninja colour. One-time $1.99 unlocks 3 skins &amp; ad-free.</span></button>
                                 <button id="menu-settings-btn" class="menu-btn menu-btn--settings"><span class="menu-btn-label">&#9881; Settings</span><span class="menu-btn-meta">Tune SFX, music, and tutorial resets from the hub.</span></button>
                             </div>
                         </div>
@@ -3154,6 +3236,24 @@
                         <p class="pause-helper">Restart wipes your current run. Main Menu returns to the title screen.</p>
                     </div>
                     <p class="pause-esc-hint">PRESS ESC TO RESUME</p>
+                </div>
+            </div>
+
+            <!-- ══════ SOFT PURCHASE PROMPT (after 3rd death in a session) ══════
+                 Shown at most once per page session, only on the native Android
+                 build, and only when the user has not already bought Remove Ads.
+                 Hidden by default; controlled entirely by inline script below. -->
+            <div id="soft-purchase-prompt" class="soft-purchase-prompt" hidden role="dialog" aria-modal="true" aria-labelledby="soft-purchase-title">
+                <div class="soft-purchase-card">
+                    <h2 id="soft-purchase-title" class="soft-purchase-title">Tough run, ninja.</h2>
+                    <p class="soft-purchase-body">
+                        Tired of ads breaking your flow? <strong>Remove Ads</strong> for <strong id="soft-purchase-price">$1.99</strong> also unlocks <strong>3 ninja skins</strong> (Sapphire, Amethyst, Steel) <span id="soft-purchase-founder-line">— plus the exclusive <strong>Gold</strong> skin and Founder badge during early access.</span>
+                    </p>
+                    <div class="soft-purchase-actions">
+                        <button id="soft-purchase-buy-btn"  class="menu-btn menu-btn--primary" type="button">&#128722; Remove Ads</button>
+                        <button id="soft-purchase-skip-btn" class="menu-btn" type="button">Not now</button>
+                    </div>
+                    <p class="soft-purchase-hint">You can also unlock skins anytime from <em>Skins &amp; Remove Ads</em> on the main menu.</p>
                 </div>
             </div>
 
@@ -3850,6 +3950,127 @@
                             _renderAdFreeState();
                         } catch (e) { try { console.warn('[RemoveAds UI]', e); } catch(_) {} }
 
+                        // ─── Soft purchase prompt (3rd death/session) ──────
+                        // Shows a one-time, dismissible modal after the player
+                        // hits the GAME_OVER state for the 3rd time in a single
+                        // page session. Native-platform-only; ad-free owners
+                        // are skipped. Frequency-capped to once/session and
+                        // also persisted with a long-cooldown localStorage key
+                        // so we don't badger players who said "Not now".
+                        try {
+                            const SOFT_PROMPT_THRESHOLD     = 3;
+                            const SOFT_PROMPT_COOLDOWN_DAYS = 7;
+                            const STORAGE_KEY_SOFT_PROMPT   = 'skunkfu.softPromptDismissedAt';
+
+                            let _sessionDeaths   = 0;
+                            let _shownThisSession = false;
+
+                            const promptEl   = document.getElementById('soft-purchase-prompt');
+                            const promptBuy  = document.getElementById('soft-purchase-buy-btn');
+                            const promptSkip = document.getElementById('soft-purchase-skip-btn');
+                            const promptPriceEl    = document.getElementById('soft-purchase-price');
+                            const promptFounderEl  = document.getElementById('soft-purchase-founder-line');
+
+                            function _isCooldownActive() {
+                                try {
+                                    const v = parseInt(localStorage.getItem(STORAGE_KEY_SOFT_PROMPT) || '0', 10);
+                                    if (!v) return false;
+                                    const ageMs = Date.now() - v;
+                                    return ageMs < (SOFT_PROMPT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+                                } catch (e) { return false; }
+                            }
+                            function _markDismissed() {
+                                try { localStorage.setItem(STORAGE_KEY_SOFT_PROMPT, String(Date.now())); } catch (e) {}
+                            }
+                            function _isWithinEarlyAccess() {
+                                const cutoff = (window.FounderManager && window.FounderManager.EARLY_ACCESS_END_ISO)
+                                    || '2026-12-31T23:59:59Z';
+                                try { return Date.now() < Date.parse(cutoff); } catch (e) { return false; }
+                            }
+                            function _hidePrompt() {
+                                if (!promptEl) return;
+                                promptEl.setAttribute('hidden', '');
+                                promptEl.classList.remove('is-visible');
+                            }
+                            function _showPrompt() {
+                                if (!promptEl) return;
+                                // Refresh price + founder line each time we show.
+                                if (promptPriceEl && window.PurchaseManager
+                                    && typeof PurchaseManager.getPriceString === 'function') {
+                                    const live = PurchaseManager.getPriceString();
+                                    if (live) promptPriceEl.textContent = live;
+                                }
+                                if (promptFounderEl) {
+                                    promptFounderEl.style.display = _isWithinEarlyAccess() ? '' : 'none';
+                                }
+                                promptEl.removeAttribute('hidden');
+                                // Force reflow before adding the visible class so the
+                                // CSS transition runs from opacity 0.
+                                void promptEl.offsetWidth;
+                                promptEl.classList.add('is-visible');
+                                _shownThisSession = true;
+                                try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_shown', { deaths: _sessionDeaths }); } catch (_) {}
+                            }
+                            function _shouldShow() {
+                                if (_shownThisSession) return false;
+                                // Only on native (Android) where IAP can actually run.
+                                const isNative = !!(window.Capacitor
+                                    && window.Capacitor.isNativePlatform
+                                    && window.Capacitor.isNativePlatform());
+                                if (!isNative) return false;
+                                // Skip if already ad-free.
+                                if (window.PurchaseManager && PurchaseManager.isAdFree
+                                    && PurchaseManager.isAdFree()) return false;
+                                // Honour user's recent "Not now".
+                                if (_isCooldownActive()) return false;
+                                return _sessionDeaths >= SOFT_PROMPT_THRESHOLD;
+                            }
+
+                            window.addEventListener('gameStateChange', (ev) => {
+                                try {
+                                    const st = ev && ev.detail && ev.detail.state;
+                                    if (st !== 'GAME_OVER') return;
+                                    _sessionDeaths++;
+                                    if (_shouldShow()) {
+                                        // Wait a beat so the game-over animation settles before nagging.
+                                        setTimeout(() => { if (_shouldShow()) _showPrompt(); }, 1800);
+                                    }
+                                } catch (e) {}
+                            });
+
+                            if (promptBuy) {
+                                promptBuy.addEventListener('click', async (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_buy_clicked'); } catch (_) {}
+                                    promptBuy.disabled = true;
+                                    try {
+                                        if (window.PurchaseManager && typeof PurchaseManager.purchaseRemoveAds === 'function') {
+                                            await PurchaseManager.purchaseRemoveAds();
+                                        }
+                                    } catch (_) {}
+                                    promptBuy.disabled = false;
+                                    _hidePrompt();
+                                    // Don't set cooldown on Buy — if the purchase
+                                    // didn't complete, we still want to allow a
+                                    // future natural retry from Settings.
+                                });
+                            }
+                            if (promptSkip) {
+                                promptSkip.addEventListener('click', (ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_dismissed'); } catch (_) {}
+                                    _markDismissed();
+                                    _hidePrompt();
+                                });
+                            }
+                            // Hide if user buys via the Settings card while prompt is up.
+                            if (window.PurchaseManager && PurchaseManager.onChange) {
+                                PurchaseManager.onChange((adFree) => { if (adFree) _hidePrompt(); });
+                            }
+                        } catch (e) { try { console.warn('[SoftPurchasePrompt]', e); } catch(_) {} }
+
                         // ─── Founder / Redeem Code wiring ──────────────────
                         try {
                             const founderStatusText = document.getElementById('founder-status-text');
@@ -4001,6 +4222,28 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 showStartMenu();
+                            });
+                        }
+
+                        // SKINS & REMOVE ADS button — opens the same Settings overlay,
+                        // then scrolls to the Remove Ads / Skins card so the shopfront
+                        // is the first thing the player sees.
+                        const skinsBtn = document.getElementById('menu-skins-btn');
+                        if (skinsBtn && settingsBtn) {
+                            skinsBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                try { Analytics.trackMenuAction('skins'); } catch(e) {}
+                                // Re-use the existing settings open path, then scroll.
+                                settingsBtn.click();
+                                setTimeout(() => {
+                                    try {
+                                        const card = document.getElementById('remove-ads-card');
+                                        if (card && typeof card.scrollIntoView === 'function') {
+                                            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                    } catch (_) {}
+                                }, 60);
                             });
                         }
                         if (howtoplayBackBtn) {

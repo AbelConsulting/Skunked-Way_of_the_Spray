@@ -176,6 +176,23 @@ const PurchaseManager = (() => {
                 if (store.owned(PRODUCT_ID_REMOVE_ADS)) _setAdFree(true, 'init-owned');
             } catch (e) {}
 
+            // First-launch auto-restore: covers reinstalls / device switches
+            // where the user already paid but the local entitlement flag was
+            // wiped. Runs at most once per install (gated by a localStorage
+            // flag) and only if we don't already see the entitlement, so
+            // returning users never get an extra Play Billing round-trip.
+            try {
+                const RESTORED_KEY = 'skunkfu.iapAutoRestoreTriedAt';
+                const alreadyTried = !!localStorage.getItem(RESTORED_KEY);
+                if (!_adFree && !alreadyTried && typeof store.restorePurchases === 'function') {
+                    _log('First-launch auto-restore probe (no local entitlement).');
+                    try { localStorage.setItem(RESTORED_KEY, String(Date.now())); } catch (_) {}
+                    // Fire-and-forget; receiptUpdated() above will flip the
+                    // entitlement if Google Play reports the product as owned.
+                    store.restorePurchases().catch(e => _warn('auto-restore failed', e));
+                }
+            } catch (e) {}
+
         } catch (e) {
             _warn('Store init failed:', e);
         }
