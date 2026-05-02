@@ -23,7 +23,7 @@ const AdManager = (() => {
     const CONFIG = {
         // Real ad unit IDs from AdMob console:
         bannerAdUnitId:       'ca-app-pub-8519140628365141/3938711780',
-        rewardedAdUnitId:     'ca-app-pub-8519140628365141/9192796056',
+        rewardedAdUnitId:     'ca-app-pub-8519140628365141/1336900492',
         interstitialAdUnitId: 'ca-app-pub-8519140628365141/9068672976',
 
         // Google's official test ad unit IDs — used when testing is true

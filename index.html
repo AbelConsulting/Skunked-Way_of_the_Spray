@@ -55,7 +55,7 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
             --safe-right: env(safe-area-inset-right, 0px);
-            --ad-width: 160px;
+            --ad-width: 0px; /* expanded to 160px on confirmed web (non-native) */
         }
         /* INLINE STYLES FOR MOBILE OPTIMIZATION */
         body, html {
@@ -75,13 +75,19 @@
             height: 100%;
         }
 
+        /* Ad rail hidden by default — AdSense bootstrap reveals it on web. */
         #ad-container-right {
             width: var(--ad-width);
-            min-width: 1px;
+            min-width: 0;
             height: 100%;
             background-color: #050505;
             flex-shrink: 0;
             order: 2; /* Sits to the right of the game */
+            display: none;
+        }
+        html.skunk-web-ads-enabled #ad-container-right {
+            display: block;
+            min-width: 1px;
         }
 
         #content-wrapper {
@@ -2641,6 +2647,19 @@
                              collapseAdRail();
                              return;
                          }
+
+                         // Only enable the desktop ad rail on wide viewports.
+                         // Mobile browsers / small windows skip the rail too.
+                         if (window.innerWidth < 900) {
+                             container.style.display = 'none';
+                             container.setAttribute('aria-hidden', 'true');
+                             collapseAdRail();
+                             return;
+                         }
+
+                         // Web + wide viewport: opt-in to the rail.
+                         document.documentElement.classList.add('skunk-web-ads-enabled');
+                         document.documentElement.style.setProperty('--ad-width', '160px');
 
                          try {
                              if (container && container.offsetWidth > 0) {
