@@ -34,6 +34,13 @@ const AdManager = (() => {
         // Set to false for production builds
         testing: false,
 
+        // Banner visibility kill-switch. Set to true once AdMob app is
+        // approved ("Ready"). Leave false during "Requires review" so we
+        // don't show Google's ugly placeholder bars on the menu screens.
+        // Rewarded + interstitial are gated by gameplay events so it's
+        // fine to leave them enabled — they simply no-op on no-fill.
+        enableBanner: false,
+
         // Show an interstitial every N stages (0 = never)
         interstitialEveryNStages: 3,
         // Minimum seconds between interstitials (frequency cap)
@@ -111,6 +118,9 @@ const AdManager = (() => {
             _available = true;
             _log('AdMob initialized successfully (testing=' + CONFIG.testing + ').');
 
+            // Defensive: clear any stale banner from a prior process.
+            try { await _plugin.removeBanner(); } catch (e) {}
+
             // Pre-load ads in the background
             _prepareRewarded();
             _prepareInterstitial();
@@ -133,6 +143,7 @@ const AdManager = (() => {
      */
     async function showBanner() {
         if (_isAdFree()) return;
+        if (!CONFIG.enableBanner) return; // Kill-switch — see CONFIG block.
         if (!_available || !_plugin || _bannerVisible) return;
         try {
             const BannerAdSize = (await import('@capacitor-community/admob')).BannerAdSize;
