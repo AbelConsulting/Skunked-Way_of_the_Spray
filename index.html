@@ -3943,6 +3943,7 @@
                                         if (statusEl) {
                                             if (res.ok) statusEl.textContent = res.reason === 'pending' ? 'Completing purchase\u2026' : 'Already owned. Thank you!';
                                             else if (res.reason === 'web-not-supported') statusEl.textContent = 'Available only on the Android app.';
+                                            else if (res.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + res.reason;
                                         }
                                     } catch (e) {

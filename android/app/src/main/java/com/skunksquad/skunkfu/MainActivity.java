@@ -1,9 +1,15 @@
 package com.skunksquad.skunkfu;
 
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 
 import androidx.activity.EdgeToEdge;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -22,13 +28,55 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(PlayGamesPlugin.class);
         super.onCreate(savedInstanceState);
 
-        // Force the WebView background black so the safe-area zones
-        // (status bar overlay strip, gesture-nav strip) don't read as
-        // the WebView's default white when the page hasn't painted yet.
+        // Force the WebView background black so any region behind the
+        // game canvas reads as our dark theme (not the WebView's default
+        // white). Belt-and-suspenders alongside the theme + immersive
+        // mode below.
         try {
             if (this.bridge != null && this.bridge.getWebView() != null) {
                 this.bridge.getWebView().setBackgroundColor(Color.BLACK);
             }
         } catch (Throwable t) { /* defensive — never crash on theme tweak */ }
+
+        // Sticky immersive: hide status bar AND navigation bar so the
+        // game owns the whole screen. Bars reappear with a swipe and
+        // auto-hide again. This is the "true fullscreen" experience.
+        applyImmersiveMode();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        // Re-apply immersive whenever the window regains focus —
+        // Android resets it after dialogs / billing sheets / app switch.
+        if (hasFocus) applyImmersiveMode();
+    }
+
+    private void applyImmersiveMode() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+                WindowInsetsControllerCompat controller =
+                        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                if (controller != null) {
+                    controller.hide(
+                            androidx.core.view.WindowInsetsCompat.Type.statusBars()
+                                    | androidx.core.view.WindowInsetsCompat.Type.navigationBars()
+                    );
+                    controller.setSystemBarsBehavior(
+                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    );
+                }
+            } else {
+                // Pre-Android 11 fallback (sticky immersive flags).
+                int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+                getWindow().getDecorView().setSystemUiVisibility(flags);
+            }
+        } catch (Throwable t) { /* never crash on UI tweak */ }
     }
 }
