@@ -4194,6 +4194,21 @@
                                     } else {
                                         btn.title = id.charAt(0).toUpperCase() + id.slice(1);
                                     }
+                                    // Status pill text — gives each tile clear context-of-ownership.
+                                    const statusEl = btn.querySelector('.founder-swatch__status');
+                                    if (statusEl) {
+                                        let statusText = '';
+                                        if (active) {
+                                            statusText = 'Active';
+                                        } else if (unlocked) {
+                                            statusText = id === 'gold' ? 'Founder' : 'Owned';
+                                        } else if (id === 'gold') {
+                                            statusText = 'Early Access';
+                                        } else {
+                                            statusText = '$1.99';
+                                        }
+                                        statusEl.textContent = statusText;
+                                    }
                                 }
                             }
 

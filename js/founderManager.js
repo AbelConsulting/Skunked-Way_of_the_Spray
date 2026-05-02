@@ -163,6 +163,40 @@ const FounderManager = (() => {
         if (_initialized) return;
         _initialized = true;
 
+        // 0. Debug overrides via URL params (development/testing only).
+        //    Add `?debugSkins=1` to grant Founder (unlocks ALL 4 skins).
+        //    Add `?debugSkins=adfree` to simulate Remove-Ads-only (3 skins, gold locked).
+        //    Add `?debugSkins=reset` to wipe skin/founder state on this device.
+        try {
+            const params = (typeof window !== 'undefined' && window.location)
+                ? new URLSearchParams(window.location.search) : null;
+            const dbg = params && params.get('debugSkins');
+            if (dbg) {
+                if (dbg === 'reset' || dbg === '0') {
+                    try {
+                        localStorage.removeItem(STORAGE_KEY_FOUNDER);
+                        localStorage.removeItem(STORAGE_KEY_FOUNDER_SINCE);
+                        localStorage.removeItem(STORAGE_KEY_AD_FREE);
+                        localStorage.removeItem(STORAGE_KEY_CODES_USED);
+                        localStorage.removeItem(STORAGE_KEY_SKIN_VARIANT);
+                        localStorage.removeItem(STORAGE_KEY_GOLD_SKIN);
+                    } catch (e) {}
+                    _isFounder = false;
+                    _founderSince = null;
+                    _goldSkinEnabled = true;
+                    _skinVariant = DEFAULT_SKIN_VARIANT;
+                    _log('debugSkins=reset — cleared founder/skin state');
+                } else if (dbg === 'adfree') {
+                    try { localStorage.setItem(STORAGE_KEY_AD_FREE, '1'); } catch (e) {}
+                    _log('debugSkins=adfree — simulating Remove Ads owner (gold stays locked)');
+                } else {
+                    // Default: grant Founder so all 4 skins are unlockable.
+                    if (!_isFounder) _grantInternal('debug-skins-param');
+                    _log('debugSkins=on — Founder granted for testing');
+                }
+            }
+        } catch (e) {}
+
         // 1. Auto-grant if Remove Ads is owned and we're inside the early-access window.
         if (!_isFounder && _hasRemoveAds() && _isWithinEarlyAccess()) {
             _grantInternal('early-access-purchase');

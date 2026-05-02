@@ -315,91 +315,282 @@
     font-weight: 400;
 }
 
-/* Founder skin colour variant swatches. */
+/* Founder skin colour variant tiles. Card-grid layout with name + status
+   pill, gradient preview, and active/locked states. Same IDs/classes as
+   the original swatch buttons so existing JS wiring is unchanged. */
 .founder-skin-variants {
-    display: flex;
-    gap: 10px;
-    margin: 6px 0 4px 28px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 12px;
+    margin: 10px 0 8px;
+    padding: 4px 2px 2px;
 }
 .founder-skin-variants.is-hidden {
     display: none;
 }
 .founder-swatch {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.25);
+    --swatch-grad: linear-gradient(180deg, #888 0%, #333 100%);
+    --swatch-glow: rgba(255, 255, 255, 0.35);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 100%;
+    min-height: 124px;
+    padding: 10px 8px 8px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.35)),
+        rgba(15, 18, 28, 0.85);
+    color: #f4f6fb;
     cursor: pointer;
-    padding: 0;
-    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    overflow: hidden;
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 .founder-swatch:hover {
-    transform: scale(1.08);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
-.founder-swatch.is-active {
-    border-color: #ffffff;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px currentColor;
-    transform: scale(1.08);
-}
-.founder-swatch--gold {
-    background: linear-gradient(180deg, #FFE08A 0%, #C4881A 100%);
-    color: #FFC857;
-}
-.founder-swatch--sapphire {
-    background: linear-gradient(180deg, #8FD0FF 0%, #14478A 100%);
-    color: #5AB8FF;
-}
-.founder-swatch--amethyst {
-    background: linear-gradient(180deg, #DDB4FF 0%, #5E2695 100%);
-    color: #C66BFF;
-}
-.founder-swatch--steel {
-    background: linear-gradient(180deg, #DCE4EE 0%, #4A5260 100%);
-    color: #C8D4E2;
+.founder-swatch:focus-visible {
+    outline: 2px solid #FFD75A;
+    outline-offset: 2px;
 }
 
-/* Locked swatch state — used for skin variants the player has not unlocked
-   (e.g. Gold for non-founders after early access, or any colour skin for
-   players who haven't bought Remove Ads). Shows a padlock overlay and
-   desaturates the gradient so it reads as a "preview" of what's purchasable. */
-.founder-swatch.is-locked {
+/* Preview disc — shows the gradient palette with a ninja icon centered. */
+.founder-swatch__preview {
     position: relative;
-    filter: grayscale(0.6) brightness(0.65);
-    opacity: 0.7;
-    cursor: pointer; /* keep pointer so click can route to Buy CTA */
-    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--swatch-grad);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+        inset 0 -6px 12px rgba(0, 0, 0, 0.35),
+        inset 0 4px 8px rgba(255, 255, 255, 0.18),
+        0 0 0 0 var(--swatch-glow);
+    transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+.founder-swatch__ninja {
+    font-size: 28px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+    pointer-events: none;
+}
+.founder-swatch__shine {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(115deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.45) 48%,
+        transparent 66%);
+    opacity: 0;
+    transform: translateX(-110%);
+    pointer-events: none;
+}
+
+.founder-swatch__name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #f4f6fb;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.founder-swatch__status {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #cfd6e4;
+    min-height: 16px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+.founder-swatch__status:empty {
+    visibility: hidden;
+}
+
+/* ── Per-variant palettes ────────────────────────────────────────────── */
+.founder-swatch--gold {
+    --swatch-grad: linear-gradient(180deg, #FFE08A 0%, #C4881A 100%);
+    --swatch-glow: rgba(255, 200, 87, 0.55);
+}
+.founder-swatch--sapphire {
+    --swatch-grad: linear-gradient(180deg, #8FD0FF 0%, #14478A 100%);
+    --swatch-glow: rgba(90, 184, 255, 0.55);
+}
+.founder-swatch--amethyst {
+    --swatch-grad: linear-gradient(180deg, #DDB4FF 0%, #5E2695 100%);
+    --swatch-glow: rgba(198, 107, 255, 0.55);
+}
+.founder-swatch--steel {
+    --swatch-grad: linear-gradient(180deg, #DCE4EE 0%, #4A5260 100%);
+    --swatch-glow: rgba(200, 212, 226, 0.45);
+}
+
+/* Subtle ambient gradient wash for each tile that matches its palette,
+   so even at rest the cards feel themed and premium. */
+.founder-swatch::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--swatch-grad);
+    opacity: 0.10;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+}
+.founder-swatch:hover::before {
+    opacity: 0.18;
+}
+
+/* ── Active state ────────────────────────────────────────────────────── */
+.founder-swatch.is-active {
+    border-color: #ffffff;
+    box-shadow:
+        0 0 0 2px rgba(0, 0, 0, 0.45),
+        0 0 18px var(--swatch-glow),
+        0 8px 22px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+}
+.founder-swatch.is-active::before {
+    opacity: 0.22;
+}
+.founder-swatch.is-active .founder-swatch__preview {
+    box-shadow:
+        inset 0 -6px 12px rgba(0, 0, 0, 0.35),
+        inset 0 4px 8px rgba(255, 255, 255, 0.18),
+        0 0 16px var(--swatch-glow);
+    transform: scale(1.04);
+}
+.founder-swatch.is-active .founder-swatch__status {
+    background: linear-gradient(180deg, var(--swatch-glow), rgba(0, 0, 0, 0.25));
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #ffffff;
+}
+
+/* Subtle "ACTIVE" checkmark badge in the corner of the active tile. */
+.founder-swatch.is-active::after {
+    content: "✓";
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #111;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 18px;
+    text-align: center;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+/* Animated shine pass on the Gold tile — gives it that premium "founder"
+   feeling without being noisy. Loops slowly. */
+@keyframes founder-swatch-shine {
+    0%   { transform: translateX(-110%); opacity: 0; }
+    20%  { opacity: 1; }
+    60%  { transform: translateX(110%); opacity: 0; }
+    100% { transform: translateX(110%); opacity: 0; }
+}
+.founder-swatch--gold:not(.is-locked) .founder-swatch__shine {
+    animation: founder-swatch-shine 4.5s ease-in-out 1.2s infinite;
+}
+.founder-swatch.is-active .founder-swatch__shine {
+    animation: founder-swatch-shine 3s ease-in-out 0.4s infinite;
+    opacity: 0;
+}
+
+/* ── Locked state ────────────────────────────────────────────────────── */
+.founder-swatch.is-locked {
+    cursor: pointer;
+    border-color: rgba(255, 255, 255, 0.06);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.45)),
+        rgba(10, 12, 18, 0.9);
+}
+.founder-swatch.is-locked .founder-swatch__preview {
+    filter: grayscale(0.65) brightness(0.55);
+    opacity: 0.85;
+}
+.founder-swatch.is-locked .founder-swatch__name {
+    opacity: 0.65;
+}
+.founder-swatch.is-locked::before {
+    opacity: 0.05;
 }
 .founder-swatch.is-locked:hover {
-    filter: grayscale(0.4) brightness(0.85);
-    opacity: 0.9;
-    transform: scale(1.05);
+    border-color: rgba(255, 215, 90, 0.35);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 215, 90, 0.18);
 }
-.founder-swatch.is-locked::after {
-    content: "\1F512"; /* 🔒 */
+.founder-swatch.is-locked:hover .founder-swatch__preview {
+    filter: grayscale(0.4) brightness(0.75);
+    opacity: 1;
+}
+.founder-swatch.is-locked .founder-swatch__status {
+    background: linear-gradient(180deg, rgba(255, 215, 90, 0.18), rgba(0, 0, 0, 0.3));
+    border-color: rgba(255, 215, 90, 0.45);
+    color: #FFD75A;
+}
+
+/* Padlock overlay on the preview disc for locked tiles. */
+.founder-swatch.is-locked .founder-swatch__preview::after {
+    content: "🔒";
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 22px;
     line-height: 1;
     color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
     pointer-events: none;
 }
+.founder-swatch.is-locked .founder-swatch__ninja {
+    opacity: 0.25;
+}
 
-/* Brief shake animation when the user clicks a locked swatch — signals
+/* Brief shake animation when the user clicks a locked tile — signals
    that the click was registered but the variant is gated. */
 @keyframes founder-swatch-shake {
     0%, 100% { transform: translateX(0); }
-    20%      { transform: translateX(-3px); }
-    40%      { transform: translateX(3px); }
-    60%      { transform: translateX(-2px); }
-    80%      { transform: translateX(2px); }
+    20%      { transform: translateX(-4px); }
+    40%      { transform: translateX(4px); }
+    60%      { transform: translateX(-3px); }
+    80%      { transform: translateX(3px); }
 }
 .founder-swatch.shake {
-    animation: founder-swatch-shake 0.36s ease-in-out;
+    animation: founder-swatch-shake 0.4s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .founder-swatch,
+    .founder-swatch__preview,
+    .founder-swatch__shine {
+        transition: none;
+        animation: none !important;
+    }
 }
 
 /* Founder marker on the player's own leaderboard row. */
