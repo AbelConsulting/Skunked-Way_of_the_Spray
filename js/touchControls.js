@@ -125,6 +125,11 @@
 
             document.body.appendChild(container);
             this.container = container;
+            // Hidden by default — initial game state is MENU and the start
+            // menu overlay should not be obscured by gameplay buttons.
+            // The gameStateChange listener below will show it when the
+            // user transitions into PLAYING / PAUSED / GAME_OVER.
+            container.style.display = 'none';
 
             // Bind buttons (restart has a custom confirm/animation)
             this._bindButton(leftBtn, 'left');
@@ -232,6 +237,21 @@
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('gameStateChange', { state: e && e.detail && e.detail.state }); } catch (e) { __err('touch', e); }
                 if (!e || !e.detail) return;
                 const st = e.detail.state;
+                // Whole-container visibility — touch controls only make
+                // sense while the user is actually inside a run (PLAYING /
+                // PAUSED) or staring at the GAME_OVER screen waiting to
+                // restart. On MENU / VICTORY they would overlay the start
+                // menu (and any taps on the invisible buttons would fire
+                // pause / movement events that bug out the menu).
+                try {
+                    if (this.container) {
+                        const visible = (st === 'PLAYING' || st === 'PAUSED' || st === 'GAME_OVER');
+                        this.container.style.display = visible ? '' : 'none';
+                    }
+                    // Also hide the restart confirm overlay if it was open
+                    // when the state changed (e.g. user hit Esc -> MENU).
+                    if (restartConfirm) restartConfirm.style.display = 'none';
+                } catch (err) { __err('touch', err); }
                 // Update pause button icon/label when paused or resumed
                 try {
                     if (this._pauseBtn) {
