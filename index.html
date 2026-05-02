@@ -2614,14 +2614,17 @@
                      }
 
                      function loadAdSenseScript(clientId) {
-                         if (!clientId || document.querySelector('script[data-skunk-web-ads="true"]')) {
+                         // AdSense complains if you put unknown data-*
+                         // attributes on its <script> tag, so we dedupe via
+                         // a window flag instead of querying for a marker.
+                         if (!clientId || window.__skunkAdSenseLoaded) {
                              return;
                          }
+                         window.__skunkAdSenseLoaded = true;
                          var script = document.createElement('script');
                          script.async = true;
                          script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(clientId);
                          script.crossOrigin = 'anonymous';
-                         script.setAttribute('data-skunk-web-ads', 'true');
                          document.head.appendChild(script);
                      }
 
