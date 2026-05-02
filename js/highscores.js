@@ -732,7 +732,10 @@ import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, check
             if (isOwnRow && isFounder) {
               const founderBadge = document.createElement('span');
               founderBadge.className = 'scoreboard-founder-badge';
-              founderBadge.textContent = 'FOUNDER';
+              const lbl = document.createElement('span');
+              lbl.className = 'scoreboard-founder-badge__label';
+              lbl.textContent = 'FOUNDER';
+              founderBadge.appendChild(lbl);
               nameRow.appendChild(document.createTextNode(' '));
               nameRow.appendChild(founderBadge);
             }

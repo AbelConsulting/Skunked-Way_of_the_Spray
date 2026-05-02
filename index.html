@@ -450,23 +450,57 @@
            when FounderManager.isFounder() is true. Cosmetic-only reward for
            early-access supporters. */
         .founder-badge {
+            position: relative;
             display: inline-block;
             margin-left: 10px;
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 999px;
-            background: linear-gradient(180deg, #FFD75A 0%, #FF9E1B 100%);
+            background: linear-gradient(180deg, #FFE38C 0%, #FFB13E 50%, #C77A00 100%);
             color: #1a0e00;
             font: 800 10px 'Space Grotesk', 'Segoe UI', sans-serif;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.20em;
             text-transform: uppercase;
-            box-shadow: 0 0 12px rgba(255, 200, 87, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow:
+                0 0 12px rgba(255, 200, 87, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                inset 0 -1px 0 rgba(120, 60, 0, 0.35);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.40);
             vertical-align: middle;
+            overflow: hidden;
+            isolation: isolate;
             animation: founderBadgePulse 2.6s ease-in-out infinite;
         }
+        .founder-badge::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                110deg,
+                transparent 0%,
+                transparent 38%,
+                rgba(255, 255, 255, 0.70) 50%,
+                transparent 62%,
+                transparent 100%
+            );
+            transform: translateX(-120%);
+            animation: founderBadgeShine 3.4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .founder-badge > * { position: relative; z-index: 2; }
         .founder-badge[hidden] { display: none !important; }
         @keyframes founderBadgePulse {
-            0%, 100% { box-shadow: 0 0 12px rgba(255, 200, 87, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
-            50%      { box-shadow: 0 0 22px rgba(255, 200, 87, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.55); }
+            0%, 100% { box-shadow: 0 0 12px rgba(255, 200, 87, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(120, 60, 0, 0.35); }
+            50%      { box-shadow: 0 0 22px rgba(255, 200, 87, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -1px 0 rgba(120, 60, 0, 0.40); }
+        }
+        @keyframes founderBadgeShine {
+            0%   { transform: translateX(-120%); }
+            55%  { transform: translateX(120%); }
+            100% { transform: translateX(120%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .founder-badge, .founder-badge::before { animation: none !important; }
         }
 
         @keyframes menuFadeIn {
@@ -2891,7 +2925,7 @@
                 <div class="start-menu-panel">
                     <div class="start-menu-layout">
                         <div class="start-menu-hero">
-                            <p class="start-menu-eyebrow">Main Hub<span id="founder-badge" class="founder-badge" hidden>FOUNDER</span></p>
+                            <p class="start-menu-eyebrow">Main Hub<span id="founder-badge" class="founder-badge" hidden><span class="founder-badge__label">FOUNDER</span></span></p>
                             <h1 class="start-menu-title">SKUNKED:</h1>
                             <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
                             <div class="start-menu-divider"></div>

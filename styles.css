@@ -615,17 +615,72 @@
 
 /* Founder marker on the player's own leaderboard row. */
 .scoreboard-founder-badge {
+    position: relative;
+    display: inline-block;
     font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    padding: 1px 7px;
+    letter-spacing: 0.14em;
+    padding: 2px 8px;
     border-radius: 999px;
-    background: linear-gradient(180deg, #FFD75A 0%, #FF9E1B 100%);
+    background:
+        linear-gradient(180deg, #FFE38C 0%, #FFB13E 50%, #C77A00 100%);
     color: #1a0e00;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 0 8px rgba(255, 200, 87, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+        0 0 10px rgba(255, 200, 87, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(120, 60, 0, 0.35);
     vertical-align: middle;
+    overflow: hidden;
+    isolation: isolate;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    animation: scoreboardFounderPulse 2.6s ease-in-out infinite;
+}
+
+/* Diagonal light-sweep — same trick used on a luxury watch dial. Pseudo
+   element rides across the pill on a slow loop, making it feel "alive"
+   without looking like a flashing ad. */
+.scoreboard-founder-badge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        110deg,
+        transparent 0%,
+        transparent 38%,
+        rgba(255, 255, 255, 0.65) 50%,
+        transparent 62%,
+        transparent 100%
+    );
+    transform: translateX(-120%);
+    animation: scoreboardFounderShine 3.4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.scoreboard-founder-badge > * { position: relative; z-index: 2; }
+
+@keyframes scoreboardFounderPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 200, 87, 0.55),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                            inset 0 -1px 0 rgba(120, 60, 0, 0.35); }
+    50%      { box-shadow: 0 0 18px rgba(255, 200, 87, 0.95),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.65),
+                            inset 0 -1px 0 rgba(120, 60, 0, 0.40); }
+}
+
+@keyframes scoreboardFounderShine {
+    0%   { transform: translateX(-120%); }
+    55%  { transform: translateX(120%); }
+    100% { transform: translateX(120%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scoreboard-founder-badge,
+    .scoreboard-founder-badge::before {
+        animation: none !important;
+    }
 }
 
 .scoreboard-score {
