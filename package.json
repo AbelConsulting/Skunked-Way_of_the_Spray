@@ -51,7 +51,8 @@
     "@capacitor/core": "^8.3.0",
     "@capacitor/screen-orientation": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.2"
+    "@capacitor/status-bar": "^8.0.2",
+    "cordova-plugin-purchase": "^13.15.4"
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "^0.28.0"

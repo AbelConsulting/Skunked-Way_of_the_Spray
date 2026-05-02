@@ -1,5 +1,5 @@
 /**
- * purchaseManager.js — In-App Purchase manager for "Remove Ads + Tip" ($1.99).
+ * purchaseManager.js — In-App Purchase manager for "Remove Ads + Skins" ($2.99).
  *
  * Strategy:
  *   • Android (Capacitor native): uses cordova-plugin-purchase (CdvPurchase) v13+
@@ -8,15 +8,21 @@
  *   • Web: uses a localStorage flag for now. Hook up Stripe/Paddle later if we
  *     want to monetize the web build directly. For now web is "Coming soon".
  *
- * Entitlement is mirrored to localStorage so AdManager can synchronously gate
- * banner/interstitial calls without awaiting the plugin on every check.
+ * What the purchase grants:
+ *   • Removes banner + between-stage interstitial ads (rewarded ads stay opt-in).
+ *   • Unlocks the Sapphire, Amethyst, and Steel ninja skins (FounderManager.isSkinUnlocked).
+ *   • If purchased before EARLY_ACCESS_END_ISO (2026-12-31), also auto-grants
+ *     Founder status + the exclusive Gold ninja skin.
+ *
+ * Entitlement is mirrored to localStorage so AdManager and FounderManager can
+ * synchronously gate calls without awaiting the plugin on every check.
  *
  * SETUP (Android, one-time):
  *   1. npm install cordova-plugin-purchase
  *   2. Create a managed product in Google Play Console:
  *        Product ID: remove_ads
  *        Type: One-time (managed)
- *        Price: $1.99
+ *        Price: $2.99
  *   3. npx cap sync android
  *   4. Upload a signed bundle to a Play Console internal testing track and add
  *      yourself as a license tester so the purchase flow works in test mode.

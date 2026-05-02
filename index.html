@@ -3091,23 +3091,23 @@
                             <button id="reset-tutorial-btn" class="menu-btn">&#128161; Reset Tutorial Hints</button>
                         </div>
                         <div class="menu-settings-card" id="remove-ads-card">
-                            <h3>&#128293; Remove Ads</h3>
-                            <p id="remove-ads-desc">One-time purchase. Removes the banner and between-stage ads. Supports the dev.</p>
+                            <h3>&#128293; Remove Ads &amp; Unlock Skins</h3>
+                            <p id="remove-ads-desc">One-time purchase. Removes banner &amp; between-stage ads <strong>and unlocks 3 ninja skins</strong> (Sapphire, Amethyst, Steel). Supports the dev.</p>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
-                                <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Remove Ads &mdash; <span id="remove-ads-price">$1.99</span></button>
+                                <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Remove Ads &mdash; <span id="remove-ads-price">$2.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button" style="opacity:0.85;">&#8635; Restore Purchase</button>
                             </div>
                             <p id="remove-ads-status" style="margin-top:8px; font-size:12px; color: rgba(255,255,255,0.6);"></p>
                         </div>
                         <div class="menu-settings-card" id="founder-card">
-                            <h3>&#11088; Founder Status</h3>
+                            <h3>&#11088; Founder Status &amp; Skins</h3>
                             <p id="founder-status-text">Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.</p>
                             <label id="founder-gold-skin-row" class="founder-gold-skin-row is-hidden">
                                 <input id="founder-gold-skin-toggle" type="checkbox" class="founder-gold-skin-toggle" />
-                                <span>Use Founder ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
+                                <span>Use ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
-                            <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Founder skin colour">
-                                <button type="button" class="founder-swatch founder-swatch--gold"     data-variant="gold"     role="radio" aria-checked="true"  title="Gold"></button>
+                            <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin colour">
+                                <button type="button" class="founder-swatch founder-swatch--gold"     data-variant="gold"     role="radio" aria-checked="true"  title="Gold — Founder exclusive"></button>
                                 <button type="button" class="founder-swatch founder-swatch--sapphire" data-variant="sapphire" role="radio" aria-checked="false" title="Sapphire"></button>
                                 <button type="button" class="founder-swatch founder-swatch--amethyst" data-variant="amethyst" role="radio" aria-checked="false" title="Amethyst"></button>
                                 <button type="button" class="founder-swatch founder-swatch--steel"    data-variant="steel"    role="radio" aria-checked="false" title="Steel"></button>
@@ -3862,36 +3862,59 @@
                             const variantBtns       = variantsRow ? Array.from(variantsRow.querySelectorAll('.founder-swatch')) : [];
 
                             function _renderFounderState() {
-                                const isF = !!(window.FounderManager && FounderManager.isFounder());
-                                const goldOn = isF && !!(window.FounderManager && typeof FounderManager.isGoldSkinEnabled === 'function' && FounderManager.isGoldSkinEnabled());
-                                const variant = (window.FounderManager && typeof FounderManager.getSkinVariant === 'function')
-                                    ? FounderManager.getSkinVariant() : 'gold';
+                                const FM = window.FounderManager;
+                                const isF = !!(FM && FM.isFounder && FM.isFounder());
+                                const adFree = !!(window.PurchaseManager && PurchaseManager.isAdFree && PurchaseManager.isAdFree());
+                                const hasAnySkin = !!(FM && typeof FM.hasAnyUnlockedSkin === 'function' && FM.hasAnyUnlockedSkin());
+                                const goldOn = hasAnySkin && !!(FM && typeof FM.isGoldSkinEnabled === 'function' && FM.isGoldSkinEnabled());
+                                const variant = (FM && typeof FM.getSkinVariant === 'function')
+                                    ? FM.getSkinVariant() : 'gold';
+
                                 if (founderStatusText) {
                                     if (isF) {
-                                        const since = window.FounderManager.getFounderSince && FounderManager.getFounderSince();
+                                        const since = FM.getFounderSince && FM.getFounderSince();
                                         const sinceLabel = since ? new Date(since).toLocaleDateString() : '';
                                         const skinLine = goldOn
-                                            ? 'The Founder ninja skin, "FOUNDER" badge, and Day-One achievement are yours forever.'
-                                            : 'The "FOUNDER" badge and Day-One achievement are yours forever. Founder skin is currently off.';
+                                            ? 'All four ninja skins (incl. exclusive Gold), the "FOUNDER" badge, and Day-One achievement are yours forever.'
+                                            : 'The "FOUNDER" badge and Day-One achievement are yours forever. Skin display is currently off.';
                                         founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for supporting early access' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
+                                    } else if (adFree) {
+                                        founderStatusText.innerHTML = '\u2705 <strong>Ad-free</strong> active. You\u2019ve unlocked the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
                                     } else {
-                                        founderStatusText.textContent = 'Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.';
+                                        founderStatusText.innerHTML = 'Not a Founder yet. Buy <strong>Remove Ads</strong> during early access (before Dec 31, 2026) to unlock the exclusive <strong>Gold</strong> skin + Founder badge, or redeem a code below. Buying after early access still unlocks Sapphire, Amethyst, and Steel.';
                                     }
                                 }
+
+                                // Skin row + swatches: visible whenever the player has ANY unlocked
+                                // skin (Founder OR Remove-Ads owner). Locked swatches still render
+                                // as previews so non-buyers can see what they're missing.
                                 if (goldSkinRow) {
-                                    goldSkinRow.classList.toggle('is-hidden', !isF);
+                                    goldSkinRow.classList.toggle('is-hidden', !hasAnySkin);
                                 }
                                 if (goldSkinToggle) {
                                     goldSkinToggle.checked = goldOn;
                                 }
                                 if (variantsRow) {
-                                    // Variant swatches show only when Founder AND skin is on.
-                                    variantsRow.classList.toggle('is-hidden', !goldOn);
+                                    // Always render the swatch row — locked ones get a padlock overlay.
+                                    variantsRow.classList.remove('is-hidden');
                                 }
                                 for (const btn of variantBtns) {
-                                    const active = btn.dataset.variant === variant;
+                                    const id = btn.dataset.variant;
+                                    const unlocked = !!(FM && typeof FM.isSkinUnlocked === 'function' && FM.isSkinUnlocked(id));
+                                    const active = unlocked && (id === variant);
                                     btn.classList.toggle('is-active', active);
+                                    btn.classList.toggle('is-locked', !unlocked);
                                     btn.setAttribute('aria-checked', active ? 'true' : 'false');
+                                    btn.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
+                                    if (id === 'gold' && !unlocked) {
+                                        btn.title = 'Gold \u2014 Early-access Founder exclusive (locked)';
+                                    } else if (!unlocked) {
+                                        btn.title = btn.dataset.variant.charAt(0).toUpperCase() + btn.dataset.variant.slice(1) + ' \u2014 Buy Remove Ads to unlock';
+                                    } else if (id === 'gold') {
+                                        btn.title = 'Gold \u2014 Founder exclusive';
+                                    } else {
+                                        btn.title = id.charAt(0).toUpperCase() + id.slice(1);
+                                    }
                                 }
                             }
 
@@ -3906,8 +3929,21 @@
                             for (const btn of variantBtns) {
                                 btn.addEventListener('click', (ev) => {
                                     ev.preventDefault();
-                                    if (window.FounderManager && typeof FounderManager.setSkinVariant === 'function') {
-                                        FounderManager.setSkinVariant(btn.dataset.variant);
+                                    const FM = window.FounderManager;
+                                    if (!FM || typeof FM.setSkinVariant !== 'function') return;
+                                    const id = btn.dataset.variant;
+                                    const ok = FM.setSkinVariant(id);
+                                    if (!ok) {
+                                        // Locked swatch — pulse to show it's purchasable, then
+                                        // route the user toward the Remove Ads CTA.
+                                        btn.classList.remove('shake');
+                                        // Force reflow so the animation restarts on rapid clicks.
+                                        void btn.offsetWidth;
+                                        btn.classList.add('shake');
+                                        const adFreeBtn = document.getElementById('remove-ads-buy-btn');
+                                        if (adFreeBtn && typeof adFreeBtn.scrollIntoView === 'function') {
+                                            try { adFreeBtn.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+                                        }
                                     }
                                 });
                             }
