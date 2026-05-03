@@ -935,20 +935,21 @@ class GameApp {
         } catch (e) { __err('main', e); }
 
         // ── 6. Google Play Games Services ────────────────────────────
-        // We deliberately DO NOT auto-sign-in at launch. Calling signIn()
-        // here triggers Google's "Welcome back" greeting toast at the top
-        // of the screen on every cold launch — players consistently flag
-        // this as an unwanted banner / ad-like overlay. Sign-in is now
-        // lazy: it happens the first time the user opens Achievements or
-        // submits a leaderboard score, and the SDK handles auth silently
-        // at that point. Set localStorage 'skunkfu.pgsAutoSignIn' = '1'
-        // to opt back into the legacy auto sign-in behaviour.
+        // PlayGamesSdk.initialize() (called in the native plugin's load())
+        // triggers Google's silent auto-auth and the "Welcome back" toast
+        // unconditionally — there is no way to suppress that banner from
+        // the JS side. Since the banner is going to appear anyway, do the
+        // proper thing: complete the sign-in flow, capture the player
+        // identity, and sync achievements so the banner is meaningful
+        // rather than cosmetic. Set localStorage 'skunkfu.pgsAutoSignIn'
+        // to '0' to skip the sign-in handshake (the OS banner may still
+        // appear from the SDK's own silent auth).
         try {
-            const wantAutoSignIn = (() => {
-                try { return localStorage.getItem('skunkfu.pgsAutoSignIn') === '1'; }
+            const skipAutoSignIn = (() => {
+                try { return localStorage.getItem('skunkfu.pgsAutoSignIn') === '0'; }
                 catch (_) { return false; }
             })();
-            if (wantAutoSignIn && window.PlayGamesServices && PlayGamesServices.isAvailable()) {
+            if (!skipAutoSignIn && window.PlayGamesServices && PlayGamesServices.isAvailable()) {
                 PlayGamesServices.signIn().then((result) => {
                     try { console.log('[PlayGames] Sign-in result:', result); } catch (e) { __err('main', e); }
                     if (result && result.isAuthenticated) {
