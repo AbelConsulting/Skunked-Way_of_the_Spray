@@ -573,6 +573,31 @@
     color: #FFD75A;
 }
 
+/* Hydrating state — shown briefly while PurchaseManager finishes its
+   native-store init handshake. Suppresses the gold padlock styling so
+   the tile feels neutral rather than "you don't own this", and gives
+   the status pill a subtle pulse so it's clearly a transient state. */
+.founder-swatch.is-checking .founder-swatch__status {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.75);
+    animation: founder-swatch-checking 1.4s ease-in-out infinite;
+}
+.founder-swatch.is-checking.is-locked .founder-swatch__preview::after {
+    /* Hide the padlock while we don't yet know if the user owns this. */
+    content: "";
+}
+.founder-swatch.is-checking.is-locked .founder-swatch__ninja {
+    opacity: 0.55;
+}
+@keyframes founder-swatch-checking {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1.0;  }
+}
+@media (prefers-reduced-motion: reduce) {
+    .founder-swatch.is-checking .founder-swatch__status { animation: none; opacity: 0.85; }
+}
+
 /* Padlock overlay on the preview disc for locked tiles. */
 .founder-swatch.is-locked .founder-swatch__preview::after {
     content: "🔒";

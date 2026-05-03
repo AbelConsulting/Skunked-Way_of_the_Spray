@@ -36,9 +36,19 @@ const PurchaseManager = (() => {
 
     let _store         = null;     // CdvPurchase.store reference
     let _initialized   = false;
+    let _ready         = false;    // True after initialize() resolves (success OR no-store)
     let _adFree        = _readEntitlementFromStorage();
     let _product       = null;     // CdvPurchase.Product
     const _listeners   = new Set();
+    const _readyListeners = new Set();
+
+    function _markReady(reason) {
+        if (_ready) return;
+        _ready = true;
+        _log('Ready (' + reason + '). Ad-free=' + _adFree);
+        _readyListeners.forEach(fn => { try { fn(_adFree); } catch(e) {} });
+        _readyListeners.clear();
+    }
 
     function _log(...args) { try { console.log('[Purchase]', ...args); } catch(e) {} }
     function _warn(...args) { try { console.warn('[Purchase]', ...args); } catch(e) {} }
@@ -122,6 +132,7 @@ const PurchaseManager = (() => {
         const store = await _getStore();
         if (!store) {
             _log('Native store unavailable. Web fallback active. Ad-free=' + _adFree);
+            _markReady('no-store');
             return;
         }
 
@@ -176,6 +187,12 @@ const PurchaseManager = (() => {
                 if (store.owned(PRODUCT_ID_REMOVE_ADS)) _setAdFree(true, 'init-owned');
             } catch (e) {}
 
+            // Mark the manager as ready BEFORE the auto-restore probe so
+            // UI renderers can stop showing skeletons immediately. The
+            // restore probe below is fire-and-forget and will trigger
+            // additional onChange() calls if it flips the entitlement.
+            _markReady('store-init');
+
             // First-launch auto-restore: covers reinstalls / device switches
             // where the user already paid but the local entitlement flag was
             // wiped. Runs at most once per install (gated by a localStorage
@@ -195,6 +212,7 @@ const PurchaseManager = (() => {
 
         } catch (e) {
             _warn('Store init failed:', e);
+            _markReady('init-error');
         }
     }
 
@@ -260,6 +278,13 @@ const PurchaseManager = (() => {
     return {
         initialize,
         isAdFree,
+        isReady: () => _ready,
+        onReady: (fn) => {
+            if (typeof fn !== 'function') return () => {};
+            if (_ready) { try { fn(_adFree); } catch (e) {} return () => {}; }
+            _readyListeners.add(fn);
+            return () => _readyListeners.delete(fn);
+        },
         onChange,
         purchaseRemoveAds,
         restorePurchases,

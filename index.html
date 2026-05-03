@@ -4159,21 +4159,37 @@
                             const card        = document.getElementById('remove-ads-card');
 
                             function _renderAdFreeState() {
-                                const owned = !!(window.PurchaseManager && PurchaseManager.isAdFree && PurchaseManager.isAdFree());
+                                const PM = window.PurchaseManager;
+                                const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                const owned = !!(PM && PM.isAdFree && PM.isAdFree());
+                                // Show a neutral "checking..." state during the brief window
+                                // between page load and the native store finishing init.
+                                // This avoids the awkward flash where the buy button shows
+                                // "$1.99 — Buy" for ~1s and then flips to "Ads Removed —
+                                // Thank You!" for a returning customer whose localStorage
+                                // entitlement was wiped (reinstall / cache clear). Web build
+                                // never enters this state because there's no async store.
+                                const checking = isNative && PM && typeof PM.isReady === 'function' && !PM.isReady() && !owned;
+                                if (checking) {
+                                    if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = 'Checking purchases\u2026'; buyBtn.style.opacity = '0.7'; }
+                                    if (statusEl) statusEl.textContent = 'Checking your previous purchases\u2026';
+                                    if (priceEl) priceEl.style.display = 'none';
+                                    return;
+                                }
                                 if (owned) {
                                     if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = '\u2713 Ads Removed \u2014 Thank You!'; buyBtn.style.opacity = '0.7'; }
                                     if (statusEl) statusEl.textContent = 'Ad-free is active on this device. Tap "Restore" on a new device after re-installing.';
                                     if (priceEl) priceEl.style.display = 'none';
                                 } else {
-                                    if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = '1'; }
+                                    if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = '1'; buyBtn.textContent = 'Remove Ads'; }
                                     if (priceEl) {
                                         priceEl.style.display = '';
-                                        const live = window.PurchaseManager && PurchaseManager.getPriceString && PurchaseManager.getPriceString();
+                                        const live = PM && PM.getPriceString && PM.getPriceString();
                                         if (live) priceEl.textContent = live;
                                     }
+                                    if (statusEl) statusEl.textContent = '';
                                 }
                                 // Web build: explain politely instead of failing silently
-                                const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
                                 if (!isNative && card && !owned) {
                                     if (statusEl) statusEl.textContent = 'Available on the Android app. Visit the Play Store version for ad-free.';
                                     if (buyBtn) { buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; }
@@ -4226,6 +4242,15 @@
 
                             if (window.PurchaseManager && PurchaseManager.onChange) {
                                 PurchaseManager.onChange(() => _renderAdFreeState());
+                            }
+                            if (window.PurchaseManager && PurchaseManager.onReady) {
+                                // Re-render once the native store finishes initializing so
+                                // the "Checking purchases..." skeleton flips to the real
+                                // owned/buy state without a user-visible price flash.
+                                PurchaseManager.onReady(() => {
+                                    _renderAdFreeState();
+                                    try { if (typeof _renderFounderState === 'function') _renderFounderState(); } catch (_) {}
+                                });
                             }
                             _renderAdFreeState();
                         } catch (e) { try { console.warn('[RemoveAds UI]', e); } catch(_) {} }
@@ -4613,16 +4638,27 @@
                                     // Status pill text — gives each tile clear context-of-ownership.
                                     const statusEl = btn.querySelector('.founder-swatch__status');
                                     if (statusEl) {
+                                        // While the native store is still hydrating, avoid
+                                        // showing a price on tiles that may flip to "Owned"
+                                        // a moment later (returning customer w/ wiped
+                                        // localStorage). Render a neutral pulse instead.
+                                        const PM = window.PurchaseManager;
+                                        const isNativeP = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                        const checking = isNativeP && PM && typeof PM.isReady === 'function' && !PM.isReady() && !unlocked;
                                         let statusText = '';
                                         if (active) {
                                             statusText = 'Active';
                                         } else if (unlocked) {
                                             statusText = id === 'gold' ? 'Founder' : 'Owned';
+                                        } else if (checking) {
+                                            statusText = '\u2026';
+                                            btn.classList.add('is-checking');
                                         } else if (id === 'gold') {
                                             statusText = 'Early Access';
                                         } else {
                                             statusText = '$1.99';
                                         }
+                                        if (!checking) btn.classList.remove('is-checking');
                                         statusEl.textContent = statusText;
                                     }
                                 }
