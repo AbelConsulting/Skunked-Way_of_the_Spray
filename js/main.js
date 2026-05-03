@@ -934,12 +934,23 @@ class GameApp {
             }
         } catch (e) { __err('main', e); }
 
-        // ── 6. Google Play Games Services auto sign-in ──────────────
+        // ── 6. Google Play Games Services ────────────────────────────
+        // We deliberately DO NOT auto-sign-in at launch. Calling signIn()
+        // here triggers Google's "Welcome back" greeting toast at the top
+        // of the screen on every cold launch — players consistently flag
+        // this as an unwanted banner / ad-like overlay. Sign-in is now
+        // lazy: it happens the first time the user opens Achievements or
+        // submits a leaderboard score, and the SDK handles auth silently
+        // at that point. Set localStorage 'skunkfu.pgsAutoSignIn' = '1'
+        // to opt back into the legacy auto sign-in behaviour.
         try {
-            if (window.PlayGamesServices && PlayGamesServices.isAvailable()) {
+            const wantAutoSignIn = (() => {
+                try { return localStorage.getItem('skunkfu.pgsAutoSignIn') === '1'; }
+                catch (_) { return false; }
+            })();
+            if (wantAutoSignIn && window.PlayGamesServices && PlayGamesServices.isAvailable()) {
                 PlayGamesServices.signIn().then((result) => {
                     try { console.log('[PlayGames] Sign-in result:', result); } catch (e) { __err('main', e); }
-                    // Sync any achievements earned while offline
                     if (result && result.isAuthenticated) {
                         PlayGamesServices.syncAchievements();
                     }
