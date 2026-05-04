@@ -125,11 +125,14 @@ const AdManager = (() => {
             _prepareRewarded();
             _prepareInterstitial();
 
-            // Show banner on menu screens by default
-            showBanner();
-
-            // Listen for game state changes to show/hide banner
-            window.addEventListener('gameStateChange', _onGameStateChange);
+            // Banner ads are disabled for now (CONFIG.enableBanner === false).
+            // Skip both the initial show and the state-change listener so the
+            // plugin never attempts to load a banner. Re-enable by flipping
+            // CONFIG.enableBanner back to true.
+            if (CONFIG.enableBanner) {
+                showBanner();
+                window.addEventListener('gameStateChange', _onGameStateChange);
+            }
 
         } catch (e) {
             _warn('AdMob init failed:', e);
