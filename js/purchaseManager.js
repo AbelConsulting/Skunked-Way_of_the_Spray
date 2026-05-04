@@ -21,7 +21,7 @@
  *   1. npm install cordova-plugin-purchase
  *   2. Create TWO managed products in Google Play Console:
  *        Product ID: remove_ads      | Type: One-time (managed) | Price: $1.99
- *        Product ID: founder_pass    | Type: One-time (managed) | Price: $1.99
+ *        Product ID: founder_pass    | Type: One-time (managed) | Price: $0.99
  *      `founder_pass` is the standalone Early-Access reward (Gold Skunk skin
  *      + Founder badge) for players who don't want to remove ads. Buying
  *      `remove_ads` during the early-access window still auto-grants the
@@ -413,7 +413,7 @@ const PurchaseManager = (() => {
             const p = (_store && _store.get && _store.get(PRODUCT_ID_FOUNDER_PASS)) || _founderProduct;
             if (p && p.pricing && p.pricing.price) return p.pricing.price;
         } catch (e) {}
-        return null;
+        return '$0.99'; // fallback until Play product loads
     }
 
     function isFounderPassOwned() { return _founderPass; }

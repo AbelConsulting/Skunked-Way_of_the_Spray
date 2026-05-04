@@ -3394,12 +3394,12 @@
                         </div>
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status &amp; Skins</h3>
-                            <p id="founder-status-text">Not a Founder yet. Buy the Founder Pass or Remove Ads during early access, or redeem a code below.</p>
+                            <p id="founder-status-text">You are an early-access player &mdash; the Gold skin and FOUNDER badge are yours free! Tap the button below to claim your optional Founder Pass badge ($0.99), or redeem a code.</p>
                             <!-- Standalone Founder Pass IAP. Unlocks Gold skin + FOUNDER badge
                                  without removing ads. Hidden once owned (or once Founder is granted
                                  via Remove Ads / promo code) by the wiring script below. -->
                             <div id="founder-pass-row" class="remove-ads-actions founder-pass-row">
-                                <button id="founder-pass-buy-btn" class="menu-btn" type="button">&#11088; Founder Pass &mdash; <span id="founder-pass-price">$1.99</span></button>
+                                <button id="founder-pass-buy-btn" class="menu-btn" type="button">&#11088; Support &amp; Claim Founder Pass &mdash; <span id="founder-pass-price">$0.99</span></button>
                             </div>
                             <p id="founder-pass-status" class="settings-card-status"></p>
                             <label id="founder-gold-skin-row" class="founder-gold-skin-row is-hidden">
@@ -4606,17 +4606,23 @@
                                     ? FM.getSkinVariant() : 'gold';
 
                                 if (founderStatusText) {
+                                    const earlyAccessEnd = new Date('2026-12-31T23:59:59Z');
+                                    const inEarlyAccess  = Date.now() < earlyAccessEnd.getTime();
                                     if (isF) {
                                         const since = FM.getFounderSince && FM.getFounderSince();
                                         const sinceLabel = since ? new Date(since).toLocaleDateString() : '';
                                         const skinLine = goldOn
                                             ? 'All four ninja skins (incl. exclusive Gold), the "FOUNDER" badge, and Day-One achievement are yours forever.'
                                             : 'The "FOUNDER" badge and Day-One achievement are yours forever. Skin display is currently off.';
-                                        founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for supporting early access' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
+                                        founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for being an early-access player' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else if (adFree) {
                                         founderStatusText.innerHTML = '\u2705 <strong>Ad-free</strong> active. You\u2019ve unlocked the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
+                                    } else if (inEarlyAccess) {
+                                        // Still in early access — Gold auto-grant should have fired; this
+                                        // branch is a UI safety net (e.g. FounderManager not yet initialized).
+                                        founderStatusText.innerHTML = '\u{1F31F} You are an early-access player &mdash; the exclusive <strong>Gold</strong> skin + Founder badge are <strong>yours free</strong>! Optionally, support the dev with the <strong>Founder Pass</strong> ($0.99) for a Play-backed claim.';
                                     } else {
-                                        founderStatusText.innerHTML = 'Not a Founder yet. Buy the <strong>Founder Pass</strong> ($1.99) to unlock the exclusive <strong>Gold</strong> skin + Founder badge &mdash; or buy <strong>Remove Ads</strong> during early access (before Dec 31, 2026) to get the same perks. Buying after early access still unlocks Sapphire, Amethyst, and Steel.';
+                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still buy <strong>Remove Ads</strong> ($1.99) to unlock the Sapphire, Amethyst, and Steel skins.';
                                     }
                                 }
 
@@ -4691,10 +4697,10 @@
                                     const PM         = window.PurchaseManager;
                                     const isNativeP  = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
                                     const fpOwned    = !!(PM && PM.isFounderPassOwned && PM.isFounderPassOwned());
+                                    const earlyAccessStillOpen = Date.now() < new Date('2026-12-31T23:59:59Z').getTime();
                                     if (fpRow) {
-                                        // Hide entirely once Founder. The row is only useful as
-                                        // a CTA for the not-yet-Founder state.
-                                        fpRow.style.display = isF ? 'none' : '';
+                                        // Hide once Founder, or after early access ends (SKU deactivates in Play).
+                                        fpRow.style.display = (isF || !earlyAccessStillOpen) ? 'none' : '';
                                     }
                                     if (fpPriceEl && PM && PM.getFounderPassPriceString) {
                                         const live = PM.getFounderPassPriceString();

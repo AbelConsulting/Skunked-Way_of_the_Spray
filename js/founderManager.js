@@ -11,7 +11,14 @@
  *   • "FOUNDER" badge displayed on the start menu and game-over leaderboard row.
  *   • "Day-One Skunk" achievement (granted on first detection).
  *
- * Remove Ads ($2.99) entitlement (separate from Founder, no time limit):
+ * Early Access auto-grant (free, no purchase required):
+ *   • Anyone who installs before EARLY_ACCESS_END_ISO automatically receives
+ *     Founder status (Gold skin + FOUNDER badge + Day-One achievement).
+ *   • The Founder Pass IAP ($0.99) is an optional "support the dev" purchase
+ *     that also grants Founder — useful for users who install after EA ends
+ *     and want the badge, and gives cloud-synced proof of ownership.
+ *
+ * Remove Ads ($1.99) entitlement (separate from Founder, no time limit):
  *   • Removes banner + interstitial ads.
  *   • Unlocks the SAPPHIRE, AMETHYST, and STEEL ninja skins.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
@@ -203,7 +210,16 @@ const FounderManager = (() => {
             }
         } catch (e) {}
 
-        // 1. Auto-grant if Remove Ads is owned and we're inside the early-access window.
+        // 1. Auto-grant to ALL players during the early-access window (free reward).
+        //    Gold skin is the "thank you for being here early" gift — no purchase needed.
+        //    The Founder Pass IAP ($0.99) is an optional support purchase; after the EA
+        //    window closes it becomes the only way to obtain Founder status.
+        if (!_isFounder && _isWithinEarlyAccess()) {
+            _grantInternal('early-access-auto');
+        }
+
+        // 1a. Also grant if Remove Ads was purchased during early access (belt-and-suspenders
+        //     for users who had the flag set before the auto-grant was introduced).
         if (!_isFounder && _hasRemoveAds() && _isWithinEarlyAccess()) {
             _grantInternal('early-access-purchase');
         }
