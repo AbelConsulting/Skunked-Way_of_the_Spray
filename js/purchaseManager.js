@@ -19,10 +19,13 @@
  *
  * SETUP (Android, one-time):
  *   1. npm install cordova-plugin-purchase
- *   2. Create a managed product in Google Play Console:
- *        Product ID: remove_ads
- *        Type: One-time (managed)
- *        Price: $1.99
+ *   2. Create TWO managed products in Google Play Console:
+ *        Product ID: remove_ads      | Type: One-time (managed) | Price: $1.99
+ *        Product ID: founder_pass    | Type: One-time (managed) | Price: $1.99
+ *      `founder_pass` is the standalone Early-Access reward (Gold Skunk skin
+ *      + Founder badge) for players who don't want to remove ads. Buying
+ *      `remove_ads` during the early-access window still auto-grants the
+ *      same cosmetics; this is the additional purchase path.
  *   3. npx cap sync android
  *   4. Upload a signed bundle to a Play Console internal testing track and add
  *      yourself as a license tester so the purchase flow works in test mode.
@@ -31,15 +34,20 @@
 const PurchaseManager = (() => {
     'use strict';
 
-    const PRODUCT_ID_REMOVE_ADS = 'remove_ads';
-    const STORAGE_KEY_AD_FREE   = 'skunkfu.adFree';
+    const PRODUCT_ID_REMOVE_ADS    = 'remove_ads';
+    const PRODUCT_ID_FOUNDER_PASS  = 'founder_pass';
+    const STORAGE_KEY_AD_FREE      = 'skunkfu.adFree';
+    const STORAGE_KEY_FOUNDER_PASS = 'skunkfu.founderPassOwned';
 
     let _store         = null;     // CdvPurchase.store reference
     let _initialized   = false;
     let _ready         = false;    // True after initialize() resolves (success OR no-store)
     let _adFree        = _readEntitlementFromStorage();
-    let _product       = null;     // CdvPurchase.Product
+    let _founderPass   = _readFounderPassFromStorage();
+    let _product       = null;     // CdvPurchase.Product (remove_ads)
+    let _founderProduct = null;    // CdvPurchase.Product (founder_pass)
     const _listeners   = new Set();
+    const _founderListeners = new Set();
     const _readyListeners = new Set();
 
     function _markReady(reason) {
@@ -59,6 +67,36 @@ const PurchaseManager = (() => {
 
     function _writeEntitlement(v) {
         try { localStorage.setItem(STORAGE_KEY_AD_FREE, v ? '1' : '0'); } catch (e) {}
+    }
+
+    function _readFounderPassFromStorage() {
+        try { return localStorage.getItem(STORAGE_KEY_FOUNDER_PASS) === '1'; } catch (e) { return false; }
+    }
+
+    function _writeFounderPass(v) {
+        try { localStorage.setItem(STORAGE_KEY_FOUNDER_PASS, v ? '1' : '0'); } catch (e) {}
+    }
+
+    function _setFounderPassOwned(v, source) {
+        const prev = _founderPass;
+        _founderPass = !!v;
+        _writeFounderPass(_founderPass);
+        if (prev !== _founderPass) {
+            _log('Founder Pass entitlement changed →', _founderPass, '(source:', source + ')');
+            // Grant Founder status (cosmetic gold skin + badge) immediately.
+            // FounderManager handles its own no-op if already granted.
+            try {
+                if (_founderPass && window.FounderManager && typeof FounderManager.grant === 'function') {
+                    FounderManager.grant('founder-pass-' + source);
+                }
+            } catch (e) { _warn('FounderManager.grant failed:', e); }
+            _founderListeners.forEach(fn => { try { fn(_founderPass); } catch (e) {} });
+            try {
+                if (window.Analytics && Analytics.trackPurchase) {
+                    Analytics.trackPurchase({ product: PRODUCT_ID_FOUNDER_PASS, source });
+                }
+            } catch (e) {}
+        }
     }
 
     function _setAdFree(v, source) {
@@ -142,16 +180,27 @@ const PurchaseManager = (() => {
 
             store.verbosity = LogLevel.WARNING;
 
-            store.register([{
-                id:       PRODUCT_ID_REMOVE_ADS,
-                type:     ProductType.NON_CONSUMABLE,
-                platform: Platform.GOOGLE_PLAY,
-            }]);
+            store.register([
+                {
+                    id:       PRODUCT_ID_REMOVE_ADS,
+                    type:     ProductType.NON_CONSUMABLE,
+                    platform: Platform.GOOGLE_PLAY,
+                },
+                {
+                    id:       PRODUCT_ID_FOUNDER_PASS,
+                    type:     ProductType.NON_CONSUMABLE,
+                    platform: Platform.GOOGLE_PLAY,
+                }
+            ]);
 
             store.when()
                 .productUpdated((p) => {
-                    if (p && p.id === PRODUCT_ID_REMOVE_ADS) {
+                    if (!p) return;
+                    if (p.id === PRODUCT_ID_REMOVE_ADS) {
                         _product = p;
+                        _log('Product loaded:', p.id, p.pricing && p.pricing.price);
+                    } else if (p.id === PRODUCT_ID_FOUNDER_PASS) {
+                        _founderProduct = p;
                         _log('Product loaded:', p.id, p.pricing && p.pricing.price);
                     }
                 })
@@ -167,15 +216,20 @@ const PurchaseManager = (() => {
                 })
                 .finished((tx) => {
                     _log('Transaction finished:', tx);
-                    if (tx && tx.products && tx.products.some(p => p.id === PRODUCT_ID_REMOVE_ADS)) {
-                        _setAdFree(true, 'purchase');
+                    if (tx && tx.products) {
+                        if (tx.products.some(p => p.id === PRODUCT_ID_REMOVE_ADS)) {
+                            _setAdFree(true, 'purchase');
+                        }
+                        if (tx.products.some(p => p.id === PRODUCT_ID_FOUNDER_PASS)) {
+                            _setFounderPassOwned(true, 'purchase');
+                        }
                     }
                 })
                 .receiptUpdated((r) => {
                     // Reconcile owned products on each receipt update (handles restore).
                     try {
-                        const owned = store.owned(PRODUCT_ID_REMOVE_ADS);
-                        if (owned) _setAdFree(true, 'restore');
+                        if (store.owned(PRODUCT_ID_REMOVE_ADS))   _setAdFree(true, 'restore');
+                        if (store.owned(PRODUCT_ID_FOUNDER_PASS)) _setFounderPassOwned(true, 'restore');
                     } catch (e) {}
                 });
 
@@ -184,7 +238,8 @@ const PurchaseManager = (() => {
 
             // Cross-check ownership on init.
             try {
-                if (store.owned(PRODUCT_ID_REMOVE_ADS)) _setAdFree(true, 'init-owned');
+                if (store.owned(PRODUCT_ID_REMOVE_ADS))   _setAdFree(true, 'init-owned');
+                if (store.owned(PRODUCT_ID_FOUNDER_PASS)) _setFounderPassOwned(true, 'init-owned');
             } catch (e) {}
 
             // Mark the manager as ready BEFORE the auto-restore probe so
@@ -275,6 +330,53 @@ const PurchaseManager = (() => {
         return null;
     }
 
+    /**
+     * Localized price string for the Founder Pass, or null if not yet loaded.
+     */
+    function getFounderPassPriceString() {
+        try {
+            const p = (_store && _store.get && _store.get(PRODUCT_ID_FOUNDER_PASS)) || _founderProduct;
+            if (p && p.pricing && p.pricing.price) return p.pricing.price;
+        } catch (e) {}
+        return null;
+    }
+
+    function isFounderPassOwned() { return _founderPass; }
+
+    function onFounderPassChange(fn) {
+        if (typeof fn === 'function') _founderListeners.add(fn);
+        return () => _founderListeners.delete(fn);
+    }
+
+    /**
+     * Initiate purchase of the standalone Founder Pass (Gold skin + badge).
+     * Does NOT remove ads.
+     * @returns {Promise<{ok:boolean, reason?:string}>}
+     */
+    async function purchaseFounderPass() {
+        if (_founderPass) return { ok: true, reason: 'already-owned' };
+
+        const store = await _getStore();
+        if (!store) return { ok: false, reason: 'web-not-supported' };
+        const product = store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
+        if (!product) return { ok: false, reason: 'product-not-loaded' };
+
+        try {
+            const offer = product.getOffer && product.getOffer();
+            if (offer && typeof offer.order === 'function') {
+                await offer.order();
+            } else if (typeof product.order === 'function') {
+                await product.order();
+            } else {
+                return { ok: false, reason: 'order-api-missing' };
+            }
+            return { ok: true, reason: 'pending' };
+        } catch (e) {
+            _warn('Founder Pass purchase failed:', e);
+            return { ok: false, reason: (e && e.message) || 'purchase-error' };
+        }
+    }
+
     return {
         initialize,
         isAdFree,
@@ -289,7 +391,13 @@ const PurchaseManager = (() => {
         purchaseRemoveAds,
         restorePurchases,
         getPriceString,
+        // Founder Pass (standalone Gold skin + Founder badge, no ad removal).
+        isFounderPassOwned,
+        onFounderPassChange,
+        purchaseFounderPass,
+        getFounderPassPriceString,
         PRODUCT_ID_REMOVE_ADS,
+        PRODUCT_ID_FOUNDER_PASS,
     };
 })();
 

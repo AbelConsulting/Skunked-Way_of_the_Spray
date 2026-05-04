@@ -3395,6 +3395,13 @@
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status &amp; Skins</h3>
                             <p id="founder-status-text">Not a Founder yet. Buy Remove Ads during early access, or redeem a code below.</p>
+                            <!-- Standalone Founder Pass IAP. Unlocks Gold skin + FOUNDER badge
+                                 without removing ads. Hidden once owned (or once Founder is granted
+                                 via Remove Ads / promo code) by the wiring script below. -->
+                            <div id="founder-pass-row" class="remove-ads-actions founder-pass-row">
+                                <button id="founder-pass-buy-btn" class="menu-btn" type="button">&#11088; Founder Pass &mdash; <span id="founder-pass-price">$1.99</span></button>
+                            </div>
+                            <p id="founder-pass-status" class="settings-card-status"></p>
                             <label id="founder-gold-skin-row" class="founder-gold-skin-row is-hidden">
                                 <input id="founder-gold-skin-toggle" type="checkbox" class="founder-gold-skin-toggle" />
                                 <span>Use ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
@@ -4670,6 +4677,45 @@
                                         statusEl.textContent = statusText;
                                     }
                                 }
+
+                                // --- Founder Pass row visibility & price ---
+                                // Hide the standalone Founder Pass CTA once the player
+                                // is already a Founder (via Remove Ads, promo, or the
+                                // Founder Pass IAP itself). Otherwise show it with the
+                                // localized Play price when available.
+                                try {
+                                    const fpRow      = document.getElementById('founder-pass-row');
+                                    const fpPriceEl  = document.getElementById('founder-pass-price');
+                                    const fpBtn      = document.getElementById('founder-pass-buy-btn');
+                                    const fpStatus   = document.getElementById('founder-pass-status');
+                                    const PM         = window.PurchaseManager;
+                                    const isNativeP  = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                    const fpOwned    = !!(PM && PM.isFounderPassOwned && PM.isFounderPassOwned());
+                                    if (fpRow) {
+                                        // Hide entirely once Founder. The row is only useful as
+                                        // a CTA for the not-yet-Founder state.
+                                        fpRow.style.display = isF ? 'none' : '';
+                                    }
+                                    if (fpPriceEl && PM && PM.getFounderPassPriceString) {
+                                        const live = PM.getFounderPassPriceString();
+                                        if (live) fpPriceEl.textContent = live;
+                                    }
+                                    if (fpBtn) {
+                                        if (!isNativeP) {
+                                            fpBtn.disabled = true;
+                                            fpBtn.style.opacity = '0.5';
+                                            fpBtn.title = 'Available on the Android app';
+                                        } else if (fpOwned && !isF) {
+                                            // Owned but FounderManager hasn’t reflected it yet —
+                                            // shouldn’t happen because the listener grants Founder,
+                                            // but be defensive.
+                                            fpBtn.disabled = true;
+                                            fpBtn.textContent = '✓ Founder Pass purchased';
+                                            fpBtn.style.opacity = '0.7';
+                                        }
+                                    }
+                                    if (fpStatus && isF) fpStatus.textContent = '';
+                                } catch (_) {}
                             }
 
 
@@ -4728,6 +4774,54 @@
                                     if (ev.key === 'Enter') { ev.preventDefault(); codeBtn.click(); }
                                 });
                             }
+
+                            // --- Founder Pass (standalone Gold skin IAP) wiring ----------
+                            try {
+                                const fpBuyBtn  = document.getElementById('founder-pass-buy-btn');
+                                const fpStatus  = document.getElementById('founder-pass-status');
+                                if (fpBuyBtn) {
+                                    fpBuyBtn.addEventListener('click', async (ev) => {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+                                        if (!window.PurchaseManager || typeof PurchaseManager.purchaseFounderPass !== 'function') {
+                                            if (fpStatus) fpStatus.textContent = 'Purchase system not available.';
+                                            return;
+                                        }
+                                        if (fpStatus) { fpStatus.style.color = ''; fpStatus.textContent = 'Opening Google Play\u2026'; }
+                                        fpBuyBtn.disabled = true;
+                                        try {
+                                            const res = await PurchaseManager.purchaseFounderPass();
+                                            if (fpStatus) {
+                                                if (res.ok) {
+                                                    fpStatus.style.color = '#7CFFB2';
+                                                    fpStatus.textContent = res.reason === 'already-owned'
+                                                        ? 'Founder Pass already owned. Thank you!'
+                                                        : 'Completing purchase\u2026';
+                                                } else if (res.reason === 'web-not-supported') {
+                                                    fpStatus.style.color = '#FFB060';
+                                                    fpStatus.textContent = 'Available only on the Android app.';
+                                                } else if (res.reason === 'product-not-loaded') {
+                                                    fpStatus.style.color = '#FFB060';
+                                                    fpStatus.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
+                                                } else {
+                                                    fpStatus.style.color = '#FF8080';
+                                                    fpStatus.textContent = 'Purchase did not complete: ' + res.reason;
+                                                }
+                                            }
+                                        } catch (e) {
+                                            if (fpStatus) { fpStatus.style.color = '#FF8080'; fpStatus.textContent = 'Purchase error.'; }
+                                        } finally {
+                                            setTimeout(() => {
+                                                fpBuyBtn.disabled = false;
+                                                _renderFounderState();
+                                            }, 500);
+                                        }
+                                    });
+                                }
+                                if (window.PurchaseManager && typeof PurchaseManager.onFounderPassChange === 'function') {
+                                    PurchaseManager.onFounderPassChange(() => _renderFounderState());
+                                }
+                            } catch (_) {}
 
                             if (window.FounderManager && FounderManager.onChange) {
                                 FounderManager.onChange(_renderFounderState);

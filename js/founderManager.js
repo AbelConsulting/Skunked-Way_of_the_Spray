@@ -62,6 +62,7 @@ const FounderManager = (() => {
     const STORAGE_KEY_FOUNDER       = 'skunkfu.founder';
     const STORAGE_KEY_FOUNDER_SINCE = 'skunkfu.founderSince';
     const STORAGE_KEY_AD_FREE       = 'skunkfu.adFree';
+    const STORAGE_KEY_FOUNDER_PASS  = 'skunkfu.founderPassOwned';
     const STORAGE_KEY_CODES_USED    = 'skunkfu.founderCodesUsed';
     // Cosmetic preference — Founders may opt out of the gold ninja skin and
     // play with the original look. Defaults to enabled (no entry == on).
@@ -125,6 +126,11 @@ const FounderManager = (() => {
 
     function _hasRemoveAds() {
         try { return localStorage.getItem(STORAGE_KEY_AD_FREE) === '1'; }
+        catch (e) { return false; }
+    }
+
+    function _hasFounderPass() {
+        try { return localStorage.getItem(STORAGE_KEY_FOUNDER_PASS) === '1'; }
         catch (e) { return false; }
     }
 
@@ -202,6 +208,13 @@ const FounderManager = (() => {
             _grantInternal('early-access-purchase');
         }
 
+        // 1b. Auto-grant if the standalone Founder Pass IAP is owned. Unlike
+        //     Remove Ads, this purchase has no early-access cutoff guard —
+        //     buying the Founder Pass IS the entitlement, regardless of date.
+        if (!_isFounder && _hasFounderPass()) {
+            _grantInternal('founder-pass-storage');
+        }
+
         // 2. Listen for future Remove Ads purchases — if PurchaseManager is
         //    wired, react when the ad-free entitlement flips to true.
         //      • During the early-access window → also grant Founder (gold).
@@ -217,6 +230,18 @@ const FounderManager = (() => {
                     } else {
                         // Skin entitlement just expanded (sapphire/amethyst/steel
                         // became unlockable). Refresh listeners.
+                        _notify();
+                    }
+                });
+            }
+            // 2b. React to standalone Founder Pass purchases — grant Founder
+            //     immediately (no early-access cutoff for this SKU).
+            if (window.PurchaseManager && typeof PurchaseManager.onFounderPassChange === 'function') {
+                PurchaseManager.onFounderPassChange(owned => {
+                    if (owned && !_isFounder) {
+                        _grantInternal('founder-pass-purchase');
+                    } else if (owned) {
+                        // Already a Founder; just refresh listeners.
                         _notify();
                     }
                 });
