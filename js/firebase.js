@@ -127,12 +127,14 @@ function _isValidEntry(e) {
 /**
  * Fetches the top scores from the leaderboard, ordered by score descending.
  * @param {number} [count=10] How many top scores to retrieve.
+ * @param {string} [period='alltime'] Time window: 'week', 'month', or 'alltime'.
  * @returns {Promise<Array<{name: string, score: number, timestamp?: Date, achievements?: string[]}>>}
  */
-export async function getHighScores(count = 10) {
+export async function getHighScores(count = 10, period = 'alltime') {
   try {
     const safeCount = Math.max(1, Math.min(100, Number(count) || 10));
-    const res = await fetchWithRetry(`${API_BASE}/getLeaderboard?count=${encodeURIComponent(safeCount)}`);
+    const safePeriod = ['week', 'month'].includes(period) ? period : 'alltime';
+    const res = await fetchWithRetry(`${API_BASE}/getLeaderboard?count=${encodeURIComponent(safeCount)}&period=${encodeURIComponent(safePeriod)}`);
     if (!res.ok) return [];
     const scores = await res.json().catch(() => null);
     if (!Array.isArray(scores)) return [];

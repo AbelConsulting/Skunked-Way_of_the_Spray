@@ -61,12 +61,33 @@ exports.getLeaderboard = onRequest({ region: "us-central1" }, async (req, res) =
   if (setCors(req, res)) return;
   try {
     const count = Math.min(parseInt(req.query.count || "10", 10), 100);
-    const snapshot = await db
-      .collection(SCORES_COLLECTION)
-      .orderBy("score", "desc")
-      .limit(count)
-      .get();
-    const scores = snapshot.docs.map((doc) => {
+    // period: "week" | "month" | "alltime" (default).
+    // week/month use a date range filter + in-memory score sort (no composite index needed).
+    // alltime uses the existing (score DESC) index for O(1) top-N.
+    const period = ["week", "month"].includes(req.query.period) ? req.query.period : "alltime";
+
+    let rawDocs;
+    if (period === "week" || period === "month") {
+      const cutoffMs = Date.now() - (period === "week" ? 7 : 30) * 24 * 60 * 60 * 1000;
+      const cutoff = admin.firestore.Timestamp.fromMillis(cutoffMs);
+      // Range filter + orderBy on the same field uses the auto single-field index on `date`.
+      const snapshot = await db
+        .collection(SCORES_COLLECTION)
+        .where("date", ">=", cutoff)
+        .orderBy("date", "desc")
+        .limit(500)
+        .get();
+      rawDocs = snapshot.docs;
+    } else {
+      const snapshot = await db
+        .collection(SCORES_COLLECTION)
+        .orderBy("score", "desc")
+        .limit(count)
+        .get();
+      rawDocs = snapshot.docs;
+    }
+
+    let scores = rawDocs.map((doc) => {
       const d = doc.data();
       return {
         name: d.initials || "???",
@@ -79,6 +100,12 @@ exports.getLeaderboard = onRequest({ region: "us-central1" }, async (req, res) =
         level: typeof d.level === "number" ? d.level : 0,
       };
     });
+
+    if (period === "week" || period === "month") {
+      scores.sort((a, b) => b.score - a.score);
+      scores = scores.slice(0, count);
+    }
+
     res.json(scores);
   } catch (e) {
     console.error("getLeaderboard error:", e);

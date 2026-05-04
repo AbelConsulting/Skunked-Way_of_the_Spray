@@ -369,11 +369,11 @@ try {
    * Fetches scores from the skunked.io leaderboard.
    * @returns {Promise<Array>} A promise that resolves to an array of score objects.
    */
-  async function loadScores(){
+  async function loadScores(period) {
     try {
-      const scores = await getAPIHighScores(MAX_SCORES);
+      const scores = await getAPIHighScores(MAX_SCORES, period || 'alltime');
       return scores || [];
-    } catch(e){ 
+    } catch(e) { 
       console.warn('Failed to load highscores from skunked.io', e);
       return []; 
     }
@@ -617,7 +617,7 @@ try {
     const container = target || document.createElement('div');
     if (!target) container.className = 'scoreboard-container';
 
-    // ── Build chrome (header + list shell) once, then refill list on each load ──
+    // ── Build chrome (header + tabs + list shell) once, then refill on each load ──
     if (!container.querySelector('.scoreboard-header')) {
       container.innerHTML = '';
 
@@ -647,18 +647,71 @@ try {
       header.appendChild(meta);
       container.appendChild(header);
 
+      // ── Period tabs ──
+      const tabs = document.createElement('div');
+      tabs.className = 'scoreboard-tabs';
+      tabs.setAttribute('role', 'tablist');
+      const tabDefs = [
+        { period: 'week',    label: 'This Week' },
+        { period: 'month',   label: 'This Month' },
+        { period: 'alltime', label: 'All Time' },
+      ];
+      for (const def of tabDefs) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'scoreboard-tab';
+        btn.dataset.period = def.period;
+        btn.textContent = def.label;
+        btn.setAttribute('role', 'tab');
+        if (def.period === 'alltime') {
+          btn.classList.add('is-active');
+          btn.setAttribute('aria-selected', 'true');
+        } else {
+          btn.setAttribute('aria-selected', 'false');
+        }
+        tabs.appendChild(btn);
+      }
+      container.appendChild(tabs);
+
       const list = document.createElement('div');
       list.className = 'scoreboard-list';
       container.appendChild(list);
 
-      refreshBtn.addEventListener('click', () => { renderScoreboard(container, showDetails); });
+      // Tab click: switch active period and reload
+      tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.scoreboard-tab');
+        if (!btn || btn.classList.contains('is-active')) return;
+        tabs.querySelectorAll('.scoreboard-tab').forEach(b => {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-selected', 'true');
+        container._scoreboardPeriod = btn.dataset.period;
+        _fillScoreboard(container);
+      });
+
+      refreshBtn.addEventListener('click', () => { _fillScoreboard(container); });
     }
 
-    const list = container.querySelector('.scoreboard-list');
+    // Set default period if not already set, then load
+    if (!container._scoreboardPeriod) container._scoreboardPeriod = 'alltime';
+    await _fillScoreboard(container);
+    return container;
+  }
+
+  /**
+   * Internal: loads scores for the container's active period and renders rows.
+   * Separated so tabs and the refresh button both share identical behaviour.
+   * @param {HTMLElement} container
+   */
+  async function _fillScoreboard(container) {
+    const period   = container._scoreboardPeriod || 'alltime';
+    const list     = container.querySelector('.scoreboard-list');
     const updatedEl = container.querySelector('.scoreboard-updated');
     const refreshBtn = container.querySelector('.scoreboard-refresh');
 
-    // Loading state (preserves header so the refresh control stays visible)
+    // Loading state (preserves header + tabs so controls stay visible)
     if (refreshBtn) refreshBtn.disabled = true;
     list.innerHTML = '<div class="scoreboard-state scoreboard-state--loading">Loading global scores…</div>';
     if (updatedEl) updatedEl.textContent = '';
@@ -666,7 +719,7 @@ try {
     let scores = null;
     let loadFailed = false;
     try {
-      scores = await loadScores();
+      scores = await loadScores(period);
     } catch (e) {
       loadFailed = true;
       console.warn('renderScoreboard: loadScores threw', e);
@@ -680,7 +733,7 @@ try {
       err.className = 'scoreboard-state scoreboard-state--error';
       err.textContent = "Couldn't reach the leaderboard. Tap Refresh to try again.";
       list.appendChild(err);
-      return container;
+      return;
     }
 
     // Stamp + auto-tick the "updated Xs ago" label.
@@ -703,128 +756,130 @@ try {
     }, 10000);
 
     if (scores.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'scoreboard-state scoreboard-state--empty';
-        empty.textContent = 'No scores yet — set the bar.';
-        list.appendChild(empty);
+      const labels = { week: 'this week', month: 'this month', alltime: '' };
+      const empty = document.createElement('div');
+      empty.className = 'scoreboard-state scoreboard-state--empty';
+      empty.textContent = labels[period]
+        ? `No scores ${labels[period]} yet — be the first!`
+        : 'No scores yet — set the bar.';
+      list.appendChild(empty);
     } else {
-        const myName = _loadPlayerName().toLowerCase();
-        scores.forEach((scoreData, i) => {
-            const entry = document.createElement('div');
-            entry.className = 'scoreboard-entry';
-            if (i === 0) entry.classList.add('gold');
-            if (i === 1) entry.classList.add('silver');
-            if (i === 2) entry.classList.add('bronze');
-            if (myName && scoreData.name && scoreData.name.toLowerCase() === myName) {
-              entry.classList.add('scoreboard-entry--me');
+      const myName = _loadPlayerName().toLowerCase();
+      scores.forEach((scoreData, i) => {
+        const entry = document.createElement('div');
+        entry.className = 'scoreboard-entry';
+        if (i === 0) entry.classList.add('gold');
+        if (i === 1) entry.classList.add('silver');
+        if (i === 2) entry.classList.add('bronze');
+        if (myName && scoreData.name && scoreData.name.toLowerCase() === myName) {
+          entry.classList.add('scoreboard-entry--me');
+        }
+
+        const rank = document.createElement('div');
+        rank.className = 'scoreboard-rank';
+        rank.textContent = `${i + 1}.`;
+
+        const info = document.createElement('div');
+        info.className = 'scoreboard-info';
+
+        // Player name
+        const nameRow = document.createElement('div');
+        nameRow.className = 'scoreboard-name';
+        nameRow.textContent = scoreData.name || '???';
+
+        // FOUNDER badge — only shown on the player's own row when they hold
+        // the early-access entitlement. The leaderboard API doesn't yet
+        // carry a founder flag for other players, so this is local-only.
+        const isOwnRow = myName && scoreData.name && scoreData.name.toLowerCase() === myName;
+        const isFounder = (() => {
+          try { return !!(window.FounderManager && FounderManager.isFounder()); }
+          catch (e) { return false; }
+        })();
+        if (isOwnRow && isFounder) {
+          const founderBadge = document.createElement('span');
+          founderBadge.className = 'scoreboard-founder-badge';
+          const lbl = document.createElement('span');
+          lbl.className = 'scoreboard-founder-badge__label';
+          lbl.textContent = 'FOUNDER';
+          founderBadge.appendChild(lbl);
+          nameRow.appendChild(document.createTextNode(' '));
+          nameRow.appendChild(founderBadge);
+        }
+
+        // Title badge (derived from achievement count)
+        const achCount = (Array.isArray(scoreData.achievements) ? scoreData.achievements.length : 0);
+        const titleData = scoreData.title
+          ? TITLE_TIERS.find(t => t.title === scoreData.title) || getTitleForCount(achCount)
+          : getTitleForCount(achCount);
+        if (achCount > 0) {
+          const titleBadge = document.createElement('span');
+          titleBadge.className = 'scoreboard-title-badge';
+          titleBadge.textContent = titleData.title;
+          titleBadge.style.color = titleData.color;
+          nameRow.appendChild(document.createTextNode(' '));
+          nameRow.appendChild(titleBadge);
+        }
+        info.appendChild(nameRow);
+
+        // Score line
+        const scoreLine = document.createElement('div');
+        scoreLine.className = 'scoreboard-score';
+        scoreLine.textContent = scoreData.score.toLocaleString();
+        info.appendChild(scoreLine);
+
+        // Achievement badges row (show top 5 icons)
+        if (achCount > 0) {
+          const badgeRow = document.createElement('div');
+          badgeRow.className = 'scoreboard-badges';
+          const achIds = scoreData.achievements.slice(0, 5);
+          for (const achId of achIds) {
+            const def = ACHIEVEMENT_DEFINITIONS.find(a => a.id === achId);
+            if (def) {
+              const badge = document.createElement('span');
+              badge.className = 'scoreboard-badge';
+              badge.textContent = def.icon;
+              badge.title = def.name;
+              badgeRow.appendChild(badge);
             }
+          }
+          if (achCount > 5) {
+            const more = document.createElement('span');
+            more.className = 'scoreboard-badge-more';
+            more.textContent = `+${achCount - 5}`;
+            badgeRow.appendChild(more);
+          }
+          info.appendChild(badgeRow);
+        }
 
-            const rank = document.createElement('div');
-            rank.className = 'scoreboard-rank';
-            rank.textContent = `${i + 1}.`;
+        // Right column: prestige + date
+        const rightCol = document.createElement('div');
+        rightCol.className = 'scoreboard-right';
 
-            const info = document.createElement('div');
-            info.className = 'scoreboard-info';
+        const prestige = scoreData.prestige || 0;
+        if (prestige > 0) {
+          const prestigeEl = document.createElement('div');
+          prestigeEl.className = 'scoreboard-prestige';
+          prestigeEl.textContent = `⭐ ${prestige}`;
+          prestigeEl.title = 'Prestige Score';
+          rightCol.appendChild(prestigeEl);
+        }
 
-            // Player name
-            const nameRow = document.createElement('div');
-            nameRow.className = 'scoreboard-name';
-            nameRow.textContent = scoreData.name || '???';
+        const date = document.createElement('div');
+        date.className = 'scoreboard-date';
+        if (scoreData.timestamp) {
+          const d = (scoreData.timestamp instanceof Date)
+            ? scoreData.timestamp
+            : new Date(scoreData.timestamp);
+          date.textContent = d.toLocaleDateString();
+        }
+        rightCol.appendChild(date);
 
-            // FOUNDER badge — only shown on the player's own row when they hold
-            // the early-access entitlement. The leaderboard API doesn't yet
-            // carry a founder flag for other players, so this is local-only.
-            const isOwnRow = myName && scoreData.name && scoreData.name.toLowerCase() === myName;
-            const isFounder = (() => {
-              try { return !!(window.FounderManager && FounderManager.isFounder()); }
-              catch (e) { return false; }
-            })();
-            if (isOwnRow && isFounder) {
-              const founderBadge = document.createElement('span');
-              founderBadge.className = 'scoreboard-founder-badge';
-              const lbl = document.createElement('span');
-              lbl.className = 'scoreboard-founder-badge__label';
-              lbl.textContent = 'FOUNDER';
-              founderBadge.appendChild(lbl);
-              nameRow.appendChild(document.createTextNode(' '));
-              nameRow.appendChild(founderBadge);
-            }
-
-            // Title badge (derived from achievement count)
-            const achCount = (Array.isArray(scoreData.achievements) ? scoreData.achievements.length : 0);
-            const titleData = scoreData.title
-              ? TITLE_TIERS.find(t => t.title === scoreData.title) || getTitleForCount(achCount)
-              : getTitleForCount(achCount);
-            if (achCount > 0) {
-              const titleBadge = document.createElement('span');
-              titleBadge.className = 'scoreboard-title-badge';
-              titleBadge.textContent = titleData.title;
-              titleBadge.style.color = titleData.color;
-              nameRow.appendChild(document.createTextNode(' '));
-              nameRow.appendChild(titleBadge);
-            }
-            info.appendChild(nameRow);
-
-            // Score line
-            const scoreLine = document.createElement('div');
-            scoreLine.className = 'scoreboard-score';
-            scoreLine.textContent = scoreData.score.toLocaleString();
-            info.appendChild(scoreLine);
-
-            // Achievement badges row (show top 5 icons)
-            if (achCount > 0) {
-              const badgeRow = document.createElement('div');
-              badgeRow.className = 'scoreboard-badges';
-              const achIds = scoreData.achievements.slice(0, 5);
-              for (const achId of achIds) {
-                const def = ACHIEVEMENT_DEFINITIONS.find(a => a.id === achId);
-                if (def) {
-                  const badge = document.createElement('span');
-                  badge.className = 'scoreboard-badge';
-                  badge.textContent = def.icon;
-                  badge.title = def.name;
-                  badgeRow.appendChild(badge);
-                }
-              }
-              if (achCount > 5) {
-                const more = document.createElement('span');
-                more.className = 'scoreboard-badge-more';
-                more.textContent = `+${achCount - 5}`;
-                badgeRow.appendChild(more);
-              }
-              info.appendChild(badgeRow);
-            }
-
-            // Right column: prestige + date
-            const rightCol = document.createElement('div');
-            rightCol.className = 'scoreboard-right';
-
-            const prestige = scoreData.prestige || 0;
-            if (prestige > 0) {
-              const prestigeEl = document.createElement('div');
-              prestigeEl.className = 'scoreboard-prestige';
-              prestigeEl.textContent = `⭐ ${prestige}`;
-              prestigeEl.title = 'Prestige Score';
-              rightCol.appendChild(prestigeEl);
-            }
-
-            const date = document.createElement('div');
-            date.className = 'scoreboard-date';
-            if (scoreData.timestamp) {
-              const d = (scoreData.timestamp instanceof Date)
-                ? scoreData.timestamp
-                : new Date(scoreData.timestamp);
-              date.textContent = d.toLocaleDateString();
-            }
-            rightCol.appendChild(date);
-
-            entry.appendChild(rank);
-            entry.appendChild(info);
-            entry.appendChild(rightCol);
-            list.appendChild(entry);
-        });
+        entry.appendChild(rank);
+        entry.appendChild(info);
+        entry.appendChild(rightCol);
+        list.appendChild(entry);
+      });
     }
-    return container;
   }
 
   /**
