@@ -7,6 +7,14 @@ service cloud.firestore {
       allow write: if false;  // Writes go through Cloud Functions only
     }
 
+    // Entitlements collection: cross-device IAP entitlement mirror.
+    // Reads must go through the getEntitlements Cloud Function so the IP
+    // rate limit applies — direct client reads are denied. Writes are
+    // always denied; only Cloud Functions (admin SDK) can modify entries.
+    match /entitlements/{playerId} {
+      allow read, write: if false;
+    }
+
     // Default: deny everything else
     match /{document=**} {
       allow read, write: if false;

@@ -31,6 +31,10 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
   // ── Leaderboard ID ──
   const LEADERBOARD_ID = 'CgkI5NbknI4GEAIQAQ';
 
+  // ── Cached identity (populated by signIn / isAuthenticated) ──
+  let _playerId = '';
+  let _playerDisplayName = '';
+
   // ── Achievement ID Mapping ──
   // Maps the game's internal achievement IDs → Google Play Games achievement IDs.
   // After creating achievements in Play Console, replace each 'GPGS_...' placeholder
@@ -135,7 +139,23 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
     const plugin = getPlugin();
     if (!plugin) return { isAuthenticated: false };
     try {
-      return await plugin.signIn();
+      const result = await plugin.signIn();
+      // Cache the player ID for cross-device entitlement sync. The native
+      // plugin's resolvePlayerInfo() includes playerId in the resolve payload.
+      try {
+        if (result && result.isAuthenticated && typeof result.playerId === 'string' && result.playerId) {
+          _playerId = result.playerId;
+          _playerDisplayName = (typeof result.displayName === 'string') ? result.displayName : '';
+          // Fire a window event so other modules (PurchaseManager, etc.)
+          // can react to the player being known without polling.
+          try {
+            window.dispatchEvent(new CustomEvent('skunkfu-pgs-signed-in', {
+              detail: { playerId: _playerId, displayName: _playerDisplayName }
+            }));
+          } catch (_) {}
+        }
+      } catch (_) {}
+      return result;
     } catch (e) {
       console.warn('[PlayGames] signIn failed', e);
       return { isAuthenticated: false };
@@ -262,6 +282,10 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
     unlockAchievement,
     syncAchievements,
     showAchievements,
+    /** Cached Play Games player ID (empty until signIn() resolves). */
+    getPlayerId: () => _playerId,
+    /** Cached Play Games display name (empty until signIn() resolves). */
+    getDisplayName: () => _playerDisplayName,
     ACHIEVEMENT_MAP,
     LEADERBOARD_ID,
   };

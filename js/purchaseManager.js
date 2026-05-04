@@ -61,6 +61,73 @@ const PurchaseManager = (() => {
     function _log(...args) { try { console.log('[Purchase]', ...args); } catch(e) {} }
     function _warn(...args) { try { console.warn('[Purchase]', ...args); } catch(e) {} }
 
+    // ---- Cross-device entitlement sync (Firestore-backed via Cloud Fns) -----
+    // Identity: Google Play Games player ID, populated by
+    // PlayGamesServices.signIn(). Until then, syncs are no-ops.
+    // - Push: after a successful local purchase, mirror entitlement to server.
+    // - Pull: on first sign-in (and again if the player swaps accounts),
+    //         fetch the server doc; if it shows ownership we don't have
+    //         locally, mirror it down.
+    function _getApi() {
+        try { return window.SkunkEntitlementsAPI || null; } catch (_) { return null; }
+    }
+    function _getPlayerId() {
+        try {
+            return (window.PlayGamesServices && PlayGamesServices.getPlayerId)
+                ? (PlayGamesServices.getPlayerId() || '')
+                : '';
+        } catch (_) { return ''; }
+    }
+    function _pushEntitlementRemote(sku) {
+        const api = _getApi();
+        const pid = _getPlayerId();
+        if (!api || !pid || !sku) return;
+        try {
+            api.setEntitlement(pid, sku).then(ok => {
+                if (ok) _log('Mirrored entitlement to server:', sku);
+                else    _warn('Server entitlement push reported failure:', sku);
+            }).catch(e => _warn('Server entitlement push threw:', e));
+        } catch (e) { _warn('Server entitlement push setup failed:', e); }
+    }
+    let _remotePullDone = false;
+    async function _pullEntitlementsRemote(force) {
+        if (_remotePullDone && !force) return;
+        const api = _getApi();
+        const pid = _getPlayerId();
+        if (!api || !pid) return;
+        _remotePullDone = true;
+        try {
+            const remote = await api.getEntitlements(pid);
+            if (!remote) return;
+            // Only ever mirror remote -> local TRUE values; we never revoke
+            // a local entitlement based on a missing server record (avoids
+            // first-launch-after-offline-purchase regressions).
+            if (remote.adFree && !_adFree) {
+                _log('Restored ad-free from server (player ' + pid.slice(0, 6) + '…)');
+                _setAdFree(true, 'remote-restore');
+            }
+            if (remote.founderPass && !_founderPass) {
+                _log('Restored founder pass from server (player ' + pid.slice(0, 6) + '…)');
+                _setFounderPassOwned(true, 'remote-restore');
+            }
+            // If we own something locally that the server doesn't, push it up
+            // so a fresh device gets it next time.
+            if (_adFree && !remote.adFree) _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
+            if (_founderPass && !remote.founderPass) _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
+        } catch (e) {
+            _warn('Remote entitlement pull failed:', e);
+        }
+    }
+
+    // Listen for the GPGS sign-in event so we can pull entitlements as soon
+    // as the player ID is known. The listener runs at most once per session
+    // because _pullEntitlementsRemote() is gated by _remotePullDone.
+    try {
+        window.addEventListener('skunkfu-pgs-signed-in', () => {
+            _pullEntitlementsRemote(false);
+        });
+    } catch (_) {}
+
     function _readEntitlementFromStorage() {
         try { return localStorage.getItem(STORAGE_KEY_AD_FREE) === '1'; } catch (e) { return false; }
     }
@@ -90,6 +157,10 @@ const PurchaseManager = (() => {
                     FounderManager.grant('founder-pass-' + source);
                 }
             } catch (e) { _warn('FounderManager.grant failed:', e); }
+            // Mirror to server (skip if this flip CAME from the server).
+            if (_founderPass && source !== 'remote-restore' && source !== 'storage') {
+                _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
+            }
             _founderListeners.forEach(fn => { try { fn(_founderPass); } catch (e) {} });
             try {
                 if (window.Analytics && Analytics.trackPurchase) {
@@ -121,6 +192,10 @@ const PurchaseManager = (() => {
                     document.documentElement.style.setProperty('--ad-width', '0px');
                 }
             } catch (e) {}
+            // Mirror to server (skip if this flip CAME from the server).
+            if (_adFree && source !== 'remote-restore' && source !== 'storage') {
+                _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
+            }
             // Notify subscribers
             _listeners.forEach(fn => { try { fn(_adFree); } catch(e) {} });
             // Analytics
@@ -396,6 +471,10 @@ const PurchaseManager = (() => {
         onFounderPassChange,
         purchaseFounderPass,
         getFounderPassPriceString,
+        // Cross-device sync: pulls server-side entitlements for the current
+        // signed-in Play Games player and mirrors any owned SKUs locally.
+        // Safe to call repeatedly; no-op until the player ID is known.
+        syncRemoteEntitlements: (force = false) => _pullEntitlementsRemote(!!force),
         PRODUCT_ID_REMOVE_ADS,
         PRODUCT_ID_FOUNDER_PASS,
     };

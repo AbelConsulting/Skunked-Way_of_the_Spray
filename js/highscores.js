@@ -8,7 +8,17 @@
 // Global high-score manager using the skunked.io leaderboard API.
 
 // Import the REST API functions for the global leaderboard
-import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth } from './firebase.js'; // REST client (no Firebase SDK)
+import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth, getEntitlements as fetchAPIEntitlements, setEntitlement as pushAPIEntitlement } from './firebase.js'; // REST client (no Firebase SDK)
+
+// Bridge the entitlement helpers to the global scope so classic-script
+// modules (PurchaseManager) can use them without bundling. PurchaseManager
+// loads after this module.
+try {
+    window.SkunkEntitlementsAPI = {
+        getEntitlements: fetchAPIEntitlements,
+        setEntitlement: pushAPIEntitlement,
+    };
+} catch (_) {}
 
 (function(window){
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';

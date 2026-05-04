@@ -153,3 +153,64 @@ export async function getHighScores(count = 10) {
     return [];
   }
 }
+
+// ── Cross-device entitlements (Play Games player ID -> IAP ownership) ──
+//
+// These call the getEntitlements / setEntitlement Cloud Functions which
+// front a /entitlements/{playerId} Firestore collection. The collection
+// itself is locked down (rules deny direct client access).
+//
+// Identity: the caller passes the Google Play Games player ID from
+// PlayGamesServices.signIn(). On the web build, these calls are inert
+// because no playerId is available.
+
+/**
+ * Fetch the entitlement document for a Play Games player.
+ * @param {string} playerId
+ * @returns {Promise<{adFree:boolean, founderPass:boolean, adFreeSince:string|null, founderPassSince:string|null} | null>}
+ *   Resolves null on network error so callers can keep using local state.
+ */
+export async function getEntitlements(playerId) {
+  if (!playerId || typeof playerId !== 'string') return null;
+  try {
+    const res = await fetchWithRetry(
+      `${API_BASE}/getEntitlements?playerId=${encodeURIComponent(playerId)}`,
+      { method: 'GET' }
+    );
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    if (!data || typeof data !== 'object') return null;
+    return {
+      adFree:           data.adFree === true,
+      founderPass:      data.founderPass === true,
+      adFreeSince:      typeof data.adFreeSince === 'string'      ? data.adFreeSince      : null,
+      founderPassSince: typeof data.founderPassSince === 'string' ? data.founderPassSince : null,
+    };
+  } catch (e) {
+    console.warn('[Entitlements] fetch failed', e);
+    return null;
+  }
+}
+
+/**
+ * Push a single entitlement (`remove_ads` or `founder_pass`) to the server
+ * for the given player. Idempotent — safe to call repeatedly.
+ * @param {string} playerId
+ * @param {'remove_ads'|'founder_pass'} sku
+ * @returns {Promise<boolean>} true on success
+ */
+export async function setEntitlement(playerId, sku) {
+  if (!playerId || typeof playerId !== 'string') return false;
+  if (sku !== 'remove_ads' && sku !== 'founder_pass') return false;
+  try {
+    const res = await fetchWithRetry(`${API_BASE}/setEntitlement`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId, sku }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('[Entitlements] push failed', e);
+    return false;
+  }
+}

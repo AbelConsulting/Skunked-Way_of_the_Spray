@@ -156,3 +156,132 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
     res.status(500).json({ error: "server_error" });
   }
 });
+
+// ── Entitlements (cross-device sync) ────────────────────────────────────────
+// Stored at /entitlements/{playerId} where playerId is the Google Play Games
+// player ID returned by PlayGamesServices.signIn().
+//
+// Document shape:
+//   {
+//     adFree:       bool,
+//     founderPass:  bool,
+//     adFreeSince:       Timestamp (server),
+//     founderPassSince:  Timestamp (server),
+//     updatedAt:    Timestamp (server)
+//   }
+//
+// Verification model (pragmatic): the writer is trusted; rate-limited per IP
+// and per playerId. SKUs are whitelisted. The playerId itself is an opaque
+// 21-char Google Play Games identifier — guessing another player's ID is
+// non-trivial. Upgrade path: replace the trust model with server-side Google
+// Play Developer API receipt verification.
+const ENTITLEMENTS_COLLECTION = "entitlements";
+const VALID_SKUS = new Set(["remove_ads", "founder_pass"]);
+const SKU_TO_FIELD = {
+  remove_ads:   { ownedField: "adFree",      sinceField: "adFreeSince" },
+  founder_pass: { ownedField: "founderPass", sinceField: "founderPassSince" },
+};
+
+// Per-playerId rate limit (shorter window than the score endpoint — entitlements
+// are written rarely, so anything more than a handful per hour is suspicious).
+const ENTITLEMENT_RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+const ENTITLEMENT_RATE_MAX    = 12;
+const playerCounter = new Map();
+
+function checkEntitlementRate(playerId) {
+  const now = Date.now();
+  const entry = playerCounter.get(playerId) || { count: 0, firstTs: now };
+  if (now - entry.firstTs > ENTITLEMENT_RATE_WINDOW) {
+    entry.count = 0;
+    entry.firstTs = now;
+  }
+  entry.count += 1;
+  playerCounter.set(playerId, entry);
+  return entry.count <= ENTITLEMENT_RATE_MAX;
+}
+
+function isValidPlayerId(s) {
+  // Google Play Games IDs are alphanumeric (sometimes with underscores), 16-32
+  // chars in practice. Be liberal but bounded.
+  return typeof s === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(s);
+}
+
+// GET /getEntitlements?playerId=...
+exports.getEntitlements = onRequest({ region: "us-central1" }, async (req, res) => {
+  if (setCors(req, res)) return;
+  try {
+    const playerId = (req.query.playerId || "").toString();
+    if (!isValidPlayerId(playerId)) {
+      res.status(400).json({ error: "bad_player_id" });
+      return;
+    }
+    const doc = await db.collection(ENTITLEMENTS_COLLECTION).doc(playerId).get();
+    if (!doc.exists) {
+      res.json({ adFree: false, founderPass: false });
+      return;
+    }
+    const d = doc.data() || {};
+    res.json({
+      adFree:           d.adFree === true,
+      founderPass:      d.founderPass === true,
+      adFreeSince:      d.adFreeSince      ? d.adFreeSince.toDate().toISOString()      : null,
+      founderPassSince: d.founderPassSince ? d.founderPassSince.toDate().toISOString() : null,
+    });
+  } catch (e) {
+    console.error("getEntitlements error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// POST /setEntitlement  body:{ playerId, sku }
+// Always sets the entitlement to TRUE. Revocation is intentionally not
+// supported via this endpoint (refunds should be handled out-of-band).
+exports.setEntitlement = onRequest({ region: "us-central1" }, async (req, res) => {
+  if (setCors(req, res)) return;
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "method_not_allowed" });
+    return;
+  }
+  // IP rate-limit (re-uses score limiter)
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
+  if (!checkRateLimit(ip)) {
+    res.status(429).json({ error: "rate_limited" });
+    return;
+  }
+
+  const body = req.body || {};
+  const playerId = (body.playerId || "").toString();
+  const sku = (body.sku || "").toString();
+  if (!isValidPlayerId(playerId)) {
+    res.status(400).json({ error: "bad_player_id" });
+    return;
+  }
+  if (!VALID_SKUS.has(sku)) {
+    res.status(400).json({ error: "bad_sku" });
+    return;
+  }
+  if (!checkEntitlementRate(playerId)) {
+    res.status(429).json({ error: "rate_limited_player" });
+    return;
+  }
+
+  const { ownedField, sinceField } = SKU_TO_FIELD[sku];
+  try {
+    const ref = db.collection(ENTITLEMENTS_COLLECTION).doc(playerId);
+    const snap = await ref.get();
+    const update = {
+      [ownedField]: true,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    // Only stamp sinceField on first grant so we preserve the original date
+    // even if the client re-pushes.
+    if (!snap.exists || snap.data()[ownedField] !== true) {
+      update[sinceField] = admin.firestore.FieldValue.serverTimestamp();
+    }
+    await ref.set(update, { merge: true });
+    res.json({ success: true, sku, playerId });
+  } catch (e) {
+    console.error("setEntitlement error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
