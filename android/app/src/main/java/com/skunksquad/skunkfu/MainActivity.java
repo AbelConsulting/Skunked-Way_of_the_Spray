@@ -8,6 +8,7 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 
 import androidx.activity.EdgeToEdge;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
@@ -20,6 +21,13 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Android 12+ Splash Screen: installSplashScreen() MUST be called
+        // before super.onCreate() to trigger the postSplashScreenTheme swap
+        // (AppTheme.NoActionBarLaunch → AppTheme.NoActionBar). Without this,
+        // the launch theme's window background (previously the white splash.png,
+        // now dark appBackground as a safety net) stays active for the lifetime
+        // of the activity and leaks through any status-bar-area gap.
+        SplashScreen.installSplashScreen(this);
         // Opt into proper edge-to-edge rendering. Required for targetSdk 35+
         // to avoid using deprecated Window.setStatusBarColor / setNavigationBarColor.
         // Must be called BEFORE super.onCreate() per the AndroidX guidance.

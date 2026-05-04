@@ -22,7 +22,15 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- Dark window background so the splash.png icon + any safe-area
+             gaps never flash white behind the WebView. On Android 12+,
+             installSplashScreen() in MainActivity triggers the postSplashScreenTheme
+             transition; this color is also the fallback for pre-12 devices. -->
+        <item name="android:windowBackground">@color/appBackground</item>
+        <item name="android:background">@color/appBackground</item>
+        <!-- Splash-screen icon (small, centered on the splash background). -->
+        <item name="windowSplashScreenBackground">@color/appBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
         <!-- After the splash hides, swap to the no-action-bar dark theme so
              the WebView is never framed by AppCompat's white title bar. -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
