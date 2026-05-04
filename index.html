@@ -6369,6 +6369,14 @@
                     const tid = setInterval(() => {
                         const cur = document.getElementById('touch-controls');
                         if (!cur) { clearInterval(tid); return; }
+                        // Cancel reassert if game returned to MENU — controls must not overlay the main menu.
+                        if (window.game && window.game.state === 'MENU') {
+                            clearInterval(tid);
+                            cur.classList.remove('visible');
+                            cur.style.display = 'none';
+                            cur.style.pointerEvents = 'none';
+                            return;
+                        }
                         try {
                             cur.style.display = 'flex'; 
                             cur.style.pointerEvents = window._forceTouchControls ? 'auto' : 'none'; 
@@ -6381,8 +6389,16 @@
                 })(800);
             } else {
                 try { window && window.logTouchControlEvent && window.logTouchControlEvent('touchControls_hiding', { state: e && e.detail && e.detail.state }); } catch (err) {}
-                // Don't hide if controls are forced to always show
-                if (!window._forceTouchControls) {
+                const isMenuState = e && e.detail && e.detail.state === 'MENU';
+                if (isMenuState) {
+                    // Always hide on MENU regardless of _forceTouchControls —
+                    // touch controls are gameplay-only and must never overlay the main menu UI.
+                    if (tcNow) {
+                        tcNow.classList.remove('visible');
+                        tcNow.style.display = 'none';
+                        tcNow.style.pointerEvents = 'none';
+                    }
+                } else if (!window._forceTouchControls) {
                     hideTouchControls();
                 }
             }
