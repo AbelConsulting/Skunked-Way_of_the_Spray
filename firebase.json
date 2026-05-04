@@ -1,7 +1,7 @@
 {
   "hosting": {
     "public": "dist",
-    "site": "skunked-way-of-the-spray",
+    "site": "studio-3829586481-2a2cf",
     "ignore": [
       "firebase.json",
       "**/.*",
