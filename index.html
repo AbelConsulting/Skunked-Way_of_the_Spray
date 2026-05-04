@@ -1,7 +1,7 @@
 <!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
-  Proprietary and confidential — unauthorized copying, distribution, or use
+  Proprietary and confidential ï¿½ unauthorized copying, distribution, or use
   of this file, via any medium, is strictly prohibited. See LICENSE for terms.
 -->
 <!DOCTYPE html>
@@ -13,19 +13,27 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>Skunked: Way of the Spray - 2D Beat 'em Up</title>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    <!-- Google Tag Manager (web only â€” skipped inside the Capacitor WebView so
+         GTM-driven AdSense Auto Ads / anchor banners can't cover the game.
+         Bumped on top of build cb4f78d / 58d5bc2 which already gated the
+         AdSense rail; this closes the same hole for the GTM container. -->
+    <script>(function(w,d,s,l,i){
+        // Defensive native check â€” must run before GTM kicks off so Auto Ads
+        // never get injected inside the app shell.
+        var isNative = !!(w.Capacitor && typeof w.Capacitor.isNativePlatform === 'function' && w.Capacitor.isNativePlatform());
+        if (isNative) { w[l]=w[l]||[]; return; }
+        w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-P6RZPFLG');</script>
     <!-- End Google Tag Manager -->
     <link rel="manifest" href="manifest.json">
-    <!-- webhint-disable compat-api/html — theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
+    <!-- webhint-disable compat-api/html ï¿½ theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
     <meta name="msapplication-TileColor" content="#1a1a2e">
-    <meta name="description" content="Lightning-fast 2D beat 'em up platformer — be the Ninja Skunk, chain combos, and master the Shadow Strike!">
+    <meta name="description" content="Lightning-fast 2D beat 'em up platformer ï¿½ be the Ninja Skunk, chain combos, and master the Shadow Strike!">
     <link rel="canonical" href="https://skunked.io/">
     <meta property="og:url" content="https://skunked.io/">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
@@ -36,7 +44,7 @@
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
     <script>
-        // AdSense (web) publisher ID — must use ca-pub- prefix (NOT ca-app-pub-, which is AdMob).
+        // AdSense (web) publisher ID ï¿½ must use ca-pub- prefix (NOT ca-app-pub-, which is AdMob).
         // Verify this matches the publisher ID shown in https://www.google.com/adsense/ ? Account ? Settings.
         window.SKUNK_WEB_AD_CLIENT = 'ca-pub-8519140628365141';
     </script>
@@ -82,7 +90,7 @@
             height: 100%;
         }
 
-        /* Ad rail hidden by default — AdSense bootstrap reveals it on web. */
+        /* Ad rail hidden by default ï¿½ AdSense bootstrap reveals it on web. */
         #ad-container-right {
             width: var(--ad-width);
             min-width: 0;
@@ -458,7 +466,7 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.55);
         }
 
-        /* Founder badge — gold pill rendered next to the "Main Hub" eyebrow
+        /* Founder badge ï¿½ gold pill rendered next to the "Main Hub" eyebrow
            when FounderManager.isFounder() is true. Cosmetic-only reward for
            early-access supporters. */
         .founder-badge {
@@ -715,7 +723,7 @@
             text-shadow: 0 1px 1px rgba(0,0,0,0.55);
         }
 
-        /* Soft purchase prompt modal — dark backdrop, centred card. Hidden
+        /* Soft purchase prompt modal ï¿½ dark backdrop, centred card. Hidden
            initially via [hidden]; transition driven by .is-visible. */
         .soft-purchase-prompt {
             position: fixed;
@@ -773,14 +781,14 @@
         /* Compact 4-up skin-tile preview inside the soft purchase prompt.
            Reuses the .founder-swatch tiles from the Skins panel but shrinks
            them so they fit cleanly inside the modal card. Tiles are static
-           previews here (non-interactive) — clicking the BUY button is the
+           previews here (non-interactive) ï¿½ clicking the BUY button is the
            call-to-action. */
         .soft-purchase-skin-preview {
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             margin: 4px 0 16px;
             padding: 0;
-            pointer-events: none; /* purely visual — actions live in the buttons below */
+            pointer-events: none; /* purely visual ï¿½ actions live in the buttons below */
         }
         .soft-purchase-skin-preview .founder-swatch {
             min-height: 96px;
@@ -1946,7 +1954,7 @@
             font-size: 19px;
         }
 
-        /* Secondary row: Restart / Quit — side-by-side, smaller than Resume. */
+        /* Secondary row: Restart / Quit ï¿½ side-by-side, smaller than Resume. */
         .pause-secondary-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -2938,7 +2946,7 @@
             </div>
 
             <!-- ------------------------------------------------------
-                 UI OVERLAYS — placed outside #game-container so they
+                 UI OVERLAYS ï¿½ placed outside #game-container so they
                  are never hidden by portrait orientation rules.
                  All use position:fixed and high z-index.
                  ------------------------------------------------------ -->
@@ -3094,7 +3102,7 @@
                 </div>
             </div>
 
-            <!-- ------ INFO SCREEN (from main menu) — Tabbed ------ -->
+            <!-- ------ INFO SCREEN (from main menu) ï¿½ Tabbed ------ -->
             <div id="menu-info-overlay" hidden>
                 <div class="menu-sub-panel menu-sub-panel--info">
                     <div class="menu-sub-header">
@@ -3392,7 +3400,7 @@
                                 <span>Use ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
                             <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin colour">
-                                <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold — Founder exclusive">
+                                <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold ï¿½ Founder exclusive">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
                                         <span class="founder-swatch__ninja">??</span>
@@ -3488,7 +3496,7 @@
                 <div class="soft-purchase-card">
                     <h2 id="soft-purchase-title" class="soft-purchase-title">Tough run, ninja.</h2>
                     <p class="soft-purchase-body">
-                        Tired of ads breaking your flow? <strong>Remove Ads</strong> for <strong id="soft-purchase-price">$1.99</strong> also unlocks <strong>3 ninja skins</strong> (Sapphire, Amethyst, Steel) <span id="soft-purchase-founder-line">— plus the exclusive <strong>Gold</strong> skin and Founder badge during early access.</span>
+                        Tired of ads breaking your flow? <strong>Remove Ads</strong> for <strong id="soft-purchase-price">$1.99</strong> also unlocks <strong>3 ninja skins</strong> (Sapphire, Amethyst, Steel) <span id="soft-purchase-founder-line">ï¿½ plus the exclusive <strong>Gold</strong> skin and Founder badge during early access.</span>
                     </p>
                     <div id="soft-purchase-skin-preview" class="founder-skin-variants soft-purchase-skin-preview" aria-hidden="true">
                         <div class="founder-swatch founder-swatch--gold is-locked" data-variant="gold">
@@ -4165,7 +4173,7 @@
                                 // Show a neutral "checking..." state during the brief window
                                 // between page load and the native store finishing init.
                                 // This avoids the awkward flash where the buy button shows
-                                // "$1.99 — Buy" for ~1s and then flips to "Ads Removed —
+                                // "$1.99 ï¿½ Buy" for ~1s and then flips to "Ads Removed ï¿½
                                 // Thank You!" for a returning customer whose localStorage
                                 // entitlement was wiped (reinstall / cache clear). Web build
                                 // never enters this state because there's no async store.
@@ -4309,7 +4317,7 @@
                                 if (promptFounderEl) {
                                     promptFounderEl.style.display = _isWithinEarlyAccess() ? '' : 'none';
                                 }
-                                // Hide the Gold tile after early-access ends — only the
+                                // Hide the Gold tile after early-access ends ï¿½ only the
                                 // 3 colour skins remain part of the offer.
                                 try {
                                     const goldTile = promptEl.querySelector('.founder-swatch--gold');
@@ -4440,7 +4448,7 @@
                                     } catch (_) {}
                                     promptBuy.disabled = false;
                                     _hidePrompt();
-                                    // Don't set cooldown on Buy — if the purchase
+                                    // Don't set cooldown on Buy ï¿½ if the purchase
                                     // didn't complete, we still want to allow a
                                     // future natural retry from Settings.
                                 });
@@ -4533,14 +4541,14 @@
                                     const dy = (ch - dst) / 2;
                                     try {
                                         ctx.drawImage(src, sx, 0, sw, sh, dx, dy, dst, dst);
-                                    } catch (e) { /* tainted canvas — silently skip */ }
+                                    } catch (e) { /* tainted canvas ï¿½ silently skip */ }
                                     canvas.classList.add('is-ready');
                                 }
 
                                 function _tick(t) {
                                     if (!_started) return;
                                     if (!_resolveSheet()) {
-                                        // Not ready yet — try again next frame.
+                                        // Not ready yet ï¿½ try again next frame.
                                         _rafId = requestAnimationFrame(_tick);
                                         return;
                                     }
@@ -4615,7 +4623,7 @@
                                     goldSkinToggle.checked = goldOn;
                                 }
                                 if (variantsRow) {
-                                    // Always render the swatch row — locked ones get a padlock overlay.
+                                    // Always render the swatch row ï¿½ locked ones get a padlock overlay.
                                     variantsRow.classList.remove('is-hidden');
                                 }
                                 for (const btn of variantBtns) {
@@ -4635,7 +4643,7 @@
                                     } else {
                                         btn.title = id.charAt(0).toUpperCase() + id.slice(1);
                                     }
-                                    // Status pill text — gives each tile clear context-of-ownership.
+                                    // Status pill text ï¿½ gives each tile clear context-of-ownership.
                                     const statusEl = btn.querySelector('.founder-swatch__status');
                                     if (statusEl) {
                                         // While the native store is still hydrating, avoid
@@ -4680,7 +4688,7 @@
                                     const id = btn.dataset.variant;
                                     const ok = FM.setSkinVariant(id);
                                     if (!ok) {
-                                        // Locked swatch — pulse to show it's purchasable, then
+                                        // Locked swatch ï¿½ pulse to show it's purchasable, then
                                         // route the user toward the Remove Ads CTA.
                                         btn.classList.remove('shake');
                                         // Force reflow so the animation restarts on rapid clicks.
@@ -4750,7 +4758,7 @@
                             });
                         }
 
-                        // SKINS & REMOVE ADS button — opens the same Settings overlay,
+                        // SKINS & REMOVE ADS button ï¿½ opens the same Settings overlay,
                         // then scrolls to the Remove Ads / Skins card so the shopfront
                         // is the first thing the player sees.
                         const skinsBtn = document.getElementById('menu-skins-btn');
@@ -5225,7 +5233,7 @@
                 }, { passive: false });
             }
 
-            // Show/hide restart on game state — delay showing during lockout
+            // Show/hide restart on game state ï¿½ delay showing during lockout
             window.addEventListener('gameStateChange', (e) => {
                 const isGameOver = e.detail && e.detail.state === 'GAME_OVER';
                 if (isGameOver) {
@@ -5669,7 +5677,7 @@
                 if (result && typeof result.then === 'function') {
                     result.then(() => {}, (err) => {
                         // Expected failure when not in a user-gesture context.
-                        // Swallow silently — the game works fine without fullscreen.
+                        // Swallow silently ï¿½ the game works fine without fullscreen.
                         console.log('[Fullscreen] Request denied (expected on VR/Edge):', String(err).slice(0, 120));
                     });
                 }
@@ -6318,7 +6326,7 @@
                     return;
                 }
                 
-                // Suppress fullscreen / user-gesture / autoplay errors — these are
+                // Suppress fullscreen / user-gesture / autoplay errors ï¿½ these are
                 // expected on browsers like Oculus, Edge, and Safari when the page
                 // tries to enter fullscreen without a fresh user gesture. They are
                 // non-fatal and should not block the game.
@@ -6369,7 +6377,7 @@
                 const safeLeft = readSafe('left');
                 const safeRight = readSafe('right');
 
-                info.innerHTML = `CSS: ${cssW} × ${cssH}<br>Internal: ${intW} × ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
+                info.innerHTML = `CSS: ${cssW} ï¿½ ${cssH}<br>Internal: ${intW} ï¿½ ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
                 rafId = requestAnimationFrame(render);
             }
 
@@ -6422,12 +6430,12 @@
     try {
         window.addEventListener('beforeinstallprompt', function (e) {
             try { e.preventDefault(); } catch (_) {}
-            try { console.log('[PWA] install prompt suppressed — use Google Play listing instead'); } catch (_) {}
+            try { console.log('[PWA] install prompt suppressed ï¿½ use Google Play listing instead'); } catch (_) {}
         });
     } catch (_) {}
 
     if (!('serviceWorker' in navigator)) return;
-    // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
+    // Skip SW on native Capacitor ï¿½ the app bundle IS the cache, and a SW
     // can serve stale assets after an app update.
     var isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
     if (isNative) return;
@@ -6494,7 +6502,7 @@
         if (!worker) return;
         worker.addEventListener('statechange', function () {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                // A new SW is waiting and there's an existing controller —
+                // A new SW is waiting and there's an existing controller ï¿½
                 // i.e. this is an update, not a first install. Prompt user.
                 showUpdateBanner(reg);
             }
