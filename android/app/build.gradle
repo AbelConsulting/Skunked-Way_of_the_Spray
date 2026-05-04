@@ -31,8 +31,8 @@ android {
         applicationId "com.skunksquad.skunkfu"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 44
-        versionName "1.2.30"
+        versionCode 45
+        versionName "1.2.31"
         // Use a versioned archive name so concurrent file locks (e.g. Defender / OneDrive
         // scanning a previously built artifact) don't block the new bundle output.
         setProperty("archivesBaseName", "skunkfu-${versionName}-${versionCode}")

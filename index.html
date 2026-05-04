@@ -1,7 +1,7 @@
-﻿<!--
+<!--
   Skunked: Way of the Spray
   Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
-  Proprietary and confidential — unauthorized copying, distribution, or use
+  Proprietary and confidential � unauthorized copying, distribution, or use
   of this file, via any medium, is strictly prohibited. See LICENSE for terms.
 -->
 <!DOCTYPE html>
@@ -21,11 +21,11 @@
     })(window,document,'script','dataLayer','GTM-P6RZPFLG');</script>
     <!-- End Google Tag Manager -->
     <link rel="manifest" href="manifest.json">
-    <!-- webhint-disable compat-api/html — theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
+    <!-- webhint-disable compat-api/html � theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
     <meta name="msapplication-TileColor" content="#1a1a2e">
-    <meta name="description" content="Lightning-fast 2D beat 'em up platformer — be the Ninja Skunk, chain combos, and master the Shadow Strike!">
+    <meta name="description" content="Lightning-fast 2D beat 'em up platformer � be the Ninja Skunk, chain combos, and master the Shadow Strike!">
     <link rel="canonical" href="https://skunked.io/">
     <meta property="og:url" content="https://skunked.io/">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
@@ -36,8 +36,8 @@
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
     <script>
-        // AdSense (web) publisher ID — must use ca-pub- prefix (NOT ca-app-pub-, which is AdMob).
-        // Verify this matches the publisher ID shown in https://www.google.com/adsense/ → Account → Settings.
+        // AdSense (web) publisher ID � must use ca-pub- prefix (NOT ca-app-pub-, which is AdMob).
+        // Verify this matches the publisher ID shown in https://www.google.com/adsense/ ? Account ? Settings.
         window.SKUNK_WEB_AD_CLIENT = 'ca-pub-8519140628365141';
     </script>
     <!-- Arcade / ninja title fonts -->
@@ -46,8 +46,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <!-- Hidden element to force-load canvas fonts before the game loop starts -->
         <span class="font-preload" aria-hidden="true">.</span>
-    <link rel="stylesheet" href="styles.css?v=1.0.2">
-    <link rel="stylesheet" href="achievements.css?v=1.0.2">
+    <link rel="stylesheet" href="styles.css?v=1.0.3">
+    <link rel="stylesheet" href="achievements.css?v=1.0.3">
 
     <style>
         /* expose safe-area insets as CSS variables so JS can read them */
@@ -82,7 +82,7 @@
             height: 100%;
         }
 
-        /* Ad rail hidden by default — AdSense bootstrap reveals it on web. */
+        /* Ad rail hidden by default � AdSense bootstrap reveals it on web. */
         #ad-container-right {
             width: var(--ad-width);
             min-width: 0;
@@ -352,9 +352,9 @@
             transform: translateY(0);
         }
 
-        /* ═══════════════════════════════════════════════════════
+        /* -------------------------------------------------------
            START MENU SPLASH PAGE
-           ═══════════════════════════════════════════════════════ */
+           ------------------------------------------------------- */
         #start-menu-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -458,7 +458,7 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.55);
         }
 
-        /* Founder badge — gold pill rendered next to the "Main Hub" eyebrow
+        /* Founder badge � gold pill rendered next to the "Main Hub" eyebrow
            when FounderManager.isFounder() is true. Cosmetic-only reward for
            early-access supporters. */
         .founder-badge {
@@ -603,7 +603,7 @@
             margin: 0 auto;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
-               first (idle) frame by widening the background to 4� the tile. */
+               first (idle) frame by widening the background to 4? the tile. */
             background-size: 400% 100%;
             background-position: 0 0;
             image-rendering: -webkit-optimize-contrast;
@@ -715,7 +715,7 @@
             text-shadow: 0 1px 1px rgba(0,0,0,0.55);
         }
 
-        /* Soft purchase prompt modal — dark backdrop, centred card. Hidden
+        /* Soft purchase prompt modal � dark backdrop, centred card. Hidden
            initially via [hidden]; transition driven by .is-visible. */
         .soft-purchase-prompt {
             position: fixed;
@@ -773,14 +773,14 @@
         /* Compact 4-up skin-tile preview inside the soft purchase prompt.
            Reuses the .founder-swatch tiles from the Skins panel but shrinks
            them so they fit cleanly inside the modal card. Tiles are static
-           previews here (non-interactive) — clicking the BUY button is the
+           previews here (non-interactive) � clicking the BUY button is the
            call-to-action. */
         .soft-purchase-skin-preview {
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             margin: 4px 0 16px;
             padding: 0;
-            pointer-events: none; /* purely visual — actions live in the buttons below */
+            pointer-events: none; /* purely visual � actions live in the buttons below */
         }
         .soft-purchase-skin-preview .founder-swatch {
             min-height: 96px;
@@ -1209,9 +1209,9 @@
             font-style: italic;
         }
 
-        /* ═══════════════════════════════════════════════════════
+        /* -------------------------------------------------------
            TABBED INFO PAGE
-           ═══════════════════════════════════════════════════════ */
+           ------------------------------------------------------- */
         .info-tabs {
             display: flex;
             gap: 8px;
@@ -1739,7 +1739,7 @@
         #pause-btn:active { transform: scale(0.96); }
         #perf-mode-btn:active { transform: scale(0.96); }
 
-        /* ── Game-over Leaderboard CTA ──
+        /* -- Game-over Leaderboard CTA --
            Shown when GAME_OVER state engages and the input lockout expires.
            Sits above the canvas-rendered "pinned restart prompt" strip
            (~92px tall in ui.js drawGameOver), centered horizontally. */
@@ -1946,7 +1946,7 @@
             font-size: 19px;
         }
 
-        /* Secondary row: Restart / Quit — side-by-side, smaller than Resume. */
+        /* Secondary row: Restart / Quit � side-by-side, smaller than Resume. */
         .pause-secondary-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -2341,7 +2341,7 @@
             .pause-title { font-size: clamp(15px, 3.5vw, 20px) !important; }
         }
 
-        /* ── Landscape with limited height (mobile landscape) ── */
+        /* -- Landscape with limited height (mobile landscape) -- */
         @media screen and (max-height: 500px) {
             .start-menu-panel {
                 gap: 8px;
@@ -2349,7 +2349,7 @@
                 max-height: 96vh;
                 width: min(980px, 96vw);
             }
-            /* Keep side-by-side layout � mobile landscape is wide, not tall */
+            /* Keep side-by-side layout ? mobile landscape is wide, not tall */
             .start-menu-layout {
                 grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr);
                 gap: 16px;
@@ -2416,7 +2416,7 @@
             }
         }
 
-        /* ── Very short landscape (e.g. phone landscape with keyboard/nav bar) ── */
+        /* -- Very short landscape (e.g. phone landscape with keyboard/nav bar) -- */
         @media screen and (max-height: 380px) {
             .start-menu-panel {
                 gap: 4px;
@@ -2503,7 +2503,7 @@
             }
         }
 
-        /* ───── Inline-style cleanup utility classes / id rules ─────
+        /* ----- Inline-style cleanup utility classes / id rules -----
            These rules replace inline style attributes that the linter
            flagged. JS-managed display:none toggles intentionally remain
            inline because the corresponding JS sets el.style.display
@@ -2589,7 +2589,7 @@
         /* Hr spacing variant used inside menu sub-panels */
         .pause-divider--space-top { margin-top: 12px; }
 
-        /* ── Pause-menu quick skin switcher ────────────────── */
+        /* -- Pause-menu quick skin switcher ------------------ */
         .pause-skin-shortcut {
             display: flex;
             flex-direction: column;
@@ -2937,13 +2937,13 @@
                 <div id="score-container" hidden></div>
             </div>
 
-            <!-- ══════════════════════════════════════════════════════
-                 UI OVERLAYS — placed outside #game-container so they
+            <!-- ------------------------------------------------------
+                 UI OVERLAYS � placed outside #game-container so they
                  are never hidden by portrait orientation rules.
                  All use position:fixed and high z-index.
-                 ══════════════════════════════════════════════════════ -->
+                 ------------------------------------------------------ -->
 
-            <!-- ══════ START MENU SPLASH PAGE ══════ -->
+            <!-- ------ START MENU SPLASH PAGE ------ -->
             <div id="start-menu-overlay">
                 <div class="start-menu-panel">
                     <div class="start-menu-layout">
@@ -3076,7 +3076,7 @@
                     <button id="menu-howtoplay-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
             </div>
-            <!-- ══════ HIGH SCORES SCREEN (from main menu) ══════ -->
+            <!-- ------ HIGH SCORES SCREEN (from main menu) ------ -->
             <div id="menu-scores-overlay" hidden>
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
@@ -3094,7 +3094,7 @@
                 </div>
             </div>
 
-            <!-- ══════ INFO SCREEN (from main menu) — Tabbed ══════ -->
+            <!-- ------ INFO SCREEN (from main menu) � Tabbed ------ -->
             <div id="menu-info-overlay" hidden>
                 <div class="menu-sub-panel menu-sub-panel--info">
                     <div class="menu-sub-header">
@@ -3114,7 +3114,7 @@
                         <button class="info-tab" data-info-tab="achievements">Achievements</button>
                     </div>
 
-                    <!-- ── TAB: About ── -->
+                    <!-- -- TAB: About -- -->
                     <div class="info-tab-content active" data-info-panel="about">
                         <div class="info-section info-story">
                             <h3 class="info-heading">&#128220; Story</h3>
@@ -3163,7 +3163,7 @@
                         <p class="info-credit">&copy; 2026 Mephitideus Interactive &mdash; skunked.io &bull; HTML5 Canvas &bull; Zero dependencies</p>
                     </div>
 
-                    <!-- ── TAB: Controls ── -->
+                    <!-- -- TAB: Controls -- -->
                     <div class="info-tab-content" data-info-panel="controls">
                         <div class="info-ctrl-group">
                             <h4>&#9000; Keyboard</h4>
@@ -3233,7 +3233,7 @@
                         </div>
                     </div>
 
-                    <!-- ── TAB: Enemies ── -->
+                    <!-- -- TAB: Enemies -- -->
                     <div class="info-tab-content" data-info-panel="enemies">
                         <h3 class="info-heading">&#128126; Enemy Types</h3>
                         <div class="info-enemies-grid">
@@ -3292,14 +3292,14 @@
                         <div class="info-boss-row" id="info-boss-row"></div>
                     </div>
 
-                    <!-- ── TAB: Stages ── -->
+                    <!-- -- TAB: Stages -- -->
                     <div class="info-tab-content" data-info-panel="stages">
                         <h3 class="info-heading">&#127759; All 10 Stages</h3>
                         <p id="info-stages-summary" class="info-summary--dim">The campaign escalates through 10 stages with remixed bosses and increasingly punishing enemy rosters.</p>
                         <div class="info-stages-grid" id="info-stages-grid"></div>
                     </div>
 
-                    <!-- ── TAB: Items ── -->
+                    <!-- -- TAB: Items -- -->
                     <div class="info-tab-content" data-info-panel="items">
                         <h3 class="info-heading">&#127873; Items &amp; Power-ups</h3>
                         <p class="info-summary--dim">Enemies drop items on defeat. Idols and boosts are placed in the level.</p>
@@ -3332,7 +3332,7 @@
 
                     </div>
 
-                    <!-- ── TAB: Achievements ── -->
+                    <!-- -- TAB: Achievements -- -->
                     <div class="info-tab-content" data-info-panel="achievements">
                         <h3 class="info-heading">&#127942; Achievements</h3>
                         <p class="info-summary--dim-tight">Earn badges through skilled play. Grey &amp; locked = not yet unlocked; gold = earned.</p>
@@ -3344,7 +3344,7 @@
                 </div>
             </div>
 
-            <!-- ══════ SETTINGS SCREEN (from main menu) ══════ -->
+            <!-- ------ SETTINGS SCREEN (from main menu) ------ -->
             <div id="menu-settings-overlay" hidden>
                 <div class="menu-sub-panel">
                     <div class="menu-sub-header">
@@ -3392,10 +3392,10 @@
                                 <span>Use ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
                             <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin colour">
-                                <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold — Founder exclusive">
+                                <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold � Founder exclusive">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
+                                        <span class="founder-swatch__ninja">??</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
                                     <span class="founder-swatch__name">Gold</span>
@@ -3404,7 +3404,7 @@
                                 <button type="button" class="founder-swatch founder-swatch--sapphire" data-variant="sapphire" role="radio" aria-checked="false" title="Sapphire">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
+                                        <span class="founder-swatch__ninja">??</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
                                     <span class="founder-swatch__name">Sapphire</span>
@@ -3413,7 +3413,7 @@
                                 <button type="button" class="founder-swatch founder-swatch--amethyst" data-variant="amethyst" role="radio" aria-checked="false" title="Amethyst">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
+                                        <span class="founder-swatch__ninja">??</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
                                     <span class="founder-swatch__name">Amethyst</span>
@@ -3422,7 +3422,7 @@
                                 <button type="button" class="founder-swatch founder-swatch--steel" data-variant="steel" role="radio" aria-checked="false" title="Steel">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
+                                        <span class="founder-swatch__ninja">??</span>
                                         <span class="founder-swatch__shine"></span>
                                     </span>
                                     <span class="founder-swatch__name">Steel</span>
@@ -3440,7 +3440,7 @@
                 </div>
             </div>
 
-            <!-- ══════ PAUSE OVERLAY ══════ -->
+            <!-- ------ PAUSE OVERLAY ------ -->
             <div id="pause-overlay" hidden>
                 <div class="pause-panel">
                     <h1 class="pause-title">PAUSED</h1>
@@ -3480,7 +3480,7 @@
                 </div>
             </div>
 
-            <!-- ══════ SOFT PURCHASE PROMPT (after 3rd death in a session) ══════
+            <!-- ------ SOFT PURCHASE PROMPT (after 3rd death in a session) ------
                  Shown at most once per page session, only on the native Android
                  build, and only when the user has not already bought Remove Ads.
                  Hidden by default; controlled entirely by inline script below. -->
@@ -3488,13 +3488,13 @@
                 <div class="soft-purchase-card">
                     <h2 id="soft-purchase-title" class="soft-purchase-title">Tough run, ninja.</h2>
                     <p class="soft-purchase-body">
-                        Tired of ads breaking your flow? <strong>Remove Ads</strong> for <strong id="soft-purchase-price">$1.99</strong> also unlocks <strong>3 ninja skins</strong> (Sapphire, Amethyst, Steel) <span id="soft-purchase-founder-line">— plus the exclusive <strong>Gold</strong> skin and Founder badge during early access.</span>
+                        Tired of ads breaking your flow? <strong>Remove Ads</strong> for <strong id="soft-purchase-price">$1.99</strong> also unlocks <strong>3 ninja skins</strong> (Sapphire, Amethyst, Steel) <span id="soft-purchase-founder-line">� plus the exclusive <strong>Gold</strong> skin and Founder badge during early access.</span>
                     </p>
                     <div id="soft-purchase-skin-preview" class="founder-skin-variants soft-purchase-skin-preview" aria-hidden="true">
                         <div class="founder-swatch founder-swatch--gold is-locked" data-variant="gold">
                             <span class="founder-swatch__preview">
                                 <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__ninja">??</span>
                                 <span class="founder-swatch__shine"></span>
                             </span>
                             <span class="founder-swatch__name">Gold</span>
@@ -3503,7 +3503,7 @@
                         <div class="founder-swatch founder-swatch--sapphire is-locked" data-variant="sapphire">
                             <span class="founder-swatch__preview">
                                 <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__ninja">??</span>
                                 <span class="founder-swatch__shine"></span>
                             </span>
                             <span class="founder-swatch__name">Sapphire</span>
@@ -3512,7 +3512,7 @@
                         <div class="founder-swatch founder-swatch--amethyst is-locked" data-variant="amethyst">
                             <span class="founder-swatch__preview">
                                 <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__ninja">??</span>
                                 <span class="founder-swatch__shine"></span>
                             </span>
                             <span class="founder-swatch__name">Amethyst</span>
@@ -3521,7 +3521,7 @@
                         <div class="founder-swatch founder-swatch--steel is-locked" data-variant="steel">
                             <span class="founder-swatch__preview">
                                 <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                <span class="founder-swatch__ninja">🥷</span>
+                                <span class="founder-swatch__ninja">??</span>
                                 <span class="founder-swatch__shine"></span>
                             </span>
                             <span class="founder-swatch__name">Steel</span>
@@ -3536,33 +3536,33 @@
                 </div>
             </div>
 
-            <script src="js/errorHandler.js?v=1.0.2"></script>
-            <script src="js/firebase.js?v=1.0.2" type="module"></script>
-            <script src="js/config.js?v=1.0.2"></script>
-            <script src="js/analytics.js?v=1.0.2"></script>
-            <script src="js/utils.js?v=1.0.2"></script>
-            <script src="js/highscores.js?v=1.0.2" type="module"></script>
-            <script src="js/playGames.js?v=1.0.2"></script>
-            <script src="js/spriteLoader.js?v=1.0.2"></script>
-            <script src="js/audioManager.js?v=1.0.2"></script>
-            <script src="js/visualEffects.js?v=1.0.2"></script>
-            <script src="js/levelData.js?v=1.0.2"></script>
-            <script src="js/level.js?v=1.0.2"></script>
-            <script src="js/levelEditor.js?v=1.0.2"></script>
-            <script src="js/player.js?v=1.0.2"></script>
-            <script src="js/enemy.js?v=1.0.2"></script>
-            <script src="js/enemyManager.js?v=1.0.2"></script>
-            <script src="js/itemManager.js?v=1.0.2"></script>
-            <script src="js/touchControls.js?v=1.0.2"></script>
-            <script src="js/ui.js?v=1.0.2"></script>
-            <script src="js/achievements.js?v=1.0.2"></script>
-            <script src="js/tutorialHints.js?v=1.0.2"></script>
-            <script src="js/game.js?v=1.0.2"></script>
-            <script src="js/purchaseManager.js?v=1.0.2"></script>
-            <script src="js/founderManager.js?v=1.0.2"></script>
-            <script src="js/goldenSkin.js?v=1.0.2"></script>
-            <script src="js/adManager.js?v=1.0.2"></script>
-            <script src="js/main.js?v=1.0.2" type="module"></script>
+            <script src="js/errorHandler.js?v=1.0.3"></script>
+            <script src="js/firebase.js?v=1.0.3" type="module"></script>
+            <script src="js/config.js?v=1.0.3"></script>
+            <script src="js/analytics.js?v=1.0.3"></script>
+            <script src="js/utils.js?v=1.0.3"></script>
+            <script src="js/highscores.js?v=1.0.3" type="module"></script>
+            <script src="js/playGames.js?v=1.0.3"></script>
+            <script src="js/spriteLoader.js?v=1.0.3"></script>
+            <script src="js/audioManager.js?v=1.0.3"></script>
+            <script src="js/visualEffects.js?v=1.0.3"></script>
+            <script src="js/levelData.js?v=1.0.3"></script>
+            <script src="js/level.js?v=1.0.3"></script>
+            <script src="js/levelEditor.js?v=1.0.3"></script>
+            <script src="js/player.js?v=1.0.3"></script>
+            <script src="js/enemy.js?v=1.0.3"></script>
+            <script src="js/enemyManager.js?v=1.0.3"></script>
+            <script src="js/itemManager.js?v=1.0.3"></script>
+            <script src="js/touchControls.js?v=1.0.3"></script>
+            <script src="js/ui.js?v=1.0.3"></script>
+            <script src="js/achievements.js?v=1.0.3"></script>
+            <script src="js/tutorialHints.js?v=1.0.3"></script>
+            <script src="js/game.js?v=1.0.3"></script>
+            <script src="js/purchaseManager.js?v=1.0.3"></script>
+            <script src="js/founderManager.js?v=1.0.3"></script>
+            <script src="js/goldenSkin.js?v=1.0.3"></script>
+            <script src="js/adManager.js?v=1.0.3"></script>
+            <script src="js/main.js?v=1.0.3" type="module"></script>
             <script nonce="%CSP_NONCE%">
         // --- UTILITIES ---
             // Touch-control visibility debug helper
@@ -3794,7 +3794,7 @@
 
                 // Attach handler to the new button once DOM is ready
                 document.addEventListener('DOMContentLoaded', () => {
-                    // ══════ START MENU SPLASH PAGE WIRING ══════
+                    // ------ START MENU SPLASH PAGE WIRING ------
                     try {
                         // Track whether the start menu overlay is visible
                         window._startMenuVisible = true;
@@ -3918,7 +3918,7 @@
                                 card.className = 'info-stage-card';
 
                                 const heading = document.createElement('h4');
-                                heading.textContent = `${stageIndex + 1} � ${stageConfig.name}`;
+                                heading.textContent = `${stageIndex + 1} ? ${stageConfig.name}`;
 
                                 const body = document.createElement('p');
                                 const bossBits = [];
@@ -3970,7 +3970,7 @@
                         renderInfoStages();
                         renderInfoAchievements();
 
-                        // ── Shared Helper: hide all menu overlays ──
+                        // -- Shared Helper: hide all menu overlays --
                         function hideAllMenuOverlays() {
                             if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
                             if (scoresOverlay) scoresOverlay.style.display = 'none';
@@ -3986,7 +3986,7 @@
                         function startGameFromMenu() {
                             if (!startMenuOverlay) return;
 
-                            // ── Gate: wait for game engine to be ready ──
+                            // -- Gate: wait for game engine to be ready --
                             if (!window.gameReady || !window.game) {
                                 if (playBtn) {
                                     playBtn.disabled = true;
@@ -4150,7 +4150,7 @@
                             }
                         } catch (e) {}
 
-                        // ─── Remove Ads (IAP) wiring ───────────────────────
+                        // --- Remove Ads (IAP) wiring -----------------------
                         try {
                             const buyBtn      = document.getElementById('remove-ads-buy-btn');
                             const restoreBtn  = document.getElementById('remove-ads-restore-btn');
@@ -4165,7 +4165,7 @@
                                 // Show a neutral "checking..." state during the brief window
                                 // between page load and the native store finishing init.
                                 // This avoids the awkward flash where the buy button shows
-                                // "$1.99 — Buy" for ~1s and then flips to "Ads Removed —
+                                // "$1.99 � Buy" for ~1s and then flips to "Ads Removed �
                                 // Thank You!" for a returning customer whose localStorage
                                 // entitlement was wiped (reinstall / cache clear). Web build
                                 // never enters this state because there's no async store.
@@ -4255,7 +4255,7 @@
                             _renderAdFreeState();
                         } catch (e) { try { console.warn('[RemoveAds UI]', e); } catch(_) {} }
 
-                        // ─── Soft purchase prompt (3rd death/session) ──────
+                        // --- Soft purchase prompt (3rd death/session) ------
                         // Shows a one-time, dismissible modal after the player
                         // hits the GAME_OVER state for the 3rd time in a single
                         // page session. Native-platform-only; ad-free owners
@@ -4309,7 +4309,7 @@
                                 if (promptFounderEl) {
                                     promptFounderEl.style.display = _isWithinEarlyAccess() ? '' : 'none';
                                 }
-                                // Hide the Gold tile after early-access ends — only the
+                                // Hide the Gold tile after early-access ends � only the
                                 // 3 colour skins remain part of the offer.
                                 try {
                                     const goldTile = promptEl.querySelector('.founder-swatch--gold');
@@ -4332,7 +4332,7 @@
                                 try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_shown', { deaths: _sessionDeaths }); } catch (_) {}
                             }
 
-                            // ─── Skin tile walk-cycle preview (modal copy) ──
+                            // --- Skin tile walk-cycle preview (modal copy) --
                             // Reuses the same ninja_walk sheet + GoldenSkin pipeline as
                             // the Skins panel. Only animates while the prompt is shown
                             // so it costs nothing during gameplay.
@@ -4440,7 +4440,7 @@
                                     } catch (_) {}
                                     promptBuy.disabled = false;
                                     _hidePrompt();
-                                    // Don't set cooldown on Buy — if the purchase
+                                    // Don't set cooldown on Buy � if the purchase
                                     // didn't complete, we still want to allow a
                                     // future natural retry from Settings.
                                 });
@@ -4460,7 +4460,7 @@
                             }
                         } catch (e) { try { console.warn('[SoftPurchasePrompt]', e); } catch(_) {} }
 
-                        // ─── Founder / Redeem Code wiring ──────────────────
+                        // --- Founder / Redeem Code wiring ------------------
                         try {
                             const founderStatusText = document.getElementById('founder-status-text');
                             const codeInput         = document.getElementById('founder-code-input');
@@ -4471,7 +4471,7 @@
                             const variantsRow       = document.getElementById('founder-skin-variants');
                             const variantBtns       = variantsRow ? Array.from(variantsRow.querySelectorAll('.founder-swatch')) : [];
 
-                            // ─── Live walk-cycle preview inside each tile ──
+                            // --- Live walk-cycle preview inside each tile --
                             // Renders an animated, palette-tinted ninja walk
                             // sprite into each tile's <canvas>. Uses the same
                             // `ninja_walk` sheet + GoldenSkin tinting pipeline
@@ -4533,14 +4533,14 @@
                                     const dy = (ch - dst) / 2;
                                     try {
                                         ctx.drawImage(src, sx, 0, sw, sh, dx, dy, dst, dst);
-                                    } catch (e) { /* tainted canvas — silently skip */ }
+                                    } catch (e) { /* tainted canvas � silently skip */ }
                                     canvas.classList.add('is-ready');
                                 }
 
                                 function _tick(t) {
                                     if (!_started) return;
                                     if (!_resolveSheet()) {
-                                        // Not ready yet — try again next frame.
+                                        // Not ready yet � try again next frame.
                                         _rafId = requestAnimationFrame(_tick);
                                         return;
                                     }
@@ -4615,7 +4615,7 @@
                                     goldSkinToggle.checked = goldOn;
                                 }
                                 if (variantsRow) {
-                                    // Always render the swatch row — locked ones get a padlock overlay.
+                                    // Always render the swatch row � locked ones get a padlock overlay.
                                     variantsRow.classList.remove('is-hidden');
                                 }
                                 for (const btn of variantBtns) {
@@ -4635,7 +4635,7 @@
                                     } else {
                                         btn.title = id.charAt(0).toUpperCase() + id.slice(1);
                                     }
-                                    // Status pill text — gives each tile clear context-of-ownership.
+                                    // Status pill text � gives each tile clear context-of-ownership.
                                     const statusEl = btn.querySelector('.founder-swatch__status');
                                     if (statusEl) {
                                         // While the native store is still hydrating, avoid
@@ -4680,7 +4680,7 @@
                                     const id = btn.dataset.variant;
                                     const ok = FM.setSkinVariant(id);
                                     if (!ok) {
-                                        // Locked swatch — pulse to show it's purchasable, then
+                                        // Locked swatch � pulse to show it's purchasable, then
                                         // route the user toward the Remove Ads CTA.
                                         btn.classList.remove('shake');
                                         // Force reflow so the animation restarts on rapid clicks.
@@ -4750,7 +4750,7 @@
                             });
                         }
 
-                        // SKINS & REMOVE ADS button — opens the same Settings overlay,
+                        // SKINS & REMOVE ADS button � opens the same Settings overlay,
                         // then scrolls to the Remove Ads / Skins card so the shopfront
                         // is the first thing the player sees.
                         const skinsBtn = document.getElementById('menu-skins-btn');
@@ -4799,7 +4799,7 @@
                             });
                         }
 
-                        // ── INFO TABS wiring ──
+                        // -- INFO TABS wiring --
                         {
                             infoTabs.forEach(tab => {
                                 tab.addEventListener('click', (ev) => {
@@ -4809,7 +4809,7 @@
                             });
                         }
 
-                        // ── BUTTON HOVER SFX ──
+                        // -- BUTTON HOVER SFX --
                         try {
                             const hoverBtns = document.querySelectorAll('.menu-btn');
                             hoverBtns.forEach(btn => {
@@ -4823,7 +4823,7 @@
                             });
                         } catch (e) {}
 
-                        // ── FOCUS TRAP for overlays ──
+                        // -- FOCUS TRAP for overlays --
                         try {
                             function trapFocus(overlayEl) {
                                 if (!overlayEl) return;
@@ -4994,7 +4994,7 @@
                                 const pgsAvail = !!(window.PlayGamesServices && PlayGamesServices.isAvailable && PlayGamesServices.isAvailable());
                                 const safeName = String(detail.name || 'Achievement Unlocked').replace(/[<>]/g, '');
                                 const safeDesc = String(detail.desc || '').replace(/[<>]/g, '');
-                                const icon = detail.icon || '🏆';
+                                const icon = detail.icon || '??';
                                 el.innerHTML = `
                                     <div class="ach-icon">${icon}</div>
                                     <div class="ach-body">
@@ -5002,7 +5002,7 @@
                                         <p class="ach-name">${safeName}</p>
                                         ${safeDesc ? `<p class="ach-desc">${safeDesc}</p>` : ''}
                                     </div>
-                                    ${pgsAvail ? '<span class="ach-pgs-badge">🎮 Play Games</span>' : ''}
+                                    ${pgsAvail ? '<span class="ach-pgs-badge">?? Play Games</span>' : ''}
                                 `;
                                 stack.appendChild(el);
                                 // Stagger reveal when several toasts queue up in the same tick.
@@ -5225,7 +5225,7 @@
                 }, { passive: false });
             }
 
-            // Show/hide restart on game state — delay showing during lockout
+            // Show/hide restart on game state � delay showing during lockout
             window.addEventListener('gameStateChange', (e) => {
                 const isGameOver = e.detail && e.detail.state === 'GAME_OVER';
                 if (isGameOver) {
@@ -5248,7 +5248,7 @@
                 }
             });
 
-            // ── Game-over Leaderboard CTA ──
+            // -- Game-over Leaderboard CTA --
             // Reveal a "View Leaderboard" button after the game-over input lockout
             // expires. Click opens the existing #menu-scores-overlay so we reuse
             // the populated scoreboard rendering instead of duplicating UI.
@@ -5431,9 +5431,9 @@
             }
         } catch (e) {}
 
-        // ── Pause-menu quick skin switcher ─────────────────
+        // -- Pause-menu quick skin switcher -----------------
         // Lets a Founder / variant-buyer flip skins mid-run without diving into
-        // Settings → Skins. Only renders if 2+ skins are unlocked. Re-renders
+        // Settings ? Skins. Only renders if 2+ skins are unlocked. Re-renders
         // every time the pause overlay is shown so unlocks reflect immediately.
         (function wirePauseSkinShortcut() {
             const overlay = document.getElementById('pause-overlay');
@@ -5488,7 +5488,7 @@
                 });
             }
 
-            // Re-render when overlay becomes visible (display flips none ↔ flex
+            // Re-render when overlay becomes visible (display flips none ? flex
             // and `.visible` class is toggled).
             const mo = new MutationObserver(() => {
                 const shown = overlay.style.display !== 'none' && !overlay.hasAttribute('hidden');
@@ -5669,7 +5669,7 @@
                 if (result && typeof result.then === 'function') {
                     result.then(() => {}, (err) => {
                         // Expected failure when not in a user-gesture context.
-                        // Swallow silently — the game works fine without fullscreen.
+                        // Swallow silently � the game works fine without fullscreen.
                         console.log('[Fullscreen] Request denied (expected on VR/Edge):', String(err).slice(0, 120));
                     });
                 }
@@ -6318,7 +6318,7 @@
                     return;
                 }
                 
-                // Suppress fullscreen / user-gesture / autoplay errors — these are
+                // Suppress fullscreen / user-gesture / autoplay errors � these are
                 // expected on browsers like Oculus, Edge, and Safari when the page
                 // tries to enter fullscreen without a fresh user gesture. They are
                 // non-fatal and should not block the game.
@@ -6369,7 +6369,7 @@
                 const safeLeft = readSafe('left');
                 const safeRight = readSafe('right');
 
-                info.innerHTML = `CSS: ${cssW} × ${cssH}<br>Internal: ${intW} × ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
+                info.innerHTML = `CSS: ${cssW} � ${cssH}<br>Internal: ${intW} � ${intH}<br>DPR: ${dpr}<br>SafeInsets: top ${safeTop}px bottom ${safeBottom}px left ${safeLeft}px right ${safeRight}px`;
                 rafId = requestAnimationFrame(render);
             }
 
@@ -6407,7 +6407,7 @@
 <!-- Service Worker registration for PWA / offline support -->
 <script>
 (function () {
-    // ── Suppress browser PWA "Install app" prompt ──────────────────────
+    // -- Suppress browser PWA "Install app" prompt ----------------------
     // Going forward we want users to install via the Google Play listing
     // (com.skunksquad.skunkfu) rather than as a standalone PWA from the
     // website. Capturing beforeinstallprompt + preventDefault stops Chrome's
@@ -6422,12 +6422,12 @@
     try {
         window.addEventListener('beforeinstallprompt', function (e) {
             try { e.preventDefault(); } catch (_) {}
-            try { console.log('[PWA] install prompt suppressed — use Google Play listing instead'); } catch (_) {}
+            try { console.log('[PWA] install prompt suppressed � use Google Play listing instead'); } catch (_) {}
         });
     } catch (_) {}
 
     if (!('serviceWorker' in navigator)) return;
-    // Skip SW on native Capacitor — the app bundle IS the cache, and a SW
+    // Skip SW on native Capacitor � the app bundle IS the cache, and a SW
     // can serve stale assets after an app update.
     var isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
     if (isNative) return;
@@ -6494,7 +6494,7 @@
         if (!worker) return;
         worker.addEventListener('statechange', function () {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                // A new SW is waiting and there's an existing controller —
+                // A new SW is waiting and there's an existing controller �
                 // i.e. this is an update, not a first install. Prompt user.
                 showUpdateBanner(reg);
             }
