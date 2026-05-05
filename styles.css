@@ -400,11 +400,6 @@
         background 0.22s ease;
     -webkit-tap-highlight-color: transparent;
 }
-.founder-swatch:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.28);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
 .founder-swatch:focus-visible {
     outline: 2px solid #FFD75A;
     outline-offset: 2px;
@@ -416,19 +411,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: var(--swatch-grad);
-    border: 2px solid rgba(255, 255, 255, 0.35);
+    border: 2px solid var(--swatch-border, rgba(255, 255, 255, 0.35));
     box-shadow:
-        inset 0 -6px 12px rgba(0, 0, 0, 0.35),
-        inset 0 4px 8px rgba(255, 255, 255, 0.18),
+        inset 0 -8px 14px rgba(0, 0, 0, 0.38),
+        inset 0 5px 10px rgba(255, 255, 255, 0.20),
         0 0 0 0 var(--swatch-glow);
     transition: box-shadow 0.22s ease, transform 0.22s ease;
 }
 .founder-swatch__ninja {
-    font-size: 28px;
+    font-size: 32px;
     line-height: 1;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
     pointer-events: none;
@@ -471,8 +466,9 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #f4f6fb;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    color: var(--swatch-name-color, #f4f6fb);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    transition: color 0.18s ease;
 }
 .founder-swatch__status {
     font-size: 10px;
@@ -494,20 +490,44 @@
 
 /* ── Per-variant palettes ────────────────────────────────────────────── */
 .founder-swatch--gold {
-    --swatch-grad: linear-gradient(180deg, #FFE08A 0%, #C4881A 100%);
-    --swatch-glow: rgba(255, 200, 87, 0.55);
+    --swatch-grad: linear-gradient(160deg, #FFE99A 0%, #D4941A 60%, #9B5A00 100%);
+    --swatch-glow: rgba(255, 200, 87, 0.65);
+    --swatch-border: rgba(255, 210, 80, 0.55);
+    --swatch-name-color: #FFE08A;
+    border-color: rgba(255, 200, 70, 0.28);
+    background:
+        linear-gradient(180deg, rgba(255, 210, 80, 0.08), rgba(0, 0, 0, 0.38)),
+        rgba(20, 14, 4, 0.90);
 }
 .founder-swatch--sapphire {
-    --swatch-grad: linear-gradient(180deg, #8FD0FF 0%, #14478A 100%);
-    --swatch-glow: rgba(90, 184, 255, 0.55);
+    --swatch-grad: linear-gradient(160deg, #A8DCFF 0%, #2D7FCC 60%, #0A2D5C 100%);
+    --swatch-glow: rgba(90, 184, 255, 0.65);
+    --swatch-border: rgba(90, 184, 255, 0.55);
+    --swatch-name-color: #8FD0FF;
+    border-color: rgba(90, 184, 255, 0.25);
+    background:
+        linear-gradient(180deg, rgba(90, 184, 255, 0.08), rgba(0, 0, 0, 0.38)),
+        rgba(4, 12, 24, 0.90);
 }
 .founder-swatch--amethyst {
-    --swatch-grad: linear-gradient(180deg, #DDB4FF 0%, #5E2695 100%);
-    --swatch-glow: rgba(198, 107, 255, 0.55);
+    --swatch-grad: linear-gradient(160deg, #ECC6FF 0%, #8A3FCC 60%, #3A0A6A 100%);
+    --swatch-glow: rgba(198, 107, 255, 0.65);
+    --swatch-border: rgba(198, 107, 255, 0.55);
+    --swatch-name-color: #DDB4FF;
+    border-color: rgba(180, 90, 255, 0.25);
+    background:
+        linear-gradient(180deg, rgba(180, 90, 255, 0.08), rgba(0, 0, 0, 0.38)),
+        rgba(14, 4, 24, 0.90);
 }
 .founder-swatch--steel {
-    --swatch-grad: linear-gradient(180deg, #DCE4EE 0%, #4A5260 100%);
-    --swatch-glow: rgba(200, 212, 226, 0.45);
+    --swatch-grad: linear-gradient(160deg, #EDF2F7 0%, #7A8EA4 60%, #2E3A46 100%);
+    --swatch-glow: rgba(200, 212, 226, 0.55);
+    --swatch-border: rgba(200, 212, 226, 0.50);
+    --swatch-name-color: #C8D8E8;
+    border-color: rgba(200, 212, 226, 0.20);
+    background:
+        linear-gradient(180deg, rgba(200, 212, 226, 0.07), rgba(0, 0, 0, 0.38)),
+        rgba(10, 14, 18, 0.90);
 }
 
 /* Subtle ambient gradient wash for each tile that matches its palette,
@@ -518,32 +538,53 @@
     inset: 0;
     border-radius: inherit;
     background: var(--swatch-grad);
-    opacity: 0.10;
+    opacity: 0.13;
     pointer-events: none;
     transition: opacity 0.22s ease;
 }
 .founder-swatch:hover::before {
-    opacity: 0.18;
+    opacity: 0.22;
+}
+.founder-swatch:hover {
+    transform: translateY(-3px);
+    border-color: var(--swatch-border, rgba(255, 255, 255, 0.35));
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.50),
+        0 0 16px var(--swatch-glow);
 }
 
 /* ── Active state ────────────────────────────────────────────────────── */
+@keyframes swatch-glow-pulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 2px rgba(0, 0, 0, 0.45),
+            0 0 18px var(--swatch-glow),
+            0 8px 22px rgba(0, 0, 0, 0.5);
+    }
+    50% {
+        box-shadow:
+            0 0 0 2px rgba(0, 0, 0, 0.45),
+            0 0 32px var(--swatch-glow),
+            0 0 8px var(--swatch-glow),
+            0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+}
 .founder-swatch.is-active {
-    border-color: #ffffff;
-    box-shadow:
-        0 0 0 2px rgba(0, 0, 0, 0.45),
-        0 0 18px var(--swatch-glow),
-        0 8px 22px rgba(0, 0, 0, 0.5);
-    transform: translateY(-2px);
+    border-color: var(--swatch-border, #ffffff);
+    animation: swatch-glow-pulse 2.8s ease-in-out infinite;
+    transform: translateY(-3px);
 }
 .founder-swatch.is-active::before {
     opacity: 0.22;
 }
 .founder-swatch.is-active .founder-swatch__preview {
+    border-color: var(--swatch-border, rgba(255, 255, 255, 0.7));
     box-shadow:
-        inset 0 -6px 12px rgba(0, 0, 0, 0.35),
-        inset 0 4px 8px rgba(255, 255, 255, 0.18),
-        0 0 16px var(--swatch-glow);
-    transform: scale(1.04);
+        inset 0 -8px 14px rgba(0, 0, 0, 0.38),
+        inset 0 5px 10px rgba(255, 255, 255, 0.22),
+        0 0 24px var(--swatch-glow),
+        0 0 8px var(--swatch-glow);
+    transform: scale(1.06);
 }
 .founder-swatch.is-active .founder-swatch__status {
     background: linear-gradient(180deg, var(--swatch-glow), rgba(0, 0, 0, 0.25));
@@ -570,8 +611,7 @@
     pointer-events: none;
 }
 
-/* Animated shine pass on the Gold tile — gives it that premium "founder"
-   feeling without being noisy. Loops slowly. */
+/* Animated shine sweeps — Gold fastest, others staggered for variety. */
 @keyframes founder-swatch-shine {
     0%   { transform: translateX(-110%); opacity: 0; }
     20%  { opacity: 1; }
@@ -581,8 +621,17 @@
 .founder-swatch--gold:not(.is-locked) .founder-swatch__shine {
     animation: founder-swatch-shine 4.5s ease-in-out 1.2s infinite;
 }
+.founder-swatch--sapphire:not(.is-locked) .founder-swatch__shine {
+    animation: founder-swatch-shine 5.5s ease-in-out 3.0s infinite;
+}
+.founder-swatch--amethyst:not(.is-locked) .founder-swatch__shine {
+    animation: founder-swatch-shine 6.0s ease-in-out 5.5s infinite;
+}
+.founder-swatch--steel:not(.is-locked) .founder-swatch__shine {
+    animation: founder-swatch-shine 7.0s ease-in-out 2.0s infinite;
+}
 .founder-swatch.is-active .founder-swatch__shine {
-    animation: founder-swatch-shine 3s ease-in-out 0.4s infinite;
+    animation: founder-swatch-shine 2.8s ease-in-out 0.4s infinite;
     opacity: 0;
 }
 
@@ -609,8 +658,17 @@
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 215, 90, 0.18);
 }
 .founder-swatch.is-locked:hover .founder-swatch__preview {
-    filter: grayscale(0.4) brightness(0.75);
+    filter: grayscale(0.3) brightness(0.80);
     opacity: 1;
+}
+/* Locked tile hover: briefly animate the padlock to invite a tap. */
+.founder-swatch.is-locked:hover .founder-swatch__preview::after {
+    animation: locked-nudge 0.5s ease-in-out;
+}
+@keyframes locked-nudge {
+    0%, 100% { transform: none; }
+    30%      { transform: scale(1.25) rotate(-8deg); }
+    65%      { transform: scale(1.15) rotate(6deg); }
 }
 .founder-swatch.is-locked .founder-swatch__status {
     background: linear-gradient(180deg, rgba(255, 215, 90, 0.18), rgba(0, 0, 0, 0.3));
