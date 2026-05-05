@@ -5655,21 +5655,10 @@
                     try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
                     if (!window.game || window.game.state !== 'PAUSED') return;
                     try { window && window.logTouchControlEvent && window.logTouchControlEvent('pauseQuit', {}); } catch (_) {}
-                    try {
-                        window.game.state = 'MENU';
-                        closePauseOverlay();
-                        // Stop music & ambient when leaving gameplay.
-                        try { window.game.audioManager && window.game.audioManager.stopMusic && window.game.audioManager.stopMusic(); } catch (_) {}
-                        try { window.game.audioManager && window.game.audioManager.stopAmbient && window.game.audioManager.stopAmbient(); } catch (_) {}
-                        try { window.game.dispatchGameStateChange && window.game.dispatchGameStateChange(); } catch (_) {}
-                        // Reveal the start menu overlay.
-                        const smo = document.getElementById('start-menu-overlay');
-                        if (smo) {
-                            smo.classList.remove('hidden');
-                            smo.style.display = '';
-                            window._startMenuVisible = true;
-                        }
-                    } catch (err) { console.warn('pause quit failed', err); }
+                    // Full page reload — cleanest way to return to the main menu
+                    // without leaving touch controls, audio, or game state in a
+                    // half-initialised condition.
+                    try { location.reload(); } catch (_) {}
                 });
             }
         } catch (e) {}
