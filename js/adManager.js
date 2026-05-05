@@ -32,7 +32,7 @@ const AdManager = (() => {
         testInterstitialId:  'ca-app-pub-3940256099942544/1033173712',
 
         // Set to false for production builds
-        testing: false,
+        testing: true,
 
         // Banner visibility kill-switch. Set to true once AdMob app is
         // approved ("Ready"). Leave false during "Requires review" so we
@@ -102,12 +102,15 @@ const AdManager = (() => {
         }
 
         try {
-            // Dynamic import of the plugin
-            const mod = await import('@capacitor-community/admob');
-            _plugin = mod.AdMob;
+            // Access the plugin via the Capacitor bridge (works in non-bundled WebView).
+            // Dynamic import('@capacitor-community/admob') fails when bundle:false because
+            // esbuild does not resolve node_modules and the WebView treats it as a URL.
+            _plugin = window.Capacitor &&
+                      window.Capacitor.Plugins &&
+                      window.Capacitor.Plugins.AdMob;
 
             if (!_plugin) {
-                _warn('AdMob plugin not found.');
+                _warn('AdMob plugin not found in Capacitor.Plugins.');
                 return;
             }
 
@@ -149,12 +152,10 @@ const AdManager = (() => {
         if (!CONFIG.enableBanner) return; // Kill-switch — see CONFIG block.
         if (!_available || !_plugin || _bannerVisible) return;
         try {
-            const BannerAdSize = (await import('@capacitor-community/admob')).BannerAdSize;
-            const BannerAdPosition = (await import('@capacitor-community/admob')).BannerAdPosition;
             await _plugin.showBanner({
                 adId: _getBannerId(),
-                adSize: BannerAdSize.ADAPTIVE_BANNER,
-                position: BannerAdPosition.BOTTOM_CENTER,
+                adSize: 'ADAPTIVE_BANNER',
+                position: 'BOTTOM_CENTER',
                 isTesting: CONFIG.testing,
             });
             _bannerVisible = true;
