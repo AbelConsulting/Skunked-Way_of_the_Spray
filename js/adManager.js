@@ -249,6 +249,7 @@ const AdManager = (() => {
     async function showRewarded() {
         if (!canShowRewarded()) return false;
 
+        const wasPaused = _pauseGameForAd();
         try {
             const result = await _plugin.showRewardedAd();
             _rewardedReady = false;
@@ -266,6 +267,9 @@ const AdManager = (() => {
             _rewardedReady = false;
             _prepareRewarded();
             return false;
+        } finally {
+            // Always restore game state regardless of ad outcome
+            if (wasPaused) _resumeGameAfterAd();
         }
     }
 
@@ -306,6 +310,7 @@ const AdManager = (() => {
             return;
         }
 
+        const wasPaused = _pauseGameForAd();
         try {
             _stagesSinceAd = 0;
             _lastInterstitialAt = now;
@@ -314,6 +319,8 @@ const AdManager = (() => {
             try { Analytics.trackAdImpression({ type: 'interstitial', placement: 'stage_complete' }); } catch(e) {}
         } catch (e) {
             _warn('Interstitial failed:', e);
+        } finally {
+            if (wasPaused) _resumeGameAfterAd();
         }
 
         _interstitialReady = false;
@@ -321,6 +328,48 @@ const AdManager = (() => {
     }
     _lastInterstitialAt = 0;
     
+    // ── Game pause helpers ─────────────────────────────────────────
+    /**
+     * Pause the game loop while an ad is visible so players don't take
+     * damage or lose lives. Only acts when the game is actively playing.
+     * Returns true if the game was paused by this call (so we know to
+     * resume it when the ad closes).
+     */
+    function _pauseGameForAd() {
+        try {
+            const g = window.game;
+            if (g && g.state === 'PLAYING') {
+                g.state = 'PAUSED';
+                try { g.audioManager && g.audioManager.pauseMusic && g.audioManager.pauseMusic(); } catch (e) {}
+                try { g.audioManager && g.audioManager.pauseAmbient && g.audioManager.pauseAmbient(); } catch (e) {}
+                g.dispatchGameStateChange && g.dispatchGameStateChange();
+                return true;
+            }
+        } catch (e) {
+            _warn('_pauseGameForAd error:', e);
+        }
+        return false;
+    }
+
+    /**
+     * Resume the game loop after an ad closes.
+     * Only resumes if the game is still in PAUSED state (guards against the
+     * player having navigated to a menu while the ad was open).
+     */
+    function _resumeGameAfterAd() {
+        try {
+            const g = window.game;
+            if (g && g.state === 'PAUSED') {
+                g.state = 'PLAYING';
+                try { g.audioManager && g.audioManager.resumeMusic && g.audioManager.resumeMusic(); } catch (e) {}
+                try { g.audioManager && g.audioManager.resumeAmbient && g.audioManager.resumeAmbient(); } catch (e) {}
+                g.dispatchGameStateChange && g.dispatchGameStateChange();
+            }
+        } catch (e) {
+            _warn('_resumeGameAfterAd error:', e);
+        }
+    }
+
     // ── Session Reset ──────────────────────────────────────────────
     /**
      * Reset per-session counters (call on fresh game start from menu).
