@@ -6391,26 +6391,45 @@
             if (!window._pendingStartGesture) {
                 return { ok: false, reason: 'no-pending' };
             }
-            // Bypass orientation check in tests so we can exercise the flow deterministically
-            try { requestFullscreen(); } catch (e) {}
-            try {
-                window._pendingStartGesture = false;
-                if (mobileStartBtn) {
-                    mobileStartBtn.disabled = false;
-                    mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
-                    delete mobileStartBtn._prevText;
-                }
-                // Dismiss the HTML start-menu overlay so the Enter key isn't blocked
-                window._startMenuVisible = false;
-                try { if (window._hideStartMenu) window._hideStartMenu(); else { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } } catch (e) {}
-                triggerKeyEvent('Enter', 'keydown');
-                setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
-                hideMobileStartOverlay();
-                try { window && window.logTouchControlEvent && window.logTouchControlEvent('test_forceDispatchDone', {}); } catch (e) {}
-                return { ok: true };
-            } catch (e) {
-                return { ok: false, reason: String(e) };
+            function _doDispatch() {
+                try { requestFullscreen(); } catch (e) {}
+                try {
+                    window._pendingStartGesture = false;
+                    if (mobileStartBtn) {
+                        mobileStartBtn.disabled = false;
+                        mobileStartBtn.textContent = mobileStartBtn._prevText || mobileStartBtn.textContent;
+                        delete mobileStartBtn._prevText;
+                    }
+                    // Dismiss the HTML start-menu overlay so the Enter key isn't blocked
+                    window._startMenuVisible = false;
+                    try { if (window._hideStartMenu) window._hideStartMenu(); else { const smo = document.getElementById('start-menu-overlay'); if (smo) smo.classList.add('hidden'); } } catch (e) {}
+                    triggerKeyEvent('Enter', 'keydown');
+                    setTimeout(() => triggerKeyEvent('Enter', 'keyup'), 100);
+                    hideMobileStartOverlay();
+                    try { window && window.logTouchControlEvent && window.logTouchControlEvent('test_forceDispatchDone', {}); } catch (e) {}
+                } catch (e) {}
             }
+            // If game is already in MENU state, dispatch immediately.
+            // Otherwise poll until it reaches MENU — this handles the case where
+            // window.gameReady is set (e.g. by a test timer) before window.game has
+            // finished initialising its state machine to 'MENU'.
+            if (window.game && window.game.state === 'MENU') {
+                _doDispatch();
+                return { ok: true };
+            }
+            let _retries = 0;
+            const _MAX = 80; // 80 × 125 ms = 10 s
+            const _poll = setInterval(function() {
+                _retries++;
+                if (window.game && window.game.state === 'MENU') {
+                    clearInterval(_poll);
+                    _doDispatch();
+                } else if (_retries >= _MAX) {
+                    clearInterval(_poll);
+                    _doDispatch(); // fire anyway so test can observe the failure mode
+                }
+            }, 125);
+            return { ok: true };
         };
 
         // Show/hide touch controls based on game state: only visible during PLAYING on mobile landscape
