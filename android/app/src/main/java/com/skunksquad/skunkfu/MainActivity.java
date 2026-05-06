@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.view.WindowManager;
 
 import androidx.activity.EdgeToEdge;
 import androidx.core.splashscreen.SplashScreen;
@@ -62,6 +63,16 @@ public class MainActivity extends BridgeActivity {
 
     private void applyImmersiveMode() {
         try {
+            // Use LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS (API 30+) so content
+            // extends into the display cutout area. This replaces the deprecated
+            // SHORT_EDGES constant that Capacitor's BridgeActivity sets by default.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                getWindow().getAttributes().layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                getWindow().getAttributes().layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES; // best available pre-30
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
                 WindowInsetsControllerCompat controller =

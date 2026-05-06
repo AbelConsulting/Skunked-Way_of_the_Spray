@@ -32,7 +32,7 @@ const AdManager = (() => {
         testInterstitialId:  'ca-app-pub-3940256099942544/1033173712',
 
         // Set to false for production builds
-        testing: true,
+        testing: false,
 
         // Banner visibility kill-switch. Set to true once AdMob app is
         // approved ("Ready"). Leave false during "Requires review" so we

@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
     // Disallow mixed content in production (HTTPS only)
     allowMixedContent: false,
     // Use hardware acceleration for our canvas game
-    webContentsDebuggingEnabled: true,   // set true during dev
+    webContentsDebuggingEnabled: false,
   },
 
   server: {
@@ -37,7 +37,7 @@ const config: CapacitorConfig = {
     },
     AdMob: {
       testingDevices: [],
-      initializeForTesting: true,
+      initializeForTesting: false,
     },
   },
 };
