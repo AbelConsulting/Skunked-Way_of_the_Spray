@@ -33,9 +33,29 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
     <meta name="msapplication-TileColor" content="#1a1a2e">
-    <meta name="description" content="Lightning-fast 2D beat 'em up platformer � be the Ninja Skunk, chain combos, and master the Shadow Strike!">
+    <meta name="description" content="Skunked: Way of the Spray — lightning-fast 2D beat 'em up. Play as the Ninja Skunk: chain savage combos, unleash the Shadow Strike, and brawl through neon stages. Free in browser or on Android.">
+    <meta name="keywords" content="skunked way of the spray, ninja skunk game, 2D beat em up, browser platformer, free fighting game, skunk ninja, combo fighter, android game, mobile beat em up, side scroller fighter, arcade action game, shadow strike, skunk squad">
+    <meta name="author" content="Mephitideus Interactive">
+    <meta name="robots" content="index, follow">
+    <meta name="apple-mobile-web-app-title" content="Skunked">
     <link rel="canonical" href="https://skunked.io/">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
     <meta property="og:url" content="https://skunked.io/">
+    <meta property="og:site_name" content="Skunked: Way of the Spray">
+    <meta property="og:title" content="Skunked: Way of the Spray — Free 2D Ninja Beat 'Em Up">
+    <meta property="og:description" content="Play as the Ninja Skunk — chain savage combos, master the Shadow Strike, and brawl through neon stages. Free in your browser or on Android.">
+    <meta property="og:image" content="https://skunked.io/assets/store-listing/feature-graphic-1024x500.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="500">
+    <meta property="og:image:alt" content="Skunked: Way of the Spray — Ninja Skunk 2D beat 'em up gameplay">
+    <meta property="og:locale" content="en_US">
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Skunked: Way of the Spray — Free 2D Ninja Beat 'Em Up">
+    <meta name="twitter:description" content="Play as the Ninja Skunk — chain savage combos, master the Shadow Strike, and brawl through neon stages. Free in your browser or on Android.">
+    <meta name="twitter:image" content="https://skunked.io/assets/store-listing/feature-graphic-1024x500.png">
+    <meta name="twitter:image:alt" content="Skunked: Way of the Spray gameplay screenshot">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#129448;</text></svg>">
         <!-- Content Security Policy: configured via HTTP header for stronger enforcement. -->
@@ -2779,6 +2799,88 @@
             display: none;
         }
     </style>
+
+    <!-- Structured Data: VideoGame + WebApplication (schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "VideoGame",
+          "@id": "https://skunked.io/#game",
+          "name": "Skunked: Way of the Spray",
+          "alternateName": "Skunked",
+          "description": "A lightning-fast 2D beat 'em up platformer where you play as a Ninja Skunk. Chain savage combos, master the Shadow Strike ability, and brawl through neon-soaked stages against enemy hordes.",
+          "url": "https://skunked.io/",
+          "image": "https://skunked.io/assets/store-listing/feature-graphic-1024x500.png",
+          "screenshot": "https://skunked.io/assets/store-listing/feature-graphic-1024x500.png",
+          "genre": ["Beat 'em up", "Platformer", "Action", "Arcade"],
+          "gamePlatform": ["Web browser", "Android"],
+          "applicationCategory": "GameApplication",
+          "operatingSystem": ["Android", "Chrome", "Firefox", "Safari", "Edge"],
+          "inLanguage": "en",
+          "isFamilyFriendly": true,
+          "isAccessibleForFree": true,
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "author": {
+            "@type": "Organization",
+            "@id": "https://skunked.io/#org",
+            "name": "Mephitideus Interactive",
+            "url": "https://skunked.io/"
+          },
+          "publisher": {
+            "@id": "https://skunked.io/#org"
+          },
+          "keywords": "ninja skunk, beat em up, 2D platformer, arcade fighter, shadow strike, combo brawler, free browser game",
+          "playMode": "SinglePlayer",
+          "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 1 }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://skunked.io/#webapp",
+          "name": "Skunked: Way of the Spray",
+          "url": "https://skunked.io/",
+          "applicationCategory": "GameApplication",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "author": { "@id": "https://skunked.io/#org" }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://skunked.io/#org",
+          "name": "Mephitideus Interactive",
+          "url": "https://skunked.io/",
+          "logo": "https://skunked.io/assets/icons/icon-512x512.png"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://skunked.io/#website",
+          "url": "https://skunked.io/",
+          "name": "Skunked: Way of the Spray",
+          "publisher": { "@id": "https://skunked.io/#org" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://skunked.io/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
 </head>
 <body>
     <!-- Google Tag Manager (noscript) -->

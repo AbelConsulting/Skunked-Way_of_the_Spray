@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <url>
+    <loc>https://skunked.io/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://skunked.io/assets/store-listing/feature-graphic-1024x500.png</image:loc>
+      <image:title>Skunked: Way of the Spray — Ninja Skunk 2D beat 'em up gameplay</image:title>
+      <image:caption>Play as the Ninja Skunk, chain combos, and unleash the Shadow Strike in this free 2D beat 'em up platformer.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://skunked.io/assets/icons/icon-512x512.png</image:loc>
+      <image:title>Skunked: Way of the Spray app icon</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skunked.io/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://skunked.io/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>

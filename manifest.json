@@ -90,5 +90,21 @@
       "id": "com.skunksquad.skunkfu"
     }
   ],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Play Now",
+      "short_name": "Play",
+      "description": "Jump straight into Skunked: Way of the Spray",
+      "url": "/?shortcut=play",
+      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Leaderboard",
+      "short_name": "Scores",
+      "description": "View the global high score leaderboard",
+      "url": "/?shortcut=leaderboard",
+      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
 }

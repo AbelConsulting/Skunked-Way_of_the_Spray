@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Disallow build artifacts and internal tooling
+Disallow: /android/
+Disallow: /tmp/
+Disallow: /tools/
+Disallow: /toolshed/
+Disallow: /scripts/
+Disallow: /python/
+Disallow: /.venv/
+Disallow: /functions/
+
+Sitemap: https://skunked.io/sitemap.xml
