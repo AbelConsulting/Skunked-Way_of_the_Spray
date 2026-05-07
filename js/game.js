@@ -1258,14 +1258,13 @@ class Game {
             
             // No progress/continue system: always play straight through.
 
-            // Wait then transition
-            setTimeout(() => {
-                // Trigger Fade Out transition
-               this.transitionState = 'FADE_OUT';
-               this.transitionTimer = 0;
-               this.transitionAlpha = 0;
-               this.transitionDuration = 1.0;
-            }, 2000);
+            // Wait then transition. Use a dt-driven timer (not setTimeout)
+            // so the wait is paused while a full-screen ad is on screen.
+            // Previously this used setTimeout(2000) which fired even when the
+            // WebView was backgrounded by an AdMob interstitial — by the time
+            // the ad closed the next level had already loaded behind it,
+            // causing damage / game-overs the player couldn't see.
+            this._levelCompleteWait = 2.0;
         }
 
         victory() {
@@ -1379,6 +1378,31 @@ class Game {
         }
 
         update(dt) {
+            // Freeze everything (gameplay, transitions, level-complete timer)
+            // while a full-screen ad is on screen. AdManager dispatches
+            // gameAdShow/gameAdHide and toggles isAdShowing() for both
+            // rewarded video and interstitial ads.
+            try {
+                if (window.AdManager && typeof window.AdManager.isAdShowing === 'function'
+                    && window.AdManager.isAdShowing()) {
+                    return;
+                }
+            } catch (e) { /* never break the loop */ }
+
+            // Drive the post-level-complete wait off real frame dt instead
+            // of setTimeout so it pauses with the rest of the loop.
+            if (this._levelCompleteWait && this._levelCompleteWait > 0
+                && this.state === 'LEVEL_COMPLETE' && !this.transitionState) {
+                this._levelCompleteWait -= dt;
+                if (this._levelCompleteWait <= 0) {
+                    this._levelCompleteWait = 0;
+                    this.transitionState = 'FADE_OUT';
+                    this.transitionTimer = 0;
+                    this.transitionAlpha = 0;
+                    this.transitionDuration = 1.0;
+                }
+            }
+
             // Handle transitions
             if (this.transitionState) {
                 this.transitionTimer += dt;

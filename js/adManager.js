@@ -61,6 +61,8 @@ const AdManager = (() => {
     let _revivesUsed        = 0;
     let _stagesSinceAd      = 0;
     let _lastInterstitialAt = 0;
+    let _adShowing          = false; // true while a rewarded/interstitial is on screen
+    let _pausedStateBeforeAd = null; // game.state value captured at pause time
 
     // ── Helpers ────────────────────────────────────────────────────
     function _getBannerId() {
@@ -250,6 +252,7 @@ const AdManager = (() => {
         if (!canShowRewarded()) return false;
 
         const wasPaused = _pauseGameForAd();
+        _setAdShowing(true);
         try {
             const result = await _plugin.showRewardedAd();
             _rewardedReady = false;
@@ -268,6 +271,7 @@ const AdManager = (() => {
             _prepareRewarded();
             return false;
         } finally {
+            _setAdShowing(false);
             // Always restore game state regardless of ad outcome
             if (wasPaused) _resumeGameAfterAd();
         }
@@ -311,6 +315,7 @@ const AdManager = (() => {
         }
 
         const wasPaused = _pauseGameForAd();
+        _setAdShowing(true);
         try {
             _stagesSinceAd = 0;
             _lastInterstitialAt = now;
@@ -320,6 +325,7 @@ const AdManager = (() => {
         } catch (e) {
             _warn('Interstitial failed:', e);
         } finally {
+            _setAdShowing(false);
             if (wasPaused) _resumeGameAfterAd();
         }
 
@@ -331,20 +337,29 @@ const AdManager = (() => {
     // ── Game pause helpers ─────────────────────────────────────────
     /**
      * Pause the game loop while an ad is visible so players don't take
-     * damage or lose lives. Only acts when the game is actively playing.
-     * Returns true if the game was paused by this call (so we know to
-     * resume it when the ad closes).
+     * damage, lose lives, or have setTimeout/transition timers fire while
+     * the ad is on top of the WebView.
+     *
+     * Records the prior game.state so it can be restored exactly when the
+     * ad closes (covers PLAYING and LEVEL_COMPLETE — interstitials fire
+     * from completeLevel() so the state is LEVEL_COMPLETE at that point).
+     * Returns true if the game was paused by this call.
      */
     function _pauseGameForAd() {
         try {
             const g = window.game;
-            if (g && g.state === 'PLAYING') {
+            if (!g) return false;
+            // States we want to freeze while the ad is on screen.
+            const pauseable = (g.state === 'PLAYING' || g.state === 'LEVEL_COMPLETE');
+            if (!pauseable) return false;
+            _pausedStateBeforeAd = g.state;
+            if (g.state !== 'PAUSED') {
                 g.state = 'PAUSED';
-                try { g.audioManager && g.audioManager.pauseMusic && g.audioManager.pauseMusic(); } catch (e) {}
-                try { g.audioManager && g.audioManager.pauseAmbient && g.audioManager.pauseAmbient(); } catch (e) {}
                 g.dispatchGameStateChange && g.dispatchGameStateChange();
-                return true;
             }
+            try { g.audioManager && g.audioManager.pauseMusic && g.audioManager.pauseMusic(); } catch (e) {}
+            try { g.audioManager && g.audioManager.pauseAmbient && g.audioManager.pauseAmbient(); } catch (e) {}
+            return true;
         } catch (e) {
             _warn('_pauseGameForAd error:', e);
         }
@@ -352,22 +367,37 @@ const AdManager = (() => {
     }
 
     /**
-     * Resume the game loop after an ad closes.
-     * Only resumes if the game is still in PAUSED state (guards against the
-     * player having navigated to a menu while the ad was open).
+     * Resume the game loop after an ad closes. Restores the exact state
+     * captured at pause time (PLAYING or LEVEL_COMPLETE) so the level
+     * transition resumes from where it left off rather than skipping ahead.
+     * Guards against the player having navigated to a menu while the ad was
+     * open.
      */
     function _resumeGameAfterAd() {
         try {
             const g = window.game;
-            if (g && g.state === 'PAUSED') {
-                g.state = 'PLAYING';
-                try { g.audioManager && g.audioManager.resumeMusic && g.audioManager.resumeMusic(); } catch (e) {}
-                try { g.audioManager && g.audioManager.resumeAmbient && g.audioManager.resumeAmbient(); } catch (e) {}
-                g.dispatchGameStateChange && g.dispatchGameStateChange();
-            }
+            const target = _pausedStateBeforeAd;
+            _pausedStateBeforeAd = null;
+            if (!g || !target) return;
+            if (g.state !== 'PAUSED') return; // user moved on (menu, game over, etc.)
+            g.state = target;
+            try { g.audioManager && g.audioManager.resumeMusic && g.audioManager.resumeMusic(); } catch (e) {}
+            try { g.audioManager && g.audioManager.resumeAmbient && g.audioManager.resumeAmbient(); } catch (e) {}
+            g.dispatchGameStateChange && g.dispatchGameStateChange();
         } catch (e) {
             _warn('_resumeGameAfterAd error:', e);
         }
+    }
+
+    /**
+     * Toggle the global ad-showing flag and broadcast a CustomEvent so
+     * other systems (gameLoop, AdSense banners, analytics) can react.
+     */
+    function _setAdShowing(showing) {
+        _adShowing = !!showing;
+        try {
+            window.dispatchEvent(new CustomEvent(showing ? 'gameAdShow' : 'gameAdHide'));
+        } catch (e) {}
     }
 
     // ── Session Reset ──────────────────────────────────────────────
@@ -390,6 +420,8 @@ const AdManager = (() => {
         showRewarded,
         onStageComplete,
         resetSession,
+        /** True while a full-screen ad (rewarded/interstitial) is on screen. */
+        isAdShowing() { return _adShowing; },
         /** True if ads are available on this platform. */
         get available() { return _available; },
         /** True if the banner is currently visible. */
