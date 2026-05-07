@@ -212,6 +212,93 @@ const Analytics = (() => {
         });
     }
 
+    // ── Revive CTA funnel (game-over rewarded ad) ──────────────────
+    // Fires when the game-over reveal timer ends AND a rewarded ad is loaded.
+    function trackAdReviveEligible(data = {}) {
+        push('ad_revive_eligible', {
+            level: data.level || 0,
+            score: data.score || 0,
+            revives_used: data.revivesUsed || 0
+        });
+    }
+    // Fires when the CTA button is actually shown to the player.
+    function trackAdReviveOffered(data = {}) {
+        push('ad_revive_offered', {
+            level: data.level || 0,
+            score: data.score || 0,
+            revives_used: data.revivesUsed || 0
+        });
+    }
+    // Fires when the player taps the CTA.
+    function trackAdReviveClicked(data = {}) {
+        push('ad_revive_clicked', {
+            level: data.level || 0,
+            score: data.score || 0,
+            revives_used: data.revivesUsed || 0
+        });
+    }
+    // Fires when the rewarded ad resolves WITHOUT granting the reward
+    // (player dismissed, ad was skipped, ad failed to play).
+    function trackAdReviveDismissed(data = {}) {
+        push('ad_revive_dismissed', {
+            level: data.level || 0,
+            score: data.score || 0,
+            reason: data.reason || 'dismissed'
+        });
+    }
+    // Fires when an ad request fails to fill (prepare error, show error).
+    function trackAdNoFill(data = {}) {
+        push('ad_no_fill', {
+            ad_type: data.type || 'unknown',
+            placement: data.placement || '',
+            phase: data.phase || 'prepare', // 'prepare' or 'show'
+            reason: data.reason || 'unknown'
+        });
+    }
+
+    // ── Purchase / IAP ─────────────────────────────────────────
+    // Fires when an entitlement flips ON (purchase, restore, remote-restore).
+    function trackPurchase(data = {}) {
+        push('purchase', {
+            product_id: data.product || data.productId || 'unknown',
+            source: data.source || 'unknown', // purchase | restore | init-owned | remote-restore
+            price: data.price || '',
+            currency: data.currency || ''
+        });
+    }
+    // Fires when the purchase modal is opened.
+    function trackPurchaseStart(data = {}) {
+        push('purchase_start', {
+            product_id: data.product || data.productId || 'unknown',
+            placement: data.placement || ''
+        });
+    }
+    // Fires when an IAP modal/CTA surface becomes visible to the user.
+    // Top of the IAP funnel — pairs with `purchase_start` (button click) and
+    // `purchase` (entitlement granted). Mirrors the revive funnel pattern.
+    function trackPurchaseModalOpen(data = {}) {
+        push('purchase_modal_open', {
+            product_id: data.product || data.productId || 'unknown',
+            placement: data.placement || '',
+            trigger: data.trigger || ''
+        });
+    }
+    // Fires when the user dismisses an IAP modal without buying.
+    function trackPurchaseModalDismissed(data = {}) {
+        push('purchase_modal_dismissed', {
+            product_id: data.product || data.productId || 'unknown',
+            placement: data.placement || '',
+            reason: data.reason || 'user_skip'
+        });
+    }
+    // Fires when the order() call fails or is cancelled by the user.
+    function trackPurchaseFailed(data = {}) {
+        push('purchase_failed', {
+            product_id: data.product || data.productId || 'unknown',
+            reason: data.reason || 'unknown'
+        });
+    }
+
     // ── Boss / combat ───────────────────────────────────────────
 
     function trackBossEncounter(data = {}) {
@@ -375,6 +462,16 @@ const Analytics = (() => {
         trackScoreSubmit,
         trackAdRevive,
         trackAdImpression,
+        trackAdReviveEligible,
+        trackAdReviveOffered,
+        trackAdReviveClicked,
+        trackAdReviveDismissed,
+        trackAdNoFill,
+        trackPurchase,
+        trackPurchaseStart,
+        trackPurchaseModalOpen,
+        trackPurchaseModalDismissed,
+        trackPurchaseFailed,
         trackBossEncounter,
         trackBossDefeat,
         trackItemPickup,

@@ -46,6 +46,21 @@ const PurchaseManager = (() => {
     let _founderPass   = _readFounderPassFromStorage();
     let _product       = null;     // CdvPurchase.Product (remove_ads)
     let _founderProduct = null;    // CdvPurchase.Product (founder_pass)
+    // Last seen Google Play purchase token, keyed by SKU. Captured in
+    // .approved() / .finished() so we can forward it to the server-side
+    // entitlement endpoint for receipt verification.
+    const _lastPurchaseToken = Object.create(null);
+    function _captureToken(tx) {
+        try {
+            const token = (tx && (tx.transactionId
+                || (tx.nativePurchase && tx.nativePurchase.purchaseToken)
+                || (tx.purchase && tx.purchase.purchaseToken))) || '';
+            if (!token || !tx || !Array.isArray(tx.products)) return;
+            for (const p of tx.products) {
+                if (p && p.id) _lastPurchaseToken[p.id] = token;
+            }
+        } catch (e) {}
+    }
     const _listeners   = new Set();
     const _founderListeners = new Set();
     const _readyListeners = new Set();
@@ -78,13 +93,15 @@ const PurchaseManager = (() => {
                 : '';
         } catch (_) { return ''; }
     }
-    function _pushEntitlementRemote(sku) {
+    function _pushEntitlementRemote(sku, opts) {
         const api = _getApi();
         const pid = _getPlayerId();
         if (!api || !pid || !sku) return;
+        const purchaseToken = (opts && opts.purchaseToken) || _lastPurchaseToken[sku] || '';
+        const productId     = (opts && opts.productId) || sku;
         try {
-            api.setEntitlement(pid, sku).then(ok => {
-                if (ok) _log('Mirrored entitlement to server:', sku);
+            api.setEntitlement(pid, sku, { purchaseToken, productId }).then(ok => {
+                if (ok) _log('Mirrored entitlement to server:', sku, purchaseToken ? '(verified)' : '(unverified)');
                 else    _warn('Server entitlement push reported failure:', sku);
             }).catch(e => _warn('Server entitlement push threw:', e));
         } catch (e) { _warn('Server entitlement push setup failed:', e); }
@@ -299,16 +316,19 @@ const PurchaseManager = (() => {
                 })
                 .approved((tx) => {
                     _log('Transaction approved:', tx);
+                    _captureToken(tx);
                     // Plugin requires explicit verification & finishing.
                     // For a non-consumable with no server, finish locally.
                     tx.verify().then(() => tx.finish()).catch(e => _warn('verify failed', e));
                 })
                 .verified((receipt) => {
                     _log('Receipt verified:', receipt);
+                    _captureToken(receipt);
                     receipt.finish();
                 })
                 .finished((tx) => {
                     _log('Transaction finished:', tx);
+                    _captureToken(tx);
                     if (tx && tx.products) {
                         if (tx.products.some(p => p.id === PRODUCT_ID_REMOVE_ADS)) {
                             _setAdFree(true, 'purchase');

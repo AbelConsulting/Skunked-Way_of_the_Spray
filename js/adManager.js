@@ -22,7 +22,19 @@ const AdManager = (() => {
     'use strict';
 
     // ── Configuration ──────────────────────────────────────────────
-    const CONFIG = {
+    // Defaults; runtime overrides come from localStorage `skunkfu_adConfig`
+    // (a JSON object). This lets us tune cadence remotely (e.g. via a Cloud
+    // Function-served config) without redeploying. Only the listed keys can
+    // be overridden — ad unit IDs and rewarded format are intentionally
+    // baked-in to avoid client-side ad spoofing.
+    const TUNABLE_KEYS = [
+        'enableBanner',
+        'interstitialEveryNStages',
+        'interstitialMinIntervalSec',
+        'interstitialFirstInstallSkipCount',
+        'maxRevivesPerSession'
+    ];
+    const DEFAULT_CONFIG = {
         // Real ad unit IDs from AdMob console (app ~5979271944, Google Play link):
         bannerAdUnitId:       'ca-app-pub-8519140628365141/7472317017',
         rewardedAdUnitId:     'ca-app-pub-8519140628365141/3920084812',
@@ -55,10 +67,30 @@ const AdManager = (() => {
         interstitialEveryNStages: 3,
         // Minimum seconds between interstitials (frequency cap)
         interstitialMinIntervalSec: 90,
+        // First-install grace: how many interstitials to skip on a brand-new
+        // install. Helps D1 retention by not showing an ad mid-tutorial. The
+        // counter persists in localStorage as `skunkfu_iapInterSkipped`.
+        interstitialFirstInstallSkipCount: 1,
 
         // Max rewarded revives per session (prevent abuse)
         maxRevivesPerSession: 2,
     };
+    const CONFIG = Object.assign({}, DEFAULT_CONFIG);
+    function _applyStoredOverrides() {
+        try {
+            const raw = localStorage.getItem('skunkfu_adConfig');
+            if (!raw) return;
+            const overrides = JSON.parse(raw);
+            if (!overrides || typeof overrides !== 'object') return;
+            for (const k of TUNABLE_KEYS) {
+                if (Object.prototype.hasOwnProperty.call(overrides, k)) {
+                    CONFIG[k] = overrides[k];
+                }
+            }
+            try { console.log('[AdManager] Applied stored config overrides:', overrides); } catch (e) {}
+        } catch (e) { /* malformed JSON — ignore */ }
+    }
+    _applyStoredOverrides();
 
     // ── State ──────────────────────────────────────────────────────
     let _plugin       = null;   // AdMob plugin reference
@@ -262,6 +294,7 @@ const AdManager = (() => {
         } catch (e) {
             _rewardedReady = false;
             _warn('Failed to prepare rewarded ad:', e);
+            try { Analytics.trackAdNoFill({ type: 'rewarded', placement: 'revive', phase: 'prepare', reason: (e && e.message) || String(e) }); } catch (_) {}
         }
     }
 
@@ -306,6 +339,11 @@ const AdManager = (() => {
             return true;
         } catch (e) {
             _warn('Rewarded ad failed or was dismissed:', e);
+            try {
+                const reason = (e && e.message) || String(e || 'dismissed');
+                Analytics.trackAdReviveDismissed({ reason });
+                Analytics.trackAdNoFill({ type: 'rewarded', placement: 'revive', phase: 'show', reason });
+            } catch (_) {}
             _rewardedReady = false;
             _prepareRewarded();
             return false;
@@ -329,6 +367,7 @@ const AdManager = (() => {
         } catch (e) {
             _interstitialReady = false;
             _warn('Failed to prepare interstitial:', e);
+            try { Analytics.trackAdNoFill({ type: 'interstitial', placement: 'stage_complete', phase: 'prepare', reason: (e && e.message) || String(e) }); } catch (_) {}
         }
     }
 
@@ -353,6 +392,21 @@ const AdManager = (() => {
             return;
         }
 
+        // First-install grace: skip the first N qualifying interstitials so
+        // brand-new players don't get hit with an ad mid-tutorial. Counter
+        // persists across sessions; resets only on uninstall/clear-data.
+        const skipTarget = CONFIG.interstitialFirstInstallSkipCount | 0;
+        if (skipTarget > 0) {
+            let skipped = 0;
+            try { skipped = parseInt(localStorage.getItem('skunkfu_iapInterSkipped') || '0', 10) || 0; } catch (e) {}
+            if (skipped < skipTarget) {
+                try { localStorage.setItem('skunkfu_iapInterSkipped', String(skipped + 1)); } catch (e) {}
+                _stagesSinceAd = 0; // reset counter so the next one comes in N stages
+                _log('Interstitial skipped (first-install grace ' + (skipped + 1) + '/' + skipTarget + ').');
+                return;
+            }
+        }
+
         const wasPaused = _pauseGameForAd();
         _setAdShowing(true);
         try {
@@ -363,6 +417,7 @@ const AdManager = (() => {
             try { Analytics.trackAdImpression({ type: 'interstitial', placement: 'stage_complete' }); } catch(e) {}
         } catch (e) {
             _warn('Interstitial failed:', e);
+            try { Analytics.trackAdNoFill({ type: 'interstitial', placement: 'stage_complete', phase: 'show', reason: (e && e.message) || String(e) }); } catch (_) {}
         } finally {
             _setAdShowing(false);
             if (wasPaused) _resumeGameAfterAd();
@@ -371,8 +426,7 @@ const AdManager = (() => {
         _interstitialReady = false;
         _prepareInterstitial();
     }
-    _lastInterstitialAt = 0;
-    
+
     // ── Game pause helpers ─────────────────────────────────────────
     /**
      * Pause the game loop while an ad is visible so players don't take
@@ -449,9 +503,43 @@ const AdManager = (() => {
     }
 
     // ── Public API ─────────────────────────────────────────────────
+    // ── Public API ────────────────────────────────────────────────
+
+    /**
+     * Update tunable cadence settings at runtime and persist them in
+     * localStorage so they survive reloads. Only keys in TUNABLE_KEYS are
+     * accepted; ad unit IDs and rewarded format are intentionally locked.
+     * Pass `null` to clear all overrides and revert to defaults.
+     */
+    function setConfig(overrides) {
+        if (overrides === null) {
+            try { localStorage.removeItem('skunkfu_adConfig'); } catch (e) {}
+            for (const k of TUNABLE_KEYS) CONFIG[k] = DEFAULT_CONFIG[k];
+            _log('Cleared config overrides; reverted to defaults.');
+            return Object.assign({}, CONFIG);
+        }
+        if (!overrides || typeof overrides !== 'object') return Object.assign({}, CONFIG);
+        let changed = false;
+        let stored = {};
+        try { stored = JSON.parse(localStorage.getItem('skunkfu_adConfig') || '{}') || {}; } catch (e) {}
+        for (const k of TUNABLE_KEYS) {
+            if (Object.prototype.hasOwnProperty.call(overrides, k)) {
+                CONFIG[k] = overrides[k];
+                stored[k] = overrides[k];
+                changed = true;
+            }
+        }
+        if (changed) {
+            try { localStorage.setItem('skunkfu_adConfig', JSON.stringify(stored)); } catch (e) {}
+            _log('Applied runtime config overrides:', overrides);
+        }
+        return Object.assign({}, CONFIG);
+    }
+
     return {
         CONFIG,
         initialize,
+        setConfig,
         showBanner,
         hideBanner,
         removeBanner,

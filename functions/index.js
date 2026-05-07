@@ -9,6 +9,89 @@ admin.initializeApp();
 const db = admin.firestore();
 const SCORES_COLLECTION = "scores";
 
+// ── Google Play receipt verification (optional) ─────────────────────────────
+// Active when ALL of the following are true:
+//   1. The `googleapis` package is installed in functions/.
+//   2. `PLAY_PACKAGE_NAME` env var is set (e.g. com.skunksquad.skunkfu).
+//   3. A service account key is available — either via Application Default
+//      Credentials (preferred on Cloud Functions) or `GOOGLE_PLAY_SA_JSON`
+//      env var containing the service account JSON.
+// When `STRICT_PURCHASE_VERIFY=1` is set, setEntitlement REJECTS any push
+// that lacks a verifiable purchaseToken. Otherwise verification is best-
+// effort: tokens that verify get a `verified:true` flag stamped on the
+// Firestore doc, and unverified tokens still flip the entitlement (the
+// existing rate-limit + GPGS playerId trust model).
+const PLAY_PACKAGE_NAME = process.env.PLAY_PACKAGE_NAME || "";
+const STRICT_PURCHASE_VERIFY = process.env.STRICT_PURCHASE_VERIFY === "1";
+let _playApi = null;
+let _playApiLoaded = false;
+async function _getPlayApi() {
+  if (_playApiLoaded) return _playApi;
+  _playApiLoaded = true;
+  if (!PLAY_PACKAGE_NAME) return null;
+  let google;
+  try {
+    ({ google } = require("googleapis"));
+  } catch (e) {
+    console.warn("[verify] googleapis not installed; skipping receipt verification.");
+    return null;
+  }
+  try {
+    let auth;
+    if (process.env.GOOGLE_PLAY_SA_JSON) {
+      const credentials = JSON.parse(process.env.GOOGLE_PLAY_SA_JSON);
+      auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+      });
+    } else {
+      auth = new google.auth.GoogleAuth({
+        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+      });
+    }
+    _playApi = google.androidpublisher({ version: "v3", auth });
+    console.info("[verify] Google Play Developer API ready.");
+    return _playApi;
+  } catch (e) {
+    console.warn("[verify] failed to init Play Developer API:", e && e.message);
+    return null;
+  }
+}
+
+/**
+ * Verify a Google Play purchase token against the Play Developer API.
+ * Returns { ok: boolean, reason?: string, purchaseState?: number, ackState?: number }.
+ *   purchaseState: 0=purchased, 1=cancelled, 2=pending
+ *   ackState:      0=yet to ack, 1=acknowledged
+ */
+async function verifyPlayPurchase(productId, purchaseToken) {
+  const api = await _getPlayApi();
+  if (!api) return { ok: false, reason: "verifier_unavailable" };
+  if (!PLAY_PACKAGE_NAME || !productId || !purchaseToken) {
+    return { ok: false, reason: "missing_args" };
+  }
+  try {
+    const resp = await api.purchases.products.get({
+      packageName: PLAY_PACKAGE_NAME,
+      productId,
+      token: purchaseToken,
+    });
+    const data = resp && resp.data ? resp.data : {};
+    if (data.purchaseState !== 0) {
+      return { ok: false, reason: "not_purchased", purchaseState: data.purchaseState };
+    }
+    return {
+      ok: true,
+      purchaseState: data.purchaseState,
+      ackState: data.acknowledgementState,
+      orderId: data.orderId,
+    };
+  } catch (e) {
+    const status = e && e.response && e.response.status;
+    return { ok: false, reason: "play_api_error", status, message: e && e.message };
+  }
+}
+
 // ── Rate limiter (in-memory, per-instance) ──────────────────────────────────
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || "10", 10);
@@ -260,9 +343,14 @@ exports.getEntitlements = onRequest({ region: "us-central1" }, async (req, res) 
   }
 });
 
-// POST /setEntitlement  body:{ playerId, sku }
+// POST /setEntitlement  body:{ playerId, sku, purchaseToken?, productId? }
 // Always sets the entitlement to TRUE. Revocation is intentionally not
 // supported via this endpoint (refunds should be handled out-of-band).
+//
+// If `purchaseToken` + `productId` are supplied AND the Play Developer API
+// is configured, the token is verified before the entitlement flip and the
+// resulting Firestore doc gets `verified: true` (plus the orderId). When
+// `STRICT_PURCHASE_VERIFY=1`, missing/invalid tokens are rejected outright.
 exports.setEntitlement = onRequest({ region: "us-central1" }, async (req, res) => {
   if (setCors(req, res)) return;
   if (req.method !== "POST") {
@@ -279,6 +367,8 @@ exports.setEntitlement = onRequest({ region: "us-central1" }, async (req, res) =
   const body = req.body || {};
   const playerId = (body.playerId || "").toString();
   const sku = (body.sku || "").toString();
+  const purchaseToken = (body.purchaseToken || "").toString();
+  const productId     = (body.productId || sku || "").toString();
   if (!isValidPlayerId(playerId)) {
     res.status(400).json({ error: "bad_player_id" });
     return;
@@ -289,6 +379,22 @@ exports.setEntitlement = onRequest({ region: "us-central1" }, async (req, res) =
   }
   if (!checkEntitlementRate(playerId)) {
     res.status(429).json({ error: "rate_limited_player" });
+    return;
+  }
+
+  // Optional Play receipt verification.
+  let verification = null;
+  if (purchaseToken) {
+    verification = await verifyPlayPurchase(productId, purchaseToken);
+    if (!verification.ok) {
+      console.warn("[setEntitlement] verification failed:", sku, verification);
+      if (STRICT_PURCHASE_VERIFY) {
+        res.status(403).json({ error: "verification_failed", reason: verification.reason });
+        return;
+      }
+    }
+  } else if (STRICT_PURCHASE_VERIFY) {
+    res.status(400).json({ error: "purchase_token_required" });
     return;
   }
 
@@ -305,8 +411,17 @@ exports.setEntitlement = onRequest({ region: "us-central1" }, async (req, res) =
     if (!snap.exists || snap.data()[ownedField] !== true) {
       update[sinceField] = admin.firestore.FieldValue.serverTimestamp();
     }
+    if (verification && verification.ok) {
+      update[`${ownedField}Verified`] = true;
+      if (verification.orderId) update[`${ownedField}OrderId`] = verification.orderId;
+    }
     await ref.set(update, { merge: true });
-    res.json({ success: true, sku, playerId });
+    res.json({
+      success: true,
+      sku,
+      playerId,
+      verified: !!(verification && verification.ok),
+    });
   } catch (e) {
     console.error("setEntitlement error:", e);
     res.status(500).json({ error: "server_error" });

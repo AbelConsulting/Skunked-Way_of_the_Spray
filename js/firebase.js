@@ -199,16 +199,25 @@ export async function getEntitlements(playerId) {
  * for the given player. Idempotent — safe to call repeatedly.
  * @param {string} playerId
  * @param {'remove_ads'|'founder_pass'} sku
+ * @param {{purchaseToken?: string, productId?: string}} [opts]
+ *   Optional Google Play purchase token + product ID to enable server-side
+ *   receipt verification when the Functions backend has a Play Developer
+ *   service account configured. Safe to omit on the web build / web fallback.
  * @returns {Promise<boolean>} true on success
  */
-export async function setEntitlement(playerId, sku) {
+export async function setEntitlement(playerId, sku, opts) {
   if (!playerId || typeof playerId !== 'string') return false;
   if (sku !== 'remove_ads' && sku !== 'founder_pass') return false;
+  const body = { playerId, sku };
+  if (opts && typeof opts === 'object') {
+    if (opts.purchaseToken && typeof opts.purchaseToken === 'string') body.purchaseToken = opts.purchaseToken;
+    if (opts.productId     && typeof opts.productId     === 'string') body.productId     = opts.productId;
+  }
   try {
     const res = await fetchWithRetry(`${API_BASE}/setEntitlement`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerId, sku }),
+      body: JSON.stringify(body),
     });
     return res.ok;
   } catch (e) {

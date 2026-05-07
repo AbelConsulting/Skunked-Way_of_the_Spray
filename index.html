@@ -4374,6 +4374,11 @@
                                     if (statusEl) statusEl.textContent = 'Opening Google Play\u2026';
                                     buyBtn.disabled = true;
                                     try {
+                                        if (window.Analytics && Analytics.trackPurchaseStart) {
+                                            Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'settings_card' });
+                                        }
+                                    } catch (_) {}
+                                    try {
                                         const res = await PurchaseManager.purchaseRemoveAds();
                                         if (statusEl) {
                                             if (res.ok) statusEl.textContent = res.reason === 'pending' ? 'Completing purchase\u2026' : 'Already owned. Thank you!';
@@ -4381,8 +4386,18 @@
                                             else if (res.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + res.reason;
                                         }
+                                        try {
+                                            if (res && !res.ok && window.Analytics && Analytics.trackPurchaseFailed) {
+                                                Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: res.reason || 'unknown' });
+                                            }
+                                        } catch (_) {}
                                     } catch (e) {
                                         if (statusEl) statusEl.textContent = 'Purchase error.';
+                                        try {
+                                            if (window.Analytics && Analytics.trackPurchaseFailed) {
+                                                Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: 'exception' });
+                                            }
+                                        } catch (_) {}
                                     } finally {
                                         setTimeout(_renderAdFreeState, 500);
                                     }
@@ -4499,6 +4514,15 @@
                                 _shownThisSession = true;
                                 _startSkinPreview();
                                 try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_shown', { deaths: _sessionDeaths }); } catch (_) {}
+                                try {
+                                    if (window.Analytics && Analytics.trackPurchaseModalOpen) {
+                                        Analytics.trackPurchaseModalOpen({
+                                            product: 'remove_ads',
+                                            placement: 'soft_prompt',
+                                            trigger: 'death_threshold'
+                                        });
+                                    }
+                                } catch (_) {}
                             }
 
                             // --- Skin tile walk-cycle preview (modal copy) --
@@ -4601,10 +4625,21 @@
                                     ev.preventDefault();
                                     ev.stopPropagation();
                                     try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_buy_clicked'); } catch (_) {}
+                                    try {
+                                        if (window.Analytics && Analytics.trackPurchaseStart) {
+                                            Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'soft_prompt' });
+                                        }
+                                    } catch (_) {}
                                     promptBuy.disabled = true;
+                                    let _spRes = null;
                                     try {
                                         if (window.PurchaseManager && typeof PurchaseManager.purchaseRemoveAds === 'function') {
-                                            await PurchaseManager.purchaseRemoveAds();
+                                            _spRes = await PurchaseManager.purchaseRemoveAds();
+                                        }
+                                    } catch (_) {}
+                                    try {
+                                        if (_spRes && !_spRes.ok && window.Analytics && Analytics.trackPurchaseFailed) {
+                                            Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: _spRes.reason || 'unknown' });
                                         }
                                     } catch (_) {}
                                     promptBuy.disabled = false;
@@ -4619,6 +4654,15 @@
                                     ev.preventDefault();
                                     ev.stopPropagation();
                                     try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_dismissed'); } catch (_) {}
+                                    try {
+                                        if (window.Analytics && Analytics.trackPurchaseModalDismissed) {
+                                            Analytics.trackPurchaseModalDismissed({
+                                                product: 'remove_ads',
+                                                placement: 'soft_prompt',
+                                                reason: 'user_skip'
+                                            });
+                                        }
+                                    } catch (_) {}
                                     _markDismissed();
                                     _hidePrompt();
                                 });
@@ -4950,7 +4994,17 @@
                                         if (fpStatus) { fpStatus.style.color = ''; fpStatus.textContent = 'Opening Google Play\u2026'; }
                                         fpBuyBtn.disabled = true;
                                         try {
+                                            if (window.Analytics && Analytics.trackPurchaseStart) {
+                                                Analytics.trackPurchaseStart({ product: 'founder_pass', placement: 'settings_card' });
+                                            }
+                                        } catch (_) {}
+                                        try {
                                             const res = await PurchaseManager.purchaseFounderPass();
+                                            try {
+                                                if (res && !res.ok && window.Analytics && Analytics.trackPurchaseFailed) {
+                                                    Analytics.trackPurchaseFailed({ product: 'founder_pass', reason: res.reason || 'unknown' });
+                                                }
+                                            } catch (_) {}
                                             if (fpStatus) {
                                                 if (res.ok) {
                                                     fpStatus.style.color = '#7CFFB2';
@@ -4970,6 +5024,11 @@
                                             }
                                         } catch (e) {
                                             if (fpStatus) { fpStatus.style.color = '#FF8080'; fpStatus.textContent = 'Purchase error.'; }
+                                            try {
+                                                if (window.Analytics && Analytics.trackPurchaseFailed) {
+                                                    Analytics.trackPurchaseFailed({ product: 'founder_pass', reason: 'exception' });
+                                                }
+                                            } catch (_) {}
                                         } finally {
                                             setTimeout(() => {
                                                 fpBuyBtn.disabled = false;
@@ -5021,6 +5080,15 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 try { Analytics.trackMenuAction('skins'); } catch(e) {}
+                                try {
+                                    if (window.Analytics && Analytics.trackPurchaseModalOpen) {
+                                        Analytics.trackPurchaseModalOpen({
+                                            product: 'remove_ads',
+                                            placement: 'menu_skins',
+                                            trigger: 'main_menu_button'
+                                        });
+                                    }
+                                } catch(_) {}
                                 // Re-use the existing settings open path, then scroll.
                                 settingsBtn.click();
                                 setTimeout(() => {
@@ -5593,7 +5661,16 @@
                             const ready = window.AdManager
                                 && typeof AdManager.canShowRewarded === 'function'
                                 && AdManager.canShowRewarded();
-                            if (ready) show();
+                            if (ready) {
+                                const meta = {
+                                    level: ((window.game.currentLevelIndex || 0) + 1),
+                                    score: (window.game.score || 0),
+                                    revivesUsed: (window.AdManager && AdManager._revivesUsed) || 0
+                                };
+                                try { Analytics.trackAdReviveEligible(meta); } catch (_) {}
+                                show();
+                                try { Analytics.trackAdReviveOffered(meta); } catch (_) {}
+                            }
                         } catch (ex) { /* noop */ }
                     }, lockoutMs + 200);
                 });
@@ -5604,6 +5681,13 @@
                     if (!window.AdManager || typeof AdManager.showRewarded !== 'function') return;
                     busy = true;
                     btn.classList.add('disabled');
+                    try {
+                        Analytics.trackAdReviveClicked({
+                            level: window.game ? ((window.game.currentLevelIndex || 0) + 1) : 0,
+                            score: window.game ? (window.game.score || 0) : 0,
+                            revivesUsed: (window.AdManager && AdManager._revivesUsed) || 0
+                        });
+                    } catch (_) {}
                     Promise.resolve(AdManager.showRewarded())
                         .then((rewarded) => {
                             try {
