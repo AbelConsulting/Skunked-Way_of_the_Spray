@@ -4,11 +4,13 @@
  * Provides Rewarded Video ("Watch Ad to Revive") and Interstitial ads
  * for the Android build. Gracefully no-ops on web / when plugin is absent.
  *
- * Ad Unit IDs (Mephitideus — pub-8519140628365141, app ~9959082819):
- *   Banner 1:     ca-app-pub-8519140628365141/3938711780
- *   Banner 2:     ca-app-pub-8519140628365141/1608061915  (reserved/spare)
- *   Interstitial: ca-app-pub-8519140628365141/9068672976
- *   Rewarded:     ca-app-pub-8519140628365141/9192796056  (Rewarded Interstitial)
+ * AdMob app (Google Play — com.skunksquad.skunkfu):
+ *   App ID:        ca-app-pub-8519140628365141~5979271944
+ *
+ * Ad units under that app:
+ *   Banner (banner):           ca-app-pub-8519140628365141/7472317017
+ *   Interstitial (betweenlevels): ca-app-pub-8519140628365141/5195233926
+ *   Rewarded (extra life):     ca-app-pub-8519140628365141/3920084812
  *
  * Google AdMob test ad unit IDs (used when testing = true):
  *   Banner:       ca-app-pub-3940256099942544/6300978111
@@ -21,10 +23,10 @@ const AdManager = (() => {
 
     // ── Configuration ──────────────────────────────────────────────
     const CONFIG = {
-        // Real ad unit IDs from AdMob console:
-        bannerAdUnitId:       'ca-app-pub-8519140628365141/3938711780',
-        rewardedAdUnitId:     'ca-app-pub-8519140628365141/1336900492',
-        interstitialAdUnitId: 'ca-app-pub-8519140628365141/9068672976',
+        // Real ad unit IDs from AdMob console (app ~5979271944, Google Play link):
+        bannerAdUnitId:       'ca-app-pub-8519140628365141/7472317017',
+        rewardedAdUnitId:     'ca-app-pub-8519140628365141/3920084812',
+        interstitialAdUnitId: 'ca-app-pub-8519140628365141/5195233926',
 
         // Google's official test ad unit IDs — used when testing is true
         testBannerId:        'ca-app-pub-3940256099942544/6300978111',
@@ -38,9 +40,9 @@ const AdManager = (() => {
         //   'rewardInterstitial' → prepareRewardInterstitialAd / showRewardInterstitialAd
         //   'rewardVideo'       → prepareRewardVideoAd       / showRewardVideoAd
         // The ad unit's type in the AdMob console must match this value or
-        // requests will silently no-fill. The header comment of this file
-        // documents 9192796056 as a Rewarded Interstitial unit.
-        rewardedFormat: 'rewardInterstitial',
+        // requests will silently no-fill. The "extra life" unit
+        // (3920084812) is type Rewarded, so we use 'rewardVideo'.
+        rewardedFormat: 'rewardVideo',
 
         // Banner visibility kill-switch. Set to true once AdMob app is
         // approved ("Ready"). Leave false during "Requires review" so we
