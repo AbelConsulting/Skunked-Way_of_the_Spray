@@ -219,6 +219,16 @@ const PurchaseManager = (() => {
 
     /**
      * Lazy-load CdvPurchase. Returns the store or null.
+     *
+     * The cordova-plugin-purchase global (`window.CdvPurchase`) is exposed by
+     * the cordova bridge AFTER `deviceready`. PurchaseManager.initialize()
+     * runs from main.js as soon as the game is ready, which is often a few
+     * hundred ms BEFORE deviceready fires on Android. Without a wait we'd
+     * hit a transient `null` and permanently degrade to the web fallback,
+     * leaving the Remove-Ads modal stuck on “Checking purchases…” for users
+     * who happen to open it during that race window.
+     *
+     * So if we don't see the global, poll for it up to ~8s before giving up.
      */
     async function _getStore() {
         if (_store) return _store;
@@ -226,9 +236,17 @@ const PurchaseManager = (() => {
 
         // CdvPurchase exposes itself as window.CdvPurchase when the cordova plugin
         // is installed. We don't `import` it because we don't want a hard build dep.
-        const CdvPurchase = window.CdvPurchase;
+        let CdvPurchase = window.CdvPurchase;
         if (!CdvPurchase || !CdvPurchase.store) {
-            _warn('CdvPurchase plugin not available. Install with: npm i cordova-plugin-purchase && npx cap sync android');
+            const deadline = Date.now() + 8000;
+            while (Date.now() < deadline) {
+                await new Promise(r => setTimeout(r, 200));
+                CdvPurchase = window.CdvPurchase;
+                if (CdvPurchase && CdvPurchase.store) break;
+            }
+        }
+        if (!CdvPurchase || !CdvPurchase.store) {
+            _warn('CdvPurchase plugin not available after 8s wait. Install with: npm i cordova-plugin-purchase && npx cap sync android');
             return null;
         }
         _store = CdvPurchase.store;
@@ -308,7 +326,21 @@ const PurchaseManager = (() => {
                     } catch (e) {}
                 });
 
-            await store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]);
+            // Race store.initialize() against a hard timeout. Google Play
+            // Billing can occasionally hang on the first connection (license-
+            // tester accounts, transient Play services restarts, no network).
+            // Without this cap, _markReady() never fires and the Remove-Ads
+            // modal stays stuck on “Checking purchases…” forever (the exact
+            // symptom early users reported). 12s is well past any healthy
+            // init and below the patience threshold of someone tapping Buy.
+            const initTimeoutMs = 12000;
+            await Promise.race([
+                store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]),
+                new Promise((_resolve, reject) => setTimeout(
+                    () => reject(new Error('store.initialize timeout after ' + initTimeoutMs + 'ms')),
+                    initTimeoutMs
+                ))
+            ]);
             _log('Store initialized.');
 
             // Cross-check ownership on init.
