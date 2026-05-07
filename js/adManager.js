@@ -34,6 +34,14 @@ const AdManager = (() => {
         // Set to false for production builds
         testing: false,
 
+        // Which rewarded ad format the configured rewardedAdUnitId belongs to.
+        //   'rewardInterstitial' → prepareRewardInterstitialAd / showRewardInterstitialAd
+        //   'rewardVideo'       → prepareRewardVideoAd       / showRewardVideoAd
+        // The ad unit's type in the AdMob console must match this value or
+        // requests will silently no-fill. The header comment of this file
+        // documents 9192796056 as a Rewarded Interstitial unit.
+        rewardedFormat: 'rewardInterstitial',
+
         // Banner visibility kill-switch. Set to true once AdMob app is
         // approved ("Ready"). Leave false during "Requires review" so we
         // don't show Google's ugly placeholder bars on the menu screens.
@@ -215,16 +223,40 @@ const AdManager = (() => {
         }
     }
 
-    // ── Rewarded Video ─────────────────────────────────────────────
+    // ── Rewarded Video / Rewarded Interstitial ─────────────────────────────
+    // The @capacitor-community/admob v8 plugin exposes two rewarded
+    // formats with distinct method names. CONFIG.rewardedFormat decides
+    // which pair we call. Picking the wrong one causes a silent no-fill,
+    // which is what was happening when prepareRewardedAd/showRewardedAd
+    // (non-existent methods) were used previously.
+    function _rewardedPrepareFn() {
+        if (!_plugin) return null;
+        return CONFIG.rewardedFormat === 'rewardVideo'
+            ? _plugin.prepareRewardVideoAd
+            : _plugin.prepareRewardInterstitialAd;
+    }
+    function _rewardedShowFn() {
+        if (!_plugin) return null;
+        return CONFIG.rewardedFormat === 'rewardVideo'
+            ? _plugin.showRewardVideoAd
+            : _plugin.showRewardInterstitialAd;
+    }
+
     async function _prepareRewarded() {
         if (!_available || !_plugin) return;
+        const prepare = _rewardedPrepareFn();
+        if (typeof prepare !== 'function') {
+            _warn('Rewarded prepare method not found on plugin (format=' + CONFIG.rewardedFormat + ').');
+            _rewardedReady = false;
+            return;
+        }
         try {
-            await _plugin.prepareRewardedAd({
+            await prepare.call(_plugin, {
                 adId: _getRewardedId(),
                 isTesting: CONFIG.testing,
             });
             _rewardedReady = true;
-            _log('Rewarded ad ready.');
+            _log('Rewarded ad ready (' + CONFIG.rewardedFormat + ').');
         } catch (e) {
             _rewardedReady = false;
             _warn('Failed to prepare rewarded ad:', e);
@@ -254,10 +286,15 @@ const AdManager = (() => {
         const wasPaused = _pauseGameForAd();
         _setAdShowing(true);
         try {
-            const result = await _plugin.showRewardedAd();
+            const show = _rewardedShowFn();
+            if (typeof show !== 'function') {
+                _warn('Rewarded show method not found on plugin (format=' + CONFIG.rewardedFormat + ').');
+                return false;
+            }
+            const result = await show.call(_plugin);
             _rewardedReady = false;
             _revivesUsed++;
-            _log('Rewarded ad completed. Revives used:', _revivesUsed);
+            _log('Rewarded ad completed. Revives used:', _revivesUsed, result);
             try { Analytics.trackAdImpression({ type: 'rewarded', placement: 'revive' }); } catch(e) {}
 
             // Immediately start loading the next one
