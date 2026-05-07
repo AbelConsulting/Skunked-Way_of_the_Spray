@@ -186,7 +186,11 @@
 
         #d-pad { left: 12px; }
         #actions { right: 12px; }
-        #game-over-controls { bottom: 100px; left: 50%; transform: translateX(-50%); }
+        /* Legacy game-over touch button cluster (#game-over-controls) is
+           hidden — its Restart/Menu buttons now live inside the unified
+           .game-over-action-bar so all CTAs occupy one layer instead of
+           two stacked rows that overlapped at bottom: 100px / 110px. */
+        #game-over-controls { display: none !important; }
 
         .touch-btn {
             width: clamp(56px, 9vw, 84px);
@@ -1768,24 +1772,37 @@
         #perf-mode-btn:active { transform: scale(0.96); }
 
         /* -- Game-over Action Bar --
-           Two CTAs (Revive + Leaderboard) sit side-by-side just above the
-           canvas-rendered "pinned restart prompt" strip (~92px tall in
-           ui.js drawGameOver). They share .game-over-cta sizing so the
-           layout stays balanced when only one of them is visible. */
+           All game-over CTAs (Revive, Leaderboard, Restart, Menu) sit
+           side-by-side on a SINGLE layer just above the canvas-rendered
+           pinned restart prompt strip (~92px tall in ui.js drawGameOver).
+           They share .game-over-cta sizing so the layout stays balanced
+           when only some of them are visible. */
         .game-over-action-bar {
             position: absolute;
             left: 50%;
             bottom: 110px;
             transform: translateX(-50%);
-            z-index: 150;
+            z-index: 151;
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
             align-items: center;
             justify-content: center;
+            max-width: calc(100vw - 24px);
             pointer-events: none;
         }
-        .game-over-action-bar .game-over-cta {
+        /* Inside the bar, neutralize the absolute-positioning of
+           .game-over-cta (which targets left:50% / bottom:110px when used
+           standalone) so flex layout governs placement. */
+        .game-over-action-bar .game-over-cta,
+        .game-over-action-bar .game-over-cta.visible,
+        .game-over-action-bar .game-over-cta:active {
             position: static;
+            left: auto;
+            right: auto;
+            bottom: auto;
+        }
+        .game-over-action-bar .game-over-cta {
             transform: translateY(8px);
         }
         .game-over-action-bar .game-over-cta.visible {
@@ -1793,6 +1810,30 @@
         }
         .game-over-action-bar .game-over-cta:active {
             transform: translateY(0) scale(0.97);
+        }
+        /* Compact icon-only Restart/Menu variants (mobile-friendly tap
+           targets without dominating horizontal space). */
+        .game-over-cta--icon {
+            padding: 12px 16px;
+            min-width: 52px;
+            justify-content: center;
+        }
+        .game-over-cta--icon .game-over-cta-icon { font-size: 20px; }
+        .game-over-cta--restart {
+            color: #FFE4A8;
+            background: linear-gradient(180deg, rgba(255,200,80,0.20), rgba(60,40,0,0.78));
+            border-color: rgba(255,200,80,0.55);
+            box-shadow:
+                0 12px 28px rgba(0,0,0,0.45),
+                0 0 22px rgba(255,200,80,0.18);
+        }
+        .game-over-cta--menu {
+            color: #C8D8FF;
+            background: linear-gradient(180deg, rgba(120,160,255,0.18), rgba(0,20,60,0.78));
+            border-color: rgba(120,160,255,0.50);
+            box-shadow:
+                0 12px 28px rgba(0,0,0,0.45),
+                0 0 22px rgba(120,160,255,0.18);
         }
         .game-over-cta--revive {
             color: #C8FFD0;
@@ -3048,10 +3089,12 @@
                 <button id="pause-btn" aria-label="Pause game" title="Pause" hidden>&#9208;</button>
                 <button id="perf-mode-btn" title="Performance mode">Perf</button>
 
-                <!-- Game-over action bar (Revive + Leaderboard).
-                     Both buttons are revealed by JS after the input lockout
-                     expires. Revive is only shown on native Android when an
-                     AdMob rewarded ad is loaded. -->
+                <!-- Game-over action bar (Revive + Leaderboard + Restart + Menu).
+                     All four buttons live on ONE layer (single flex row) so
+                     they cannot overlap. Each is independently shown/hidden
+                     by JS after the input lockout expires. Revive is only
+                     shown on native Android when an AdMob rewarded ad is
+                     loaded; the other three are always shown post-lockout. -->
                 <div id="game-over-action-bar" class="game-over-action-bar">
                     <button id="game-over-revive-btn"
                             type="button"
@@ -3068,6 +3111,24 @@
                             hidden>
                         <span class="game-over-cta-icon" aria-hidden="true">&#127942;</span>
                         <span class="game-over-cta-label">View Leaderboard</span>
+                    </button>
+                    <button id="game-over-restart-btn"
+                            type="button"
+                            class="game-over-cta game-over-cta--restart game-over-cta--icon"
+                            aria-label="Restart"
+                            title="Restart"
+                            hidden>
+                        <span class="game-over-cta-icon" aria-hidden="true">&#10226;</span>
+                        <span class="game-over-cta-label">Restart</span>
+                    </button>
+                    <button id="game-over-menu-btn"
+                            type="button"
+                            class="game-over-cta game-over-cta--menu game-over-cta--icon"
+                            aria-label="Main menu"
+                            title="Main menu"
+                            hidden>
+                        <span class="game-over-cta-icon" aria-hidden="true">&#9776;</span>
+                        <span class="game-over-cta-label">Menu</span>
                     </button>
                 </div>
 
@@ -5624,6 +5685,73 @@
                     } catch (e) {
                         console.warn('game-over leaderboard CTA failed', e);
                     }
+                });
+            })();
+
+            // -- Game-over Restart + Menu CTAs --
+            // HTML buttons inside #game-over-action-bar (replacing the legacy
+            // #btn-restart / #btn-menu touch-controls cluster which is now
+            // hidden via CSS). Both reveal after the input lockout expires
+            // and dispatch the same Enter / Escape key events that the
+            // legacy buttons used, so existing game-state handlers work
+            // unchanged.
+            (function wireGameOverRestartMenuCtas() {
+                const restartCta = document.getElementById('game-over-restart-btn');
+                const menuCta    = document.getElementById('game-over-menu-btn');
+                if (!restartCta && !menuCta) return;
+                let revealTimer = null;
+                const hide = (btn) => {
+                    if (!btn) return;
+                    btn.classList.remove('visible');
+                    btn.setAttribute('hidden', '');
+                };
+                const show = (btn) => {
+                    if (!btn) return;
+                    btn.removeAttribute('hidden');
+                    requestAnimationFrame(() => btn.classList.add('visible'));
+                };
+                const isLocked = () => {
+                    try {
+                        return !!(window.game && typeof window.game._isGameOverLocked === 'function'
+                            && window.game._isGameOverLocked());
+                    } catch (_) { return false; }
+                };
+                const dispatchKey = (key) => {
+                    try { triggerKeyEvent(key, 'keydown'); } catch (_) {}
+                    setTimeout(() => { try { triggerKeyEvent(key, 'keyup'); } catch (_) {} }, 100);
+                };
+                if (restartCta) {
+                    restartCta.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (isLocked()) return;
+                        try { Analytics.trackMenuAction && Analytics.trackMenuAction('restart_gameover'); } catch (_) {}
+                        dispatchKey('Enter');
+                    });
+                }
+                if (menuCta) {
+                    menuCta.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (isLocked()) return;
+                        try { Analytics.trackMenuAction && Analytics.trackMenuAction('menu_gameover'); } catch (_) {}
+                        dispatchKey('Escape');
+                    });
+                }
+                window.addEventListener('gameStateChange', (e) => {
+                    const isGameOver = e && e.detail && e.detail.state === 'GAME_OVER';
+                    if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+                    if (!isGameOver) { hide(restartCta); hide(menuCta); return; }
+                    hide(restartCta); hide(menuCta);
+                    const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                        ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+                    revealTimer = setTimeout(() => {
+                        try {
+                            if (!window.game || window.game.state !== 'GAME_OVER') return;
+                            show(restartCta);
+                            show(menuCta);
+                        } catch (_) {}
+                    }, lockoutMs + 200);
                 });
             })();
 
