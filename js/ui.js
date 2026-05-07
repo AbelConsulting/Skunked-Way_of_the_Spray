@@ -699,52 +699,20 @@ class UI {
             }
         } else {
             // ── Encouraging tip ──
+            // The actionable buttons (Restart, Menu, Revive, Leaderboard)
+            // are now real HTML elements in #game-over-action-bar so we
+            // don't duplicate "WATCH AD TO REVIVE" / "ENTER → RESTART"
+            // canvas text here. Keeping the strip lean reduces clutter on
+            // the GAME_OVER screen and prevents overlap with the stats
+            // panel and the HTML CTAs.
             const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
             if (tips) {
                 ctx.save();
                 ctx.globalAlpha = 0.6;
                 ctx.font = "10px 'Press Start 2P', monospace";
                 ctx.fillStyle = '#AABBCC';
-                ctx.fillText(tips, cx, pinnedCenterY - 22);
+                ctx.fillText(tips, cx, pinnedCenterY);
                 ctx.restore();
-            }
-
-            // "Watch Ad to Revive" option (only on native Android with ads available)
-            const adAvailable = window.AdManager && AdManager.canShowRewarded && AdManager.canShowRewarded();
-            if (adAvailable) {
-                // Revive button — pulsing green
-                const revivePulse = Math.sin(now / 350) * 0.3 + 0.7;
-                ctx.globalAlpha = revivePulse;
-                ctx.font = "bold 16px 'Press Start 2P', monospace";
-                ctx.fillStyle = '#44FF44';
-                ctx.shadowColor = '#44FF44';
-                ctx.shadowBlur = 10;
-                ctx.fillText('\u25B6 WATCH AD TO REVIVE', cx, pinnedCenterY);
-                ctx.shadowBlur = 0;
-                ctx.globalAlpha = 1;
-
-                // Restart + ESC option compact
-                const blink = Math.sin(now / 400) * 0.3 + 0.5;
-                ctx.globalAlpha = blink;
-                ctx.font = "10px 'Press Start 2P', monospace";
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.fillText('ENTER / TAP \u2192 RESTART     \u2022     ESC \u2192 MENU', cx, pinnedCenterY + 22);
-            } else {
-                // Standard restart prompt — pulsing
-                const blink = Math.sin(now / 400) * 0.4 + 0.6;
-                ctx.globalAlpha = blink;
-                ctx.font = "16px 'Press Start 2P', monospace";
-                ctx.fillStyle = '#FFFFFF';
-                ctx.shadowColor = '#FFFFFF';
-                ctx.shadowBlur = 6;
-                ctx.fillText('ENTER / TAP \u2192 RESTART', cx, pinnedCenterY - 4);
-                ctx.shadowBlur = 0;
-
-                // Return to menu hint
-                ctx.globalAlpha = 0.45;
-                ctx.font = "9px 'Press Start 2P', monospace";
-                ctx.fillStyle = 'rgba(200,200,220,0.7)';
-                ctx.fillText('ESC \u2192 MENU', cx, pinnedCenterY + 22);
             }
         }
         ctx.restore(); // end of pinned prompt strip

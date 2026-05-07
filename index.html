@@ -1767,6 +1767,45 @@
         #pause-btn:active { transform: scale(0.96); }
         #perf-mode-btn:active { transform: scale(0.96); }
 
+        /* -- Game-over Action Bar --
+           Two CTAs (Revive + Leaderboard) sit side-by-side just above the
+           canvas-rendered "pinned restart prompt" strip (~92px tall in
+           ui.js drawGameOver). They share .game-over-cta sizing so the
+           layout stays balanced when only one of them is visible. */
+        .game-over-action-bar {
+            position: absolute;
+            left: 50%;
+            bottom: 110px;
+            transform: translateX(-50%);
+            z-index: 150;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .game-over-action-bar .game-over-cta {
+            position: static;
+            transform: translateY(8px);
+        }
+        .game-over-action-bar .game-over-cta.visible {
+            transform: translateY(0);
+        }
+        .game-over-action-bar .game-over-cta:active {
+            transform: translateY(0) scale(0.97);
+        }
+        .game-over-cta--revive {
+            color: #C8FFD0;
+            background: linear-gradient(180deg, rgba(80,255,140,0.22), rgba(0,60,20,0.78));
+            border-color: rgba(120,255,160,0.55);
+            box-shadow:
+                0 12px 28px rgba(0,0,0,0.45),
+                0 0 22px rgba(80,255,140,0.20);
+        }
+        .game-over-cta--revive:focus-visible {
+            outline: 2px solid rgba(120,255,160,0.95);
+        }
+
         /* -- Game-over Leaderboard CTA --
            Shown when GAME_OVER state engages and the input lockout expires.
            Sits above the canvas-rendered "pinned restart prompt" strip
@@ -3009,15 +3048,28 @@
                 <button id="pause-btn" aria-label="Pause game" title="Pause" hidden>&#9208;</button>
                 <button id="perf-mode-btn" title="Performance mode">Perf</button>
 
-                <!-- Game-over leaderboard CTA (shown when state === GAME_OVER and lockout expired) -->
-                <button id="game-over-leaderboard-btn"
-                        type="button"
-                        class="game-over-cta"
-                        aria-label="View leaderboard"
-                        hidden>
-                    <span class="game-over-cta-icon" aria-hidden="true">&#127942;</span>
-                    <span class="game-over-cta-label">View Leaderboard</span>
-                </button>
+                <!-- Game-over action bar (Revive + Leaderboard).
+                     Both buttons are revealed by JS after the input lockout
+                     expires. Revive is only shown on native Android when an
+                     AdMob rewarded ad is loaded. -->
+                <div id="game-over-action-bar" class="game-over-action-bar">
+                    <button id="game-over-revive-btn"
+                            type="button"
+                            class="game-over-cta game-over-cta--revive"
+                            aria-label="Watch ad to revive"
+                            hidden>
+                        <span class="game-over-cta-icon" aria-hidden="true">&#9658;</span>
+                        <span class="game-over-cta-label">Watch Ad &mdash; Revive</span>
+                    </button>
+                    <button id="game-over-leaderboard-btn"
+                            type="button"
+                            class="game-over-cta"
+                            aria-label="View leaderboard"
+                            hidden>
+                        <span class="game-over-cta-icon" aria-hidden="true">&#127942;</span>
+                        <span class="game-over-cta-label">View Leaderboard</span>
+                    </button>
+                </div>
 
                 <div id="mobile-start-overlay" hidden>
                     <button id="mobile-start-btn">Tap to Start</button>
@@ -5504,6 +5556,98 @@
                     } catch (e) {
                         console.warn('game-over leaderboard CTA failed', e);
                     }
+                });
+            })();
+
+            // -- Game-over Revive (Watch Ad) CTA --
+            // Reveal a "Watch Ad — Revive" button after the input lockout
+            // expires, but only when AdMob is available AND a rewarded ad is
+            // currently prepared. On click, we show the rewarded ad through
+            // AdManager (which pauses the game while the ad is on screen)
+            // and call game.reviveFromAd() if the user earned the reward.
+            (function wireGameOverReviveCta() {
+                const btn = document.getElementById('game-over-revive-btn');
+                if (!btn) return;
+                let revealTimer = null;
+                let busy = false;
+                const hide = () => {
+                    btn.classList.remove('visible');
+                    btn.setAttribute('hidden', '');
+                    if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+                };
+                const show = () => {
+                    btn.removeAttribute('hidden');
+                    requestAnimationFrame(() => btn.classList.add('visible'));
+                };
+                window.addEventListener('gameStateChange', (e) => {
+                    const isGameOver = e && e.detail && e.detail.state === 'GAME_OVER';
+                    busy = false;
+                    if (!isGameOver) { hide(); return; }
+                    hide();
+                    const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                        ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+                    revealTimer = setTimeout(() => {
+                        try {
+                            if (!window.game || window.game.state !== 'GAME_OVER') return;
+                            // Only reveal when a rewarded ad is actually ready to play.
+                            const ready = window.AdManager
+                                && typeof AdManager.canShowRewarded === 'function'
+                                && AdManager.canShowRewarded();
+                            if (ready) show();
+                        } catch (ex) { /* noop */ }
+                    }, lockoutMs + 200);
+                });
+                btn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (busy) return;
+                    if (!window.AdManager || typeof AdManager.showRewarded !== 'function') return;
+                    busy = true;
+                    btn.classList.add('disabled');
+                    Promise.resolve(AdManager.showRewarded())
+                        .then((rewarded) => {
+                            try {
+                                if (rewarded && window.game && window.game.state === 'GAME_OVER'
+                                    && typeof window.game.reviveFromAd === 'function') {
+                                    window.game.reviveFromAd();
+                                }
+                            } catch (e) { console.warn('reviveFromAd failed', e); }
+                        })
+                        .catch((e) => console.warn('showRewarded failed', e))
+                        .finally(() => {
+                            busy = false;
+                            btn.classList.remove('disabled');
+                            // Hide either way — if rewarded, run resumed and we want
+                            // it gone; if dismissed, the player can hit Restart/Menu.
+                            hide();
+                        });
+                });
+            })();
+
+            // -- Hide gameplay touch buttons during GAME_OVER --
+            // Movement / attack / jump buttons are useless on the game-over
+            // screen and obscure the stats panel + action bar. Hide #d-pad,
+            // #actions, and the mobile score panel while in GAME_OVER and
+            // restore them on the next state change.
+            (function hideGameplayChromeOnGameOver() {
+                const ids = ['d-pad', 'actions', 'mobile-score-panel'];
+                window.addEventListener('gameStateChange', (e) => {
+                    const st = e && e.detail && e.detail.state;
+                    const hide = (st === 'GAME_OVER');
+                    ids.forEach((id) => {
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        if (hide) {
+                            // Remember prior inline display so we can restore it.
+                            if (typeof el.dataset.prevDisplay === 'undefined') {
+                                el.dataset.prevDisplay = el.style.display || '';
+                            }
+                            el.style.display = 'none';
+                        } else if (typeof el.dataset.prevDisplay !== 'undefined') {
+                            el.style.display = el.dataset.prevDisplay;
+                            delete el.dataset.prevDisplay;
+                        }
+                    });
                 });
             })();
 
