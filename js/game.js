@@ -1148,6 +1148,8 @@ class Game {
             // Boss state is per-level; always reset when loading a new level.
             this.bossEncountered = false;
             this.bossDefeated = false;
+            this._bossDefeatSlowdown = 0;
+            this._bossEncounterTime = 0;
             this.exitPortal = null;
             if (this.enemyManager) this.enemyManager.bossInstance = null;
             this.isRespawning = false;
@@ -2585,9 +2587,11 @@ class Game {
         if (!alreadyDead && this._gameStartTime && this._gracePeriodMs) {
             const elapsed = Date.now() - this._gameStartTime;
             if (elapsed < this._gracePeriodMs) {
-                console.log('=== DEATH BLOCKED - GRACE PERIOD ===');
-                console.log('Grace period remaining:', ((this._gracePeriodMs - elapsed) / 1000).toFixed(2), 'seconds');
-                console.log('Player health:', this.player.health);
+                if (typeof Config !== 'undefined' && Config.DEBUG) {
+                    console.log('=== DEATH BLOCKED - GRACE PERIOD ===');
+                    console.log('Grace period remaining:', ((this._gracePeriodMs - elapsed) / 1000).toFixed(2), 'seconds');
+                    console.log('Player health:', this.player.health);
+                }
                 // Restore health if somehow damaged during grace period
                 if (this.player.health < this.player.maxHealth) {
                     this.player.health = this.player.maxHealth;
@@ -2900,6 +2904,7 @@ class Game {
         this.respawnTimer = 0;
         this._pendingRespawn = null;
         this._gameOverAnim = null; // Clear game-over overlay so it doesn't flash on revive
+        this._bossDefeatSlowdown = 0; // Clear any active slowdown effect from before death
 
         // Resume music
         try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
