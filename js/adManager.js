@@ -443,7 +443,8 @@ const AdManager = (() => {
             const g = window.game;
             if (!g) return false;
             // States we want to freeze while the ad is on screen.
-            const pauseable = (g.state === 'PLAYING' || g.state === 'LEVEL_COMPLETE');
+            // GAME_OVER is included so rewarded-ad revives also freeze the loop.
+            const pauseable = (g.state === 'PLAYING' || g.state === 'LEVEL_COMPLETE' || g.state === 'GAME_OVER');
             if (!pauseable) return false;
             _pausedStateBeforeAd = g.state;
             if (g.state !== 'PAUSED') {

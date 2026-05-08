@@ -2879,19 +2879,27 @@ class Game {
         this.state = 'PLAYING';
         this._gameOverTime = 0;
 
-        // Restore player to a safe state
+        // Restore player to a fully clean state (mirrors _performRespawn)
         if (this.player) {
             this.player.health = this.player.maxHealth;
             this.player.invulnerableTimer = 3.0; // generous i-frames after revive
+            this.player.velocityX = 0;
             this.player.velocityY = 0;
+            this.player.targetVelocityX = 0;
             this.player.isAlive = true;
-            this.player._deathTimer = 0;
-            this.player._deathPhase = null;
+            this.player.isDying = false;
+            this.player.deathTimer = 0;
+            this.player.isAttacking = false;
+            this.player.isShadowStriking = false;
+            this.player.hitStunTimer = 0;
+            try { this.player.clearInputState && this.player.clearInputState(); } catch (e) { __err('game', e); }
+            try { this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) { __err('game', e); }
         }
 
         this.isRespawning = false;
         this.respawnTimer = 0;
         this._pendingRespawn = null;
+        this._gameOverAnim = null; // Clear game-over overlay so it doesn't flash on revive
 
         // Resume music
         try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
