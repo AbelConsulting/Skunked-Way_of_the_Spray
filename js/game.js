@@ -767,17 +767,16 @@ class Game {
                 this.player.invulnerableTimer = 1.5;
             }
 
-            // Load the level after resets so idol spawns are preserved
-            this.loadLevel(levelIndex, { skipMusic: true });
-
-            // Survival mode: overlay the survival arena and configure wave spawning
-            if (this.gameMode === 'survival') {
+            // Load the level after resets so idol spawns are preserved.
+            // Survival mode skips arcade loadLevel entirely and uses its own arena setup.
+            if (this.gameMode !== 'survival') {
+                this.loadLevel(levelIndex, { skipMusic: true });
+            } else {
                 this._initSurvivalMode();
             }
             // Place player at a spawn point near the level start.
-            // (Previous logic spawned on the rightmost platform on desktop, which can
-            // unintentionally drop you into the boss arena on long levels.)
-            if (this.level && this.level.platforms && this.level.platforms.length > 0) {
+            // Survival mode already placed the player via _initSurvivalMode(); skip this.
+            if (this.gameMode !== 'survival' && this.level && this.level.platforms && this.level.platforms.length > 0) {
                 let spawnPlatform = null;
                 try {
                     const nonGroundPlatforms = this.level.platforms.filter(p => p && typeof p.x === 'number' && typeof p.y === 'number' && typeof p.width === 'number' && !(p.y >= this.level.height - 40 && p.width >= this.level.width * 0.8));
@@ -808,7 +807,7 @@ class Game {
                     this.player.y = Math.max(100, this.height - this.player.height - 100);
                     if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Using fallback spawn position:', this.player.x, this.player.y);
                 }
-            } else {
+            } else if (this.gameMode !== 'survival') {
                 // No platforms available - use safe fallback
                 this.player.x = 100;
                 this.player.y = Math.max(100, this.height - this.player.height - 100);
@@ -860,8 +859,8 @@ class Game {
             // Pre-render static layer (platform tiles) so visuals are ready
             try { if (this.level && typeof this.level.renderStaticLayer === 'function') this.level.renderStaticLayer(this.viewWidth, this.viewHeight); } catch (e) { __err('game', e); }
 
-            // Trigger tutorial hints on first playthrough of Level 1
-            if (this.tutorialHints) {
+            // Trigger tutorial hints on first playthrough of Level 1 (not in survival mode)
+            if (this.gameMode !== 'survival' && this.tutorialHints) {
                 this.tutorialHints.startRun();
                 if (levelIndex === 0) {
                     this.tutorialHints.trigger('move_jump');
@@ -1022,8 +1021,11 @@ class Game {
                 }
             } catch (e) { /* ignore */ }
 
-            // Get music options from level config, default to gameplay
-            const config = LEVEL_CONFIGS[this.currentLevelIndex];
+            // Get music options from level config, default to gameplay.
+            // Survival mode uses SURVIVAL_ARENA_CONFIG directly (currentLevelIndex is -1).
+            const config = (this.gameMode === 'survival' && typeof SURVIVAL_ARENA_CONFIG !== 'undefined')
+                ? SURVIVAL_ARENA_CONFIG
+                : LEVEL_CONFIGS[this.currentLevelIndex];
             const musicOptions = (config && Array.isArray(config.music) && config.music.length > 0)
                 ? config.music
                 : ['gameplay'];
@@ -1054,7 +1056,9 @@ class Game {
         /** Determine and play appropriate ambient sound for the current level */
         async _ensureLevelAmbient() {
             if (!this.audioManager || !this.audioManager.playAmbient) return;
-            const config = LEVEL_CONFIGS[this.currentLevelIndex];
+            const config = (this.gameMode === 'survival' && typeof SURVIVAL_ARENA_CONFIG !== 'undefined')
+                ? SURVIVAL_ARENA_CONFIG
+                : LEVEL_CONFIGS[this.currentLevelIndex];
             if (!config) return;
 
             // Map background types to ambient tracks
@@ -1270,10 +1274,17 @@ class Game {
                 this.itemManager.reset();
             }
 
-            // Drop the player onto the arena floor
+            // Reset level timer (normally done by loadLevel, skipped in survival)
+            this.levelStartTime = 0;
+            this.levelTime = 0;
+            try { this.gameStats.levelDamageTaken = 0; } catch (e) {}
+
+            // Drop the player onto the arena center floor
             if (this.player) {
-                this.player.x = 400;
+                this.player.x = 1350;
                 this.player.y = 620;
+                this.player.velocityX = 0;
+                this.player.velocityY = 0;
             }
 
             // 3-second "GET READY" countdown before wave 1
@@ -1281,9 +1292,6 @@ class Game {
             this.survivalWaveRestTimer = 3.0;
             this._survivalWaveBannerText = 'GET READY!';
             this._survivalWaveBannerTimer = 3.0;
-
-            // Start arena music
-            try { this.ensureLevelMusic(); } catch (e) { __err('game', e); }
         }
 
         /** Increment wave counter and configure enemies for the new wave. */
