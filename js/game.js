@@ -1318,8 +1318,22 @@ class Game {
                 this.enemyManager.spawnTimer           = 0;
             }
 
-            this._survivalWaveBannerText  = `WAVE ${wave}`;
-            this._survivalWaveBannerTimer = 2.0;
+            // Milestone banner text for landmark waves
+            let bannerText = `WAVE ${wave}`;
+            if      (wave === 5)              bannerText = 'WAVE 5 — HALFWAY?!';
+            else if (wave === 10)             bannerText = 'WAVE 10 — STILL STANDING?!';
+            else if (wave === 15)             bannerText = 'WAVE 15 — UNSTOPPABLE!';
+            else if (wave >= 20 && wave % 5 === 0) bannerText = `WAVE ${wave} — LEGENDARY!`;
+            this._survivalWaveBannerText  = bannerText;
+            this._survivalWaveBannerTimer = 2.5;
+
+            // Screen flash + shake — intensity scales with wave number
+            try {
+                const flashAlpha = Math.min(0.5, 0.15 + wave * 0.025);
+                this.screenFlash = new ScreenFlash(`rgba(255, 80, 0, ${flashAlpha.toFixed(2)})`, 0.4);
+                const shakeIntensity = Math.min(10, 2 + wave * 0.6);
+                this.screenShake = new ScreenShake(0.18, shakeIntensity);
+            } catch (e) { __err('game', e); }
 
             try {
                 if (this.audioManager && this.audioManager.playSound) {
@@ -1362,6 +1376,19 @@ class Game {
                     this.score += waveBonus;
                     try { this._scorePulse = 1.0; } catch (e) {}
                     try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) {}
+
+                    // Green screen flash on wave clear
+                    try { this.screenFlash = new ScreenFlash('rgba(0, 220, 100, 0.28)', 0.45); } catch (e) { __err('game', e); }
+
+                    // Wave-clear bonus text floating over the arena center
+                    try {
+                        const cx = (this.viewWidth || this.width) / 2;
+                        this.damageNumbers.push(new FloatingText(
+                            cx - (this.camera ? this.camera.x : 0), 120,
+                            `WAVE ${clearedWave} BONUS  +${waveBonus.toLocaleString()}`,
+                            { color: '#FFD700', lifetime: 2.2, velocityY: -45, font: 'bold 20px Arial' }
+                        ));
+                    } catch (e) { __err('game', e); }
 
                     // Heal player between waves
                     if (this.player) {
