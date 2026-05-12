@@ -1215,6 +1215,74 @@
             padding: 10px 0 2px;
         }
 
+        /* Scores overlay mode tabs (Arcade / Survival) */
+        .scores-mode-tabs {
+            display: flex;
+            gap: 6px;
+            margin: 4px 0 12px;
+        }
+
+        .scores-mode-tab {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.6);
+            font: 700 13px 'Space Grotesk', 'Segoe UI', sans-serif;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s, border-color 0.18s;
+        }
+
+        .scores-mode-tab.is-active {
+            background: rgba(255,255,255,0.14);
+            border-color: rgba(255,255,255,0.45);
+            color: #fff;
+        }
+
+        .scores-mode-tab:hover:not(.is-active) {
+            background: rgba(255,255,255,0.10);
+            color: rgba(255,255,255,0.85);
+        }
+
+        .scores-tab-panel[hidden] { display: none; }
+
+        /* Survival personal-best callout bar */
+        .survival-pb-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(200,30,0,0.35), rgba(255,120,0,0.20));
+            border: 1px solid rgba(255,80,0,0.40);
+        }
+
+        .survival-pb-label {
+            font: 700 11px 'Press Start 2P', monospace;
+            color: rgba(255,200,140,0.75);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            flex-shrink: 0;
+        }
+
+        .survival-pb-wave {
+            font: 700 18px 'Bangers', 'Arial Black', Impact, sans-serif;
+            color: #FF8A65;
+            letter-spacing: 0.04em;
+        }
+
+        .survival-pb-score {
+            font: 600 13px 'Space Grotesk', 'Segoe UI', sans-serif;
+            color: rgba(255,255,255,0.75);
+            margin-left: auto;
+        }
+
+        .survival-entry .scoreboard-name {
+            color: #FF8A65;
+        }
+
         /* Info screen layout */
         .info-columns {
             display: flex;
@@ -3365,10 +3433,26 @@
                         <p class="menu-sub-lede">Compare your best runs, spot the next score to beat, and use the main hub to jump right back into another attempt.</p>
                     </div>
                     <hr class="pause-divider">
-                    <div class="menu-sub-section">
-                        <h3 class="menu-sub-section-title">Current Board</h3>
-                        <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
-                        <div id="menu-scores-board"></div>
+                    <!-- Mode tabs -->
+                    <div class="scores-mode-tabs" role="tablist" aria-label="Score mode">
+                        <button class="scores-mode-tab is-active" data-scores-tab="arcade" role="tab" aria-selected="true">&#9654; Arcade</button>
+                        <button class="scores-mode-tab" data-scores-tab="survival" role="tab" aria-selected="false">&#128293; Survival</button>
+                    </div>
+                    <!-- Arcade panel -->
+                    <div class="scores-tab-panel" id="scores-panel-arcade">
+                        <div class="menu-sub-section">
+                            <h3 class="menu-sub-section-title">Global Arcade Board</h3>
+                            <p class="menu-sub-section-copy">Online placements update here whenever the leaderboard is available.</p>
+                            <div id="menu-scores-board"></div>
+                        </div>
+                    </div>
+                    <!-- Survival panel -->
+                    <div class="scores-tab-panel" id="scores-panel-survival" hidden>
+                        <div class="menu-sub-section">
+                            <h3 class="menu-sub-section-title">Your Survival Runs</h3>
+                            <p class="menu-sub-section-copy">Top 10 personal best runs — ranked by wave reached, then score. Stored locally on this device.</p>
+                            <div id="menu-survival-board"></div>
+                        </div>
                     </div>
                     <button id="menu-scores-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
                 </div>
@@ -4102,6 +4186,7 @@
                         const settingsBackBtn   = document.getElementById('menu-settings-back');
                         const howtoplayBackBtn  = document.getElementById('menu-howtoplay-back');
                         const scoresBoardEl     = document.getElementById('menu-scores-board');
+                        const survivalBoardEl   = document.getElementById('menu-survival-board');
                         const infoAchievementsGrid = document.getElementById('info-achieve-grid');
                         const infoBossSummary = document.getElementById('info-boss-summary');
                         const infoBossRow = document.getElementById('info-boss-row');
@@ -4379,7 +4464,18 @@
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                 if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
-                                // Populate scoreboard
+                                // Reset to arcade tab on open
+                                const arcadePanel   = document.getElementById('scores-panel-arcade');
+                                const survivalPanel = document.getElementById('scores-panel-survival');
+                                const scoreTabs     = document.querySelectorAll('.scores-mode-tab');
+                                if (arcadePanel)   arcadePanel.hidden   = false;
+                                if (survivalPanel) survivalPanel.hidden = true;
+                                scoreTabs.forEach(t => {
+                                    const isArcade = t.dataset.scoresTab === 'arcade';
+                                    t.classList.toggle('is-active', isArcade);
+                                    t.setAttribute('aria-selected', String(isArcade));
+                                });
+                                // Populate arcade scoreboard
                                 if (scoresBoardEl) {
                                     if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
                                         // renderScoreboard manages its own loading/error/empty states.
@@ -4395,6 +4491,33 @@
                                 if (scoresOverlay) scoresOverlay.style.display = 'flex';
                             });
                         }
+
+                        // Scores mode tab switching (Arcade / Survival)
+                        (function() {
+                            const tabContainer = document.querySelector('.scores-mode-tabs');
+                            if (!tabContainer) return;
+                            tabContainer.addEventListener('click', (ev) => {
+                                const btn = ev.target.closest('.scores-mode-tab');
+                                if (!btn || btn.classList.contains('is-active')) return;
+                                const tab = btn.dataset.scoresTab;
+                                tabContainer.querySelectorAll('.scores-mode-tab').forEach(t => {
+                                    const active = t.dataset.scoresTab === tab;
+                                    t.classList.toggle('is-active', active);
+                                    t.setAttribute('aria-selected', String(active));
+                                });
+                                const arcadePanel   = document.getElementById('scores-panel-arcade');
+                                const survivalPanel = document.getElementById('scores-panel-survival');
+                                if (arcadePanel)   arcadePanel.hidden   = (tab !== 'arcade');
+                                if (survivalPanel) survivalPanel.hidden = (tab !== 'survival');
+                                if (tab === 'survival' && survivalBoardEl) {
+                                    if (window.Highscores && typeof Highscores.renderSurvivalBoard === 'function') {
+                                        Highscores.renderSurvivalBoard(survivalBoardEl);
+                                    } else {
+                                        survivalBoardEl.innerHTML = '<p class="scoreboard-empty-msg">No survival scores yet.</p>';
+                                    }
+                                }
+                            });
+                        })();
 
                         // HOW TO PLAY button
                         if (howtoplayBtn) {

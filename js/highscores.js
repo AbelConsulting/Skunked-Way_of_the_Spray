@@ -890,6 +890,118 @@ try {
     return checkAPIHealth();
   }
 
+  // ── Survival Mode Local Leaderboard ─────────────────────────────────────────
+  const SURVIVAL_SCORES_KEY = 'skunkfu_survival_scores_v1';
+  const MAX_SURVIVAL_SCORES = 10;
+
+  /**
+   * Load local survival scores (sorted best-first by wave, then score).
+   * @returns {Array<{wave:number, score:number, enemies:number, date:string}>}
+   */
+  function getSurvivalScores() {
+    try {
+      const raw = localStorage.getItem(SURVIVAL_SCORES_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * Save a new survival run to local storage. Keeps only top MAX_SURVIVAL_SCORES.
+   * @param {{wave:number, score:number, enemies:number}} runData
+   */
+  function addSurvivalScore(runData) {
+    try {
+      const wave    = Math.max(0, parseInt(runData.wave,    10) || 0);
+      const score   = Math.max(0, parseInt(runData.score,   10) || 0);
+      const enemies = Math.max(0, parseInt(runData.enemies, 10) || 0);
+      if (wave === 0 && score === 0) return; // nothing meaningful
+      const existing = getSurvivalScores();
+      existing.push({
+        wave,
+        score,
+        enemies,
+        date: new Date().toLocaleDateString(),
+      });
+      // Sort: highest wave first, break ties by score
+      existing.sort((a, b) => b.wave - a.wave || b.score - a.score);
+      const trimmed = existing.slice(0, MAX_SURVIVAL_SCORES);
+      localStorage.setItem(SURVIVAL_SCORES_KEY, JSON.stringify(trimmed));
+    } catch (e) { /* localStorage unavailable */ }
+  }
+
+  /**
+   * Render the survival leaderboard into a target element.
+   * @param {HTMLElement} target
+   */
+  function renderSurvivalBoard(target) {
+    if (!target) return;
+    const scores = getSurvivalScores();
+
+    target.innerHTML = '';
+
+    if (scores.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'scoreboard-state scoreboard-state--empty';
+      empty.textContent = 'No survival runs yet — launch Survival Mode to set the bar!';
+      target.appendChild(empty);
+      return;
+    }
+
+    // Personal best callout
+    const best = scores[0];
+    const pbBar = document.createElement('div');
+    pbBar.className = 'survival-pb-bar';
+    pbBar.innerHTML = `
+      <span class="survival-pb-label">Personal Best</span>
+      <span class="survival-pb-wave">Wave ${best.wave}</span>
+      <span class="survival-pb-score">${best.score.toLocaleString()} pts</span>
+    `;
+    target.appendChild(pbBar);
+
+    // Rows
+    scores.forEach((entry, i) => {
+      const row = document.createElement('div');
+      row.className = 'scoreboard-entry survival-entry';
+      if (i === 0) row.classList.add('gold');
+      if (i === 1) row.classList.add('silver');
+      if (i === 2) row.classList.add('bronze');
+
+      const rank = document.createElement('div');
+      rank.className = 'scoreboard-rank';
+      rank.textContent = `${i + 1}.`;
+
+      const info = document.createElement('div');
+      info.className = 'scoreboard-info';
+
+      const nameLine = document.createElement('div');
+      nameLine.className = 'scoreboard-name';
+      nameLine.textContent = `Wave ${entry.wave}`;
+
+      const detailLine = document.createElement('div');
+      detailLine.className = 'scoreboard-score';
+      detailLine.textContent = `${entry.score.toLocaleString()} pts  ·  ${entry.enemies} kills`;
+
+      info.appendChild(nameLine);
+      info.appendChild(detailLine);
+
+      const right = document.createElement('div');
+      right.className = 'scoreboard-right';
+      const dateLine = document.createElement('div');
+      dateLine.className = 'scoreboard-date';
+      dateLine.textContent = entry.date || '';
+      right.appendChild(dateLine);
+
+      row.appendChild(rank);
+      row.appendChild(info);
+      row.appendChild(right);
+      target.appendChild(row);
+    });
+  }
+
   // Expose the public API
   window.Highscores = {
     // Global scores
@@ -912,6 +1024,10 @@ try {
     getPrestigeScore,
     getMaxPrestige,
     getTitleForCount,
+    // Survival mode local leaderboard
+    getSurvivalScores,
+    addSurvivalScore,
+    renderSurvivalBoard,
   };
 
 })(window);

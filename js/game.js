@@ -2897,6 +2897,16 @@ class Game {
             if (this.gameMode === 'survival') {
                 this._gameOverLevelReached = this.survivalWave;
                 this._gameOverLevelName    = 'Survival Mode';
+                // Save to local survival leaderboard
+                try {
+                    if (window.Highscores && typeof Highscores.addSurvivalScore === 'function') {
+                        Highscores.addSurvivalScore({
+                            wave:    this.survivalWave,
+                            score:   this.score,
+                            enemies: this.enemyManager ? (this.enemyManager.enemiesDefeated || 0) : 0,
+                        });
+                    }
+                } catch (e) { __err('game', e); }
             } else {
                 this._gameOverLevelReached = (this.currentLevelIndex || 0) + 1;
                 try {
