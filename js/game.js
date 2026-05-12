@@ -1325,6 +1325,7 @@ class Game {
                 this.enemyManager.aggression           = aggression;
                 this.enemyManager.allowedEnemyTypes    = allowedTypes;
                 this.enemyManager.spawnTimer           = 0;
+                this.enemyManager.forceChase           = true; // enemies always seek player in survival
             }
 
             // Milestone banner text for landmark waves
@@ -1380,15 +1381,15 @@ class Game {
                 // Check wave completion
                 const defeatedThisWave = (this.enemyManager ? (this.enemyManager.enemiesDefeated || 0) : 0) - this.survivalWaveKillsAtStart;
                 const allKilled  = defeatedThisWave >= this.survivalWaveKillTarget;
-                const arenaEmpty = !this.enemyManager || this.enemyManager.enemies.length === 0;
 
-                // Once the kill target is reached, stop spawning so the arena can drain
-                if (allKilled && this.enemyManager && this.enemyManager.spawningEnabled) {
-                    this.enemyManager.spawningEnabled = false;
-                }
-
-                if (allKilled && arenaEmpty) {
-                    // Wave cleared!
+                if (allKilled) {
+                    // Kill target reached — advance immediately. Clear remaining
+                    // enemies so the player isn't juggling stragglers during the
+                    // rest countdown.
+                    if (this.enemyManager) {
+                        this.enemyManager.spawningEnabled = false;
+                        this.enemyManager.enemies = [];
+                    }
                     this.survivalWaveResting  = true;
                     this.survivalWaveRestTimer = 4.0;
 

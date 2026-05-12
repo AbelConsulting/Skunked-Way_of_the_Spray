@@ -21,6 +21,7 @@ class EnemyManager {
         this.enemiesDefeated = 0;
         this.spawningEnabled = true;
         this.bossInstance = null;
+        this.forceChase = false; // If true, enemies spawn already chasing the player
     }
 
     reset() {
@@ -31,6 +32,7 @@ class EnemyManager {
         this.aggression = 1.0;
         this.spawningEnabled = true;
         this.bossInstance = null;
+        this.forceChase = false;
         // Start with a longer spawn delay on reset to give player breathing room
         this.spawnTimer = -2.0; // Don't spawn for first 2 seconds
     }
@@ -186,6 +188,13 @@ class EnemyManager {
             enemy.attackCooldown = Math.max(0.45, enemy.attackCooldown / clampedAggression);
             enemy.detectionRange = Math.max(220, (enemy.detectionRange || 300) * clampedAggression);
             enemy.attackRange = Math.max(50, (enemy.attackRange || 80) * (0.9 + ((clampedAggression - 1) * 0.35)));
+        }
+
+        // Survival mode: force enemies into immediate chase so the player
+        // doesn't have to hunt them down across the arena.
+        if (this.forceChase) {
+            enemy.detectionRange = 9999;
+            enemy.state = 'CHASE';
         }
 
         this.enemies.push(enemy);
