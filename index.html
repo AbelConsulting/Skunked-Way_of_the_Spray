@@ -943,6 +943,54 @@
 
         .menu-btn--play:hover { filter: brightness(1.18); transform: translateY(-2px) scale(1.01); }
 
+        .menu-btn--survival {
+            grid-column: 1 / -1;
+            border-color: rgba(255,80,0,0.55) !important;
+            background: linear-gradient(135deg, rgba(200,30,0,0.45) 0%, rgba(255,120,0,0.30) 50%, rgba(120,0,0,0.55) 100%) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.40),
+                0 0 32px rgba(255,80,0,0.22),
+                inset 0 1px 0 rgba(255,160,60,0.18) !important;
+            min-height: 80px !important;
+            padding: 16px 22px !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-btn--survival::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,140,0,0.10) 40%, rgba(255,60,0,0.14) 60%, transparent 100%);
+            background-size: 200% 100%;
+            animation: survivalShimmer 2.8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes survivalShimmer {
+            0%   { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        .menu-btn--survival .menu-btn-label {
+            font-size: clamp(16px, 2.2vw, 20px) !important;
+            color: #FF9966 !important;
+            text-shadow: 0 0 12px rgba(255,100,0,0.6) !important;
+        }
+
+        .menu-btn--survival .menu-btn-meta {
+            color: rgba(255,220,190,0.85) !important;
+        }
+
+        .menu-btn--survival:hover {
+            filter: brightness(1.22) !important;
+            transform: translateY(-2px) scale(1.01) !important;
+            box-shadow:
+                0 18px 36px rgba(0,0,0,0.45),
+                0 0 44px rgba(255,80,0,0.38),
+                inset 0 1px 0 rgba(255,160,60,0.28) !important;
+        }
+
         .menu-btn--scores {
             border-color: rgba(255,215,0,0.35) !important;
             background: linear-gradient(180deg, rgba(255,215,0,0.18), rgba(60,40,0,0.6)) !important;
@@ -2514,6 +2562,10 @@
             .menu-btn--play .menu-btn-label {
                 font-size: clamp(14px, 2.4vw, 20px) !important;
             }
+            .menu-btn--survival {
+                min-height: 52px !important;
+                padding: 8px 12px !important;
+            }
             .start-menu-footer {
                 margin: 2px 0 0;
                 font-size: 8px;
@@ -2578,6 +2630,10 @@
             }
             .menu-btn--play .menu-btn-label {
                 font-size: clamp(13px, 2vw, 17px) !important;
+            }
+            .menu-btn--survival {
+                min-height: 44px !important;
+                padding: 6px 10px !important;
             }
             .start-menu-footer {
                 margin: 1px 0 0;
