@@ -6004,13 +6004,29 @@
                     revealTimer = setTimeout(() => {
                         try {
                             if (!window.game || window.game.state !== 'GAME_OVER') return;
-                            // Only reveal when a rewarded ad is actually ready to play.
-                            const ready = window.AdManager
+                            const isSurvival = window.game.gameMode === 'survival';
+                            const survivalReviveUsed = !!(window.game._survivalAdReviveUsed);
+
+                            // Survival mode: show the button once per run regardless of
+                            // platform, as long as the per-run allowance hasn't been spent.
+                            // Arcade mode: only show when a native AdMob rewarded ad is ready.
+                            const adReady = window.AdManager
                                 && typeof AdManager.canShowRewarded === 'function'
                                 && AdManager.canShowRewarded();
-                            if (ready) {
+
+                            const eligible = isSurvival
+                                ? (!survivalReviveUsed && adReady)
+                                : adReady;
+
+                            if (eligible) {
+                                // Label the button differently in survival mode
+                                if (isSurvival) {
+                                    const lbl = btn.querySelector('.game-over-cta-label');
+                                    if (lbl) lbl.textContent = 'Watch Ad — Extra Life';
+                                    btn.setAttribute('aria-label', 'Watch ad for an extra life');
+                                }
                                 const meta = {
-                                    level: ((window.game.currentLevelIndex || 0) + 1),
+                                    level: isSurvival ? (window.game.survivalWave || 0) : ((window.game.currentLevelIndex || 0) + 1),
                                     score: (window.game.score || 0),
                                     revivesUsed: (window.AdManager && AdManager._revivesUsed) || 0
                                 };
