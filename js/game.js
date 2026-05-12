@@ -1280,10 +1280,11 @@ class Game {
             this.levelTime = 0;
             try { this.gameStats.levelDamageTaken = 0; } catch (e) {}
 
-            // Drop the player onto the arena center floor
+            // Drop the player onto the arena center floor.
+            // Ground platform top is at y=660; player height = 64 → spawn just above it.
             if (this.player) {
                 this.player.x = 1350;
-                this.player.y = 620;
+                this.player.y = 596; // 660 - 64 (player height)
                 this.player.velocityX = 0;
                 this.player.velocityY = 0;
             }
@@ -1368,6 +1369,10 @@ class Game {
 
             // Grant 2 skunk shots at the start of every wave
             if (this.player) {
+                // Brief invulnerability window so the player isn't immediately
+                // swarmed the moment a wave kicks off.
+                this.player.invulnerableTimer = Math.max(this.player.invulnerableTimer, 1.5);
+
                 this.player.skunkAmmo = (this.player.skunkAmmo || 0) + 2;
                 try {
                     this.damageNumbers.push(new FloatingText(
@@ -3194,7 +3199,7 @@ class Game {
             // Re-center player in the survival arena
             if (this.player) {
                 this.player.x = 1350;
-                this.player.y = 620;
+                this.player.y = 596;
             }
 
             // Clear all remaining enemies so they don't instantly kill the revived player

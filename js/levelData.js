@@ -1125,6 +1125,7 @@ const SURVIVAL_ARENA_CONFIG = {
     name: "Survival Arena",
     id: "survival_arena",
     width: 2800,
+    height: 780,
     background: 'bg_city',
     music: ['city_theme', 'action_theme', 'gameplay'],
     spawnPoints: [
