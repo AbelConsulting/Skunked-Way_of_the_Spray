@@ -1423,122 +1423,225 @@ class UI {
                 const resting    = survivalInfo.waveResting;
                 const killsDone  = Math.max(0, survivalInfo.killsThisWave || 0);
                 const killTarget = Math.max(1, survivalInfo.killTarget || 1);
+                const now        = Date.now();
 
                 // Color tier based on wave difficulty
-                let waveFg, waveGlow;
-                if      (wave <= 0)  { waveFg = '#FFFFFF'; waveGlow = 'rgba(255,255,255,0.5)'; }
-                else if (wave <= 3)  { waveFg = '#4FC3F7'; waveGlow = 'rgba(79,195,247,0.7)'; }
-                else if (wave <= 6)  { waveFg = '#FFEE58'; waveGlow = 'rgba(255,238,88,0.7)'; }
-                else if (wave <= 9)  { waveFg = '#FF8A65'; waveGlow = 'rgba(255,138,101,0.7)'; }
-                else if (wave <= 14) { waveFg = '#FF5252'; waveGlow = 'rgba(255,82,82,0.7)'; }
-                else                 { waveFg = '#CE93D8'; waveGlow = 'rgba(206,147,216,0.8)'; }
+                let waveFg, waveGlow, waveRgb;
+                if      (wave <= 0)  { waveFg = '#FFFFFF'; waveGlow = 'rgba(255,255,255,0.6)'; waveRgb = '255,255,255'; }
+                else if (wave <= 3)  { waveFg = '#4FC3F7'; waveGlow = 'rgba(79,195,247,0.8)';  waveRgb = '79,195,247'; }
+                else if (wave <= 6)  { waveFg = '#FFEE58'; waveGlow = 'rgba(255,238,88,0.8)';  waveRgb = '255,238,88'; }
+                else if (wave <= 9)  { waveFg = '#FF8A65'; waveGlow = 'rgba(255,138,101,0.8)'; waveRgb = '255,138,101'; }
+                else if (wave <= 14) { waveFg = '#FF5252'; waveGlow = 'rgba(255,82,82,0.9)';   waveRgb = '255,82,82'; }
+                else                 { waveFg = '#EA80FC'; waveGlow = 'rgba(234,128,252,0.9)'; waveRgb = '234,128,252'; }
 
-                const now        = Date.now();
-                const barW       = Math.min(Math.floor(this.width * 0.30), 320);
-                const barH       = 7;
-                const barX       = Math.floor((this.width - barW) / 2);
-                const barY       = padTop + 5;
+                // ── Layout: compact card top-center ─────────────────────────────
+                const cardW   = Math.min(Math.floor(this.width * 0.34), 340);
+                const cardH   = 48;
+                const cardX   = Math.floor((this.width - cardW) / 2);
+                const cardY   = padTop - 4;
+                const cardR   = 8;
 
-                // Dark pill background
+                // Card shadow + body
                 ctx.save();
-                ctx.fillStyle = 'rgba(0,0,0,0.62)';
-                const pillR = 5;
-                const pillX = barX - 2, pillY = barY - 2, pillW = barW + 4, pillH = barH + 4;
+                ctx.shadowColor = `rgba(${waveRgb},0.35)`;
+                ctx.shadowBlur  = 14;
+                // Gradient fill: dark center, faint tinted edges
+                const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX, cardY + cardH);
+                cardGrad.addColorStop(0,   'rgba(10,10,18,0.88)');
+                cardGrad.addColorStop(1,   `rgba(${waveRgb},0.08)`);
+                ctx.fillStyle = cardGrad;
                 ctx.beginPath();
-                ctx.moveTo(pillX + pillR, pillY);
-                ctx.lineTo(pillX + pillW - pillR, pillY);
-                ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + pillH, pillR);
-                ctx.lineTo(pillX + pillW, pillY + pillH - pillR);
-                ctx.arcTo(pillX + pillW, pillY + pillH, pillX, pillY + pillH, pillR);
-                ctx.lineTo(pillX + pillR, pillY + pillH);
-                ctx.arcTo(pillX, pillY + pillH, pillX, pillY, pillR);
-                ctx.lineTo(pillX, pillY + pillR);
-                ctx.arcTo(pillX, pillY, pillX + pillW, pillY, pillR);
+                ctx.moveTo(cardX + cardR, cardY);
+                ctx.lineTo(cardX + cardW - cardR, cardY);
+                ctx.arcTo(cardX + cardW, cardY,            cardX + cardW, cardY + cardH, cardR);
+                ctx.arcTo(cardX + cardW, cardY + cardH,    cardX,         cardY + cardH, cardR);
+                ctx.arcTo(cardX,         cardY + cardH,    cardX,         cardY,         cardR);
+                ctx.arcTo(cardX,         cardY,            cardX + cardW, cardY,         cardR);
                 ctx.closePath();
                 ctx.fill();
-                ctx.strokeStyle = `rgba(255,255,255,0.14)`;
-                ctx.lineWidth = 1;
+                // Bright top edge accent line in wave colour
+                ctx.strokeStyle = `rgba(${waveRgb},0.65)`;
+                ctx.lineWidth   = 1.5;
                 ctx.stroke();
                 ctx.restore();
 
-                // Segmented pip bar (individual kill blocks) or continuous for large waves
-                if (!resting && killTarget <= 25) {
-                    const gap    = 2;
-                    const pipW   = Math.max(3, Math.floor((barW - gap * (killTarget - 1)) / killTarget));
-                    for (let i = 0; i < killTarget; i++) {
-                        const px = barX + i * (pipW + gap);
-                        const filled = i < killsDone;
-                        ctx.save();
-                        if (filled) {
-                            ctx.shadowColor = waveGlow;
-                            ctx.shadowBlur  = 5;
-                            ctx.fillStyle   = waveFg;
-                        } else {
-                            ctx.fillStyle = 'rgba(255,255,255,0.10)';
-                        }
-                        ctx.fillRect(px, barY, pipW, barH);
-                        ctx.restore();
-                    }
-                } else if (!resting) {
-                    // Continuous bar for large waves
-                    const progress = Math.min(1, killsDone / killTarget);
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-                    ctx.fillRect(barX, barY, barW, barH);
-                    ctx.shadowColor = waveGlow;
-                    ctx.shadowBlur  = 8;
-                    ctx.fillStyle   = waveFg;
-                    ctx.fillRect(barX, barY, Math.floor(barW * progress), barH);
-                    ctx.restore();
-                } else {
-                    // Rest period — green progress fill
-                    const restTotal = wave === 0 ? 3.0 : 4.0;
-                    const restPct   = Math.max(0, 1 - (survivalInfo.restTimer / restTotal));
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(0,255,136,0.12)';
-                    ctx.fillRect(barX, barY, barW, barH);
-                    ctx.shadowColor = 'rgba(0,255,136,0.8)';
-                    ctx.shadowBlur  = 6;
-                    ctx.fillStyle   = '#00FF88';
-                    ctx.fillRect(barX, barY, Math.floor(barW * restPct), barH);
-                    ctx.restore();
-                }
+                // ── Left section: WAVE NUMBER ────────────────────────────────────
+                const waveNumX = cardX + 14;
+                const waveNumCY = cardY + cardH / 2;
 
-                // Wave label (left of bar) — pulses at high waves
+                // "WAVE" label tiny above number
                 ctx.save();
-                const highWavePulse = wave >= 10 ? (0.85 + 0.15 * Math.sin(now / 280)) : 1;
-                ctx.globalAlpha = highWavePulse;
-                ctx.font = "bold 12px 'Press Start 2P', monospace";
-                ctx.fillStyle = waveFg;
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.shadowColor = waveGlow;
-                ctx.shadowBlur  = wave >= 10 ? 10 : 4;
-                const waveLabel = wave > 0 ? `WAVE ${wave}` : 'GET READY';
-                ctx.fillText(waveLabel, barX - 8, barY + barH / 2);
+                ctx.font         = "700 7px 'Press Start 2P', monospace";
+                ctx.fillStyle    = `rgba(${waveRgb},0.7)`;
+                ctx.textAlign    = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.letterSpacing = '0.08em';
+                ctx.fillText('WAVE', waveNumX, waveNumCY - 5);
                 ctx.restore();
 
-                // Kill count (right of bar, only during active waves)
-                if (!resting && wave > 0) {
-                    ctx.save();
-                    ctx.font = "bold 12px 'Press Start 2P', monospace";
-                    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'middle';
-                    ctx.shadowColor = '#000';
-                    ctx.shadowBlur  = 3;
-                    ctx.fillText(`${Math.min(killsDone, killTarget)}/${killTarget}`, barX + barW + 8, barY + barH / 2);
-                    ctx.restore();
-                }
+                // Large wave number — pulses at high waves
+                const highWavePulse = wave >= 10 ? (0.88 + 0.12 * Math.sin(now / 220)) : 1;
+                ctx.save();
+                ctx.globalAlpha  = highWavePulse;
+                ctx.font         = "900 22px 'Bangers', 'Arial Black', Impact, sans-serif";
+                ctx.fillStyle    = waveFg;
+                ctx.textAlign    = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.shadowColor  = waveGlow;
+                ctx.shadowBlur   = wave >= 10 ? 14 : 6;
+                ctx.fillText(wave > 0 ? String(wave) : '—', waveNumX, waveNumCY + 10);
+                ctx.restore();
 
-                // Rest countdown (right of bar during break)
-                if (resting && survivalInfo.restTimer > 0 && wave > 0) {
+                // ── Divider ──────────────────────────────────────────────────────
+                const divX = cardX + 56;
+                ctx.save();
+                ctx.strokeStyle = `rgba(${waveRgb},0.25)`;
+                ctx.lineWidth   = 1;
+                ctx.beginPath();
+                ctx.moveTo(divX, cardY + 8);
+                ctx.lineTo(divX, cardY + cardH - 8);
+                ctx.stroke();
+                ctx.restore();
+
+                // ── Right section: progress bar + kill counter ───────────────────
+                const innerX  = divX + 10;
+                const innerW  = cardX + cardW - innerX - 12;
+                const barH    = 8;
+                const barY    = cardY + 10;
+
+                if (!resting && wave > 0) {
+                    // ── Kill label row ────────────────────────────────────────────
                     ctx.save();
-                    ctx.font = "bold 11px 'Press Start 2P', monospace";
-                    ctx.fillStyle = 'rgba(0,255,136,0.8)';
-                    ctx.textAlign = 'left';
+                    ctx.font         = "700 7px 'Press Start 2P', monospace";
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillStyle    = 'rgba(255,255,255,0.45)';
+                    ctx.textAlign    = 'left';
+                    ctx.fillText('KILLS', innerX, barY + 1);
+                    ctx.fillStyle = waveFg;
+                    ctx.textAlign = 'right';
+                    ctx.shadowColor = waveGlow;
+                    ctx.shadowBlur  = 4;
+                    ctx.fillText(`${Math.min(killsDone, killTarget)} / ${killTarget}`, cardX + cardW - 10, barY + 1);
+                    ctx.restore();
+
+                    // ── Bar track ─────────────────────────────────────────────────
+                    const barTrackY = barY + 8;
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+                    ctx.beginPath();
+                    ctx.roundRect(innerX, barTrackY, innerW, barH, 3);
+                    ctx.fill();
+
+                    // Segmented pips when ≤ 25, continuous otherwise
+                    if (killTarget <= 25) {
+                        const gap  = 2;
+                        const pipW = Math.max(3, Math.floor((innerW - gap * (killTarget - 1)) / killTarget));
+                        for (let i = 0; i < killTarget; i++) {
+                            const px     = innerX + i * (pipW + gap);
+                            const filled = i < killsDone;
+                            // Just-filled pip gets an extra pop
+                            const isNew  = filled && i === killsDone - 1;
+                            if (filled) {
+                                ctx.shadowColor = waveGlow;
+                                ctx.shadowBlur  = isNew ? 10 : 4;
+                                const pipGrad = ctx.createLinearGradient(px, barTrackY, px, barTrackY + barH);
+                                pipGrad.addColorStop(0, waveFg);
+                                pipGrad.addColorStop(1, `rgba(${waveRgb},0.55)`);
+                                ctx.fillStyle = pipGrad;
+                            } else {
+                                ctx.shadowBlur = 0;
+                                ctx.fillStyle  = 'rgba(255,255,255,0.08)';
+                            }
+                            ctx.beginPath();
+                            ctx.roundRect(px, barTrackY, pipW, barH, 2);
+                            ctx.fill();
+                        }
+                    } else {
+                        // Continuous bar
+                        const progress = Math.min(1, killsDone / killTarget);
+                        const fillW    = Math.max(0, Math.floor(innerW * progress));
+                        if (fillW > 0) {
+                            ctx.shadowColor = waveGlow;
+                            ctx.shadowBlur  = 8;
+                            const fillGrad = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
+                            fillGrad.addColorStop(0,   `rgba(${waveRgb},0.6)`);
+                            fillGrad.addColorStop(0.6, waveFg);
+                            fillGrad.addColorStop(1,   '#FFFFFF');
+                            ctx.fillStyle = fillGrad;
+                            ctx.beginPath();
+                            ctx.roundRect(innerX, barTrackY, fillW, barH, 3);
+                            ctx.fill();
+                            // Shimmer leading-edge spark
+                            const sparkX = innerX + fillW - 3;
+                            ctx.shadowColor = '#FFFFFF';
+                            ctx.shadowBlur  = 12;
+                            ctx.fillStyle   = 'rgba(255,255,255,0.9)';
+                            ctx.fillRect(sparkX, barTrackY, 3, barH);
+                        }
+                    }
+                    ctx.restore();
+
+                    // ── Skull icon ────────────────────────────────────────────────
+                    ctx.save();
+                    ctx.font         = '13px sans-serif';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(`${Math.ceil(survivalInfo.restTimer)}s`, barX + barW + 8, barY + barH / 2);
+                    ctx.textAlign    = 'left';
+                    ctx.fillText('💀', innerX - 1, cardY + cardH - 10);
+                    ctx.restore();
+
+                } else if (!resting && wave === 0) {
+                    // GET READY state — simple centered text
+                    ctx.save();
+                    ctx.font         = "bold 10px 'Press Start 2P', monospace";
+                    ctx.fillStyle    = 'rgba(255,255,255,0.8)';
+                    ctx.textAlign    = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor  = 'rgba(255,255,255,0.5)';
+                    ctx.shadowBlur   = 6;
+                    ctx.fillText('GET READY!', innerX + innerW / 2, cardY + cardH / 2);
+                    ctx.restore();
+
+                } else {
+                    // ── Rest period ───────────────────────────────────────────────
+                    const restTotal = wave === 0 ? 3.0 : 4.0;
+                    const restPct   = Math.max(0, 1 - (survivalInfo.restTimer / restTotal));
+                    const secs      = survivalInfo.restTimer > 0 ? Math.ceil(survivalInfo.restTimer) : 0;
+
+                    // "NEXT WAVE" label
+                    ctx.save();
+                    ctx.font         = "700 7px 'Press Start 2P', monospace";
+                    ctx.fillStyle    = 'rgba(0,255,136,0.75)';
+                    ctx.textAlign    = 'left';
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillText('NEXT WAVE', innerX, barY + 1);
+                    // Countdown seconds badge
+                    ctx.font         = "900 14px 'Bangers', Impact, sans-serif";
+                    ctx.fillStyle    = '#00FF88';
+                    ctx.textAlign    = 'right';
+                    ctx.shadowColor  = 'rgba(0,255,136,0.9)';
+                    ctx.shadowBlur   = 8;
+                    ctx.fillText(`${secs}s`, cardX + cardW - 10, barY + 2);
+                    ctx.restore();
+
+                    // Green fill bar
+                    const barTrackY = barY + 8;
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(0,255,136,0.08)';
+                    ctx.beginPath();
+                    ctx.roundRect(innerX, barTrackY, innerW, barH, 3);
+                    ctx.fill();
+                    if (restPct > 0) {
+                        ctx.shadowColor = 'rgba(0,255,136,0.9)';
+                        ctx.shadowBlur  = 8;
+                        const gGrad = ctx.createLinearGradient(innerX, 0, innerX + innerW, 0);
+                        gGrad.addColorStop(0,   'rgba(0,200,100,0.7)');
+                        gGrad.addColorStop(0.7,  '#00FF88');
+                        gGrad.addColorStop(1,    '#AAFFD4');
+                        ctx.fillStyle = gGrad;
+                        ctx.beginPath();
+                        ctx.roundRect(innerX, barTrackY, Math.floor(innerW * restPct), barH, 3);
+                        ctx.fill();
+                    }
                     ctx.restore();
                 }
 
