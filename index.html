@@ -63,11 +63,6 @@
             Content-Security-Policy: script-src 'self' 'nonce-<random>' https://pagead2.googlesyndication.com; object-src 'none'; base-uri 'self';
             The server should also inject the matching nonce into the inline <script nonce="%CSP_NONCE%"> tags below.
         -->
-    <script>
-        // AdSense (web) publisher ID � must use ca-pub- prefix (NOT ca-app-pub-, which is AdMob).
-        // Verify this matches the publisher ID shown in https://www.google.com/adsense/ ? Account ? Settings.
-        window.SKUNK_WEB_AD_CLIENT = 'ca-pub-8519140628365141';
-    </script>
     <!-- Arcade / ninja title fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,21 +103,6 @@
             display: flex;
             width: 100%;
             height: 100%;
-        }
-
-        /* Ad rail hidden by default � AdSense bootstrap reveals it on web. */
-        #ad-container-right {
-            width: var(--ad-width);
-            min-width: 0;
-            height: 100%;
-            background-color: #050505;
-            flex-shrink: 0;
-            order: 2; /* Sits to the right of the game */
-            display: none;
-        }
-        html.skunk-web-ads-enabled #ad-container-right {
-            display: block;
-            min-width: 1px;
         }
 
         #content-wrapper {
@@ -2676,7 +2656,6 @@
 
         /* Hide ad on mobile / small screens */
         @media screen and (max-width: 768px) {
-            #ad-container-right { display: none; }
             #content-wrapper { width: 100%; }
             canvas { max-width: calc(100vw - var(--safe-left) - var(--safe-right)); }
             #touch-controls { left: 0; right: 0; }
@@ -2910,11 +2889,6 @@
         .gtm-noscript-iframe {
             display: none;
             visibility: hidden;
-        }
-        ins.adsbygoogle.adsense-banner-160 {
-            display: inline-block;
-            width: 160px;
-            height: 600px;
         }
         #canvas-rotator {
             width: 100%;
@@ -3251,87 +3225,6 @@
     height="0" width="0" class="gtm-noscript-iframe"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <div id="main-wrapper">
-        <div id="ad-container-right">
-            <!-- SkunkedBanner -->
-            <ins class="adsbygoogle adsense-banner-160"
-                 data-ad-client="ca-pub-8519140628365141"
-                 data-ad-slot="4631220272"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (function() {
-                     function isNativePlatform() {
-                         return !!(
-                             typeof window !== 'undefined' &&
-                             window.Capacitor &&
-                             typeof window.Capacitor.isNativePlatform === 'function' &&
-                             window.Capacitor.isNativePlatform()
-                         );
-                     }
-
-                     function collapseAdRail() {
-                         document.documentElement.style.setProperty('--ad-width', '0px');
-                     }
-
-                     function loadAdSenseScript(clientId) {
-                         // AdSense complains if you put unknown data-*
-                         // attributes on its <script> tag, so we dedupe via
-                         // a window flag instead of querying for a marker.
-                         if (!clientId || window.__skunkAdSenseLoaded) {
-                             return;
-                         }
-                         window.__skunkAdSenseLoaded = true;
-                         var script = document.createElement('script');
-                         script.async = true;
-                         script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(clientId);
-                         script.crossOrigin = 'anonymous';
-                         document.head.appendChild(script);
-                     }
-
-                     function tryPushAd() {
-                         var container = document.getElementById('ad-container-right');
-                         if (!container) {
-                             collapseAdRail();
-                             return;
-                         }
-
-                         if (isNativePlatform()) {
-                             container.style.display = 'none';
-                             container.setAttribute('aria-hidden', 'true');
-                             collapseAdRail();
-                             return;
-                         }
-
-                         // Only enable the desktop ad rail on wide viewports.
-                         // Mobile browsers / small windows skip the rail too.
-                         if (window.innerWidth < 900) {
-                             container.style.display = 'none';
-                             container.setAttribute('aria-hidden', 'true');
-                             collapseAdRail();
-                             return;
-                         }
-
-                         // Web + wide viewport: opt-in to the rail.
-                         document.documentElement.classList.add('skunk-web-ads-enabled');
-                         document.documentElement.style.setProperty('--ad-width', '160px');
-
-                         try {
-                             if (container && container.offsetWidth > 0) {
-                                 loadAdSenseScript(window.SKUNK_WEB_AD_CLIENT);
-                                 (adsbygoogle = window.adsbygoogle || []).push({});
-                             } else {
-                                 collapseAdRail();
-                             }
-                         } catch (e) { /* suppress ad errors */ }
-                     }
-                     if (document.readyState === 'complete') {
-                         tryPushAd();
-                     } else {
-                         window.addEventListener('load', tryPushAd);
-                     }
-                 })();
-            </script>
-        </div>
         <div id="content-wrapper">
             <div id="rotate-message">
                 <div class="rotate-phone-icon">
@@ -3928,7 +3821,7 @@
                         </div>
                         <div class="menu-settings-card" id="remove-ads-card">
                             <h3>&#128293; Remove Ads &amp; Unlock Skins</h3>
-                            <p id="remove-ads-desc">One-time purchase. Removes banner &amp; between-stage ads <strong>and unlocks 3 ninja skins</strong> (Sapphire, Amethyst, Steel). Supports the dev.</p>
+                            <p id="remove-ads-desc">One-time purchase. Removes between-stage ads <strong>and unlocks 3 ninja skins</strong> (Sapphire, Amethyst, Steel). Supports the dev.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Remove Ads &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>

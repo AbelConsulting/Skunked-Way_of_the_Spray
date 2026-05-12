@@ -193,22 +193,12 @@ const PurchaseManager = (() => {
         _writeEntitlement(_adFree);
         if (prev !== _adFree) {
             _log('Ad-free entitlement changed →', _adFree, '(source:', source + ')');
-            // Tell AdManager to reconcile (hide banner, skip interstitial, etc.)
+            // Tell AdManager to reconcile (skip interstitial, etc.)
             try {
                 if (window.AdManager && _adFree) {
-                    if (typeof window.AdManager.removeBanner === 'function') {
-                        window.AdManager.removeBanner();
-                    }
+                    // No banner to remove; interstitial is gated by _isAdFree() in onStageComplete.
                 }
             } catch (e) { _warn('AdManager reconcile failed:', e); }
-            // Hide web AdSense container if present
-            try {
-                const adRail = document.getElementById('ad-container-right');
-                if (adRail && _adFree) {
-                    adRail.style.display = 'none';
-                    document.documentElement.style.setProperty('--ad-width', '0px');
-                }
-            } catch (e) {}
             // Mirror to server (skip if this flip CAME from the server).
             if (_adFree && source !== 'remote-restore' && source !== 'storage') {
                 _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);

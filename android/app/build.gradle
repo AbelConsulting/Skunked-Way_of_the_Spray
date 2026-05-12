@@ -33,9 +33,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 63
         versionName "1.2.49"
-        // Use a versioned archive name so concurrent file locks (e.g. Defender / OneDrive
-        // scanning a previously built artifact) don't block the new bundle output.
-        setProperty("archivesBaseName", "skunkfu-${versionName}-${versionCode}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -45,14 +42,14 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             ndk {
-                debugSymbolLevel 'FULL'
+                debugSymbolLevel = 'FULL'
             }
             if (hasReleaseSigning) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             } else {
                 throw new GradleException("Release signing is not configured. Add android/keystore.properties or set ANDROID_STORE_FILE, ANDROID_STORE_PASSWORD, ANDROID_KEY_ALIAS, and ANDROID_KEY_PASSWORD before running bundleRelease.")
             }
@@ -64,6 +61,13 @@ repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
+}
+
+// Use a versioned archive name so concurrent file locks (Defender / OneDrive
+// scanning a prior artifact) don't block the new bundle output.
+// archivesName replaces the deprecated BasePluginConvention.archivesBaseName.
+base {
+    archivesName = "skunkfu-${android.defaultConfig.versionName}-${android.defaultConfig.versionCode}"
 }
 
 dependencies {

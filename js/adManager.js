@@ -8,12 +8,10 @@
  *   App ID:        ca-app-pub-8519140628365141~5979271944
  *
  * Ad units under that app:
- *   Banner (banner):           ca-app-pub-8519140628365141/7472317017
  *   Interstitial (betweenlevels): ca-app-pub-8519140628365141/5195233926
  *   Rewarded (extra life):     ca-app-pub-8519140628365141/3920084812
  *
  * Google AdMob test ad unit IDs (used when testing = true):
- *   Banner:       ca-app-pub-3940256099942544/6300978111
  *   Rewarded:     ca-app-pub-3940256099942544/5224354917
  *   Interstitial: ca-app-pub-3940256099942544/1033173712
  */
@@ -28,7 +26,6 @@ const AdManager = (() => {
     // be overridden — ad unit IDs and rewarded format are intentionally
     // baked-in to avoid client-side ad spoofing.
     const TUNABLE_KEYS = [
-        'enableBanner',
         'interstitialEveryNStages',
         'interstitialMinIntervalSec',
         'interstitialFirstInstallSkipCount',
@@ -36,12 +33,10 @@ const AdManager = (() => {
     ];
     const DEFAULT_CONFIG = {
         // Real ad unit IDs from AdMob console (app ~5979271944, Google Play link):
-        bannerAdUnitId:       'ca-app-pub-8519140628365141/7472317017',
         rewardedAdUnitId:     'ca-app-pub-8519140628365141/3920084812',
         interstitialAdUnitId: 'ca-app-pub-8519140628365141/5195233926',
 
         // Google's official test ad unit IDs — used when testing is true
-        testBannerId:        'ca-app-pub-3940256099942544/6300978111',
         testRewardedId:      'ca-app-pub-3940256099942544/5224354917',
         testInterstitialId:  'ca-app-pub-3940256099942544/1033173712',
 
@@ -55,13 +50,6 @@ const AdManager = (() => {
         // requests will silently no-fill. The "extra life" unit
         // (3920084812) is type Rewarded, so we use 'rewardVideo'.
         rewardedFormat: 'rewardVideo',
-
-        // Banner visibility kill-switch. Set to true once AdMob app is
-        // approved ("Ready"). Leave false during "Requires review" so we
-        // don't show Google's ugly placeholder bars on the menu screens.
-        // Rewarded + interstitial are gated by gameplay events so it's
-        // fine to leave them enabled — they simply no-op on no-fill.
-        enableBanner: false,
 
         // Show an interstitial every N stages (0 = never)
         interstitialEveryNStages: 3,
@@ -98,8 +86,6 @@ const AdManager = (() => {
     let _available     = false;  // true only on native Android with plugin
     let _rewardedReady      = false;
     let _interstitialReady  = false;
-    let _bannerVisible      = false;
-    let _bannerLoaded       = false;
     let _revivesUsed        = 0;
     let _stagesSinceAd      = 0;
     let _lastInterstitialAt = 0;
@@ -107,10 +93,6 @@ const AdManager = (() => {
     let _pausedStateBeforeAd = null; // game.state value captured at pause time
 
     // ── Helpers ────────────────────────────────────────────────────
-    function _getBannerId() {
-        return CONFIG.testing ? CONFIG.testBannerId : CONFIG.bannerAdUnitId;
-    }
-
     function _getRewardedId() {
         return CONFIG.testing ? CONFIG.testRewardedId : CONFIG.rewardedAdUnitId;
     }
@@ -165,95 +147,12 @@ const AdManager = (() => {
             _available = true;
             _log('AdMob initialized successfully (testing=' + CONFIG.testing + ').');
 
-            // Defensive: clear any stale banner from a prior process.
-            try { await _plugin.removeBanner(); } catch (e) {}
-
             // Pre-load ads in the background
             _prepareRewarded();
             _prepareInterstitial();
 
-            // Banner ads are disabled for now (CONFIG.enableBanner === false).
-            // Skip both the initial show and the state-change listener so the
-            // plugin never attempts to load a banner. Re-enable by flipping
-            // CONFIG.enableBanner back to true.
-            if (CONFIG.enableBanner) {
-                showBanner();
-                window.addEventListener('gameStateChange', _onGameStateChange);
-            }
-
         } catch (e) {
             _warn('AdMob init failed:', e);
-        }
-    }
-
-    // ── Banner ──────────────────────────────────────────────────────
-    /**
-     * Show a small banner ad at the bottom of the screen.
-     * Safe to call multiple times — no-ops if already visible.
-     */
-    async function showBanner() {
-        if (_isAdFree()) return;
-        if (!CONFIG.enableBanner) return; // Kill-switch — see CONFIG block.
-        if (!_available || !_plugin || _bannerVisible) return;
-        try {
-            await _plugin.showBanner({
-                adId: _getBannerId(),
-                adSize: 'ADAPTIVE_BANNER',
-                position: 'BOTTOM_CENTER',
-                isTesting: CONFIG.testing,
-            });
-            _bannerVisible = true;
-            _bannerLoaded = true;
-            _log('Banner shown.');
-        } catch (e) {
-            _warn('Banner show failed:', e);
-        }
-    }
-
-    /**
-     * Hide the banner ad. Call when entering active gameplay.
-     */
-    async function hideBanner() {
-        if (!_available || !_plugin || !_bannerVisible) return;
-        try {
-            await _plugin.hideBanner();
-            _bannerVisible = false;
-            _log('Banner hidden.');
-        } catch (e) {
-            _warn('Banner hide failed:', e);
-        }
-    }
-
-    /**
-     * Completely remove the banner (frees resources).
-     */
-    async function removeBanner() {
-        if (!_available || !_plugin || !_bannerLoaded) return;
-        try {
-            await _plugin.removeBanner();
-            _bannerVisible = false;
-            _bannerLoaded = false;
-            _log('Banner removed.');
-        } catch (e) {
-            _warn('Banner remove failed:', e);
-        }
-    }
-
-    /**
-     * Auto-manage banner visibility based on game state.
-     * Banner shows on: MENU, GAME_OVER, PAUSED, LEVEL_COMPLETE, VICTORY
-     * Banner hides on: PLAYING
-     */
-    function _onGameStateChange(ev) {
-        try {
-            const state = ev && ev.detail && ev.detail.state;
-            if (state === 'PLAYING') {
-                hideBanner();
-            } else {
-                showBanner();
-            }
-        } catch (e) {
-            _warn('Banner state handler error:', e);
         }
     }
 
@@ -304,7 +203,7 @@ const AdManager = (() => {
      */
     function canShowRewarded() {
         // Rewarded ads remain available for everyone, including Remove-Ads owners.
-        // The Remove-Ads SKU only suppresses banner + interstitial. Rewarded is
+        // The Remove-Ads SKU only suppresses interstitial. Rewarded is
         // an opt-in trade ("watch a 30s ad to revive") that ad-free players can
         // still choose to use for the extra life.
         return _available && _rewardedReady && _revivesUsed < CONFIG.maxRevivesPerSession;
@@ -485,7 +384,7 @@ const AdManager = (() => {
 
     /**
      * Toggle the global ad-showing flag and broadcast a CustomEvent so
-     * other systems (gameLoop, AdSense banners, analytics) can react.
+     * other systems (gameLoop, analytics) can react.
      */
     function _setAdShowing(showing) {
         _adShowing = !!showing;
@@ -541,9 +440,6 @@ const AdManager = (() => {
         CONFIG,
         initialize,
         setConfig,
-        showBanner,
-        hideBanner,
-        removeBanner,
         canShowRewarded,
         showRewarded,
         onStageComplete,
@@ -552,8 +448,6 @@ const AdManager = (() => {
         isAdShowing() { return _adShowing; },
         /** True if ads are available on this platform. */
         get available() { return _available; },
-        /** True if the banner is currently visible. */
-        get bannerVisible() { return _bannerVisible; },
     };
 })();
 
