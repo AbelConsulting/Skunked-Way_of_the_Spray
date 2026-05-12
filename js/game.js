@@ -685,6 +685,7 @@ class Game {
             this.survivalWaveResting = false;
             this._survivalWaveBannerTimer = 0;
             this._survivalWaveBannerText = '';
+            this._survivalAdReviveUsed = false; // one rewarded revive allowed per survival run
             
             // Set a game-level grace period timestamp - player cannot die before this time
             this._gameStartTime = Date.now();
@@ -1348,6 +1349,18 @@ class Game {
                     this.audioManager.playSound('ui_confirm', 0.5);
                 }
             } catch (e) { __err('game', e); }
+
+            // Grant 2 skunk shots at the start of every wave
+            if (this.player) {
+                this.player.skunkAmmo = (this.player.skunkAmmo || 0) + 2;
+                try {
+                    this.damageNumbers.push(new FloatingText(
+                        this.player.x + 32, this.player.y - 40,
+                        '+2 SPRAY',
+                        { color: '#A8FF78', lifetime: 1.4, velocityY: -70, font: 'bold 16px Arial' }
+                    ));
+                } catch (e) { __err('game', e); }
+            }
         }
 
         /** Called every frame during PLAYING in survival mode. */
@@ -3106,6 +3119,8 @@ class Game {
     /**
      * Revive the player after watching a rewarded ad.
      * Continues from the current level with 1 life and full HP.
+     * In survival mode restarts the current wave's rest countdown and
+     * clears remaining enemies so the player gets a clean slate.
      */
     reviveFromAd() {
         if (this.state !== 'GAME_OVER') return;
@@ -3117,7 +3132,7 @@ class Game {
         // Restore player to a fully clean state (mirrors _performRespawn)
         if (this.player) {
             this.player.health = this.player.maxHealth;
-            this.player.invulnerableTimer = 3.0; // generous i-frames after revive
+            this.player.invulnerableTimer = 3.5; // generous i-frames after revive
             this.player.velocityX = 0;
             this.player.velocityY = 0;
             this.player.targetVelocityX = 0;
@@ -3134,18 +3149,52 @@ class Game {
         this.isRespawning = false;
         this.respawnTimer = 0;
         this._pendingRespawn = null;
-        this._gameOverAnim = null; // Clear game-over overlay so it doesn't flash on revive
-        this._bossDefeatSlowdown = 0; // Clear any active slowdown effect from before death
+        this._gameOverAnim = null;
+        this._bossDefeatSlowdown = 0;
 
-        // Resume music
-        try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
+        if (this.gameMode === 'survival') {
+            // Mark the per-run revive as used
+            this._survivalAdReviveUsed = true;
+
+            // Re-center player in the survival arena
+            if (this.player) {
+                this.player.x = 1350;
+                this.player.y = 620;
+            }
+
+            // Clear all remaining enemies so they don't instantly kill the revived player
+            if (this.enemyManager) {
+                this.enemyManager.enemies = [];
+                this.enemyManager.spawningEnabled = false;
+            }
+
+            // Grant bonus ammo on revive
+            if (this.player) {
+                this.player.skunkAmmo = (this.player.skunkAmmo || 0) + 2;
+            }
+
+            // Re-use the wave rest countdown so the player gets a "GET READY" breather
+            this.survivalWaveResting  = true;
+            this.survivalWaveRestTimer = 4.0;
+            this._survivalWaveBannerText  = `WAVE ${this.survivalWave} — REVIVED!`;
+            this._survivalWaveBannerTimer = 4.0;
+
+            // Resume survival arena music
+            try { this.ensureLevelMusic(); } catch (e) { __err('game', e); }
+
+            // Flash green to signal the revive
+            try { this.screenFlash = new ScreenFlash('rgba(0,255,136,0.35)', 0.6); } catch (e) { __err('game', e); }
+        } else {
+            // Arcade: resume the level music as before
+            try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
+        }
 
         this.dispatchGameStateChange();
         // Analytics: ad revive
         try {
             if (typeof Analytics !== 'undefined') {
                 Analytics.trackAdRevive({
-                    level: (this.currentLevelIndex || 0) + 1,
+                    level: this.gameMode === 'survival' ? this.survivalWave : (this.currentLevelIndex || 0) + 1,
                     score: this.score,
                     revivesUsed: window.AdManager ? (AdManager._revivesUsed || 1) : 1
                 });
