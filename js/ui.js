@@ -1207,11 +1207,13 @@ class UI {
         ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
 
         // Life icons (hearts) below health bar
+        // Survival mode uses a single-life design — showing arcade hearts is
+        // misleading and confusing, so we skip them entirely in survival.
         const lifeIconSize = 20;
         const lifeIconGap = 6;
         const lifeIconsY = healthBarY + healthBarHeight + 8;
         const maxDisplayLives = 9; // Don't crowd the UI
-        const safeLives = Number.isFinite(lives) ? lives : 0;
+        const safeLives = (survivalInfo || !Number.isFinite(lives)) ? 0 : lives;
         const livesToShow = Math.min(Math.max(0, safeLives), maxDisplayLives);
         
         for (let i = 0; i < livesToShow; i++) {

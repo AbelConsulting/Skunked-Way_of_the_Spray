@@ -1288,6 +1288,20 @@ class Game {
                 this.player.velocityY = 0;
             }
 
+            // Survival is single-life: die = game over (revive ad is the only
+            // second chance). Override the arcade `lives = 3` set at game start.
+            this.lives = 1;
+
+            // Ensure no leftover respawn state from a previous run
+            this.isRespawning = false;
+            this.respawnTimer = 0;
+            this._pendingRespawn = null;
+
+            // Extend grace period and i-frames to cover the full GET READY window.
+            // The game start already set _gameStartTime; just lengthen the shield.
+            this._gracePeriodMs = 3500;
+            if (this.player) this.player.invulnerableTimer = 3.5;
+
             // 3-second "GET READY" countdown before wave 1
             this.survivalWaveResting = true;
             this.survivalWaveRestTimer = 3.0;
@@ -2848,6 +2862,12 @@ class Game {
             invulnerable: this.player.invulnerableTimer
         });
         console.log('Reason unknown - check takeDamage logs above');
+
+        // Survival is single-life: force straight to GAME_OVER regardless of
+        // how many lives the counter holds (defense in depth against stale state).
+        if (this.gameMode === 'survival') {
+            this.lives = 1; // will become 0 after decrement below
+        }
 
         // Player died - check for remaining lives
         this.lives--;
