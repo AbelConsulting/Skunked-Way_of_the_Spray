@@ -374,14 +374,23 @@ class UI {
 
         // ── Stats panel with staggered reveal ──
         // Stats list is defined before the panel so we can size the panel to fit.
-        const stats = [
-            { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0, color: '#FF6B6B' },
-            { label: '\u23F1\uFE0F  Time Survived', value: this.formatTime(gameStats.timeSurvived || 0), color: '#4ECDC4' },
-            { label: '\uD83D\uDD25 Max Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
-            { label: '\uD83D\uDCA5 Best Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
-            { label: '\uD83C\uDFAF Accuracy', value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`, color: '#95E1D3' },
-            { label: '\uD83C\uDFFA Idols Collected', value: gameStats.idolsCollected || 0, color: '#F38181' }
-        ];
+        const isSurvival = !!(extra.isSurvival);
+        const stats = isSurvival
+            ? [
+                { label: '\uD83C\uDF0A Wave Reached',    value: extra.levelReached || 0,                                     color: '#4ECDC4' },
+                { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0,                            color: '#FF6B6B' },
+                { label: '\u23F1\uFE0F  Time Survived',   value: this.formatTime(gameStats.timeSurvived || 0),               color: '#95E1D3' },
+                { label: '\uD83D\uDD25 Max Combo',        value: `x${gameStats.maxCombo || 0}`,                              color: '#FFD93D' },
+                { label: '\uD83D\uDCA5 Best Multiplier',  value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`,         color: '#FF9500' },
+            ]
+            : [
+                { label: '\u2694\uFE0F  Enemies Defeated', value: gameStats.enemiesDefeated || 0,                            color: '#FF6B6B' },
+                { label: '\u23F1\uFE0F  Time Survived',   value: this.formatTime(gameStats.timeSurvived || 0),               color: '#4ECDC4' },
+                { label: '\uD83D\uDD25 Max Combo',        value: `x${gameStats.maxCombo || 0}`,                              color: '#FFD93D' },
+                { label: '\uD83D\uDCA5 Best Multiplier',  value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`,         color: '#FF9500' },
+                { label: '\uD83C\uDFAF Accuracy',         value: `${Math.floor((gameStats.accuracy || 0) * 100)}%`,          color: '#95E1D3' },
+                { label: '\uD83C\uDFFA Idols Collected',  value: gameStats.idolsCollected || 0,                              color: '#F38181' }
+            ];
 
         const lineHeight = 30;
         const boxW = Math.min(520, this.width - 60);
@@ -421,7 +430,7 @@ class UI {
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
         ctx.textAlign = 'center';
         ctx.letterSpacing = '0.08em';
-        ctx.fillText('PERFORMANCE', cx, boxY + 24);
+        ctx.fillText(isSurvival ? 'SURVIVAL STATS' : 'PERFORMANCE', cx, boxY + 24);
         ctx.restore();
 
         // Thin separator under header

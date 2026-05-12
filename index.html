@@ -1963,6 +1963,165 @@
             outline: 2px solid rgba(120,255,160,0.95);
         }
 
+        /* ── Survival Mode Extra-Life Interstitial ─────────────────────────
+           Full-screen modal that appears after the game-over lockout in
+           Survival Mode when a rewarded ad is ready. A countdown ring
+           auto-dismisses it if the player does nothing. */
+        .sri {
+            position: fixed;
+            inset: 0;
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: sri-fade-in 0.35s ease both;
+        }
+        .sri[hidden] { display: none; }
+        @keyframes sri-fade-in {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .sri-backdrop {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 40%, rgba(0,80,30,0.72) 0%, rgba(0,0,0,0.88) 70%);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+        }
+        .sri-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 36px 28px 28px;
+            width: min(380px, calc(100vw - 32px));
+            background: linear-gradient(160deg, rgba(10,40,20,0.96), rgba(0,20,10,0.98));
+            border: 1px solid rgba(80,255,140,0.38);
+            border-radius: 22px;
+            box-shadow:
+                0 0 60px rgba(0,200,80,0.22),
+                0 24px 56px rgba(0,0,0,0.65);
+            animation: sri-card-in 0.45s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+            text-align: center;
+        }
+        @keyframes sri-card-in {
+            from { transform: scale(0.85) translateY(20px); opacity: 0; }
+            to   { transform: scale(1)    translateY(0);    opacity: 1; }
+        }
+        /* Soft pulsing green halo behind card */
+        .sri-pulse-ring {
+            position: absolute;
+            inset: -18px;
+            border-radius: 32px;
+            background: transparent;
+            border: 2px solid rgba(80,255,140,0.18);
+            animation: sri-pulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes sri-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1);    }
+            50%       { opacity: 0.8; transform: scale(1.03); }
+        }
+        .sri-icon {
+            font-size: 48px;
+            line-height: 1;
+            filter: drop-shadow(0 0 14px rgba(0,255,100,0.55));
+        }
+        .sri-title {
+            margin: 0;
+            font: 700 38px 'Bangers', 'Arial Black', sans-serif;
+            letter-spacing: 0.06em;
+            color: #80FFB0;
+            text-shadow: 0 0 20px rgba(0,255,100,0.6);
+        }
+        .sri-wave-line {
+            margin: 0;
+            font: 700 14px 'Press Start 2P', monospace;
+            color: rgba(200,255,220,0.85);
+        }
+        .sri-sub {
+            margin: 0;
+            font: 400 12px 'Space Grotesk', 'Segoe UI', sans-serif;
+            color: rgba(160,220,180,0.7);
+            line-height: 1.4;
+        }
+        /* Countdown ring */
+        .sri-countdown-wrap {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 4px 0;
+        }
+        .sri-ring {
+            width: 80px;
+            height: 80px;
+            transform: rotate(-90deg);
+        }
+        .sri-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.10);
+            stroke-width: 6;
+        }
+        .sri-ring-arc {
+            fill: none;
+            stroke: #60FFB0;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 213.6;  /* 2π×34 */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+            filter: drop-shadow(0 0 6px rgba(0,255,100,0.7));
+        }
+        .sri-timer-num {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font: 700 22px 'Press Start 2P', monospace;
+            color: #80FFB0;
+        }
+        /* Buttons */
+        .sri-btn {
+            appearance: none;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            -webkit-tap-highlight-color: transparent;
+            transition: filter 140ms ease, transform 140ms ease;
+            width: 100%;
+        }
+        .sri-btn:hover  { filter: brightness(1.15); }
+        .sri-btn:active { transform: scale(0.97);   }
+        .sri-btn--primary {
+            padding: 14px 20px;
+            font-size: 15px;
+            color: #001A08;
+            background: linear-gradient(180deg, #60FFB0, #20C060);
+            box-shadow: 0 6px 24px rgba(0,200,80,0.40), 0 0 18px rgba(0,255,100,0.20);
+        }
+        .sri-btn--primary:focus-visible {
+            outline: 2px solid rgba(96,255,176,0.95);
+            outline-offset: 3px;
+        }
+        .sri-btn--skip {
+            padding: 10px 20px;
+            font-size: 12px;
+            color: rgba(160,200,170,0.65);
+            background: transparent;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .sri-btn--skip:hover { color: rgba(160,200,170,0.9); }
+        @media (max-width: 400px) {
+            .sri-card { padding: 28px 18px 22px; }
+            .sri-title { font-size: 30px; }
+        }
+
         /* -- Game-over Leaderboard CTA --
            Shown when GAME_OVER state engages and the input lockout expires.
            Sits above the canvas-rendered "pinned restart prompt" strip
@@ -3254,6 +3413,34 @@
                         <span class="game-over-cta-icon" aria-hidden="true">&#9776;</span>
                         <span class="game-over-cta-label">Menu</span>
                     </button>
+                </div>
+
+                <!-- Survival mode extra-life interstitial overlay.
+                     Shown after the game-over lockout expires when the player
+                     dies in Survival Mode and a rewarded ad is ready.
+                     A 10-second countdown auto-dismisses if the player
+                     doesn't interact; "Watch Ad" triggers the rewarded ad
+                     flow and calls game.reviveFromAd() on success. -->
+                <div id="survival-revive-interstitial" class="sri" hidden aria-modal="true" role="dialog" aria-label="Extra life offer">
+                    <div class="sri-backdrop"></div>
+                    <div class="sri-card">
+                        <div class="sri-pulse-ring"></div>
+                        <div class="sri-icon" aria-hidden="true">&#128154;</div>
+                        <h2 class="sri-title">EXTRA LIFE!</h2>
+                        <p class="sri-wave-line">Wave <strong id="sri-wave-num">1</strong> Complete</p>
+                        <p class="sri-sub">Watch a short ad to keep your run alive</p>
+                        <div class="sri-countdown-wrap" aria-hidden="true">
+                            <svg class="sri-ring" viewBox="0 0 80 80">
+                                <circle class="sri-ring-bg" cx="40" cy="40" r="34"/>
+                                <circle id="sri-ring-arc"  class="sri-ring-arc" cx="40" cy="40" r="34"/>
+                            </svg>
+                            <span id="sri-timer-num" class="sri-timer-num">10</span>
+                        </div>
+                        <button id="sri-watch-btn" class="sri-btn sri-btn--primary" type="button">
+                            <span aria-hidden="true">&#9658;</span>&nbsp;Watch Ad &mdash; Revive
+                        </button>
+                        <button id="sri-skip-btn" class="sri-btn sri-btn--skip" type="button">No Thanks</button>
+                    </div>
                 </div>
 
                 <div id="mobile-start-overlay" hidden>
@@ -6005,28 +6192,19 @@
                         try {
                             if (!window.game || window.game.state !== 'GAME_OVER') return;
                             const isSurvival = window.game.gameMode === 'survival';
-                            const survivalReviveUsed = !!(window.game._survivalAdReviveUsed);
 
-                            // Survival mode: show the button once per run regardless of
-                            // platform, as long as the per-run allowance hasn't been spent.
+                            // Survival mode uses the full-screen interstitial overlay
+                            // (wireSurvivalReviveInterstitial below). Skip the button here.
+                            if (isSurvival) return;
+
                             // Arcade mode: only show when a native AdMob rewarded ad is ready.
                             const adReady = window.AdManager
                                 && typeof AdManager.canShowRewarded === 'function'
                                 && AdManager.canShowRewarded();
 
-                            const eligible = isSurvival
-                                ? (!survivalReviveUsed && adReady)
-                                : adReady;
-
-                            if (eligible) {
-                                // Label the button differently in survival mode
-                                if (isSurvival) {
-                                    const lbl = btn.querySelector('.game-over-cta-label');
-                                    if (lbl) lbl.textContent = 'Watch Ad — Extra Life';
-                                    btn.setAttribute('aria-label', 'Watch ad for an extra life');
-                                }
+                            if (adReady) {
                                 const meta = {
-                                    level: isSurvival ? (window.game.survivalWave || 0) : ((window.game.currentLevelIndex || 0) + 1),
+                                    level: (window.game.currentLevelIndex || 0) + 1,
                                     score: (window.game.score || 0),
                                     revivesUsed: (window.AdManager && AdManager._revivesUsed) || 0
                                 };
@@ -6068,6 +6246,147 @@
                             // it gone; if dismissed, the player can hit Restart/Menu.
                             hide();
                         });
+                });
+            })();
+
+            // -- Survival Mode Extra-Life Interstitial --
+            // Full-screen overlay shown in survival GAME_OVER when a rewarded
+            // ad is ready. A 10-second countdown auto-dismisses it so the
+            // player is never trapped; "Watch Ad" triggers the rewarded flow
+            // and calls game.reviveFromAd() on success.
+            (function wireSurvivalReviveInterstitial() {
+                const overlay   = document.getElementById('survival-revive-interstitial');
+                const waveNumEl = document.getElementById('sri-wave-num');
+                const timerEl   = document.getElementById('sri-timer-num');
+                const ringArc   = document.getElementById('sri-ring-arc');
+                const watchBtn  = document.getElementById('sri-watch-btn');
+                const skipBtn   = document.getElementById('sri-skip-btn');
+                if (!overlay || !watchBtn || !skipBtn) return;
+
+                const COUNTDOWN_SEC = 10;
+                const RING_CIRC     = 2 * Math.PI * 34; // ≈213.6
+                let countdownInterval = null;
+                let revealTimer       = null;
+                let busy              = false;
+
+                function updateRing(secsLeft) {
+                    const fraction = secsLeft / COUNTDOWN_SEC;
+                    if (ringArc) ringArc.style.strokeDashoffset = String(RING_CIRC * (1 - fraction));
+                    if (timerEl) timerEl.textContent = String(secsLeft);
+                    // Turn ring red in final 3 seconds
+                    if (ringArc) ringArc.style.stroke = secsLeft <= 3 ? '#FF6060' : '#60FFB0';
+                }
+
+                function startCountdown() {
+                    let secsLeft = COUNTDOWN_SEC;
+                    updateRing(secsLeft);
+                    clearInterval(countdownInterval);
+                    countdownInterval = setInterval(() => {
+                        secsLeft--;
+                        updateRing(secsLeft);
+                        if (secsLeft <= 0) {
+                            clearInterval(countdownInterval);
+                            hideInterstitial();
+                        }
+                    }, 1000);
+                }
+
+                function showInterstitial(wave) {
+                    if (waveNumEl) waveNumEl.textContent = String(wave);
+                    // Reset ring
+                    updateRing(COUNTDOWN_SEC);
+                    overlay.removeAttribute('hidden');
+                    startCountdown();
+                    try {
+                        Analytics.trackAdReviveOffered({
+                            level: wave,
+                            score: (window.game && window.game.score) || 0,
+                            revivesUsed: (window.AdManager && AdManager._revivesUsed) || 0,
+                            placement: 'survival_interstitial'
+                        });
+                    } catch (_) {}
+                }
+
+                function hideInterstitial() {
+                    clearInterval(countdownInterval);
+                    overlay.setAttribute('hidden', '');
+                    busy = false;
+                }
+
+                // Watch Ad button
+                watchBtn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (busy) return;
+                    if (!window.AdManager || typeof AdManager.showRewarded !== 'function') {
+                        hideInterstitial();
+                        return;
+                    }
+                    busy = true;
+                    clearInterval(countdownInterval);
+                    watchBtn.disabled = true;
+                    try {
+                        Analytics.trackAdReviveClicked({
+                            level: (window.game && window.game.survivalWave) || 0,
+                            score: (window.game && window.game.score) || 0,
+                            revivesUsed: (window.AdManager && AdManager._revivesUsed) || 0,
+                            placement: 'survival_interstitial'
+                        });
+                    } catch (_) {}
+                    Promise.resolve(AdManager.showRewarded())
+                        .then((rewarded) => {
+                            try {
+                                if (rewarded && window.game && window.game.state === 'GAME_OVER'
+                                    && typeof window.game.reviveFromAd === 'function') {
+                                    window.game.reviveFromAd();
+                                }
+                            } catch (e) { console.warn('reviveFromAd failed', e); }
+                        })
+                        .catch((e) => console.warn('showRewarded failed', e))
+                        .finally(() => {
+                            watchBtn.disabled = false;
+                            hideInterstitial();
+                        });
+                });
+
+                // No Thanks / skip button
+                skipBtn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    try { Analytics.trackAdReviveDismissed && Analytics.trackAdReviveDismissed({ reason: 'skip', placement: 'survival_interstitial' }); } catch (_) {}
+                    hideInterstitial();
+                });
+
+                // Trigger on GAME_OVER state change
+                window.addEventListener('gameStateChange', (e) => {
+                    const isGameOver = e && e.detail && e.detail.state === 'GAME_OVER';
+                    if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+                    if (!isGameOver) { hideInterstitial(); return; }
+
+                    // Only for survival mode
+                    const isSurvival = window.game && window.game.gameMode === 'survival';
+                    if (!isSurvival) return;
+
+                    hideInterstitial();
+
+                    const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                        ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+
+                    // Show after lockout + small buffer so the game-over animation breathes
+                    revealTimer = setTimeout(() => {
+                        try {
+                            if (!window.game || window.game.state !== 'GAME_OVER') return;
+                            if (window.game.gameMode !== 'survival') return;
+                            if (window.game._survivalAdReviveUsed) return;
+
+                            const adReady = window.AdManager
+                                && typeof AdManager.canShowRewarded === 'function'
+                                && AdManager.canShowRewarded();
+                            if (!adReady) return;
+
+                            showInterstitial(window.game.survivalWave || 0);
+                        } catch (ex) { /* noop */ }
+                    }, lockoutMs + 400);
                 });
             })();
 

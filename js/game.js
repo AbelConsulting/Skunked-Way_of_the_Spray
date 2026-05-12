@@ -3645,7 +3645,8 @@ class Game {
                 levelReached: this._gameOverLevelReached,
                 levelName: this._gameOverLevelName,
                 newAchievements: this._gameOverNewAchievements,
-                elapsed: (Date.now() - this._gameOverTime) / 1000
+                elapsed: (Date.now() - this._gameOverTime) / 1000,
+                isSurvival: this.gameMode === 'survival'
             });
         }
 
