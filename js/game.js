@@ -152,7 +152,7 @@ class Game {
         // Load the first level
         // (LEVEL_CONFIGS is defined in levelData.js)
         if (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS.length > 0) {
-            this.loadLevel(this.currentLevelIndex);
+            this.loadLevel(this.currentLevelIndex, { skipMusic: true });
         } else {
             console.warn('LEVEL_CONFIGS not found, falling back to default level.');
             // Fallback default level data
