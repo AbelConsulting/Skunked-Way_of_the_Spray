@@ -1925,6 +1925,11 @@ class Game {
             this.levelTime = (Date.now() / 1000) - this.levelStartTime;
             
             this.gameStats.timeSurvived += dt;
+            // In survival mode, only count time while a wave is actively running
+            // (not during GET READY or inter-wave rest periods).
+            if (this.gameMode === 'survival' && this.survivalWaveResting) {
+                this.gameStats.timeSurvived -= dt;
+            }
 
             // ── Mid-run achievement check (throttled) ──
             // Most achievements are gameplay-driven (kills, combos, accuracy,
@@ -2117,8 +2122,8 @@ class Game {
                     }
                 } catch (e) { __err('game', e); }
 
-                // Grant extra life if applicable
-                if (result && result.type === 'EXTRA_LIFE' && result.success) {
+                // Grant extra life if applicable (arcade only — survival is single-life)
+                if (result && result.type === 'EXTRA_LIFE' && result.success && this.gameMode !== 'survival') {
                     this.lives = Math.min(this.lives + (result.lives || 1), 9);
                 } else if (result && result.type === 'SKUNK_POWERUP' && result.success) {
                     // Tutorial hint for skunk shot pickup
@@ -2208,12 +2213,14 @@ class Game {
                             try { this._scorePulse = 1.0; } catch (e) { __err('game', e); }
                             try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('powerup', 0.7); } catch (e) { __err('game', e); }
                             
-                            // Full set bonus: Extra life!
-                            this.lives = Math.min(this.lives + 1, 9);
+                            // Full set bonus: Extra life! (arcade only — survival is single-life)
+                            if (this.gameMode !== 'survival') {
+                                this.lives = Math.min(this.lives + 1, 9);
+                            }
                             this.damageNumbers.push(new FloatingText(
                                 item.x,
                                 item.y - 90,
-                                'FULL SET! +1 LIFE!',
+                                this.gameMode === 'survival' ? 'FULL SET! +POWER!' : 'FULL SET! +1 LIFE!',
                                 { color: '#FF00FF', lifetime: 2.5, velocityY: -100, font: 'bold 22px Arial' }
                             ));
                         }
@@ -2773,7 +2780,9 @@ class Game {
         // was never processed (e.g. due to timing edge cases).
         if (this.player && this.player.health <= 0 && !this.player.isDying &&
             !this.isRespawning && this.state === 'PLAYING') {
-            console.warn('=== ZOMBIE STATE DETECTED - forcing death ===');
+            if (typeof Config !== 'undefined' && Config.DEBUG) {
+                console.warn('=== ZOMBIE STATE DETECTED - forcing death ===');
+            }
             this._lastDeathCause = this._lastDeathCause || 'zombie_state';
             this._handlePlayerDeath();
         }
@@ -2849,19 +2858,22 @@ class Game {
         // Prevent death during initial spawn invulnerability window
         // BUT if health is already <= 0 the player IS dead - don't block it.
         if (!alreadyDead && this.player.invulnerableTimer > 0) {
-            console.log('=== DEATH BLOCKED - INVULNERABLE ===');
-            console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
-            console.log('Player health:', this.player.health);
+            if (typeof Config !== 'undefined' && Config.DEBUG) {
+                console.log('=== DEATH BLOCKED - INVULNERABLE ===');
+                console.log('Invulnerability time remaining:', this.player.invulnerableTimer);
+                console.log('Player health:', this.player.health);
+            }
             return;
         }
         
-        console.log('=== PLAYER DEATH TRIGGERED ===');
-        console.log('Player state:', {
-            health: this.player.health,
-            pos: { x: this.player.x, y: this.player.y },
-            invulnerable: this.player.invulnerableTimer
-        });
-        console.log('Reason unknown - check takeDamage logs above');
+        if (typeof Config !== 'undefined' && Config.DEBUG) {
+            console.log('=== PLAYER DEATH TRIGGERED ===');
+            console.log('Player state:', {
+                health: this.player.health,
+                pos: { x: this.player.x, y: this.player.y },
+                invulnerable: this.player.invulnerableTimer
+            });
+        }
 
         // Survival is single-life: force straight to GAME_OVER regardless of
         // how many lives the counter holds (defense in depth against stale state).
