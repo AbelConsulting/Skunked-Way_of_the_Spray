@@ -703,7 +703,7 @@ class UI {
             ctx.fillText(String(secs), ringX, ringY + 1);
 
             // Tip text below ring
-            const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
+            const tips = this._getGameOverTip(extra.levelReached || 0, gameStats, extra.isSurvival);
             if (tips) {
                 ctx.globalAlpha = 0.55;
                 ctx.font = "10px 'Press Start 2P', monospace";
@@ -719,7 +719,7 @@ class UI {
             // canvas text here. Keeping the strip lean reduces clutter on
             // the GAME_OVER screen and prevents overlap with the stats
             // panel and the HTML CTAs.
-            const tips = this._getGameOverTip(extra.levelReached || 0, gameStats);
+            const tips = this._getGameOverTip(extra.levelReached || 0, gameStats, extra.isSurvival);
             if (tips) {
                 ctx.save();
                 ctx.globalAlpha = 0.6;
@@ -786,14 +786,25 @@ class UI {
     /**
      * Returns a contextual encouragement tip based on player performance.
      */
-    _getGameOverTip(levelReached, stats) {
+    _getGameOverTip(levelReached, stats, isSurvival) {
         if (!stats) return null;
-        const combo = stats.maxCombo || 0;
+        const combo    = stats.maxCombo || 0;
         const accuracy = stats.accuracy || 0;
-        const enemies = stats.enemiesDefeated || 0;
-        const time = stats.timeSurvived || 0;
+        const enemies  = stats.enemiesDefeated || 0;
+        const time     = stats.timeSurvived || 0;
 
-        // Select a tip based on what could improve
+        if (isSurvival) {
+            // Survival-specific tips keyed off wave reached
+            if (levelReached >= 15) return '\uD83D\uDD25 LEGENDARY! Wave ' + levelReached + ' — you\'re a survivor!';
+            if (levelReached >= 10) return '\uD83C\uDFC6 Wave ' + levelReached + ' reached — incredible run!';
+            if (levelReached >= 5)  return '\uD83D\uDCAA Wave ' + levelReached + ' — keep the pressure on!';
+            if (combo >= 5)         return '\uD83D\uDD25 Great combos! Chain kills before the next wave hits!';
+            if (enemies < 5)        return '\uD83D\uDCA1 TIP: Stay aggressive — enemies chase you in survival!';
+            if (time < 30)          return '\u26A1 Stay mobile between waves to collect ammo drops!';
+            return '\uD83C\uDF0A Each wave gets harder — use your spray wisely!';
+        }
+
+        // Arcade tips
         if (levelReached <= 1 && enemies < 5) return '\uD83D\uDCA1 TIP: Time your attacks to build combos!';
         if (combo < 3 && enemies > 0) return '\uD83D\uDD25 Chain attacks on enemies for big combo bonuses!';
         if (accuracy < 0.3 && enemies > 3) return '\uD83C\uDFAF Land more hits to boost your accuracy score!';
@@ -1612,7 +1623,7 @@ class UI {
 
                 } else {
                     // ── Rest period ───────────────────────────────────────────────
-                    const restTotal = wave === 0 ? 3.0 : 4.0;
+                    const restTotal = survivalInfo.restTotal || (wave === 0 ? 3.0 : 4.0);
                     const restPct   = Math.max(0, 1 - (survivalInfo.restTimer / restTotal));
                     const secs      = survivalInfo.restTimer > 0 ? Math.ceil(survivalInfo.restTimer) : 0;
 
@@ -1654,6 +1665,20 @@ class UI {
                     ctx.restore();
                 }
 
+                // ── Revive-used badge ─────────────────────────────────────────
+                if (survivalInfo.reviveUsed) {
+                    ctx.save();
+                    ctx.font         = "bold 8px 'Press Start 2P', monospace";
+                    ctx.textAlign    = 'right';
+                    ctx.textBaseline = 'top';
+                    ctx.globalAlpha  = 0.70;
+                    ctx.fillStyle    = '#FF8888';
+                    ctx.shadowColor  = 'rgba(255,80,80,0.6)';
+                    ctx.shadowBlur   = 6;
+                    ctx.fillText('\u2665 REVIVE USED', cardX + cardW - 4, cardY + cardH + 4);
+                    ctx.restore();
+                }
+
                 // ── Low-health danger vignette ──────────────────────────────────
                 if (player && player.maxHealth > 0 && player.health / player.maxHealth < 0.3) {
                     const hpFrac  = player.health / player.maxHealth;
@@ -1674,14 +1699,15 @@ class UI {
 
                 // ── Full-screen wave banner ─────────────────────────────────────
                 if (survivalInfo.bannerText && survivalInfo.bannerAlpha > 0) {
-                    const alpha   = Math.min(1, survivalInfo.bannerAlpha);
-                    const cx      = this.width / 2;
-                    const cy      = Math.floor(this.height * 0.37);
+                    const alpha      = Math.min(1, survivalInfo.bannerAlpha);
+                    const cx         = this.width / 2;
+                    const cy         = Math.floor(this.height * 0.37);
                     const isCleared  = survivalInfo.bannerText.includes('CLEARED');
                     const isGetReady = survivalInfo.bannerText === 'GET READY!';
+                    const isRevived  = survivalInfo.bannerText.includes('ONE MORE CHANCE');
                     const scale   = 1 + 0.05 * Math.sin(now / 140);
-                    const bannerColor = isCleared ? '#00FF88' : (isGetReady ? '#FFFFFF' : waveFg);
-                    const bannerGlow  = isCleared ? 'rgba(0,255,136,0.9)' : (isGetReady ? 'rgba(255,255,255,0.6)' : waveGlow);
+                    const bannerColor = isCleared ? '#00FF88' : (isRevived ? '#80FFD4' : (isGetReady ? '#FFFFFF' : waveFg));
+                    const bannerGlow  = isCleared ? 'rgba(0,255,136,0.9)' : (isRevived ? 'rgba(0,220,160,0.8)' : (isGetReady ? 'rgba(255,255,255,0.6)' : waveGlow));
 
                     // Background strip
                     ctx.save();

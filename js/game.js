@@ -1291,6 +1291,7 @@ class Game {
             // 3-second "GET READY" countdown before wave 1
             this.survivalWaveResting = true;
             this.survivalWaveRestTimer = 3.0;
+            this._survivalWaveRestTotal = 3.0;
             this._survivalWaveBannerText = 'GET READY!';
             this._survivalWaveBannerTimer = 3.0;
         }
@@ -1392,6 +1393,7 @@ class Game {
                     }
                     this.survivalWaveResting  = true;
                     this.survivalWaveRestTimer = 4.0;
+                    this._survivalWaveRestTotal = 4.0;
 
                     const clearedWave = this.survivalWave;
                     this._survivalWaveBannerText  = `WAVE ${clearedWave} CLEARED!`;
@@ -3169,15 +3171,23 @@ class Game {
                 this.enemyManager.spawningEnabled = false;
             }
 
-            // Grant bonus ammo on revive
+            // Grant bonus ammo on revive (with floating feedback)
             if (this.player) {
                 this.player.skunkAmmo = (this.player.skunkAmmo || 0) + 2;
+                try {
+                    this.damageNumbers.push(new FloatingText(
+                        this.player.x + 32, this.player.y - 40,
+                        '+2 SPRAY',
+                        { color: '#A8FF78', lifetime: 1.6, velocityY: -70, font: 'bold 16px Arial' }
+                    ));
+                } catch (e) { __err('game', e); }
             }
 
             // Re-use the wave rest countdown so the player gets a "GET READY" breather
             this.survivalWaveResting  = true;
             this.survivalWaveRestTimer = 4.0;
-            this._survivalWaveBannerText  = `WAVE ${this.survivalWave} — REVIVED!`;
+            this._survivalWaveRestTotal = 4.0;
+            this._survivalWaveBannerText  = `WAVE ${this.survivalWave} — ONE MORE CHANCE!`;
             this._survivalWaveBannerTimer = 4.0;
 
             // Resume survival arena music
@@ -3545,10 +3555,12 @@ class Game {
                 wave:          this.survivalWave,
                 waveResting:   this.survivalWaveResting,
                 restTimer:     this.survivalWaveRestTimer,
+                restTotal:     this._survivalWaveRestTotal || (this.survivalWave === 0 ? 3.0 : 4.0),
                 killsThisWave: (this.enemyManager ? (this.enemyManager.enemiesDefeated || 0) : 0) - this.survivalWaveKillsAtStart,
                 killTarget:    this.survivalWaveKillTarget,
                 bannerText:    this._survivalWaveBannerTimer > 0 ? this._survivalWaveBannerText : null,
-                bannerAlpha:   this._survivalWaveBannerTimer > 0 ? Math.min(1, this._survivalWaveBannerTimer) : 0
+                bannerAlpha:   this._survivalWaveBannerTimer > 0 ? Math.min(1, this._survivalWaveBannerTimer) : 0,
+                reviveUsed:    !!(this._survivalAdReviveUsed)
             } : null;
 
             this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime, bossInfo, survivalInfo);
