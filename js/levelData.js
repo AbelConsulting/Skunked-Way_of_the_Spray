@@ -1117,3 +1117,44 @@ const LEVEL_CONFIGS = [
         }
     }
 ];
+
+// --- SURVIVAL MODE ARENA ---
+// Compact fighting arena used exclusively for Survival Mode.
+// No boss, no exit — enemies come in escalating waves until the player falls.
+const SURVIVAL_ARENA_CONFIG = {
+    name: "Survival Arena",
+    id: "survival_arena",
+    width: 2800,
+    background: 'bg_city',
+    music: ['city_theme', 'action_theme', 'gameplay'],
+    spawnPoints: [
+        { x: 'right', y: 300 },
+        { x: 'left',  y: 300 },
+        { x: 2800,    y: 300 },
+        { x: -50,     y: 300 }
+    ],
+    platforms: [
+        // Ground
+        { x: 0,    y: 660, width: 2800, height: 40, type: 'static', tile: 'ground3_tile' },
+        // Lower-mid platforms
+        { x: 80,   y: 520, width: 280, height: 24, type: 'static', tile: 'platform2_tile' },
+        { x: 600,  y: 480, width: 260, height: 24, type: 'static', tile: 'platform2_tile' },
+        { x: 1150, y: 520, width: 280, height: 24, type: 'static', tile: 'platform4_tile' },
+        { x: 1700, y: 480, width: 260, height: 24, type: 'static', tile: 'platform2_tile' },
+        { x: 2300, y: 520, width: 280, height: 24, type: 'static', tile: 'platform2_tile' },
+        // Upper platforms
+        { x: 380,  y: 360, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+        { x: 900,  y: 320, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+        { x: 1450, y: 360, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+        { x: 2000, y: 320, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+        // High platforms
+        { x: 680,  y: 210, width: 180, height: 24, type: 'static', tile: 'platform5_tile' },
+        { x: 1620, y: 210, width: 180, height: 24, type: 'static', tile: 'platform5_tile' }
+    ],
+    enemyConfig: {
+        spawnInterval: 2.5,
+        maxEnemies: 5,
+        aggression: 1.0,
+        allowedTypes: ['BASIC', 'FAST_BASIC']
+    }
+};

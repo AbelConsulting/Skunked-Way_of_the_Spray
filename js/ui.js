@@ -300,7 +300,12 @@ class UI {
                 ctx.fillStyle = '#AAAACC';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const levelText = levelName ? `STAGE ${levelReached} \u2022 ${levelName.toUpperCase()}` : `STAGE ${levelReached}`;
+                let levelText;
+                if (levelName === 'Survival Mode') {
+                    levelText = levelReached > 0 ? `SURVIVAL \u2022 WAVE ${levelReached}` : 'SURVIVAL MODE';
+                } else {
+                    levelText = levelName ? `STAGE ${levelReached} \u2022 ${levelName.toUpperCase()}` : `STAGE ${levelReached}`;
+                }
                 ctx.fillText(levelText, cx, titleY + 40);
                 ctx.restore();
             }
@@ -1093,7 +1098,7 @@ class UI {
         ctx.restore();
     }
 
-    drawHUD(ctx, player, score, combo, pulse, levelNumber = 1, objectiveInfo = null, lives = 1, idolStatus = null, levelTime = 0, bossInfo = null) {
+    drawHUD(ctx, player, score, combo, pulse, levelNumber = 1, objectiveInfo = null, lives = 1, idolStatus = null, levelTime = 0, bossInfo = null, survivalInfo = null) {
         // Refresh safe-area insets (cheap — just reads cached CSS vars)
         this._refreshSafeAreaInsets();
 
@@ -1410,8 +1415,85 @@ class UI {
         } catch (e) { __err('ui', e); }
 
         // Top-center progress bar (distance to boss/exit, or boss HP)
+        // In survival mode this is replaced by the wave indicator.
         try {
-            if (objectiveInfo && (typeof objectiveInfo.progress === 'number' || typeof objectiveInfo.bossHpPct === 'number')) {
+            if (survivalInfo) {
+                // ── Survival wave indicator ──────────────────────────────────────
+                const wave       = survivalInfo.wave || 0;
+                const resting    = survivalInfo.waveResting;
+                const killsDone  = Math.max(0, survivalInfo.killsThisWave || 0);
+                const killTarget = Math.max(1, survivalInfo.killTarget || 1);
+                const progress   = resting ? 1 : Math.min(1, killsDone / killTarget);
+
+                const barW = Math.min(Math.floor(this.width * 0.36), 400);
+                const barH = 8;
+                const barX = Math.floor((this.width - barW) / 2);
+                const barY = padTop + 2;
+
+                // Background
+                ctx.save();
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
+                ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(barX - 2, barY - 2, barW + 4, barH + 4);
+
+                // Fill
+                const fillColor = resting ? '#00FF88' : '#FF8800';
+                ctx.fillStyle = fillColor;
+                ctx.fillRect(barX, barY, Math.max(0, Math.floor(barW * progress)), barH);
+                ctx.restore();
+
+                // Wave label (left of bar)
+                ctx.save();
+                ctx.font = "bold 13px 'Press Start 2P', monospace";
+                ctx.fillStyle = '#FFFFFF';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 4;
+                const waveLabel = wave > 0 ? `WAVE ${wave}` : 'SURVIVAL';
+                ctx.fillText(waveLabel, barX - 8, barY + barH / 2);
+                ctx.restore();
+
+                // Kill counter (right of bar)
+                if (!resting && wave > 0) {
+                    ctx.save();
+                    ctx.font = "bold 12px 'Press Start 2P', monospace";
+                    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = '#000';
+                    ctx.shadowBlur = 3;
+                    ctx.fillText(`${killsDone}/${killTarget}`, barX + barW + 8, barY + barH / 2);
+                    ctx.restore();
+                }
+
+                // Banner overlay (wave start / wave cleared)
+                if (survivalInfo.bannerText && survivalInfo.bannerAlpha > 0) {
+                    const alpha = Math.min(1, survivalInfo.bannerAlpha);
+                    const cx = this.width / 2;
+                    const cy = this.height * 0.38;
+                    const now = Date.now();
+                    const scale = 1 + 0.04 * Math.sin(now / 160);
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.translate(cx, cy);
+                    ctx.scale(scale, scale);
+                    ctx.font = "bold 52px 'Bangers', 'Arial Black', Impact, sans-serif";
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = '#FF8800';
+                    ctx.shadowBlur = 22;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillText(survivalInfo.bannerText, 0, 0);
+                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.globalAlpha = alpha * 0.35;
+                    ctx.fillText(survivalInfo.bannerText, 0, 0);
+                    ctx.restore();
+                }
+            } else if (objectiveInfo && (typeof objectiveInfo.progress === 'number' || typeof objectiveInfo.bossHpPct === 'number')) {
                 const mode = String(objectiveInfo.mode || '');
                 const iconSize = 14;
                 const iconGap = 10;

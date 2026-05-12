@@ -3199,6 +3199,7 @@
                             </div>
                             <div class="start-menu-actions" role="navigation" aria-label="Main menu">
                                 <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label">&#9654; Launch Run</span><span class="menu-btn-meta">Drop straight into Stage 1 and keep momentum.</span></button>
+                                <button id="menu-survival-btn" class="menu-btn menu-btn--survival"><span class="menu-btn-label">&#128293; Survival Mode</span><span class="menu-btn-meta">Endless enemy waves — fight until you fall.</span></button>
                                 <button id="menu-howtoplay-btn" class="menu-btn menu-btn--howtoplay"><span class="menu-btn-label">&#128214; How to Play</span><span class="menu-btn-meta">Learn scoring, idols, time attack, and combat.</span></button>
                                 <button id="menu-scores-btn" class="menu-btn menu-btn--scores"><span class="menu-btn-label">&#127942; High Scores</span><span class="menu-btn-meta">Check the board and chase the next target score.</span></button>
                                 <button id="menu-info-btn" class="menu-btn menu-btn--info"><span class="menu-btn-label">&#9432; Intel</span><span class="menu-btn-meta">Review controls, stages, enemies, and boss info.</span></button>
@@ -4248,6 +4249,34 @@
                             } catch (e) { console.warn('startGameFromMenu failed', e); }
                         }
 
+                        // Helper: launch survival mode
+                        function startSurvivalFromMenu() {
+                            if (!window.gameReady || !window.game) {
+                                const survivalBtn = document.getElementById('menu-survival-btn');
+                                if (survivalBtn) {
+                                    survivalBtn.disabled = true;
+                                    const prevText = survivalBtn.innerHTML;
+                                    survivalBtn.textContent = '\u23F3 LOADING\u2026';
+                                    const onReady = () => {
+                                        survivalBtn.disabled = false;
+                                        survivalBtn.innerHTML = prevText;
+                                        window.removeEventListener('gameReady', onReady);
+                                        startSurvivalFromMenu();
+                                    };
+                                    window.addEventListener('gameReady', onReady);
+                                }
+                                return;
+                            }
+                            hideAllMenuOverlays();
+                            try { if (typeof hideMobileStartOverlay === 'function') hideMobileStartOverlay(); } catch (e) {}
+                            try { if (typeof requestFullscreen === 'function') requestFullscreen(); } catch (e) {}
+                            try {
+                                window.game.audioManager && window.game.audioManager.playSound && window.game.audioManager.playSound('ui_confirm');
+                                window.game.startGame(0, 'survival');
+                                window.game.dispatchGameStateChange && window.game.dispatchGameStateChange();
+                            } catch (e) { console.warn('startSurvivalFromMenu failed', e); }
+                        }
+
                         // Helper: show the main start menu (used by back buttons)
                         function showStartMenu() {
                             if (startMenuOverlay) { startMenuOverlay.classList.remove('hidden'); startMenuOverlay.style.display = ''; }
@@ -4265,6 +4294,17 @@
                                 ev.stopPropagation();
                                 try { Analytics.trackMenuAction('play'); } catch(e) {}
                                 startGameFromMenu();
+                            });
+                        }
+
+                        // SURVIVAL MODE button
+                        const survivalBtn = document.getElementById('menu-survival-btn');
+                        if (survivalBtn) {
+                            survivalBtn.addEventListener('click', (ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                try { Analytics.trackMenuAction('survival'); } catch(e) {}
+                                startSurvivalFromMenu();
                             });
                         }
 

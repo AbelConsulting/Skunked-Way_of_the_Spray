@@ -69,6 +69,17 @@ class Game {
         this.score = 0;
         this.lives = 3;
 
+        // Game mode: 'arcade' = normal campaign; 'survival' = endless wave mode
+        this.gameMode = 'arcade';
+        // Survival mode state
+        this.survivalWave = 0;
+        this.survivalWaveKillsAtStart = 0;
+        this.survivalWaveKillTarget = 0;
+        this.survivalWaveRestTimer = 0;
+        this.survivalWaveResting = false;
+        this._survivalWaveBannerTimer = 0;
+        this._survivalWaveBannerText = '';
+
         // Game Over lockout: timestamp (ms) when GAME_OVER was entered.
         // Input is blocked until GAME_OVER_LOCKOUT seconds have elapsed.
         this._gameOverTime = 0;
@@ -384,7 +395,7 @@ class Game {
                                 } else {
                                     // Ad dismissed — restart normally
                                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
-                                    this.startGame(0);
+                                    this.startGame(0, this.gameMode);
                                     this.dispatchGameStateChange();
                                     try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                                 }
@@ -392,7 +403,7 @@ class Game {
                             return;
                         }
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
-                        this.startGame(0);
+                        this.startGame(0, this.gameMode);
                         this.dispatchGameStateChange();
                         try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                     }
@@ -467,7 +478,7 @@ class Game {
                         // Respect lockout period
                         if (this._isGameOverLocked()) return;
                         // Restart the game
-                        this.startGame();
+                        this.startGame(0, this.gameMode);
                         // Hide any overlays if present
                         const overlay = document.getElementById('mobile-restart-overlay');
                         if (overlay) overlay.style.display = 'none';
@@ -512,7 +523,7 @@ class Game {
                     // Respect lockout period
                     if (this._isGameOverLocked()) return;
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
-                    this.startGame(0);
+                    this.startGame(0, this.gameMode);
                     return;
                 }
 
@@ -597,7 +608,7 @@ class Game {
                 if (this.state === 'GAME_OVER') {
                     if (this._isGameOverLocked()) return;
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
-                    this.startGame(0);
+                    this.startGame(0, this.gameMode);
                     this.dispatchGameStateChange();
                     try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                     return;
@@ -628,8 +639,9 @@ class Game {
             }
 
         // Start or restart the game (New Game)
-        async startGame(levelIndex = 0) {
-            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game.startGame() called, level:', levelIndex);
+        // mode: 'arcade' (default) | 'survival'
+        async startGame(levelIndex = 0, mode = 'arcade') {
+            if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Game.startGame() called, level:', levelIndex, 'mode:', mode);
 
             // Analytics: track retry when restarting after game over or victory
             try {
@@ -662,6 +674,17 @@ class Game {
             this.lives = 3;
             this._gameOverTime = 0; // Clear lockout from previous game over
             this._gameOverAnim = null; // Clear previous game over animation
+
+            // Game mode
+            this.gameMode = mode || 'arcade';
+            // Reset survival state
+            this.survivalWave = 0;
+            this.survivalWaveKillsAtStart = 0;
+            this.survivalWaveKillTarget = 0;
+            this.survivalWaveRestTimer = 0;
+            this.survivalWaveResting = false;
+            this._survivalWaveBannerTimer = 0;
+            this._survivalWaveBannerText = '';
             
             // Set a game-level grace period timestamp - player cannot die before this time
             this._gameStartTime = Date.now();
@@ -746,6 +769,11 @@ class Game {
 
             // Load the level after resets so idol spawns are preserved
             this.loadLevel(levelIndex, { skipMusic: true });
+
+            // Survival mode: overlay the survival arena and configure wave spawning
+            if (this.gameMode === 'survival') {
+                this._initSurvivalMode();
+            }
             // Place player at a spawn point near the level start.
             // (Previous logic spawned on the rightmost platform on desktop, which can
             // unintentionally drop you into the boss arena on long levels.)
@@ -1218,7 +1246,149 @@ class Game {
             } catch (e) { __err('game', e); }
         }
 
+        // ─── Survival Mode Methods ────────────────────────────────────────
+
+        /** Load the compact survival arena and kick off the first wave countdown. */
+        _initSurvivalMode() {
+            try {
+                if (typeof SURVIVAL_ARENA_CONFIG !== 'undefined') {
+                    this.level.loadLevel(SURVIVAL_ARENA_CONFIG);
+                    this.currentLevelIndex = -1; // not a regular arcade level
+                    this.currentLevelId = 'survival_arena';
+                    this.level.useMobileOptimizations = this.isMobile;
+                    // Re-apply static layer so the new arena renders correctly
+                    this.level._staticNeedsUpdate = true;
+                }
+            } catch (e) { __err('game', e); }
+
+            // Discard any items / enemies from the arcade level
+            if (this.enemyManager) {
+                this.enemyManager.reset();
+                this.enemyManager.spawningEnabled = false;
+            }
+            if (this.itemManager && typeof this.itemManager.reset === 'function') {
+                this.itemManager.reset();
+            }
+
+            // Drop the player onto the arena floor
+            if (this.player) {
+                this.player.x = 400;
+                this.player.y = 620;
+            }
+
+            // 3-second "GET READY" countdown before wave 1
+            this.survivalWaveResting = true;
+            this.survivalWaveRestTimer = 3.0;
+            this._survivalWaveBannerText = 'GET READY!';
+            this._survivalWaveBannerTimer = 3.0;
+
+            // Start arena music
+            try { this.ensureLevelMusic(); } catch (e) { __err('game', e); }
+        }
+
+        /** Increment wave counter and configure enemies for the new wave. */
+        _startSurvivalWave() {
+            this.survivalWave++;
+            const wave = this.survivalWave;
+
+            // Difficulty scaling
+            const enemiesThisWave = Math.min(40, 4 + (wave - 1) * 3);        // 4, 7, 10 … capped at 40
+            const aggression      = Math.min(2.0, 1.0 + (wave - 1) * 0.15); // 1.0 → 2.0
+            const spawnInterval   = Math.max(0.8, 2.5 - (wave - 1) * 0.1);  // 2.5s → 0.8s
+            const maxSimultaneous = Math.min(12, 3 + Math.floor(wave * 1.2));
+
+            // Unlock enemy types progressively
+            let allowedTypes;
+            if      (wave <= 2)  allowedTypes = ['BASIC', 'FAST_BASIC'];
+            else if (wave <= 4)  allowedTypes = ['BASIC', 'FAST_BASIC', 'SECOND_BASIC'];
+            else if (wave <= 7)  allowedTypes = ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC'];
+            else if (wave <= 10) allowedTypes = ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC'];
+            else                 allowedTypes = ['FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC'];
+
+            this.survivalWaveKillsAtStart = this.enemyManager ? (this.enemyManager.enemiesDefeated || 0) : 0;
+            this.survivalWaveKillTarget   = enemiesThisWave;
+            this.survivalWaveResting      = false;
+
+            if (this.enemyManager) {
+                this.enemyManager.spawningEnabled      = true;
+                this.enemyManager.spawnInterval        = spawnInterval;
+                this.enemyManager.maxEnemies           = maxSimultaneous;
+                this.enemyManager.aggression           = aggression;
+                this.enemyManager.allowedEnemyTypes    = allowedTypes;
+                this.enemyManager.spawnTimer           = 0;
+            }
+
+            this._survivalWaveBannerText  = `WAVE ${wave}`;
+            this._survivalWaveBannerTimer = 2.0;
+
+            try {
+                if (this.audioManager && this.audioManager.playSound) {
+                    this.audioManager.playSound('ui_confirm', 0.5);
+                }
+            } catch (e) { __err('game', e); }
+        }
+
+        /** Called every frame during PLAYING in survival mode. */
+        _updateSurvivalWave(dt) {
+            // Tick the banner fade timer
+            if (this._survivalWaveBannerTimer > 0) {
+                this._survivalWaveBannerTimer -= dt;
+            }
+
+            if (this.survivalWaveResting) {
+                // Countdown to next wave
+                this.survivalWaveRestTimer -= dt;
+                if (this.survivalWaveRestTimer <= 0) {
+                    this._startSurvivalWave();
+                }
+            } else {
+                // Check wave completion
+                const defeatedThisWave = (this.enemyManager ? (this.enemyManager.enemiesDefeated || 0) : 0) - this.survivalWaveKillsAtStart;
+                const allKilled  = defeatedThisWave >= this.survivalWaveKillTarget;
+                const arenaEmpty = !this.enemyManager || this.enemyManager.enemies.length === 0;
+
+                if (allKilled && arenaEmpty) {
+                    // Wave cleared!
+                    if (this.enemyManager) this.enemyManager.spawningEnabled = false;
+                    this.survivalWaveResting  = true;
+                    this.survivalWaveRestTimer = 4.0;
+
+                    const clearedWave = this.survivalWave;
+                    this._survivalWaveBannerText  = `WAVE ${clearedWave} CLEARED!`;
+                    this._survivalWaveBannerTimer = 4.0;
+
+                    // Wave-clear score bonus
+                    const waveBonus = clearedWave * 500;
+                    this.score += waveBonus;
+                    try { this._scorePulse = 1.0; } catch (e) {}
+                    try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) {}
+
+                    // Heal player between waves
+                    if (this.player) {
+                        const heal = Math.max(10, Math.floor(this.player.maxHealth * 0.15));
+                        this.player.health = Math.min(this.player.maxHealth, this.player.health + heal);
+                        try {
+                            this.damageNumbers.push(new FloatingText(
+                                this.player.x + 32, this.player.y - 20,
+                                `+${heal} HP`,
+                                { color: '#00FF88', lifetime: 1.5, velocityY: -80, font: 'bold 22px Arial' }
+                            ));
+                        } catch (e) { __err('game', e); }
+                    }
+
+                    // Wave-clear sound
+                    try {
+                        if (this.audioManager && this.audioManager.playSound) {
+                            this.audioManager.playSound('level_complete', 0.5);
+                        }
+                    } catch (e) { __err('game', e); }
+                }
+            }
+        }
+
         completeLevel() {
+            // Survival mode has no level completion
+            if (this.gameMode === 'survival') return;
             if (this.state === 'LEVEL_COMPLETE') return;
             
             this.state = 'LEVEL_COMPLETE';
@@ -1462,8 +1632,8 @@ class Game {
                 dt *= 0.3; // Slow everything to 30% speed briefly
             }
 
-            // Boss Trigger Logic
-            if (!this.bossEncountered && this.level.bossConfig && this.level.completionConfig) {
+            // Boss Trigger Logic — skipped in survival mode (no boss in survival arena)
+            if (this.gameMode !== 'survival' && !this.bossEncountered && this.level.bossConfig && this.level.completionConfig) {
                 const triggerX = this.level.completionConfig.bossTriggerX;
                 if (this.player.x > triggerX) {
                     this.bossEncountered = true;
@@ -1532,8 +1702,8 @@ class Game {
                 }
             }
 
-            // Boss Defeat Logic
-            if (this.bossEncountered && !this.bossDefeated) {
+            // Boss Defeat Logic — skipped in survival mode
+            if (this.gameMode !== 'survival' && this.bossEncountered && !this.bossDefeated) {
                 // Check if boss instance is dead
                 if (this.enemyManager.bossInstance && (this.enemyManager.bossInstance.health <= 0 || this.enemyManager.enemies.indexOf(this.enemyManager.bossInstance) === -1)) {
                      this.bossDefeated = true;
@@ -1646,29 +1816,36 @@ class Game {
                 }
             }
 
-            // Check Level Completion
-            // Update exit portal if active
-            if (this.exitPortal) {
-                this.exitPortal.update(dt);
-                // Player walks into the portal to complete the level
-                if (this.exitPortal.overlaps(this.player.x, this.player.y, this.player.width || 64, this.player.height || 64)) {
-                    this.completeLevel();
-                    return;
+            // Check Level Completion — skipped in survival mode (endless)
+            if (this.gameMode !== 'survival') {
+                // Update exit portal if active
+                if (this.exitPortal) {
+                    this.exitPortal.update(dt);
+                    // Player walks into the portal to complete the level
+                    if (this.exitPortal.overlaps(this.player.x, this.player.y, this.player.width || 64, this.player.height || 64)) {
+                        this.completeLevel();
+                        return;
+                    }
+                }
+
+                let exitX = this.level.width - 100;
+                if (this.level.completionConfig) exitX = this.level.completionConfig.exitX;
+
+                // For non-boss levels (no portal), use the classic X boundary
+                if (!this.exitPortal && this.player.x > exitX) {
+                    // Double check boss (redundant with clamp, but safe)
+                    if (this.level.bossConfig && !this.bossDefeated) {
+                        // Blocked
+                    } else {
+                        this.completeLevel();
+                        return;
+                    }
                 }
             }
 
-            let exitX = this.level.width - 100;
-            if (this.level.completionConfig) exitX = this.level.completionConfig.exitX;
-
-            // For non-boss levels (no portal), use the classic X boundary
-            if (!this.exitPortal && this.player.x > exitX) {
-                // Double check boss (redundant with clamp, but safe)
-                if (this.level.bossConfig && !this.bossDefeated) {
-                    // Blocked
-                } else {
-                    this.completeLevel();
-                    return;
-                }
+            // Survival mode wave management (runs every frame while PLAYING)
+            if (this.gameMode === 'survival') {
+                this._updateSurvivalWave(dt);
             }
 
             // Update game statistics
@@ -2681,15 +2858,20 @@ class Game {
                 }
             } catch (e) { __err('game', e); }
 
-            // Capture level reached
-            this._gameOverLevelReached = (this.currentLevelIndex || 0) + 1;
-            try {
-                if (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[this.currentLevelIndex]) {
-                    this._gameOverLevelName = LEVEL_CONFIGS[this.currentLevelIndex].name || '';
-                } else {
-                    this._gameOverLevelName = '';
-                }
-            } catch (e) { this._gameOverLevelName = ''; }
+            // Capture level / wave reached
+            if (this.gameMode === 'survival') {
+                this._gameOverLevelReached = this.survivalWave;
+                this._gameOverLevelName    = 'Survival Mode';
+            } else {
+                this._gameOverLevelReached = (this.currentLevelIndex || 0) + 1;
+                try {
+                    if (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS[this.currentLevelIndex]) {
+                        this._gameOverLevelName = LEVEL_CONFIGS[this.currentLevelIndex].name || '';
+                    } else {
+                        this._gameOverLevelName = '';
+                    }
+                } catch (e) { this._gameOverLevelName = ''; }
+            }
 
             // Finalize game statistics
             this.gameStats.timeSurvived = (Date.now() / 1000) - this.gameStats.startTime;
@@ -3259,7 +3441,18 @@ class Game {
                 }
             } catch (e) { __err('game', e); }
 
-            this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime, bossInfo);
+            // Build survival info for the HUD
+            const survivalInfo = (this.gameMode === 'survival') ? {
+                wave:          this.survivalWave,
+                waveResting:   this.survivalWaveResting,
+                restTimer:     this.survivalWaveRestTimer,
+                killsThisWave: (this.enemyManager ? (this.enemyManager.enemiesDefeated || 0) : 0) - this.survivalWaveKillsAtStart,
+                killTarget:    this.survivalWaveKillTarget,
+                bannerText:    this._survivalWaveBannerTimer > 0 ? this._survivalWaveBannerText : null,
+                bannerAlpha:   this._survivalWaveBannerTimer > 0 ? Math.min(1, this._survivalWaveBannerTimer) : 0
+            } : null;
+
+            this.ui.drawHUD(this.ctx, this.player, this.score, this.player.comboCount, this._scorePulse || 0, this.currentLevelIndex + 1, objectiveInfo, this.lives, idolStatus, this.levelTime, bossInfo, survivalInfo);
 
             // Draw tutorial hints overlay (above HUD, below transitions)
             if (this.tutorialHints) {
