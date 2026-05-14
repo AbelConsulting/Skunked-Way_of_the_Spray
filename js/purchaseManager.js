@@ -393,6 +393,25 @@ const PurchaseManager = (() => {
     }
 
     /**
+     * Wait until the manager is ready (store.initialize finished or errored), or
+     * until timeoutMs elapses. This prevents `product-not-loaded` errors when the
+     * user taps Buy during the brief startup window.
+     */
+    function _waitForReady(timeoutMs = 14000) {
+        if (_ready) return Promise.resolve();
+        return new Promise(resolve => {
+            const unsub = _readyListeners.add;
+            const timer = setTimeout(() => { done(); }, timeoutMs);
+            function done() {
+                clearTimeout(timer);
+                _readyListeners.delete(done);
+                resolve();
+            }
+            _readyListeners.add(done);
+        });
+    }
+
+    /**
      * Initiate purchase of the Remove Ads product.
      * @returns {Promise<{ok:boolean, reason?:string}>}
      */
@@ -405,6 +424,10 @@ const PurchaseManager = (() => {
             // whether we're on web or on Android with a missing plugin.
             return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
         }
+
+        // Wait for store.initialize() to finish so the product catalogue is loaded.
+        await _waitForReady();
+
         const product = store.get(PRODUCT_ID_REMOVE_ADS) || _product;
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 
@@ -480,6 +503,10 @@ const PurchaseManager = (() => {
 
         const store = await _getStore();
         if (!store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
+
+        // Wait for store.initialize() so the product catalogue is loaded.
+        await _waitForReady();
+
         const product = store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 
