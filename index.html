@@ -6136,7 +6136,11 @@
                     Promise.resolve(AdManager.showRewarded())
                         .then((rewarded) => {
                             try {
-                                if (rewarded && window.game && window.game.state === 'GAME_OVER'
+                                const st = window.game && window.game.state;
+                                // Accept GAME_OVER (normal) or PAUSED (fallback when
+                                // _resumeGameAfterAd failed due to Android lifecycle timing)
+                                if (rewarded && window.game
+                                    && (st === 'GAME_OVER' || st === 'PAUSED')
                                     && typeof window.game.reviveFromAd === 'function') {
                                     window.game.reviveFromAd();
                                 }
@@ -6240,7 +6244,11 @@
                     Promise.resolve(AdManager.showRewarded())
                         .then((rewarded) => {
                             try {
-                                if (rewarded && window.game && window.game.state === 'GAME_OVER'
+                                const st = window.game && window.game.state;
+                                // Accept GAME_OVER (normal) or PAUSED (fallback when
+                                // _resumeGameAfterAd failed due to Android lifecycle timing)
+                                if (rewarded && window.game
+                                    && (st === 'GAME_OVER' || st === 'PAUSED')
                                     && typeof window.game.reviveFromAd === 'function') {
                                     window.game.reviveFromAd();
                                 }

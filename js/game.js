@@ -3220,7 +3220,14 @@ class Game {
      * clears remaining enemies so the player gets a clean slate.
      */
     reviveFromAd() {
-        if (this.state !== 'GAME_OVER') return;
+        // Accept GAME_OVER (normal path) or PAUSED (fallback: _resumeGameAfterAd failed to
+        // restore state — happens on some Android versions due to app-lifecycle timing).
+        if (this.state !== 'GAME_OVER' && this.state !== 'PAUSED') return;
+        // Ensure we're cleanly in PLAYING regardless of which entry state we came from.
+        if (this.state === 'PAUSED') {
+            // _resumeGameAfterAd didn't fire; manually unblock before continuing.
+            try { if (this.audioManager && this.audioManager.resumeMusic) this.audioManager.resumeMusic(); } catch (e) { __err('game', e); }
+        }
 
         this.lives = 2; // Buffer: first post-revive death respawns instead of immediate GAME_OVER (mirrors arcade mode fix)
         this.state = 'PLAYING';

@@ -509,7 +509,10 @@ const AdManager = (() => {
             const target = _pausedStateBeforeAd;
             _pausedStateBeforeAd = null;
             if (!g || !target) return;
-            if (g.state !== 'PAUSED') return; // user moved on (menu, game over, etc.)
+            // If state is already the target, it was restored by another code path;
+        // just re-dispatch so listeners sync up and proceed to un-pause audio.
+        // Only bail if the user has navigated somewhere unexpected (e.g. MENU).
+        if (g.state !== 'PAUSED' && g.state !== target) return; // user moved on
             g.state = target;
             try { g.audioManager && g.audioManager.resumeMusic && g.audioManager.resumeMusic(); } catch (e) {}
             try { g.audioManager && g.audioManager.resumeAmbient && g.audioManager.resumeAmbient(); } catch (e) {}
