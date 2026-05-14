@@ -1900,7 +1900,8 @@ class Game {
                 }
                 
                 // Arena Constraint: Prevent leaving until boss is defeated
-                if (!this.bossDefeated && this.level.completionConfig) {
+                // Only applies to levels that actually have a boss.
+                if (!this.bossDefeated && this.level.bossConfig && this.level.completionConfig) {
                     if (this.player.x > this.level.completionConfig.exitX) {
                         this.player.x = this.level.completionConfig.exitX;
                     }

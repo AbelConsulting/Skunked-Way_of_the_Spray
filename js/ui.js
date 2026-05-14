@@ -1077,7 +1077,7 @@ class UI {
             { label: '\uD83D\uDD25 Best Combo', value: `x${gameStats.maxCombo || 0}`, color: '#FFD93D' },
             { label: '\u26A1 Multiplier', value: `${(gameStats.bestMultiplier || 1.0).toFixed(1)}x`, color: '#FF9500' },
             { label: '\uD83D\uDC80 Dmg Taken', value: damageTaken === 0 ? 'NONE!' : damageTaken, color: damageTaken === 0 ? '#00FFFF' : '#FF6B6B' },
-            { label: '\uD83C\uDFC1 Levels', value: `${gameStats.levelsCompleted || 0}/10`, color: '#A8E6CF' }
+            { label: '\uD83C\uDFC1 Levels', value: `${gameStats.levelsCompleted || 0}/20`, color: '#A8E6CF' }
         ];
         drawStatCol(leftStats, col1X, halfW - 10);
 
