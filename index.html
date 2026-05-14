@@ -1950,7 +1950,7 @@
         .sri {
             position: fixed;
             inset: 0;
-            z-index: 900;
+            z-index: 2100;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1964,6 +1964,7 @@
         .sri-backdrop {
             position: absolute;
             inset: 0;
+            pointer-events: none;
             background: radial-gradient(ellipse at 50% 40%, rgba(0,80,30,0.72) 0%, rgba(0,0,0,0.88) 70%);
             -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
@@ -3308,34 +3309,6 @@
                     </button>
                 </div>
 
-                <!-- Survival mode extra-life interstitial overlay.
-                     Shown after the game-over lockout expires when the player
-                     dies in Survival Mode and a rewarded ad is ready.
-                     A 10-second countdown auto-dismisses if the player
-                     doesn't interact; "Watch Ad" triggers the rewarded ad
-                     flow and calls game.reviveFromAd() on success. -->
-                <div id="survival-revive-interstitial" class="sri" hidden aria-modal="true" role="dialog" aria-label="Extra life offer">
-                    <div class="sri-backdrop"></div>
-                    <div class="sri-card">
-                        <div class="sri-pulse-ring"></div>
-                        <div class="sri-icon" aria-hidden="true">&#128154;</div>
-                        <h2 class="sri-title">EXTRA LIFE!</h2>
-                        <p class="sri-wave-line">Wave <strong id="sri-wave-num">1</strong> Complete</p>
-                        <p class="sri-sub">Watch a short ad to keep your run alive</p>
-                        <div class="sri-countdown-wrap" aria-hidden="true">
-                            <svg class="sri-ring" viewBox="0 0 80 80">
-                                <circle class="sri-ring-bg" cx="40" cy="40" r="34"/>
-                                <circle id="sri-ring-arc"  class="sri-ring-arc" cx="40" cy="40" r="34"/>
-                            </svg>
-                            <span id="sri-timer-num" class="sri-timer-num">10</span>
-                        </div>
-                        <button id="sri-watch-btn" class="sri-btn sri-btn--primary" type="button">
-                            <span aria-hidden="true">&#9658;</span>&nbsp;Watch Ad &mdash; Revive
-                        </button>
-                        <button id="sri-skip-btn" class="sri-btn sri-btn--skip" type="button">No Thanks</button>
-                    </div>
-                </div>
-
                 <div id="mobile-start-overlay" hidden>
                     <button id="mobile-start-btn">Tap to Start</button>
                 </div>
@@ -3369,6 +3342,37 @@
                  are never hidden by portrait orientation rules.
                  All use position:fixed and high z-index.
                  ------------------------------------------------------ -->
+
+            <!-- Survival mode extra-life interstitial overlay.
+                 Placed OUTSIDE #game-container so portrait-mode display:none
+                 on the game container never hides it, and touch events are
+                 never blocked by the canvas / game-container touch-action:none.
+                 Shown after the game-over lockout expires when the player
+                 dies in Survival Mode and a rewarded ad is ready.
+                 A 10-second countdown auto-dismisses if the player
+                 doesn't interact; "Watch Ad" triggers the rewarded ad
+                 flow and calls game.reviveFromAd() on success. -->
+            <div id="survival-revive-interstitial" class="sri" hidden aria-modal="true" role="dialog" aria-label="Extra life offer">
+                <div class="sri-backdrop" style="pointer-events:none;"></div>
+                <div class="sri-card">
+                    <div class="sri-pulse-ring"></div>
+                    <div class="sri-icon" aria-hidden="true">&#128154;</div>
+                    <h2 class="sri-title">EXTRA LIFE!</h2>
+                    <p class="sri-wave-line">Wave <strong id="sri-wave-num">1</strong> Complete</p>
+                    <p class="sri-sub">Watch a short ad to keep your run alive</p>
+                    <div class="sri-countdown-wrap" aria-hidden="true">
+                        <svg class="sri-ring" viewBox="0 0 80 80">
+                            <circle class="sri-ring-bg" cx="40" cy="40" r="34"/>
+                            <circle id="sri-ring-arc"  class="sri-ring-arc" cx="40" cy="40" r="34"/>
+                        </svg>
+                        <span id="sri-timer-num" class="sri-timer-num">10</span>
+                    </div>
+                    <button id="sri-watch-btn" class="sri-btn sri-btn--primary" type="button">
+                        <span aria-hidden="true">&#9658;</span>&nbsp;Watch Ad &mdash; Revive
+                    </button>
+                    <button id="sri-skip-btn" class="sri-btn sri-btn--skip" type="button">No Thanks</button>
+                </div>
+            </div>
 
             <!-- ------ START MENU SPLASH PAGE ------ -->
             <div id="start-menu-overlay">

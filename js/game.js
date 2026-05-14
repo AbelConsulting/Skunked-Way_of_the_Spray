@@ -1382,6 +1382,23 @@ class Game {
                     ));
                 } catch (e) { __err('game', e); }
             }
+
+            // Every other wave spawn a health pickup on a random upper platform
+            if (wave % 2 === 0 && this.itemManager) {
+                try {
+                    const upperPlatforms = [
+                        { x: 380,  y: 360, width: 220 },
+                        { x: 900,  y: 320, width: 220 },
+                        { x: 1450, y: 360, width: 220 },
+                        { x: 2000, y: 320, width: 220 }
+                    ];
+                    const plat = upperPlatforms[Math.floor(Math.random() * upperPlatforms.length)];
+                    const itemSize = (typeof Config !== 'undefined' && Config.HEALTH_REGEN_ITEM_SIZE) || 32;
+                    const spawnX = plat.x + Math.floor(plat.width / 2) - Math.floor(itemSize / 2);
+                    const spawnY = plat.y - itemSize;
+                    this.itemManager.spawnHealthRegen(spawnX, spawnY);
+                } catch (e) { __err('game', e); }
+            }
         }
 
         /** Called every frame during PLAYING in survival mode. */
