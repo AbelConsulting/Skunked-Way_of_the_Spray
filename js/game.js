@@ -2628,6 +2628,7 @@ class Game {
                 
                 // If projectile hit an enemy, create spray cloud and remove projectile
                 if (hitAnyEnemy) {
+                    this.gameStats.skunkShotsHit = (this.gameStats.skunkShotsHit || 0) + 1;
                     this.player.createSprayCloud(proj.x, proj.y);
                     this.player.skunkProjectiles.splice(i, 1);
                 }

@@ -454,7 +454,7 @@ class ItemManager {
             if (!player.damageBoost) {
                 player.damageBoost = {
                     duration: Config.DAMAGE_BOOST_DURATION || 10.0,
-                    multiplier: Config.DAMAGE_BOOST_MULTIPLIER || 3.0,
+                    multiplier: Config.DAMAGE_BOOST_MULTIPLIER || 1.75,
                     timer: 0
                 };
             } else {
