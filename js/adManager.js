@@ -43,11 +43,10 @@ const AdManager = (() => {
         // Set to false for production builds
         testing: false,
 
-        // Web rewarded ad slot (GPT OutOfPageFormat.REWARDED).
-        // Create a "Rewarded" ad unit in AdSense/Ad Manager and paste the
-        // ad unit path here (e.g. '/pub-8519140628365141/skunkfu_web_rewarded').
-        // null = web rewarded ads disabled.
-        webRewardedGptSlot: null,
+        // Set to true to enable the AdSense H5 Games Ads API on web.
+        // Requires the AdSense account to be approved and active.
+        // false = web rewarded ads disabled.
+        webRewardedEnabled: true,
 
         // Which rewarded ad format the configured rewardedAdUnitId belongs to.
         //   'rewardInterstitial' → prepareRewardInterstitialAd / showRewardInterstitialAd
@@ -98,11 +97,9 @@ const AdManager = (() => {
     let _adShowing          = false; // true while a rewarded/interstitial is on screen
     let _pausedStateBeforeAd = null; // game.state value captured at pause time
 
-    // ── Web (GPT) rewarded state ────────────────────────────────────
-    let _webInitDone     = false;
-    let _webAdSlot       = null;  // GPT slot object
-    let _webAdReady      = false; // true after rewardedSlotReady fires
-    let _webAdReadyEvent = null;  // the event object (has .makeRewardedVisible())
+    // ── Web (AdSense adBreak) rewarded state ─────────────────────────────
+    let _webInitDone = false;
+    let _webAdReady  = false; // true once adConfig onReady fires
 
     // ── Helpers ────────────────────────────────────────────────────
     function _getRewardedId() {
@@ -125,15 +122,37 @@ const AdManager = (() => {
         try { return !!(window.PurchaseManager && window.PurchaseManager.isAdFree && window.PurchaseManager.isAdFree()); } catch (e) { return false; }
     }
 
-    // ── Web (GPT) rewarded helpers ──────────────────────────────────
-    function _loadGptScript() {
-        if (typeof googletag !== 'undefined') return Promise.resolve();
+    // ── Web (AdSense H5 Games Ads — adBreak API) rewarded helpers ─────────
+    // AdSense uses the Ad Placement API (adConfig / adBreak) for web games,
+    // NOT GPT. The adsbygoogle.js script exposes window.adConfig and
+    // window.adBreak automatically once loaded.
+    const WEB_PUB_ID = 'ca-pub-8519140628365141';
+
+    function _loadAdsenseScript() {
         return new Promise((resolve) => {
+            // Already loaded by adsbygoogle tag or a prior call
+            if (window.adsbygoogle && typeof window.adBreak === 'function') {
+                resolve();
+                return;
+            }
+            if (document.querySelector('script[src*="adsbygoogle.js"]')) {
+                // Script tag exists but may still be loading — poll briefly
+                let tries = 0;
+                const poll = setInterval(() => {
+                    tries++;
+                    if (typeof window.adBreak === 'function' || tries > 40) {
+                        clearInterval(poll);
+                        resolve();
+                    }
+                }, 250);
+                return;
+            }
             const s = document.createElement('script');
             s.async = true;
-            s.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
+            s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + WEB_PUB_ID;
+            s.crossOrigin = 'anonymous';
             s.onload = resolve;
-            s.onerror = resolve; // resolve even on failure — caller checks googletag
+            s.onerror = resolve; // resolve even on failure — caller checks adBreak
             document.head.appendChild(s);
         });
     }
@@ -142,55 +161,25 @@ const AdManager = (() => {
         if (_webInitDone) return;
         _webInitDone = true;
 
-        const slotPath = DEFAULT_CONFIG.webRewardedGptSlot;
-        if (!slotPath) {
-            _log('Web rewarded ads disabled — webRewardedGptSlot not configured.');
+        if (!DEFAULT_CONFIG.webRewardedEnabled) {
+            _log('Web rewarded ads disabled (webRewardedEnabled=false).');
             return;
         }
 
         try {
-            await _loadGptScript();
-            if (typeof googletag === 'undefined') {
-                _warn('GPT script failed to load.');
+            await _loadAdsenseScript();
+
+            if (typeof window.adConfig !== 'function') {
+                _warn('adConfig not available — AdSense script may not have loaded.');
                 return;
             }
-            window.googletag = window.googletag || { cmd: [] };
-            googletag.cmd.push(function () {
-                try {
-                    const slot = googletag.defineOutOfPageSlot(
-                        slotPath,
-                        googletag.enums.OutOfPageFormat.REWARDED
-                    );
-                    if (!slot) {
-                        _warn('GPT: rewarded format not supported in this context.');
-                        return;
-                    }
-                    slot.addService(googletag.pubads());
-                    googletag.enableServices();
 
-                    googletag.pubads().addEventListener('rewardedSlotReady', function (ev) {
-                        if (ev.slot === _webAdSlot) {
-                            _webAdReady = true;
-                            _webAdReadyEvent = ev;
-                            _log('Web rewarded ad ready.');
-                        }
-                    });
-
-                    // No-fill: slot rendered but empty
-                    googletag.pubads().addEventListener('slotRenderEnded', function (ev) {
-                        if (ev.slot === _webAdSlot && ev.isEmpty) {
-                            _webAdReady = false;
-                            _webAdReadyEvent = null;
-                            _warn('Web rewarded ad: no fill — will retry in 30 s.');
-                            setTimeout(_prepareWebRewarded, 30000);
-                        }
-                    });
-
-                    _webAdSlot = slot;
-                    googletag.display(slot);
-                    _log('Web rewarded slot defined: ' + slotPath);
-                } catch (e) {
-                    _warn('GPT slot setup error:', e);
+            window.adConfig({
+                preloadAdBreaks: 'on',
+                sound: 'enabled',
+                onReady: () => {
+                    _webAdReady = true;
+                    _log('AdSense H5 Games Ads ready.');
                 }
             });
         } catch (e) {
@@ -198,68 +187,47 @@ const AdManager = (() => {
         }
     }
 
-    function _prepareWebRewarded() {
-        const slotPath = DEFAULT_CONFIG.webRewardedGptSlot;
-        if (!slotPath || typeof googletag === 'undefined' || !_webAdSlot) return;
-        _webAdReady = false;
-        _webAdReadyEvent = null;
-        try {
-            googletag.cmd.push(function () {
-                try {
-                    googletag.destroySlots([_webAdSlot]);
-                    const slot = googletag.defineOutOfPageSlot(
-                        slotPath,
-                        googletag.enums.OutOfPageFormat.REWARDED
-                    );
-                    if (!slot) return;
-                    slot.addService(googletag.pubads());
-                    _webAdSlot = slot;
-                    googletag.display(slot);
-                } catch (e) { _warn('_prepareWebRewarded inner error:', e); }
-            });
-        } catch (e) { _warn('_prepareWebRewarded error:', e); }
-    }
-
-    async function _showWebRewarded() {
-        if (!_webAdReady || !_webAdReadyEvent) return false;
-
-        const wasPaused = _pauseGameForAd();
-        _setAdShowing(true);
+    function _showWebRewarded() {
+        if (!_webAdReady) return Promise.resolve(false);
+        if (typeof window.adBreak !== 'function') return Promise.resolve(false);
 
         return new Promise((resolve) => {
-            let settled = false;
-            const settle = (rewarded) => {
-                if (settled) return;
-                settled = true;
-                try { googletag.pubads().removeEventListener('rewardedSlotGranted', grantCb); } catch (_) {}
-                try { googletag.pubads().removeEventListener('rewardedSlotClosed', closeCb); } catch (_) {}
-                _webAdReady = false;
-                _webAdReadyEvent = null;
-                _revivesUsed++;
-                _setAdShowing(false);
-                if (wasPaused) _resumeGameAfterAd();
-                if (rewarded) {
+            let adActuallyShown = false;
+            let rewardEarned   = false;
+            let wasPaused      = false;
+
+            window.adBreak({
+                type: 'reward',
+                name: 'revive',
+                beforeAd: () => {
+                    // Called only when an ad is actually available and about to show
+                    adActuallyShown = true;
+                    wasPaused = _pauseGameForAd();
+                    _setAdShowing(true);
+                },
+                adDismissed: () => {
+                    // Player closed without watching to completion
+                    rewardEarned = false;
+                },
+                adViewed: () => {
+                    // Player earned the reward
+                    rewardEarned = true;
+                    _revivesUsed++;
                     try { Analytics.trackAdImpression({ type: 'rewarded', placement: 'revive', platform: 'web' }); } catch (_) {}
+                },
+                afterAd: () => {
+                    if (adActuallyShown) {
+                        _setAdShowing(false);
+                        if (wasPaused) _resumeGameAfterAd();
+                    } else {
+                        // No fill — hide button until next game over
+                        _webAdReady = false;
+                        _warn('Web rewarded: no fill.');
+                        try { Analytics.trackAdNoFill({ type: 'rewarded', placement: 'revive', phase: 'show', platform: 'web', reason: 'no_fill' }); } catch (_) {}
+                    }
+                    resolve(rewardEarned);
                 }
-                // Pre-load the next ad
-                setTimeout(_prepareWebRewarded, 500);
-                resolve(rewarded);
-            };
-
-            const grantCb = (ev) => { if (ev.slot === _webAdSlot) settle(true); };
-            const closeCb = (ev) => { if (ev.slot === _webAdSlot) settle(false); };
-
-            try {
-                googletag.pubads().addEventListener('rewardedSlotGranted', grantCb);
-                googletag.pubads().addEventListener('rewardedSlotClosed', closeCb);
-                const evRef = _webAdReadyEvent;
-                _webAdReadyEvent = null;
-                _webAdReady = false;
-                evRef.makeRewardedVisible();
-            } catch (e) {
-                _warn('_showWebRewarded error:', e);
-                settle(false);
-            }
+            });
         });
     }
 
@@ -359,8 +327,8 @@ const AdManager = (() => {
         // an opt-in trade ("watch a 30s ad to revive") that ad-free players can
         // still choose to use for the extra life.
         if (_revivesUsed >= CONFIG.maxRevivesPerSession) return false;
-        if (_available) return _rewardedReady;           // native (AdMob)
-        return !!DEFAULT_CONFIG.webRewardedGptSlot && _webAdReady; // web (GPT)
+        if (_available) return _rewardedReady;                          // native (AdMob)
+        return !!DEFAULT_CONFIG.webRewardedEnabled && _webAdReady;      // web (AdSense)
     }
 
     /**
@@ -557,8 +525,8 @@ const AdManager = (() => {
     function resetSession() {
         _revivesUsed = 0;
         _stagesSinceAd = 0;
-        // Re-request a fresh web rewarded ad for the new session
-        if (!_available && _webInitDone) _prepareWebRewarded();
+        // Re-enable web rewarded button for the new session (adBreak handles its own fill)
+        if (!_available && _webInitDone) _webAdReady = true;
     }
 
     // ── Public API ─────────────────────────────────────────────────
