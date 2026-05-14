@@ -1679,10 +1679,12 @@ class GameApp {
         this.lastTime = currentTime;
 
         // Accumulate time and run fixed-step updates. Render once per RAF.
-        this._accumulator += rawDt;
+        // Clamp rawDt so a tab returning from background (large elapsed time)
+        // doesn't queue many frames worth of catch-up — cap at maxSteps worth.
+        const maxSteps = 5;
+        this._accumulator += Math.min(rawDt, step * maxSteps);
 
         // Prevent spiral of death by capping steps per frame
-        const maxSteps = 5;
         let steps = 0;
         while (this._accumulator >= step && steps < maxSteps) {
             try {

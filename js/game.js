@@ -2043,14 +2043,21 @@ class Game {
         }
 
         // Update damage numbers and effects
-        this.damageNumbers = this.damageNumbers.filter(dn => dn && typeof dn.isAlive === 'function' && dn.isAlive());
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const dn = this.damageNumbers[i];
+            if (!dn || typeof dn.isAlive !== 'function' || !dn.isAlive()) {
+                this.damageNumbers.splice(i, 1);
+            }
+        }
         for (const dn of this.damageNumbers) {
             if (dn && typeof dn.update === 'function') {
                 dn.update(dt);
             }
         }
 
-        this.hitSparks = this.hitSparks.filter(hs => hs.isAlive());
+        for (let i = this.hitSparks.length - 1; i >= 0; i--) {
+            if (!this.hitSparks[i].isAlive()) this.hitSparks.splice(i, 1);
+        }
         for (const hs of this.hitSparks) {
             hs.update(dt);
         }
@@ -3375,12 +3382,12 @@ class Game {
         this.cameraX = Utils.clamp(targetCameraX, 0, clampMaxX);
 
         // Short diagnostics on first frames while playing
-        if (!this._camDiagInitialized) {
-            this._camDiagInitialized = true;
-            this._camDiagCount = 0;
-        }
-        if (this.state === 'PLAYING' && this._camDiagCount < 20) {
-            if (typeof Config !== 'undefined' && Config.DEBUG) {
+        if (typeof Config !== 'undefined' && Config.DEBUG) {
+            if (!this._camDiagInitialized) {
+                this._camDiagInitialized = true;
+                this._camDiagCount = 0;
+            }
+            if (this.state === 'PLAYING' && this._camDiagCount < 20) {
                 console.log('CameraX trace', {
                     frame: this._camDiagCount,
                     playerX: this.player.x,
@@ -3391,10 +3398,10 @@ class Game {
                     viewWidth: this.viewWidth,
                     levelWidth: this.level.width
                 });
-            }
-            this._camDiagCount++;
-            if (this._camDiagCount === 20 && clampMaxX === 0) {
-                if (typeof Config !== 'undefined' && Config.DEBUG) console.warn('No horizontal room to pan: level.width <= viewWidth', { levelWidth: this.level.width, viewWidth: this.viewWidth });
+                this._camDiagCount++;
+                if (this._camDiagCount === 20 && clampMaxX === 0) {
+                    console.warn('No horizontal room to pan: level.width <= viewWidth', { levelWidth: this.level.width, viewWidth: this.viewWidth });
+                }
             }
         }
         // Vertical camera follow to keep player visible on short viewports.

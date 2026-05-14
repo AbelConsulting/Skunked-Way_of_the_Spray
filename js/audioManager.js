@@ -591,7 +591,7 @@ class AudioManager {
                 } catch (e) {
                     console.warn('AudioManager: media element routing failed for', name, e);
                 }
-                console.log(`AudioManager: loadMusic('${name}') complete — connected=${!!audio._audioConnected}, src=${audio.src}`);
+                if (typeof Config !== 'undefined' && Config.DEBUG) console.log(`AudioManager: loadMusic('${name}') complete — connected=${!!audio._audioConnected}, src=${audio.src}`);
                 resolve(audio);
             };
 
