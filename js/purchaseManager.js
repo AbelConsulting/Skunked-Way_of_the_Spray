@@ -431,7 +431,7 @@ const PurchaseManager = (() => {
      */
     async function restorePurchases() {
         const store = await _getStore();
-        if (!store) return { ok: false, reason: 'web-not-supported' };
+        if (!store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
         try {
             await store.restorePurchases();
             return { ok: true };
@@ -479,7 +479,7 @@ const PurchaseManager = (() => {
         if (_founderPass) return { ok: true, reason: 'already-owned' };
 
         const store = await _getStore();
-        if (!store) return { ok: false, reason: 'web-not-supported' };
+        if (!store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
         const product = store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 

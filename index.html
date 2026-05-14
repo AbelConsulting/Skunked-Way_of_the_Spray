@@ -4748,6 +4748,7 @@
                                         if (statusEl) {
                                             if (res.ok) statusEl.textContent = res.reason === 'pending' ? 'Completing purchase\u2026' : 'Already owned. Thank you!';
                                             else if (res.reason === 'web-not-supported') statusEl.textContent = 'Available only on the Android app.';
+                                            else if (res.reason === 'store-unavailable') statusEl.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
                                             else if (res.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + res.reason;
                                         }
@@ -4779,6 +4780,7 @@
                                         if (statusEl) {
                                             if (res.ok) statusEl.textContent = 'Restore complete.';
                                             else if (res.reason === 'web-not-supported') statusEl.textContent = 'Restore only available on the Android app.';
+                                            else if (res.reason === 'store-unavailable') statusEl.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
                                             else statusEl.textContent = 'Could not restore: ' + res.reason;
                                         }
                                     } catch (e) {
@@ -5379,6 +5381,9 @@
                                                 } else if (res.reason === 'web-not-supported') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Available only on the Android app.';
+                                                } else if (res.reason === 'store-unavailable') {
+                                                    fpStatus.style.color = '#FFB060';
+                                                    fpStatus.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
                                                 } else if (res.reason === 'product-not-loaded') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
