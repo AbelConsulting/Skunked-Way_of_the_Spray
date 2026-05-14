@@ -40,6 +40,7 @@ const PurchaseManager = (() => {
     const STORAGE_KEY_FOUNDER_PASS = 'skunkfu.founderPassOwned';
 
     let _store         = null;     // CdvPurchase.store reference
+    let _storePollDone = false;    // True after first poll attempt (avoids 8s re-poll on every click)
     let _initialized   = false;
     let _ready         = false;    // True after initialize() resolves (success OR no-store)
     let _adFree        = _readEntitlementFromStorage();
@@ -240,6 +241,8 @@ const PurchaseManager = (() => {
     async function _getStore() {
         if (_store) return _store;
         if (!isNative()) return null;
+        // Skip re-poll if we already know the plugin is unavailable.
+        if (_storePollDone) return null;
 
         // CdvPurchase exposes itself as window.CdvPurchase when the cordova plugin
         // is installed. We don't `import` it because we don't want a hard build dep.
@@ -252,6 +255,7 @@ const PurchaseManager = (() => {
                 if (CdvPurchase && CdvPurchase.store) break;
             }
         }
+        _storePollDone = true; // remember result so future calls don't re-poll
         if (!CdvPurchase || !CdvPurchase.store) {
             _warn('CdvPurchase plugin not available after 8s wait. Install with: npm i cordova-plugin-purchase && npx cap sync android');
             return null;
@@ -397,8 +401,9 @@ const PurchaseManager = (() => {
 
         const store = await _getStore();
         if (!store) {
-            // Web fallback — explain the situation, don't silently grant.
-            return { ok: false, reason: 'web-not-supported' };
+            // Return a distinct reason so the UI can give a sensible message
+            // whether we're on web or on Android with a missing plugin.
+            return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
         }
         const product = store.get(PRODUCT_ID_REMOVE_ADS) || _product;
         if (!product) return { ok: false, reason: 'product-not-loaded' };
