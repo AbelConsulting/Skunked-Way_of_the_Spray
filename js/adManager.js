@@ -140,7 +140,7 @@ const AdManager = (() => {
                 let tries = 0;
                 const poll = setInterval(() => {
                     tries++;
-                    if (typeof window.adBreak === 'function' || tries > 40) {
+                    if (typeof window.adConfig === 'function' || typeof window.adBreak === 'function' || tries > 40) {
                         clearInterval(poll);
                         resolve();
                     }
@@ -151,7 +151,19 @@ const AdManager = (() => {
             s.async = true;
             s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + WEB_PUB_ID;
             s.crossOrigin = 'anonymous';
-            s.onload = resolve;
+            s.onload = () => {
+                // adConfig/adBreak may be set asynchronously after the script
+                // executes (e.g. after the first adsbygoogle.push tick). Poll
+                // briefly so _initWeb doesn't check before they're defined.
+                let tries = 0;
+                const poll = setInterval(() => {
+                    tries++;
+                    if (typeof window.adConfig === 'function' || tries > 20) {
+                        clearInterval(poll);
+                        resolve();
+                    }
+                }, 100);
+            };
             s.onerror = resolve; // resolve even on failure — caller checks adBreak
             document.head.appendChild(s);
         });

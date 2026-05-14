@@ -421,6 +421,10 @@ class AudioManager {
      * to unlock the browser's audio engine.
      */
     async initialize() {
+        // Multiple input events (mousedown + pointerdown + touchstart) can fire
+        // simultaneously from a single tap. Guard against concurrent calls.
+        if (this._initializeInProgress) return;
+        this._initializeInProgress = true;
         console.log('AudioManager: Initializing audio context...');
         this._ensureContext();
         if (this.audioCtx) {
@@ -454,6 +458,7 @@ class AudioManager {
                 if (p) p.catch(e => console.warn('AudioManager: Retry play() still blocked', e.message || e));
             } catch (e) { __err('audio', e); }
         }
+        this._initializeInProgress = false;
     }
 
     /**
