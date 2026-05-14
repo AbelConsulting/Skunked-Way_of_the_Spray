@@ -4713,20 +4713,21 @@
                                     if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = '\u2713 Ads Removed \u2014 Thank You!'; buyBtn.style.opacity = '0.7'; }
                                     if (statusEl) statusEl.textContent = 'Ad-free is active on this device. Tap "Restore" on a new device after re-installing.';
                                     if (priceEl) priceEl.style.display = 'none';
+                                } else if (!isNative) {
+                                    // Web build: explain politely and disable the button.
+                                    if (buyBtn) { buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; buyBtn.textContent = '\uD83D\uDCF1 Android App Only'; }
+                                    if (statusEl) statusEl.textContent = 'In-app purchase available on the Android app. Get it on Google Play to go ad-free.';
+                                    if (restoreBtn) { restoreBtn.disabled = true; restoreBtn.style.opacity = '0.5'; }
                                 } else {
-                                    if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = '1'; buyBtn.textContent = 'Remove Ads'; }
+                                    // Native (Android): restore button HTML and update price span
+                                    // WITHOUT using textContent (which would destroy the inner span).
+                                    if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = '1'; }
                                     if (priceEl) {
                                         priceEl.style.display = '';
                                         const live = PM && PM.getPriceString && PM.getPriceString();
                                         if (live) priceEl.textContent = live;
                                     }
                                     if (statusEl) statusEl.textContent = '';
-                                }
-                                // Web build: explain politely instead of failing silently
-                                if (!isNative && card && !owned) {
-                                    if (statusEl) statusEl.textContent = 'Available on the Android app. Visit the Play Store version for ad-free.';
-                                    if (buyBtn) { buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; }
-                                    if (restoreBtn) { restoreBtn.disabled = true; restoreBtn.style.opacity = '0.5'; }
                                 }
                             }
 
