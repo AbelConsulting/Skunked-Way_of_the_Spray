@@ -10,24 +10,14 @@
  */
 
 const LEVEL_CONFIGS = [
-    // --- LEVEL 1: FOREST OUTSKIRTS ---
+    // =========================================================
+    // STAGE 1-1: FOREST OUTSKIRTS — THE RUN
+    // =========================================================
     {
         name: "Forest Outskirts",
         id: "level_1",
-        width: 10000, 
-        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
-        completion: {
-            bossTriggerX: 10000 - 800,
-            exitX: 10000 - 100
-        },
-        boss: {
-            type: "BOSS7",
-            spawnX: 10000 - 520,
-            spawnY: 520,
-            healthMultiplier: 6.0,
-            speedMultiplier: 0.9,
-            attackDamageMultiplier: 1.3
-        },
+        width: 10000,
+        completion: { exitX: 9900 },
         background: 'bg_forest',
         music: ['forest_theme', 'gameplay'],
         spawnPoints: [ 
@@ -107,24 +97,58 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 2: DOWNTOWN SKUNK CITY ---
+    // =========================================================
+    // STAGE 1-2: FOREST SHOWDOWN
+    // =========================================================
+    {
+        name: "Forest Showdown",
+        id: "level_1_boss",
+        width: 4000,
+        completion: { bossTriggerX: 3200, exitX: 3900 },
+        boss: {
+            type: "BOSS7",
+            spawnX: 3480,
+            spawnY: 520,
+            healthMultiplier: 6.5,
+            speedMultiplier: 1.0,
+            attackDamageMultiplier: 1.4
+        },
+        background: 'bg_forest',
+        music: ['forest_theme', 'gameplay'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 680, width: 4000, height: 40, type: 'static', tile: 'ground_tile' },
+            { x: 300, y: 540, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 750, y: 440, width: 220, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1200, y: 340, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 1750, y: 460, width: 280, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 2300, y: 360, width: 240, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 2850, y: 490, width: 260, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 3350, y: 390, width: 280, height: 24, type: 'static', tile: 'platform2_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 900, y: 400 }],
+        damageBoosts: [{ x: 2600, y: 460 }],
+        skunkPowerups: [{ x: 1600, y: 420 }],
+        enemyConfig: {
+            spawnInterval: 3.5,
+            maxEnemies: 3,
+            aggression: 0.6,
+            allowedTypes: ['BASIC', 'SECOND_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 2-1: SKUNK CITY — THE RUN
+    // =========================================================
     {
         name: "Skunk City",
         id: "level_2",
         width: 12000,
-        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
-        completion: {
-            bossTriggerX: 12000 - 900,
-            exitX: 12000 - 100
-        },
-        boss: {
-            type: "BOSS2",
-            spawnX: 12000 - 520,
-            spawnY: 520,
-            healthMultiplier: 8.0,
-            speedMultiplier: 1.0,
-            attackDamageMultiplier: 1.5
-        },
+        completion: { exitX: 11900 },
         background: 'bg_city',
         music: ['city_theme', 'action_theme', 'gameplay'],
         spawnPoints: [ 
@@ -211,24 +235,59 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 3: THE DOJO ---
+    // =========================================================
+    // STAGE 2-2: CITY SHOWDOWN
+    // =========================================================
+    {
+        name: "City Showdown",
+        id: "level_2_boss",
+        width: 4000,
+        completion: { bossTriggerX: 3200, exitX: 3900 },
+        boss: {
+            type: "BOSS2",
+            spawnX: 3480,
+            spawnY: 520,
+            healthMultiplier: 8.5,
+            speedMultiplier: 1.1,
+            attackDamageMultiplier: 1.6
+        },
+        background: 'bg_city',
+        music: ['city_theme', 'action_theme', 'gameplay'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 660, width: 4000, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 250, y: 520, width: 280, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 700, y: 420, width: 220, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 1150, y: 330, width: 200, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 1650, y: 470, width: 300, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 1950, y: 380, width: 130, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.0, tile: 'platform4_tile' },
+            { x: 2200, y: 380, width: 240, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 2700, y: 510, width: 280, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 3200, y: 400, width: 260, height: 24, type: 'static', tile: 'platform4_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 800, y: 380 }],
+        damageBoosts: [{ x: 2500, y: 340 }],
+        skunkPowerups: [{ x: 1700, y: 430 }],
+        enemyConfig: {
+            spawnInterval: 2.5,
+            maxEnemies: 4,
+            aggression: 0.8,
+            allowedTypes: ['BASIC', 'FAST_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 3-1: MOUNTAIN DOJO — THE RUN
+    // =========================================================
     {
         name: "Mountain Dojo",
         id: "level_3",
         width: 15000,
-        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
-        completion: {
-            bossTriggerX: 15000 - 1000,
-            exitX: 15000 - 100
-        },
-        boss: {
-            type: "BOSS3",
-            spawnX: 15000 - 520,
-            spawnY: 520,
-            healthMultiplier: 10.0,
-            speedMultiplier: 1.1,
-            attackDamageMultiplier: 1.9
-        },
+        completion: { exitX: 14900 },
         background: 'bg_dojo',
         music: ['gameplay', 'action_theme'],
         spawnPoints: [ 
@@ -321,24 +380,59 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 4: CRYSTAL CAVERNS ---
+    // =========================================================
+    // STAGE 3-2: DOJO SHOWDOWN
+    // =========================================================
+    {
+        name: "Dojo Showdown",
+        id: "level_3_boss",
+        width: 4500,
+        completion: { bossTriggerX: 3700, exitX: 4400 },
+        boss: {
+            type: "BOSS3",
+            spawnX: 3980,
+            spawnY: 520,
+            healthMultiplier: 10.5,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.0
+        },
+        background: 'bg_dojo',
+        music: ['gameplay', 'action_theme'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 650, width: 4500, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 300, y: 530, width: 240, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 750, y: 430, width: 200, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 1100, y: 480, width: 100, height: 24, type: 'moving', axis: 'y', range: 150, speed: 2.5, tile: 'platform4_tile' },
+            { x: 1350, y: 330, width: 300, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 2000, y: 490, width: 280, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 2600, y: 380, width: 260, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 3150, y: 510, width: 300, height: 24, type: 'static', tile: 'platform3_tile' },
+            { x: 3750, y: 410, width: 240, height: 24, type: 'static', tile: 'platform4_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 1500, y: 290 }],
+        damageBoosts: [{ x: 2700, y: 340 }],
+        skunkPowerups: [{ x: 2000, y: 450 }],
+        enemyConfig: {
+            spawnInterval: 2.0,
+            maxEnemies: 5,
+            aggression: 1.0,
+            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 4-1: CRYSTAL CAVERNS — THE RUN
+    // =========================================================
     {
         name: "Crystal Caverns",
         id: "level_4",
         width: 16000,
-        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
-        completion: {
-            bossTriggerX: 16000 - 1100,
-            exitX: 16000 - 100
-        },
-        boss: {
-            type: "BOSS6",
-            spawnX: 16000 - 520,
-            spawnY: 520,
-            healthMultiplier: 11.0,
-            speedMultiplier: 1.05,
-            attackDamageMultiplier: 1.7
-        },
+        completion: { exitX: 15900 },
         background: 'bg_caves_crystal',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
         spawnPoints: [ 
@@ -435,24 +529,59 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 5: CRYSTAL CAVERNS DEPTHS ---
+    // =========================================================
+    // STAGE 4-2: CRYSTAL SHOWDOWN
+    // =========================================================
+    {
+        name: "Crystal Showdown",
+        id: "level_4_boss",
+        width: 4500,
+        completion: { bossTriggerX: 3700, exitX: 4400 },
+        boss: {
+            type: "BOSS6",
+            spawnX: 3980,
+            spawnY: 520,
+            healthMultiplier: 11.5,
+            speedMultiplier: 1.1,
+            attackDamageMultiplier: 1.8
+        },
+        background: 'bg_caves_crystal',
+        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 640, width: 4500, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 300, y: 550, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 800, y: 430, width: 180, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 1300, y: 340, width: 160, height: 24, type: 'moving', axis: 'y', range: 120, speed: 1.8, tile: 'platform6_tile' },
+            { x: 1850, y: 490, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 2400, y: 370, width: 180, height: 24, type: 'moving', axis: 'x', range: 100, speed: 1.5, tile: 'platform6_tile' },
+            { x: 2950, y: 510, width: 220, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 3450, y: 400, width: 200, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 3900, y: 490, width: 240, height: 24, type: 'static', tile: 'platform5_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 1000, y: 390 }],
+        damageBoosts: [{ x: 2700, y: 330 }],
+        skunkPowerups: [{ x: 1900, y: 450 }],
+        enemyConfig: {
+            spawnInterval: 1.8,
+            maxEnemies: 5,
+            aggression: 1.1,
+            allowedTypes: ['BASIC', 'FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 5-1: CRYSTAL CAVERNS DEPTHS — THE RUN
+    // =========================================================
     {
         name: "Crystal Caverns Depths",
         id: "level_5",
         width: 16000,
-        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
-        completion: {
-            bossTriggerX: 16000 - 1100,
-            exitX: 16000 - 100
-        },
-        boss: {
-            type: "BOSS5",
-            spawnX: 16000 - 520,
-            spawnY: 520,
-            healthMultiplier: 12.0,
-            speedMultiplier: 1.1,
-            attackDamageMultiplier: 1.8
-        },
+        completion: { exitX: 15900 },
         background: 'bg_cave_depths',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
         spawnPoints: [ 
@@ -553,24 +682,59 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 6: NEON CROSSROADS ---
+    // =========================================================
+    // STAGE 5-2: DEPTHS SHOWDOWN
+    // =========================================================
+    {
+        name: "Depths Showdown",
+        id: "level_5_boss",
+        width: 4500,
+        completion: { bossTriggerX: 3700, exitX: 4400 },
+        boss: {
+            type: "BOSS5",
+            spawnX: 3980,
+            spawnY: 520,
+            healthMultiplier: 12.5,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 1.9
+        },
+        background: 'bg_cave_depths',
+        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 630, width: 4500, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 250, y: 540, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 700, y: 440, width: 180, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 1200, y: 340, width: 160, height: 24, type: 'moving', axis: 'y', range: 140, speed: 2.0, tile: 'platform6_tile' },
+            { x: 1750, y: 480, width: 220, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 2300, y: 380, width: 160, height: 24, type: 'moving', axis: 'y', range: 140, speed: 2.0, timeOffset: 1.2, tile: 'platform6_tile' },
+            { x: 2850, y: 520, width: 240, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 3400, y: 430, width: 200, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 3900, y: 500, width: 240, height: 24, type: 'static', tile: 'platform5_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 950, y: 400 }],
+        damageBoosts: [{ x: 2700, y: 340 }],
+        skunkPowerups: [{ x: 1900, y: 440 }],
+        enemyConfig: {
+            spawnInterval: 1.6,
+            maxEnemies: 6,
+            aggression: 1.2,
+            allowedTypes: ['FAST_BASIC', 'SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 6-1: NEON CROSSROADS — THE RUN
+    // =========================================================
     {
         name: "Neon Crossroads",
         id: "level_6",
         width: 12000,
-        // Clear condition: reach the boss trigger, defeat the boss, then reach the exit.
-        completion: {
-            bossTriggerX: 12000 - 900,
-            exitX: 12000 - 100
-        },
-        boss: {
-            type: "BOSS4",
-            spawnX: 12000 - 520,
-            spawnY: 520,
-            healthMultiplier: 13.0,
-            speedMultiplier: 1.1,
-            attackDamageMultiplier: 1.9
-        },
+        completion: { exitX: 11900 },
         background: 'bg_neon',
         music: ['city_theme', 'action_theme', 'gameplay'],
         spawnPoints: [ 
@@ -660,23 +824,59 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 7: CRYSTAL RIDGE ---
+    // =========================================================
+    // STAGE 6-2: NEON SHOWDOWN
+    // =========================================================
+    {
+        name: "Neon Showdown",
+        id: "level_6_boss",
+        width: 4000,
+        completion: { bossTriggerX: 3200, exitX: 3900 },
+        boss: {
+            type: "BOSS4",
+            spawnX: 3480,
+            spawnY: 520,
+            healthMultiplier: 13.5,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.0
+        },
+        background: 'bg_neon',
+        music: ['city_theme', 'action_theme', 'gameplay'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 620, width: 4000, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 250, y: 530, width: 220, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 700, y: 430, width: 180, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 1150, y: 330, width: 160, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 1600, y: 400, width: 110, height: 24, type: 'moving', axis: 'x', range: 120, speed: 2.0, tile: 'platform5_tile' },
+            { x: 1700, y: 470, width: 260, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 2250, y: 370, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 2800, y: 490, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 3200, y: 380, width: 200, height: 24, type: 'static', tile: 'platform5_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 850, y: 390 }],
+        damageBoosts: [{ x: 2500, y: 330 }],
+        skunkPowerups: [{ x: 1800, y: 430 }],
+        enemyConfig: {
+            spawnInterval: 1.8,
+            maxEnemies: 6,
+            aggression: 1.2,
+            allowedTypes: ['SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 7-1: CRYSTAL RIDGE — THE RUN
+    // =========================================================
     {
         name: "Crystal Ridge",
         id: "level_7",
         width: 16000,
-        completion: {
-            bossTriggerX: 16000 - 1100,
-            exitX: 16000 - 100
-        },
-        boss: {
-            type: "BOSS",
-            spawnX: 16000 - 520,
-            spawnY: 520,
-            healthMultiplier: 14.0,
-            speedMultiplier: 1.1,
-            attackDamageMultiplier: 2.0
-        },
+        completion: { exitX: 15900 },
         background: 'bg_mountains',
         music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
         spawnPoints: [
@@ -775,23 +975,60 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 8: ABYSSAL CAVERNS ---
+    // =========================================================
+    // STAGE 7-2: RIDGE SHOWDOWN
+    // =========================================================
+    {
+        name: "Ridge Showdown",
+        id: "level_7_boss",
+        width: 5000,
+        completion: { bossTriggerX: 4200, exitX: 4900 },
+        boss: {
+            type: "BOSS",
+            spawnX: 4480,
+            spawnY: 520,
+            healthMultiplier: 14.5,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.1
+        },
+        background: 'bg_mountains',
+        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 610, width: 5000, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 300, y: 530, width: 260, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 850, y: 430, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 1400, y: 330, width: 200, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 1800, y: 360, width: 130, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.2, tile: 'platform6_tile' },
+            { x: 2000, y: 470, width: 280, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 2600, y: 370, width: 240, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 3200, y: 510, width: 260, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 3800, y: 400, width: 240, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 4300, y: 490, width: 280, height: 24, type: 'static', tile: 'platform5_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 1050, y: 390 }],
+        damageBoosts: [{ x: 2800, y: 330 }],
+        skunkPowerups: [{ x: 2100, y: 430 }],
+        enemyConfig: {
+            spawnInterval: 1.6,
+            maxEnemies: 7,
+            aggression: 1.3,
+            allowedTypes: ['SECOND_BASIC', 'THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 8-1: ABYSSAL CAVERNS — THE RUN
+    // =========================================================
     {
         name: "Abyssal Caverns",
         id: "level_8",
         width: 16000,
-        completion: {
-            bossTriggerX: 16000 - 1100,
-            exitX: 16000 - 100
-        },
-        boss: {
-            type: "BOSS2",
-            spawnX: 16000 - 520,
-            spawnY: 520,
-            healthMultiplier: 15.0,
-            speedMultiplier: 1.15,
-            attackDamageMultiplier: 2.1
-        },
+        completion: { exitX: 15900 },
         background: 'bg_caves_crystal',
         music: ['cave_ambient', 'ambient_cave_loop'],
         spawnPoints: [
@@ -893,23 +1130,60 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 9: NEON NEXUS ---
+    // =========================================================
+    // STAGE 8-2: ABYSS SHOWDOWN
+    // =========================================================
+    {
+        name: "Abyss Showdown",
+        id: "level_8_boss",
+        width: 5000,
+        completion: { bossTriggerX: 4200, exitX: 4900 },
+        boss: {
+            type: "BOSS2",
+            spawnX: 4480,
+            spawnY: 520,
+            healthMultiplier: 15.5,
+            speedMultiplier: 1.2,
+            attackDamageMultiplier: 2.2
+        },
+        background: 'bg_caves_crystal',
+        music: ['cave_ambient', 'ambient_cave_loop'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 600, width: 5000, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 250, y: 520, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 700, y: 420, width: 170, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 1200, y: 320, width: 160, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.5, tile: 'platform6_tile' },
+            { x: 1750, y: 460, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 2300, y: 350, width: 180, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 2900, y: 480, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 3450, y: 380, width: 160, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.5, timeOffset: 1.0, tile: 'platform6_tile' },
+            { x: 4000, y: 500, width: 240, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 4500, y: 420, width: 220, height: 24, type: 'static', tile: 'platform5_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 900, y: 380 }],
+        damageBoosts: [{ x: 2700, y: 310 }],
+        skunkPowerups: [{ x: 2000, y: 420 }],
+        enemyConfig: {
+            spawnInterval: 1.4,
+            maxEnemies: 7,
+            aggression: 1.4,
+            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 9-1: NEON NEXUS — THE RUN
+    // =========================================================
     {
         name: "Neon Nexus",
         id: "level_9",
         width: 12000,
-        completion: {
-            bossTriggerX: 12000 - 900,
-            exitX: 12000 - 100
-        },
-        boss: {
-            type: "BOSS3",
-            spawnX: 12000 - 520,
-            spawnY: 520,
-            healthMultiplier: 16.0,
-            speedMultiplier: 1.15,
-            attackDamageMultiplier: 2.2
-        },
+        completion: { exitX: 11900 },
         background: 'bg_neon',
         music: ['city_theme', 'action_theme', 'gameplay'],
         spawnPoints: [
@@ -1005,23 +1279,59 @@ const LEVEL_CONFIGS = [
         }
     },
 
-    // --- LEVEL 10: FINAL SHOWDOWN ---
+    // =========================================================
+    // STAGE 9-2: NEXUS SHOWDOWN
+    // =========================================================
+    {
+        name: "Nexus Showdown",
+        id: "level_9_boss",
+        width: 4000,
+        completion: { bossTriggerX: 3200, exitX: 3900 },
+        boss: {
+            type: "BOSS3",
+            spawnX: 3480,
+            spawnY: 520,
+            healthMultiplier: 16.5,
+            speedMultiplier: 1.2,
+            attackDamageMultiplier: 2.3
+        },
+        background: 'bg_neon',
+        music: ['city_theme', 'action_theme', 'gameplay'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 590, width: 4000, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 200, y: 510, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 650, y: 410, width: 160, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 1100, y: 310, width: 150, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 1600, y: 450, width: 240, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 2100, y: 350, width: 160, height: 24, type: 'moving', axis: 'x', range: 130, speed: 2.2, tile: 'platform5_tile' },
+            { x: 2700, y: 470, width: 200, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 3100, y: 370, width: 180, height: 24, type: 'static', tile: 'platform5_tile' },
+            { x: 3500, y: 460, width: 200, height: 24, type: 'static', tile: 'platform4_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 800, y: 370 }],
+        damageBoosts: [{ x: 2600, y: 330 }],
+        skunkPowerups: [{ x: 1750, y: 410 }],
+        enemyConfig: {
+            spawnInterval: 1.4,
+            maxEnemies: 8,
+            aggression: 1.4,
+            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 10-1: FINAL SHOWDOWN — THE RUN
+    // =========================================================
     {
         name: "Final Showdown",
         id: "level_10",
         width: 12000,
-        completion: {
-            bossTriggerX: 12000 - 900,
-            exitX: 12000 - 100
-        },
-        boss: {
-            type: "BOSS4",
-            spawnX: 12000 - 520,
-            spawnY: 520,
-            healthMultiplier: 18.0,
-            speedMultiplier: 1.2,
-            attackDamageMultiplier: 2.3
-        },
+        completion: { exitX: 11900 },
         background: 'bg_final',
         music: ['boss_theme', 'action_theme', 'city_theme'],
         spawnPoints: [
@@ -1113,6 +1423,52 @@ const LEVEL_CONFIGS = [
             spawnInterval: 1.3,
             maxEnemies: 12,
             aggression: 1.35,
+            allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
+        }
+    },
+
+    // =========================================================
+    // STAGE 10-2: FINAL CONFRONTATION
+    // =========================================================
+    {
+        name: "Final Confrontation",
+        id: "level_10_boss",
+        width: 5000,
+        completion: { bossTriggerX: 4200, exitX: 4900 },
+        boss: {
+            type: "BOSS4",
+            spawnX: 4480,
+            spawnY: 520,
+            healthMultiplier: 19.0,
+            speedMultiplier: 1.25,
+            attackDamageMultiplier: 2.5
+        },
+        background: 'bg_final',
+        music: ['boss_theme', 'action_theme', 'city_theme'],
+        spawnPoints: [
+            { x: 200, y: 300 },
+            { x: 'right', y: 300 }
+        ],
+        platforms: [
+            { x: 0, y: 580, width: 5000, height: 40, type: 'static', tile: 'ground3_tile' },
+            { x: 200, y: 500, width: 180, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 650, y: 400, width: 150, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 1100, y: 300, width: 140, height: 24, type: 'moving', axis: 'y', range: 200, speed: 3.0, tile: 'platform5_tile' },
+            { x: 1700, y: 440, width: 200, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 2250, y: 340, width: 160, height: 24, type: 'moving', axis: 'x', range: 150, speed: 2.8, tile: 'platform5_tile' },
+            { x: 2850, y: 470, width: 200, height: 24, type: 'static', tile: 'platform2_tile' },
+            { x: 3400, y: 370, width: 160, height: 24, type: 'moving', axis: 'y', range: 200, speed: 3.0, timeOffset: 1.0, tile: 'platform5_tile' },
+            { x: 4000, y: 490, width: 260, height: 24, type: 'static', tile: 'platform4_tile' },
+            { x: 4500, y: 400, width: 200, height: 24, type: 'static', tile: 'platform2_tile' }
+        ],
+        idols: [],
+        speedBoosts: [{ x: 850, y: 360 }],
+        damageBoosts: [{ x: 2700, y: 300 }],
+        skunkPowerups: [{ x: 1900, y: 400 }],
+        enemyConfig: {
+            spawnInterval: 1.2,
+            maxEnemies: 8,
+            aggression: 1.5,
             allowedTypes: ['THIRD_BASIC', 'FOURTH_BASIC', 'FIFTH_BASIC']
         }
     }
