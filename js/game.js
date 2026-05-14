@@ -698,6 +698,7 @@ class Game {
             this.bossEncountered = false;
             this.bossDefeated = false;
             this.exitPortal = null;
+            this._portalHintFired = false;
             this.isRespawning = false;
             this.respawnTimer = 0;
             this._pendingRespawn = null;
@@ -1184,7 +1185,29 @@ class Game {
             this._bossDefeatSlowdown = 0;
             this._bossEncounterTime = 0;
             this.exitPortal = null;
+            this._portalHintFired = false;
             if (this.enemyManager) this.enemyManager.bossInstance = null;
+
+            // For running levels (no boss) spawn the exit portal immediately so
+            // the player has a visible goal instead of just walking off-screen.
+            if (!config.boss && config.completion && typeof config.completion.exitX === 'number') {
+                try {
+                    const portalX = config.completion.exitX;
+                    const portalRadius = 50;
+                    let portalY = 620;
+                    if (Array.isArray(this.level.platforms)) {
+                        let bestPlatform = null;
+                        for (const p of this.level.platforms) {
+                            if (!p || typeof p.x !== 'number') continue;
+                            if (portalX >= p.x && portalX <= p.x + p.width) {
+                                if (!bestPlatform || p.y > bestPlatform.y) bestPlatform = p;
+                            }
+                        }
+                        if (bestPlatform) portalY = bestPlatform.y - portalRadius;
+                    }
+                    this.exitPortal = new ExitPortal(portalX, portalY);
+                } catch (e) { __err('game', e); }
+            }
             this.isRespawning = false;
             this.respawnTimer = 0;
             this._pendingRespawn = null;
@@ -1918,17 +1941,23 @@ class Game {
                         this.completeLevel();
                         return;
                     }
+                    // Proximity hint: fire "exit_portal" hint when player is
+                    // within ~500px of the portal so the hint is contextually
+                    // relevant regardless of when the portal appeared.
+                    if (this.tutorialHints && !this._portalHintFired) {
+                        const dx = this.exitPortal.x - (this.player.x + (this.player.width || 64) / 2);
+                        if (Math.abs(dx) < 500) {
+                            this._portalHintFired = true;
+                            this.tutorialHints.trigger('exit_portal');
+                        }
+                    }
                 }
 
-                let exitX = this.level.width - 100;
-                if (this.level.completionConfig) exitX = this.level.completionConfig.exitX;
-
-                // For non-boss levels (no portal), use the classic X boundary
-                if (!this.exitPortal && this.player.x > exitX) {
-                    // Double check boss (redundant with clamp, but safe)
-                    if (this.level.bossConfig && !this.bossDefeated) {
-                        // Blocked
-                    } else {
+                // Boss levels without a portal yet: use X boundary as fallback
+                if (!this.exitPortal && this.level.bossConfig) {
+                    let exitX = this.level.width - 100;
+                    if (this.level.completionConfig) exitX = this.level.completionConfig.exitX;
+                    if (this.player.x > exitX && this.bossDefeated) {
                         this.completeLevel();
                         return;
                     }

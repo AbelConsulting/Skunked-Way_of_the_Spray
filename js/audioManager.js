@@ -426,6 +426,7 @@ class AudioManager {
         if (this._initializeInProgress) return;
         this._initializeInProgress = true;
         console.log('AudioManager: Initializing audio context...');
+        try {
         this._ensureContext();
         if (this.audioCtx) {
             if (this.audioCtx.state === 'suspended') {
@@ -458,7 +459,9 @@ class AudioManager {
                 if (p) p.catch(e => console.warn('AudioManager: Retry play() still blocked', e.message || e));
             } catch (e) { __err('audio', e); }
         }
-        this._initializeInProgress = false;
+        } finally {
+            this._initializeInProgress = false;
+        }
     }
 
     /**
