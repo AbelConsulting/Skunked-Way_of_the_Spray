@@ -537,9 +537,11 @@ class TutorialHints {
         const titleLines = this._wrapHintLine(ctx, h.lines[0], textMaxWidth);
         ctx.font = `500 ${bodySize}px ${tutorialFont}`;
         const bodyLines = h.lines.slice(1).flatMap(line => this._wrapHintLine(ctx, line, textMaxWidth));
+        ctx.letterSpacing = '0.08em';
         ctx.font = `700 ${eyebrowSize}px ${tutorialFont}`;
         const badgeText = theme.label;
         const badgeWidth = Math.ceil(ctx.measureText(badgeText).width) + Math.round(20 * scale);
+        ctx.letterSpacing = '0';
         ctx.font = `500 ${dismissSize}px ${tutorialFont}`;
         const dismissText = this.isMobile ? 'Tap anywhere to close' : 'Press any key to close';
         const dismissWidth = Math.ceil(ctx.measureText(dismissText).width) + Math.round(18 * scale);
@@ -608,14 +610,15 @@ class TutorialHints {
         }
 
         ctx.globalAlpha = h.alpha;
-        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.letterSpacing = '0.08em';
         ctx.font = `700 ${eyebrowSize}px ${tutorialFont}`;
         ctx.fillStyle = theme.accent;
-        ctx.fillText(badgeText, boxX + Math.round(46 * scale), boxY + Math.round(28 * scale));
+        ctx.textAlign = 'center';
+        ctx.fillText(badgeText, boxX + Math.round(30 * scale) + badgeWidth / 2, boxY + Math.round(28 * scale));
 
         ctx.letterSpacing = '0';
+        ctx.textAlign = 'left';
         let textY = boxY + topPadding + badgeHeight + sectionGap;
 
         ctx.font = `700 ${titleSize}px ${tutorialFont}`;
@@ -638,7 +641,8 @@ class TutorialHints {
 
         ctx.font = `500 ${dismissSize}px ${tutorialFont}`;
         ctx.fillStyle = 'rgba(236, 242, 248, 0.72)';
-        ctx.fillText(dismissText, boxX + boxWidth - dismissWidth, boxY + boxHeight - dismissHeight / 2 - Math.round(14 * scale));
+        ctx.textAlign = 'center';
+        ctx.fillText(dismissText, boxX + boxWidth - Math.round(18 * scale) - dismissWidth / 2, boxY + boxHeight - dismissHeight / 2 - Math.round(14 * scale));
 
         ctx.letterSpacing = '0';
 
