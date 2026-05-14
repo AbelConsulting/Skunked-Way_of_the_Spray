@@ -2936,8 +2936,10 @@ class Game {
         }
 
         // Survival is single-life: force straight to GAME_OVER regardless of
-        // how many lives the counter holds (defense in depth against stale state).
-        if (this.gameMode === 'survival') {
+        // how many lives the counter holds — UNLESS the player just used a revive
+        // ad (lives=2), in which case the first death after revive should respawn
+        // rather than game-over (mirrors the arcade mode behaviour).
+        if (this.gameMode === 'survival' && this.lives <= 1) {
             this.lives = 1; // will become 0 after decrement below
         }
 
@@ -3220,11 +3222,15 @@ class Game {
     reviveFromAd() {
         if (this.state !== 'GAME_OVER') return;
 
-        this.lives = 1;
+        this.lives = 2; // Buffer: first post-revive death respawns instead of immediate GAME_OVER (mirrors arcade mode fix)
         this.state = 'PLAYING';
         this._gameOverTime = 0;
 
-        // Restore player to a fully clean state (mirrors _performRespawn)
+        // Cancel any pending death-sequence audio (game_over stinger is scheduled
+        // via setTimeout inside startDeath; it must be killed before we resume play).
+        try { this.audioManager && this.audioManager.cancelDeathSequence && this.audioManager.cancelDeathSequence(); } catch (e) { __err('game', e); }
+
+        // Restore player to a fully clean state (mirrors reset() + _performRespawn)
         if (this.player) {
             this.player.health = this.player.maxHealth;
             this.player.invulnerableTimer = 3.5; // generous i-frames after revive
@@ -3237,8 +3243,17 @@ class Game {
             this.player.isAttacking = false;
             this.player.isShadowStriking = false;
             this.player.hitStunTimer = 0;
+            // Reset combat state that isn't covered by the properties above
+            this.player.isSkunkShooting   = false;
+            this.player.skunkShotTimer    = 0;
+            this.player.attackTimer       = 0;
+            this.player.attackCooldownTimer = 0;
+            this.player.skunkCooldownTimer = 0;
+            this.player.jumpsRemaining    = this.player.maxJumps || 2;
+            this.player._prevAttackHitbox = null;
+            try { this.player.hitEnemies && this.player.hitEnemies.clear && this.player.hitEnemies.clear(); } catch (e) { __err('game', e); }
             try { this.player.clearInputState && this.player.clearInputState(); } catch (e) { __err('game', e); }
-            try { this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) { __err('game', e); }
+            // updateAnimation is called after position is set (see survival branch below)
         }
 
         this.isRespawning = false;
@@ -3251,10 +3266,12 @@ class Game {
             // Mark the per-run revive as used
             this._survivalAdReviveUsed = true;
 
-            // Re-center player in the survival arena
+            // Re-center player in the survival arena BEFORE updateAnimation
+            // so physics / ground state is meaningful when animation is recomputed.
             if (this.player) {
                 this.player.x = 1350;
                 this.player.y = 596;
+                try { this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) { __err('game', e); }
             }
 
             // Clear all remaining enemies so they don't instantly kill the revived player
@@ -3288,7 +3305,9 @@ class Game {
             // Flash green to signal the revive
             try { this.screenFlash = new ScreenFlash('rgba(0,255,136,0.35)', 0.6); } catch (e) { __err('game', e); }
         } else {
-            // Arcade: resume the level music as before
+            // Arcade: updateAnimation now that the player is at the correct position
+            try { this.player && this.player.updateAnimation && this.player.updateAnimation(0); } catch (e) { __err('game', e); }
+            // Resume the level music as before
             try { this.audioManager.playLevelMusic && this.audioManager.playLevelMusic(this.currentLevelIndex); } catch (e) { __err('game', e); }
         }
 
