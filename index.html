@@ -3270,8 +3270,8 @@
                      All four buttons live on ONE layer (single flex row) so
                      they cannot overlap. Each is independently shown/hidden
                      by JS after the input lockout expires. Revive is only
-                     shown on native Android when an AdMob rewarded ad is
-                     loaded; the other three are always shown post-lockout. -->
+                     shown when AdManager.canShowRewarded() returns true
+                     (native: AdMob rewarded loaded; web: GPT rewarded ready). -->
                 <div id="game-over-action-bar" class="game-over-action-bar">
                     <button id="game-over-revive-btn"
                             type="button"
@@ -6094,7 +6094,8 @@
                             // (wireSurvivalReviveInterstitial below). Skip the button here.
                             if (isSurvival) return;
 
-                            // Arcade mode: only show when a native AdMob rewarded ad is ready.
+                            // Arcade mode: show when a rewarded ad is ready
+                            // (works on both native AdMob and web GPT).
                             const adReady = window.AdManager
                                 && typeof AdManager.canShowRewarded === 'function'
                                 && AdManager.canShowRewarded();
