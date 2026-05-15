@@ -28,6 +28,17 @@
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-P6RZPFLG');</script>
     <!-- End Google Tag Manager -->
+    <!-- Google AdSense (web only — skipped inside the Capacitor WebView) -->
+    <script>
+        if (!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform())) {
+            var _as = document.createElement('script');
+            _as.async = true;
+            _as.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8519140628365141';
+            _as.crossOrigin = 'anonymous';
+            document.head.appendChild(_as);
+        }
+    </script>
+    <!-- End Google AdSense -->
     <link rel="manifest" href="manifest.json">
     <!-- webhint-disable compat-api/html � theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
     <meta name="theme-color" content="#1a1a2e">
