@@ -28,6 +28,37 @@
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-P6RZPFLG');</script>
     <!-- End Google Tag Manager -->
+    <!-- Google Funding Choices CMP — IAB TCF certified consent management for EEA/UK/Switzerland.
+         Must load BEFORE adsbygoogle.js so AdSense respects the TC string.
+         Configure the GDPR message in AdSense › Privacy & messaging.
+         Skipped inside the Capacitor WebView (no ad serving in-app). -->
+    <script>
+        (function() {
+            if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) { return; }
+            // Signal googlefc iframe presence so Funding Choices can write the TC string
+            // before adsbygoogle.js initialises ad slots.
+            function signalGooglefcPresent() {
+                if (!window.frames['googlefcPresent']) {
+                    if (document.body) {
+                        var iframe = document.createElement('iframe');
+                        iframe.style.cssText = 'width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;';
+                        iframe.style.display = 'none';
+                        iframe.name = 'googlefcPresent';
+                        document.body.appendChild(iframe);
+                    } else {
+                        setTimeout(signalGooglefcPresent, 0);
+                    }
+                }
+            }
+            signalGooglefcPresent();
+            // Load Funding Choices CMP script
+            var fc = document.createElement('script');
+            fc.async = true;
+            fc.src = 'https://fundingchoicesmessages.google.com/i/pub-8519140628365141/de.js';
+            document.head.appendChild(fc);
+        })();
+    </script>
+    <!-- End Google Funding Choices CMP -->
     <!-- Google AdSense (web only — skipped inside the Capacitor WebView) -->
     <script>
         if (!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform())) {
