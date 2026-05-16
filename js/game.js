@@ -379,7 +379,16 @@ class Game {
                     // without requiring a keyboard or touch input).
                     // Block if the HTML start-menu overlay is active
                     if (this.state === 'MENU' && window._startMenuVisible) return;
-                    if (this.state === 'MENU' || this.state === 'VICTORY') {
+                    if (this.state === 'VICTORY') {
+                        // After campaign clear: gently fade out and
+                        // reload to the main menu rather than instantly
+                        // restarting a new run. Respects a brief lockout
+                        // so players can read the screen, and blocks
+                        // while the high-score prompt is open.
+                        this._returnToMenuAfterVictory();
+                        return;
+                    }
+                    if (this.state === 'MENU') {
                         this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                         this.startGame(0);
                         this.dispatchGameStateChange();
@@ -514,7 +523,11 @@ class Game {
                 // Allow tapping to start/restart in non-playing states
                 // Block if the HTML start-menu overlay is active
                 if (this.state === 'MENU' && window._startMenuVisible) return;
-                if (this.state === 'MENU' || this.state === 'VICTORY') {
+                if (this.state === 'VICTORY') {
+                    this._returnToMenuAfterVictory();
+                    return;
+                }
+                if (this.state === 'MENU') {
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                     this.startGame(0);
                     return;
@@ -597,8 +610,12 @@ class Game {
                 if (!ev) return;
                 // Block if the HTML start-menu overlay is active
                 if (this.state === 'MENU' && window._startMenuVisible) return;
+                if (this.state === 'VICTORY') {
+                    this._returnToMenuAfterVictory();
+                    return;
+                }
                 // Start / restart in non-playing states
-                if (this.state === 'MENU' || this.state === 'VICTORY') {
+                if (this.state === 'MENU') {
                     this.audioManager.playSound && this.audioManager.playSound('ui_confirm');
                     this.startGame(0);
                     this.dispatchGameStateChange();
@@ -1504,11 +1521,23 @@ class Game {
             // Survival mode has no level completion
             if (this.gameMode === 'survival') return;
             if (this.state === 'LEVEL_COMPLETE') return;
-            
+
             this.state = 'LEVEL_COMPLETE';
             this.dispatchGameStateChange();
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
-            this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
+            // Is this the final campaign stage? If so, skip the per-stage
+            // jingle and the interstitial cue — both feel jarring right
+            // before the victory screen.
+            const _isFinalStage = (typeof LEVEL_CONFIGS !== 'undefined')
+                && ((this.currentLevelIndex || 0) + 1) >= LEVEL_CONFIGS.length;
+            this._isFinalStageComplete = _isFinalStage;
+            if (!_isFinalStage) {
+                this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
+            } else {
+                // Begin tailing the (already-stopped) music for an extra
+                // beat of silence before the victory jingle hits.
+                try { this.audioManager && this.audioManager.stopMusic && this.audioManager.stopMusic(600); } catch (e) { __err('game', e); }
+            }
 
             // Analytics: level complete
             try {
@@ -1531,8 +1560,14 @@ class Game {
                 }
             } catch (e) { /* analytics must never break gameplay */ }
 
-            // Notify ad manager for interstitial pacing
-            try { if (window.AdManager && typeof AdManager.onStageComplete === 'function') AdManager.onStageComplete(); } catch (e) { __err('game', e); }
+            // Notify ad manager for interstitial pacing — but never on the
+            // final stage; an interstitial sandwiched between the boss kill
+            // and the victory screen is a guaranteed bad review.
+            try {
+                if (!_isFinalStage && window.AdManager && typeof AdManager.onStageComplete === 'function') {
+                    AdManager.onStageComplete();
+                }
+            } catch (e) { __err('game', e); }
             
             // Track level completion and perfect runs
             try {
@@ -1550,7 +1585,9 @@ class Game {
             // WebView was backgrounded by an AdMob interstitial — by the time
             // the ad closed the next level had already loaded behind it,
             // causing damage / game-overs the player couldn't see.
-            this._levelCompleteWait = 2.0;
+            // Final stage holds a touch longer so the "FINAL BOSS DOWN!"
+            // banner has time to breathe before the fade to victory.
+            this._levelCompleteWait = _isFinalStage ? 2.8 : 2.0;
         }
 
         victory() {
@@ -1636,13 +1673,26 @@ class Game {
                 }
             } catch (e) { console.warn('Achievement check (victory) failed', e); }
 
-            // High score flow at campaign completion
+            // High score flow at campaign completion.
+            // Brief lockout so players can read "MISSION ACCOMPLISHED!"
+            // before either the prompt or any input snaps them away.
+            this._victoryShownAt = Date.now();
+            this._victoryInputLockoutMs = 2200;
+            this._victoryPromptOpen = false;
+            this._victoryReturning = false;
             try {
                 if (window.Highscores && typeof Highscores.isHighScore === 'function') {
                     Promise.resolve(Highscores.isHighScore(this.score)).then((isHigh) => {
                         if (!isHigh) return;
-                        try {
-                            Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
+                        // Delay the prompt so the victory screen lands
+                        // first — modal-on-celebration is jarring.
+                        setTimeout(() => {
+                            // Bail if the player already started the
+                            // return-to-menu fade.
+                            if (this.state !== 'VICTORY' || this._victoryReturning) return;
+                            this._victoryPromptOpen = true;
+                            try {
+                                Highscores.promptForInitials(this.score, this.gameStats, (updated) => {
                                 try { this.dispatchScoreChange && this.dispatchScoreChange(); } catch (e) { __err('game', e); }
                                 // If a DOM target exists, show the scoreboard there
                                 try {
@@ -1656,11 +1706,49 @@ class Game {
                                         if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Highscores updated (victory)', updated);
                                     }
                                 } catch (e) { console.warn('Failed to render scoreboard (victory)', e); }
+                                // High-score flow done — gently return
+                                // to the main menu via a full reload so
+                                // the next run starts on a clean slate.
+                                this._victoryPromptOpen = false;
+                                setTimeout(() => { this._returnToMenuAfterVictory(); }, 600);
                             });
-                        } catch (e) { console.warn('Highscores prompt (victory) failed', e); }
+                        } catch (e) {
+                            console.warn('Highscores prompt (victory) failed', e);
+                            this._victoryPromptOpen = false;
+                        }
+                        }, 1500);
                     }).catch(() => { /* ignore highscores errors */ });
                 }
             } catch (e) { /* ignore highscores errors */ }
+        }
+
+        // Gently fade to black and reload the page so the player lands on a
+        // fresh main menu after victory. Idempotent + respects a brief
+        // lockout so victory inputs don't fire while reading the screen,
+        // and waits for any open high-score prompt to close first.
+        _returnToMenuAfterVictory() {
+            if (this.state !== 'VICTORY') return;
+            if (this._victoryReturning) return;
+            // Lockout window so the celebration isn't skipped immediately.
+            if (this._victoryShownAt && this._victoryInputLockoutMs
+                && (Date.now() - this._victoryShownAt) < this._victoryInputLockoutMs) {
+                return;
+            }
+            // Don't yank the screen out from under an open prompt.
+            if (this._victoryPromptOpen) return;
+            this._victoryReturning = true;
+            try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('ui_confirm'); } catch (e) { __err('game', e); }
+            try { this.audioManager && this.audioManager.stopMusic && this.audioManager.stopMusic(600); } catch (e) { __err('game', e); }
+            // Drive a fade-out using the existing transition machinery.
+            this.transitionState = 'FADE_OUT';
+            this.transitionTimer = 0;
+            this.transitionAlpha = 0;
+            this.transitionDuration = 0.8;
+            // Hard reload after the fade so all subsystems re-initialise
+            // (audio nodes, ad counters, level state, RNG seed, etc.).
+            setTimeout(() => {
+                try { window.location.reload(); } catch (e) { /* */ }
+            }, 900);
         }
 
         update(dt) {
@@ -1705,6 +1793,15 @@ class Game {
                     // Fade from transparent (0.0) to black (1.0)
                     this.transitionAlpha = progress;
                     if (progress >= 1.0) {
+                        // If we're fading out as part of the victory →
+                        // main-menu return, just hold on black; the
+                        // location.reload() scheduled in
+                        // _returnToMenuAfterVictory() will replace the page.
+                        if (this._victoryReturning || this.state === 'VICTORY') {
+                            this.transitionAlpha = 1.0;
+                            this.transitionState = null;
+                            return;
+                        }
                         this.transitionState = 'FADE_IN'; // Start fading in next frame
                         this.transitionTimer = 0;
                         this.transitionAlpha = 1.0;
@@ -1718,11 +1815,13 @@ class Game {
                             if (this.enemyManager) this.enemyManager.spawnTimer = 0;
                         } else {
                             this.victory();
-                            this.transitionState = null; // No fade in for victory screen
-                            // Clear the full-black fade overlay or it stays on
-                            // top of the victory screen ("glitch" reported by
-                            // players after defeating the final boss).
-                            this.transitionAlpha = 0;
+                            // Fade IN to the victory screen so it doesn't
+                            // pop in abruptly out of full black. Without
+                            // this the transition felt like a "glitch".
+                            this.transitionState = 'FADE_IN';
+                            this.transitionTimer = 0;
+                            this.transitionAlpha = 1.0;
+                            this.transitionDuration = 1.2;
                         }
                     }
                 }
@@ -1921,8 +2020,17 @@ class Game {
                             if (this.audioManager && this.audioManager.resetMusicPlaybackRate) {
                                 this.audioManager.resetMusicPlaybackRate();
                             }
-                            // Switch back to level music
-                            this.ensureLevelMusic();
+                            // On the FINAL stage we don't bounce back into
+                            // the level music — the victory jingle is
+                            // moments away. Let the boss music tail off.
+                            const _isFinalLevel = (typeof LEVEL_CONFIGS !== 'undefined')
+                                && ((this.currentLevelIndex || 0) + 1) >= LEVEL_CONFIGS.length;
+                            if (_isFinalLevel) {
+                                try { this.audioManager && this.audioManager.stopMusic && this.audioManager.stopMusic(1200); } catch (e) { __err('game', e); }
+                            } else {
+                                // Switch back to level music
+                                this.ensureLevelMusic();
+                            }
                             }
                 }
                 

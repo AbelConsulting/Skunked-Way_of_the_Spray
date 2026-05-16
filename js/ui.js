@@ -861,7 +861,7 @@ class UI {
         ctx.textBaseline = 'middle';
         ctx.letterSpacing = '0.03em';
         const subtitle = isFinalLevel
-            ? 'Mission accomplished...'
+            ? 'Roll credits\u2026'
             : `Proceeding to Stage ${levelNum + 1}...`;
         ctx.fillText(subtitle, cx, cy + 40);
         ctx.restore();
@@ -1136,7 +1136,7 @@ class UI {
         ctx.font = "16px 'Press Start 2P', monospace";
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
-        ctx.fillText('PRESS ENTER TO CONTINUE', cx, boxY + boxH + 65);
+        ctx.fillText('PRESS ENTER FOR MAIN MENU', cx, boxY + boxH + 65);
         ctx.restore();
     }
 
