@@ -1719,6 +1719,10 @@ class Game {
                         } else {
                             this.victory();
                             this.transitionState = null; // No fade in for victory screen
+                            // Clear the full-black fade overlay or it stays on
+                            // top of the victory screen ("glitch" reported by
+                            // players after defeating the final boss).
+                            this.transitionAlpha = 0;
                         }
                     }
                 }
@@ -3758,7 +3762,9 @@ class Game {
         } else if (this.state === "LEVEL_COMPLETE") {
             // Draw Level Complete screen
             if (this.ui && typeof this.ui.drawLevelComplete === 'function') {
-                this.ui.drawLevelComplete(this.ctx, this.currentLevelIndex + 1);
+                const totalLevels = (typeof LEVEL_CONFIGS !== 'undefined' && LEVEL_CONFIGS.length) ? LEVEL_CONFIGS.length : 0;
+                const isFinalLevel = totalLevels > 0 && (this.currentLevelIndex + 1) >= totalLevels;
+                this.ui.drawLevelComplete(this.ctx, this.currentLevelIndex + 1, { isFinalLevel });
             }
         } else if (this.state === "VICTORY") {
              if (this.ui && typeof this.ui.drawVictory === 'function') {

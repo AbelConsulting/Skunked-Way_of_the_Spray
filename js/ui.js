@@ -820,10 +820,11 @@ class UI {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
-    drawLevelComplete(ctx, levelNum) {
+    drawLevelComplete(ctx, levelNum, opts = {}) {
         const cx = this.width / 2;
         const cy = this.height / 2;
         const now = Date.now();
+        const isFinalLevel = !!opts.isFinalLevel;
 
         // Dark overlay
         ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
@@ -833,20 +834,21 @@ class UI {
         const glow = 14 + Math.sin(now / 250) * 8;
         ctx.save();
         ctx.font = "bold 62px 'Bangers', 'Arial Black', Impact, sans-serif";
-        ctx.fillStyle = '#00FF77';
+        ctx.fillStyle = isFinalLevel ? '#FFD700' : '#00FF77';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.shadowColor = '#00FF77';
+        ctx.shadowColor = isFinalLevel ? '#FFD700' : '#00FF77';
         ctx.shadowBlur = glow;
         ctx.letterSpacing = '0.04em';
-        ctx.fillText('STAGE CLEAR!', cx, cy - 32);
+        ctx.fillText(isFinalLevel ? 'FINAL BOSS DOWN!' : 'STAGE CLEAR!', cx, cy - 32);
         ctx.restore();
 
         // Decorative divider
         const divGrad = ctx.createLinearGradient(cx - 160, 0, cx + 160, 0);
+        const divCol = isFinalLevel ? 'rgba(255,215,0,0.5)' : 'rgba(0,255,120,0.5)';
         divGrad.addColorStop(0, 'transparent');
-        divGrad.addColorStop(0.3, 'rgba(0,255,120,0.5)');
-        divGrad.addColorStop(0.7, 'rgba(0,255,120,0.5)');
+        divGrad.addColorStop(0.3, divCol);
+        divGrad.addColorStop(0.7, divCol);
         divGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = divGrad;
         ctx.fillRect(cx - 160, cy + 6, 320, 2);
@@ -858,7 +860,10 @@ class UI {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.letterSpacing = '0.03em';
-        ctx.fillText(`Proceeding to Stage ${levelNum + 1}...`, cx, cy + 40);
+        const subtitle = isFinalLevel
+            ? 'Mission accomplished...'
+            : `Proceeding to Stage ${levelNum + 1}...`;
+        ctx.fillText(subtitle, cx, cy + 40);
         ctx.restore();
     }
 
@@ -917,8 +922,25 @@ class UI {
         ctx.fillText('MISSION ACCOMPLISHED!', cx, titleY);
         ctx.restore();
 
+        // ── Victory narrative line ──
+        ctx.save();
+        ctx.font = "bold 22px 'Bangers', 'Arial Black', sans-serif";
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(255, 120, 0, 0.85)';
+        ctx.shadowBlur = 10;
+        ctx.letterSpacing = '0.03em';
+        ctx.fillText("Congratulations \u2014 you defeated the minions of Malador!", cx, titleY + 42);
+        ctx.font = "16px 'Space Grotesk', 'Segoe UI', sans-serif";
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.85)';
+        ctx.shadowColor = 'rgba(255, 215, 0, 0.55)';
+        ctx.shadowBlur = 8;
+        ctx.fillText('The streets are safe \u2014 for now. The Way of the Spray endures.', cx, titleY + 66);
+        ctx.restore();
+
         // ── Achievement banners ──
-        let nextY = titleY + 50;
+        let nextY = titleY + 92;
         if (achievements.length > 0) {
             ctx.save();
             achievements.forEach((ach, idx) => {
