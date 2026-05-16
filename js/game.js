@@ -692,6 +692,17 @@ class Game {
             this._gameOverTime = 0; // Clear lockout from previous game over
             this._gameOverAnim = null; // Clear previous game over animation
 
+            // Clear victory / final-stage flags so a previous campaign run
+            // can't leak state into the new one (input lockouts, skipped
+            // music/ads, blocked transitions, etc.). Normally a post-
+            // victory path reloads the page, but be defensive in case
+            // startGame() is ever invoked without a reload.
+            this._victoryReturning = false;
+            this._victoryPromptOpen = false;
+            this._victoryShownAt = 0;
+            this._victoryInputLockoutMs = 0;
+            this._isFinalStageComplete = false;
+
             // Game mode
             this.gameMode = mode || 'arcade';
             // Reset survival state

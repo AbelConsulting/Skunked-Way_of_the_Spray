@@ -207,8 +207,32 @@ const AdManager = (() => {
             let adActuallyShown = false;
             let rewardEarned   = false;
             let wasPaused      = false;
+            let settled        = false;
 
-            window.adBreak({
+            // Safety net: if Google's adBreak SDK never fires afterAd
+            // (network drop, SDK error, ad container destroyed, etc.),
+            // we'd be left with _adShowing=true and the game loop paused
+            // forever. Force-resolve after 60s.
+            const watchdog = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                if (adActuallyShown) {
+                    _setAdShowing(false);
+                    if (wasPaused) _resumeGameAfterAd();
+                }
+                _warn('Web rewarded: watchdog timeout, force-resolving.');
+                resolve(rewardEarned);
+            }, 60000);
+
+            const safeResolve = (value) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(watchdog);
+                resolve(value);
+            };
+
+            try {
+              window.adBreak({
                 type: 'reward',
                 name: 'revive',
                 beforeAd: () => {
@@ -237,9 +261,17 @@ const AdManager = (() => {
                         _warn('Web rewarded: no fill.');
                         try { Analytics.trackAdNoFill({ type: 'rewarded', placement: 'revive', phase: 'show', platform: 'web', reason: 'no_fill' }); } catch (_) {}
                     }
-                    resolve(rewardEarned);
+                    safeResolve(rewardEarned);
                 }
-            });
+              });
+            } catch (e) {
+                _warn('Web rewarded: adBreak threw synchronously:', e);
+                if (adActuallyShown) {
+                    _setAdShowing(false);
+                    if (wasPaused) _resumeGameAfterAd();
+                }
+                safeResolve(false);
+            }
         });
     }
 

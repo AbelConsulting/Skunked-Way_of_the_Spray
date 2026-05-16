@@ -516,6 +516,15 @@ try {
    */
   function promptForInitials(score, gameStats, onDone){
     try {
+      // Defensive: remove any stale overlay from a previous prompt that
+      // never tore down cleanly (e.g. page error mid-submit, rapid
+      // game-over → victory transitions). Prevents stacked modals.
+      try {
+        document.querySelectorAll('.highscore-prompt-overlay').forEach((n) => {
+          try { n.parentNode && n.parentNode.removeChild(n); } catch (_) {}
+        });
+      } catch (_) {}
+
       const overlay = document.createElement('div');
       overlay.className = 'highscore-prompt-overlay';
 
