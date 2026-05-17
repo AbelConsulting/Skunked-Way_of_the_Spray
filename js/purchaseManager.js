@@ -271,9 +271,34 @@ const PurchaseManager = (() => {
         // Sync localStorage entitlement → DOM (web ad rail) immediately on boot.
         if (_adFree) _setAdFree(true, 'storage');
 
+        // Hard watchdog: no matter what happens below (plugin hang, native
+        // crash, exception in third-party code, etc.) the UI must NEVER be
+        // stuck on "Checking purchases…" indefinitely. If _markReady() has
+        // not been called within 22s (8s plugin poll + 12s init race + 2s
+        // slack) we force-flip ready so the Buy button enables and the user
+        // can at least attempt a purchase (which surfaces a clear error).
+        // This is the bug that caused at least one uninstall: a user whose
+        // bridge race left them stuck forever on the spinner.
+        const _watchdog = setTimeout(() => {
+            if (!_ready) {
+                _warn('Watchdog firing — store init never completed in 22s. Forcing ready.');
+                try {
+                    if (window.Analytics && typeof Analytics.trackEvent === 'function') {
+                        Analytics.trackEvent('iap_init_watchdog_fired', {
+                            isNative: isNative(),
+                            hasPlugin: !!(window.CdvPurchase && window.CdvPurchase.store),
+                            adFree: _adFree
+                        });
+                    }
+                } catch (_) {}
+                _markReady('watchdog');
+            }
+        }, 22000);
+
         const store = await _getStore();
         if (!store) {
             _log('Native store unavailable. Web fallback active. Ad-free=' + _adFree);
+            clearTimeout(_watchdog);
             _markReady('no-store');
             return;
         }
@@ -311,14 +336,40 @@ const PurchaseManager = (() => {
                 .approved((tx) => {
                     _log('Transaction approved:', tx);
                     _captureToken(tx);
-                    // Plugin requires explicit verification & finishing.
-                    // For a non-consumable with no server, finish locally.
-                    tx.verify().then(() => tx.finish()).catch(e => _warn('verify failed', e));
+                    // CRITICAL: No `store.validator` is registered, so per
+                    // cordova-plugin-purchase v13 docs we MUST call tx.finish()
+                    // directly here. Previously we called tx.verify().then(()=>tx.finish())
+                    // with a .catch that swallowed errors — if verify() rejected for
+                    // any reason, finish() was never called, leaving the purchase
+                    // un-acknowledged. Google Play auto-refunds unacknowledged
+                    // purchases after 3 days, which is the exact symptom users
+                    // reported ("I paid but ads are still showing"). Server-side
+                    // receipt verification still happens via _pushEntitlementRemote()
+                    // → verifyPurchase Cloud Function (see functions/index.js).
+                    //
+                    // Belt-and-suspenders: also flip the local entitlement here.
+                    // .finished() will run it again (idempotent in _setAdFree)
+                    // but if .finished() somehow doesn't fire on this device,
+                    // the player has still been charged and deserves the unlock.
+                    try {
+                        if (tx && Array.isArray(tx.products)) {
+                            if (tx.products.some(p => p && p.id === PRODUCT_ID_REMOVE_ADS)) {
+                                _setAdFree(true, 'approved');
+                            }
+                            if (tx.products.some(p => p && p.id === PRODUCT_ID_FOUNDER_PASS)) {
+                                _setFounderPassOwned(true, 'approved');
+                            }
+                        }
+                    } catch (e) { _warn('entitlement flip in approved failed', e); }
+                    try { tx.finish(); }
+                    catch (e) { _warn('tx.finish() failed', e); }
                 })
                 .verified((receipt) => {
+                    // Reached only if a validator is registered in the future.
+                    // Kept for forward compatibility; safe no-op today.
                     _log('Receipt verified:', receipt);
                     _captureToken(receipt);
-                    receipt.finish();
+                    try { receipt.finish(); } catch (e) {}
                 })
                 .finished((tx) => {
                     _log('Transaction finished:', tx);
@@ -367,6 +418,7 @@ const PurchaseManager = (() => {
             // UI renderers can stop showing skeletons immediately. The
             // restore probe below is fire-and-forget and will trigger
             // additional onChange() calls if it flips the entitlement.
+            clearTimeout(_watchdog);
             _markReady('store-init');
 
             // First-launch auto-restore: covers reinstalls / device switches
@@ -388,6 +440,7 @@ const PurchaseManager = (() => {
 
         } catch (e) {
             _warn('Store init failed:', e);
+            clearTimeout(_watchdog);
             _markReady('init-error');
         }
     }
@@ -400,7 +453,6 @@ const PurchaseManager = (() => {
     function _waitForReady(timeoutMs = 14000) {
         if (_ready) return Promise.resolve();
         return new Promise(resolve => {
-            const unsub = _readyListeners.add;
             const timer = setTimeout(() => { done(); }, timeoutMs);
             function done() {
                 clearTimeout(timer);
@@ -472,7 +524,9 @@ const PurchaseManager = (() => {
             const p = (_store && _store.get && _store.get(PRODUCT_ID_REMOVE_ADS)) || _product;
             if (p && p.pricing && p.pricing.price) return p.pricing.price;
         } catch (e) {}
-        return null;
+        // Fallback so the Buy button never reads as blank/null while the Play
+        // catalogue is still loading. Matches the product's USD list price.
+        return '$1.99';
     }
 
     /**
@@ -555,3 +609,36 @@ const PurchaseManager = (() => {
 })();
 
 window.PurchaseManager = PurchaseManager;
+
+// -------------------------------------------------------------------------
+// Self-initialize. Previously initialize() was only invoked from deep inside
+// the game-init chain in js/main.js; if anything upstream threw on a user's
+// device, initialize() was never called and isReady() stayed false forever,
+// permanently freezing the Remove Ads card on "Checking purchases…". Kick
+// off init from the module itself so the IAP store path is independent of
+// game readiness. initialize() is idempotent (guarded by _initialized) so
+// the existing call from main.js remains a harmless no-op.
+// -------------------------------------------------------------------------
+(function _autoInitPurchaseManager() {
+    function go() {
+        try { PurchaseManager.initialize(); } catch (e) {
+            try { console.warn('[Purchase] auto-init failed:', e); } catch (_) {}
+        }
+    }
+    try {
+        // On Cordova/Capacitor the bridge fires `deviceready` once native is
+        // available. Hook both that and the DOM ready event so we always
+        // initialize regardless of which fires first / whether the bridge is
+        // present (web build just runs immediately).
+        if (typeof document !== 'undefined') {
+            document.addEventListener('deviceready', go, { once: true });
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(go, 0);
+            } else {
+                document.addEventListener('DOMContentLoaded', go, { once: true });
+            }
+        } else {
+            setTimeout(go, 0);
+        }
+    } catch (_) {}
+})();

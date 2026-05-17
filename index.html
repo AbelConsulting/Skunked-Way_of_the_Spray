@@ -4055,7 +4055,7 @@
             <script src="js/achievements.js?v=1.0.3"></script>
             <script src="js/tutorialHints.js?v=1.0.3"></script>
             <script src="js/game.js?v=1.1.3"></script>
-            <script src="js/purchaseManager.js?v=1.0.5"></script>
+            <script src="js/purchaseManager.js?v=1.2.58"></script>
             <script src="js/founderManager.js?v=1.0.3"></script>
             <script src="js/goldenSkin.js?v=1.0.3"></script>
             <script src="js/adManager.js?v=1.0.5"></script>
@@ -4733,6 +4733,29 @@
                             const statusEl    = document.getElementById('remove-ads-status');
                             const card        = document.getElementById('remove-ads-card');
 
+                            // UI-side fallback: even if PurchaseManager.isReady() never
+                            // flips (e.g., catastrophic plugin failure), force the Buy
+                            // button to become tappable after 18s so the user can at
+                            // least try; purchaseRemoveAds() surfaces a clear error
+                            // path. Without this, the card froze on "Checking
+                            // purchases…" forever and players uninstalled.
+                            let _uiForceReady = false;
+                            setTimeout(() => {
+                                if (_uiForceReady) return;
+                                _uiForceReady = true;
+                                try {
+                                    const PM = window.PurchaseManager;
+                                    const stillNotReady = !(PM && typeof PM.isReady === 'function' && PM.isReady());
+                                    if (stillNotReady && window.Analytics && typeof Analytics.trackEvent === 'function') {
+                                        Analytics.trackEvent('iap_ui_fallback_fired', {
+                                            placement: 'settings_card',
+                                            isNative: !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
+                                        });
+                                    }
+                                } catch (_) {}
+                                try { _renderAdFreeState(); } catch (_) {}
+                            }, 18000);
+
                             function _renderAdFreeState() {
                                 const PM = window.PurchaseManager;
                                 const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -4744,7 +4767,7 @@
                                 // Thank You!" for a returning customer whose localStorage
                                 // entitlement was wiped (reinstall / cache clear). Web build
                                 // never enters this state because there's no async store.
-                                const checking = isNative && PM && typeof PM.isReady === 'function' && !PM.isReady() && !owned;
+                                const checking = isNative && PM && typeof PM.isReady === 'function' && !PM.isReady() && !owned && !_uiForceReady;
                                 if (checking) {
                                     if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = 'Checking purchases\u2026'; buyBtn.style.opacity = '0.7'; }
                                     if (statusEl) statusEl.textContent = 'Checking your previous purchases\u2026';
