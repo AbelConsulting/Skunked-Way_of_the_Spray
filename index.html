@@ -3261,6 +3261,22 @@
       ]
     }
     </script>
+    <!-- Google Ads (gtag.js) — web only; defines gtag() globally for conversion events.
+         The external script is skipped inside the Capacitor WebView — purchases there
+         go through Google Play Billing and are tracked via Play Console / Firebase. -->
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'AW-18170482905');
+        if (!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform())) {
+            var _gtag = document.createElement('script');
+            _gtag.async = true;
+            _gtag.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18170482905';
+            document.head.appendChild(_gtag);
+        }
+    </script>
+    <!-- End Google Ads (gtag.js) -->
 </head>
 <body>
     <!-- Google Tag Manager (noscript) -->

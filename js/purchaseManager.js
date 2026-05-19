@@ -381,6 +381,15 @@ const PurchaseManager = (() => {
                         if (tx.products.some(p => p.id === PRODUCT_ID_FOUNDER_PASS)) {
                             _setFounderPassOwned(true, 'purchase');
                         }
+                        // Google Ads conversion — only fires on web (gtag script not loaded in Capacitor native).
+                        try {
+                            if (typeof gtag === 'function') {
+                                gtag('event', 'conversion', {
+                                    'send_to': 'AW-18170482905/sLK9CNfb864cENmhrthD',
+                                    'transaction_id': (tx.transactionId || tx.nativeTransactionId || tx.id || '')
+                                });
+                            }
+                        } catch (e) {}
                     }
                 })
                 .receiptUpdated((r) => {
