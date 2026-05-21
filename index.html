@@ -4830,6 +4830,13 @@
                                     if (!window.PurchaseManager) return;
                                     if (statusEl) statusEl.textContent = 'Opening Google Play\u2026';
                                     buyBtn.disabled = true;
+                                    // Safety net: if the purchase flow hangs without resolving
+                                    // (e.g. billing library deadlock or dialog never shown),
+                                    // re-enable the button after 90s so the user can retry.
+                                    const _safetyTimer = setTimeout(() => {
+                                        try { _renderAdFreeState(); } catch (_) {}
+                                        if (statusEl) statusEl.textContent = 'Purchase timed out. Please try again.';
+                                    }, 90000);
                                     try {
                                         if (window.Analytics && Analytics.trackPurchaseStart) {
                                             Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'settings_card' });
@@ -4857,6 +4864,7 @@
                                             }
                                         } catch (_) {}
                                     } finally {
+                                        clearTimeout(_safetyTimer);
                                         setTimeout(_renderAdFreeState, 500);
                                     }
                                 });
@@ -5452,6 +5460,11 @@
                                         }
                                         if (fpStatus) { fpStatus.style.color = ''; fpStatus.textContent = 'Opening Google Play\u2026'; }
                                         fpBuyBtn.disabled = true;
+                                        // Safety net: re-enable after 90s if the billing flow hangs.
+                                        const _fpSafetyTimer = setTimeout(() => {
+                                            fpBuyBtn.disabled = false;
+                                            if (fpStatus) { fpStatus.style.color = '#FFB060'; fpStatus.textContent = 'Purchase timed out. Please try again.'; }
+                                        }, 90000);
                                         try {
                                             if (window.Analytics && Analytics.trackPurchaseStart) {
                                                 Analytics.trackPurchaseStart({ product: 'founder_pass', placement: 'settings_card' });
@@ -5492,6 +5505,7 @@
                                                 }
                                             } catch (_) {}
                                         } finally {
+                                            clearTimeout(_fpSafetyTimer);
                                             setTimeout(() => {
                                                 fpBuyBtn.disabled = false;
                                                 _renderFounderState();

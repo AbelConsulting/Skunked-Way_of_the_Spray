@@ -351,7 +351,7 @@ exports.getEntitlements = onRequest({ region: "us-central1" }, async (req, res) 
 // is configured, the token is verified before the entitlement flip and the
 // resulting Firestore doc gets `verified: true` (plus the orderId). When
 // `STRICT_PURCHASE_VERIFY=1`, missing/invalid tokens are rejected outright.
-exports.setEntitlement = onRequest({ region: "us-central1" }, async (req, res) => {
+exports.setEntitlement = onRequest({ region: "us-central1", secrets: ["GOOGLE_PLAY_SA_JSON"] }, async (req, res) => {
   if (setCors(req, res)) return;
   if (req.method !== "POST") {
     res.status(405).json({ error: "method_not_allowed" });
