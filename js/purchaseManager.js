@@ -493,13 +493,23 @@ const PurchaseManager = (() => {
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 
         try {
+            // CdvPurchase v13: order() returns Promise<IError | undefined>.
+            // An IError means the order was rejected (e.g. item not available,
+            // already owned, billing unavailable) WITHOUT throwing. Previously
+            // the return value was ignored, causing a silent "Completing…" with
+            // no billing dialog — the root cause of "button does nothing" reports.
             const offer = product.getOffer && product.getOffer();
+            let orderErr;
             if (offer && typeof offer.order === 'function') {
-                await offer.order();
+                orderErr = await offer.order();
             } else if (typeof product.order === 'function') {
-                await product.order();
+                orderErr = await product.order();
             } else {
                 return { ok: false, reason: 'order-api-missing' };
+            }
+            if (orderErr) {
+                _warn('Purchase order rejected:', orderErr);
+                return { ok: false, reason: (orderErr.message || String(orderErr.code || 'order-error')) };
             }
             // The actual entitlement flip happens in the .finished()/receiptUpdated()
             // handler asynchronously. Caller can poll `isAdFree()` or subscribe via onChange().
@@ -574,13 +584,20 @@ const PurchaseManager = (() => {
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 
         try {
+            // CdvPurchase v13: order() returns Promise<IError | undefined>.
+            // Surface any returned IError so the UI can show a real message.
             const offer = product.getOffer && product.getOffer();
+            let orderErr;
             if (offer && typeof offer.order === 'function') {
-                await offer.order();
+                orderErr = await offer.order();
             } else if (typeof product.order === 'function') {
-                await product.order();
+                orderErr = await product.order();
             } else {
                 return { ok: false, reason: 'order-api-missing' };
+            }
+            if (orderErr) {
+                _warn('Founder Pass order rejected:', orderErr);
+                return { ok: false, reason: (orderErr.message || String(orderErr.code || 'order-error')) };
             }
             return { ok: true, reason: 'pending' };
         } catch (e) {

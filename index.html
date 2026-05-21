@@ -4800,13 +4800,24 @@
                                     if (statusEl) statusEl.textContent = 'In-app purchase available on the Android app. Get it on Google Play to go ad-free.';
                                     if (restoreBtn) { restoreBtn.disabled = true; restoreBtn.style.opacity = '0.5'; }
                                 } else {
-                                    // Native (Android): restore button HTML and update price span
-                                    // WITHOUT using textContent (which would destroy the inner span).
-                                    if (buyBtn) { buyBtn.disabled = false; buyBtn.style.opacity = '1'; }
-                                    if (priceEl) {
-                                        priceEl.style.display = '';
+                                    // Native (Android): restore button HTML and update price span.
+                                    // The "Checking…" state uses buyBtn.textContent which destroys
+                                    // the inner <span id="remove-ads-price">. Re-insert the full
+                                    // inner HTML so the button reads "🛒 Remove Ads — $1.99" and
+                                    // users know it is tappable. Use getElementById so the lookup
+                                    // always hits the live (possibly freshly re-inserted) span.
+                                    if (buyBtn) {
+                                        buyBtn.disabled = false;
+                                        buyBtn.style.opacity = '1';
+                                        if (!buyBtn.querySelector('#remove-ads-price')) {
+                                            buyBtn.innerHTML = '\uD83D\uDED2 Remove Ads \u2014 <span id="remove-ads-price">$1.99</span>';
+                                        }
+                                    }
+                                    const livePriceEl = document.getElementById('remove-ads-price');
+                                    if (livePriceEl) {
+                                        livePriceEl.style.display = '';
                                         const live = PM && PM.getPriceString && PM.getPriceString();
-                                        if (live) priceEl.textContent = live;
+                                        if (live) livePriceEl.textContent = live;
                                     }
                                     if (statusEl) statusEl.textContent = '';
                                 }
