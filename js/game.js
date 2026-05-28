@@ -1969,7 +1969,10 @@ class Game {
                                 const bx = this.enemyManager.bossInstance ? this.enemyManager.bossInstance.x + 64 : this.player.x + 200;
                                 const by = this.enemyManager.bossInstance ? this.enemyManager.bossInstance.y + 64 : this.player.y;
                                 const defeatColors = ['#FFD700', '#FF4444', '#FFFFFF', '#FF8800', '#00FF88'];
-                                for (let i = 0; i < 30; i++) {
+                                // Reduce explosion burst on mobile to avoid a sudden spike in draw calls
+                                const bossSparkCount = (this.isMobile && typeof Config !== 'undefined' && Config.MOBILE_MAX_PARTICLES === 0) ? 0
+                                    : (this.isMobile ? 8 : 30);
+                                for (let i = 0; i < bossSparkCount; i++) {
                                     const angle = (Math.PI * 2 * i) / 30;
                                     const speed = 150 + Math.random() * 300;
                                     const spark = new HitSpark(bx, by, {

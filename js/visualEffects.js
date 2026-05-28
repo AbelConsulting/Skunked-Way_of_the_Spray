@@ -63,8 +63,12 @@ class DamageNumber {
         ctx.fillStyle = fillColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 4;
-        ctx.shadowColor = fillColor;
-        ctx.shadowBlur = this.critical ? 18 : 10;
+        // shadowBlur is expensive on low-end GPUs — skip it when the flag is set
+        const disableShadow = (typeof Config !== 'undefined' && Config.MOBILE_DISABLE_SHADOW_BLUR);
+        if (!disableShadow) {
+            ctx.shadowColor = fillColor;
+            ctx.shadowBlur = this.critical ? 18 : 10;
+        }
 
         const text = this.damage.toString();
         const metrics = ctx.measureText(text);
@@ -187,10 +191,14 @@ class HitSpark {
         ctx.save();
         const alpha = 1.0 - (this.age / this.lifetime);
         ctx.globalAlpha = alpha;
+        // On low/mid perf devices, skip createRadialGradient (expensive per-particle)
+        // and use a flat fill colour instead — much cheaper on fill-rate limited GPUs.
+        const flatMode = (typeof Config !== 'undefined' && Config.MOBILE_FLAT_PARTICLES);
 
         for (const particle of this.particles) {
-            // Use custom color if provided, otherwise default gradient
-            if (particle.color) {
+            if (flatMode) {
+                ctx.fillStyle = particle.color || '#FFAA00';
+            } else if (particle.color) {
                 const gradient = ctx.createRadialGradient(
                     this.x + particle.x, this.y + particle.y, 0,
                     this.x + particle.x, this.y + particle.y, particle.size
@@ -276,7 +284,11 @@ class MovementFX {
         this.particles = [];
         this.stepTimer = 0;
         this.stepInterval = (typeof opts.stepInterval === 'number') ? opts.stepInterval : 0.12;
-        this.maxParticles = (typeof opts.maxParticles === 'number') ? opts.maxParticles : 180;
+        // On mobile the config caps movement particles to save CPU; fall back to 180 on desktop.
+        const configCap = (typeof Config !== 'undefined' && typeof Config.MOBILE_MAX_MOVEMENT_PARTICLES === 'number' && Config.MOBILE_MAX_MOVEMENT_PARTICLES >= 0)
+            ? Config.MOBILE_MAX_MOVEMENT_PARTICLES
+            : 180;
+        this.maxParticles = (typeof opts.maxParticles === 'number') ? opts.maxParticles : configCap;
     }
 
     _themeForLevel(level) {

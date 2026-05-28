@@ -1055,18 +1055,27 @@ class GameApp {
                         Config.MOBILE_DPR_SCALE_REDUCTION = 0.5;
                         Config.MOBILE_MAX_PARTICLES = 0;
                         Config.MOBILE_MAX_DAMAGE_NUMBERS = 0;
+                        Config.MOBILE_FLAT_PARTICLES = true;
+                        Config.MOBILE_DISABLE_SHADOW_BLUR = true;
+                        Config.MOBILE_MAX_MOVEMENT_PARTICLES = 0;
                         Config.BACKGROUND_PARALLAX_MOBILE = 0.08;
                     } else if (mode === 'mid') {
                         Config.MOBILE_FPS = 30;
                         Config.MOBILE_DPR_SCALE_REDUCTION = 0.6;
-                        Config.MOBILE_MAX_PARTICLES = 1;
+                        Config.MOBILE_MAX_PARTICLES = 3;
+                        Config.MOBILE_FLAT_PARTICLES = true;
+                        Config.MOBILE_DISABLE_SHADOW_BLUR = true;
+                        Config.MOBILE_MAX_MOVEMENT_PARTICLES = 20;
                         Config.MOBILE_MAX_DAMAGE_NUMBERS = 1;
                         Config.BACKGROUND_PARALLAX_MOBILE = 0.2;
                     } else {
                         // high / default
                         Config.MOBILE_FPS = 40;
                         Config.MOBILE_DPR_SCALE_REDUCTION = 0.7;
-                        Config.MOBILE_MAX_PARTICLES = 2;
+                        Config.MOBILE_MAX_PARTICLES = 6;
+                        Config.MOBILE_FLAT_PARTICLES = false;
+                        Config.MOBILE_DISABLE_SHADOW_BLUR = false;
+                        Config.MOBILE_MAX_MOVEMENT_PARTICLES = 60;
                         Config.MOBILE_MAX_DAMAGE_NUMBERS = 2;
                         Config.BACKGROUND_PARALLAX_MOBILE = 0.3;
                     }
