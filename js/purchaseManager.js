@@ -326,11 +326,21 @@ const PurchaseManager = (() => {
                 .productUpdated((p) => {
                     if (!p) return;
                     if (p.id === PRODUCT_ID_REMOVE_ADS) {
+                        const wasLoaded = !!(_product && _product.pricing);
                         _product = p;
                         _log('Product loaded:', p.id, p.pricing && p.pricing.price);
+                        // Re-notify UI subscribers so a disabled "Loading…" button re-enables
+                        // now that the product details have arrived from Google Play.
+                        if (!wasLoaded && p.pricing) {
+                            _listeners.forEach(fn => { try { fn(_adFree); } catch(e) {} });
+                        }
                     } else if (p.id === PRODUCT_ID_FOUNDER_PASS) {
+                        const wasLoaded = !!(_founderProduct && _founderProduct.pricing);
                         _founderProduct = p;
                         _log('Product loaded:', p.id, p.pricing && p.pricing.price);
+                        if (!wasLoaded && p.pricing) {
+                            _founderListeners.forEach(fn => { try { fn(_founderPass); } catch(e) {} });
+                        }
                     }
                 })
                 .approved((tx) => {
@@ -548,6 +558,24 @@ const PurchaseManager = (() => {
         return '$1.99';
     }
 
+    /** True once the Play Billing client has returned pricing data for remove_ads. */
+    function isRemoveAdsProductLoaded() {
+        if (!_ready || !_store) return false;
+        try {
+            const p = _store.get(PRODUCT_ID_REMOVE_ADS) || _product;
+            return !!(p && p.pricing && p.pricing.price);
+        } catch (e) { return false; }
+    }
+
+    /** True once the Play Billing client has returned pricing data for founder_pass. */
+    function isFounderPassProductLoaded() {
+        if (!_ready || !_store) return false;
+        try {
+            const p = _store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
+            return !!(p && p.pricing && p.pricing.price);
+        } catch (e) { return false; }
+    }
+
     /**
      * Localized price string for the Founder Pass, or null if not yet loaded.
      */
@@ -620,6 +648,8 @@ const PurchaseManager = (() => {
         purchaseRemoveAds,
         restorePurchases,
         getPriceString,
+        isRemoveAdsProductLoaded,
+        isFounderPassProductLoaded,
         // Founder Pass (standalone Gold skin + Founder badge, no ad removal).
         isFounderPassOwned,
         onFounderPassChange,

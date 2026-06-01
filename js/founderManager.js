@@ -292,7 +292,9 @@ const FounderManager = (() => {
     function isSkinUnlocked(variantId) {
         if (!VALID_SKIN_VARIANTS.includes(variantId)) return false;
         if (variantId === 'gold') return _isFounder;
-        if (_isFounder) return true;
+        // Sapphire, amethyst, and steel always require the remove_ads purchase,
+        // even for Founders. Gold is the Founder-only early-access exclusive;
+        // the colour variants are the remove_ads reward — separate value props.
         return _hasRemoveAds();
     }
 

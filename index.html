@@ -4800,7 +4800,18 @@
                                     if (statusEl) statusEl.textContent = 'In-app purchase available on the Android app. Get it on Google Play to go ad-free.';
                                     if (restoreBtn) { restoreBtn.disabled = true; restoreBtn.style.opacity = '0.5'; }
                                 } else {
-                                    // Native (Android): restore button HTML and update price span.
+                                    // Native (Android): if Play Billing hasn't returned product
+                                    // details yet, disable the button to prevent the
+                                    // product-not-loaded error on click. The onChange listener
+                                    // wired to productUpdated will re-fire _renderAdFreeState
+                                    // once the details arrive.
+                                    const productReady = !!(PM && PM.isRemoveAdsProductLoaded && PM.isRemoveAdsProductLoaded());
+                                    if (!productReady) {
+                                        if (buyBtn) { buyBtn.disabled = true; buyBtn.textContent = '\u23F3 Loading product\u2026'; buyBtn.style.opacity = '0.6'; }
+                                        if (statusEl) statusEl.textContent = 'Fetching product details from Google Play\u2026';
+                                        return;
+                                    }
+                                    // Restore button HTML and update price span.
                                     // The "Checking…" state uses buyBtn.textContent which destroys
                                     // the inner <span id="remove-ads-price">. Re-insert the full
                                     // inner HTML so the button reads "🛒 Remove Ads — $1.99" and
@@ -5383,6 +5394,12 @@
                                             fpBtn.disabled = true;
                                             fpBtn.textContent = '✓ Founder Pass purchased';
                                             fpBtn.style.opacity = '0.7';
+                                        } else if (!(PM && PM.isFounderPassProductLoaded && PM.isFounderPassProductLoaded())) {
+                                            // Product details not yet back from Google Play —
+                                            // disable button to prevent the product-not-loaded error.
+                                            fpBtn.disabled = true;
+                                            fpBtn.style.opacity = '0.6';
+                                            fpBtn.textContent = '\u23F3 Loading product\u2026';
                                         }
                                     }
                                     if (fpStatus && isF) fpStatus.textContent = '';
