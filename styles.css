@@ -437,6 +437,7 @@
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+    image-rendering: -webkit-optimize-contrast; /* Edge */
     image-rendering: crisp-edges;
     pointer-events: none;
     opacity: 0;
@@ -1042,4 +1043,15 @@
     font: 600 14px 'Space Grotesk', 'Segoe UI', sans-serif;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+}
+
+/* Visually hidden SEO text — readable by screen readers and crawlers,
+   invisible in the rendered layout. */
+.seo-desc {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
 }
