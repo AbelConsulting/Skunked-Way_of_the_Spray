@@ -558,30 +558,23 @@ const PurchaseManager = (() => {
         return '$1.99';
     }
 
-    /** True once the Play Billing client has returned pricing data for remove_ads.
-     *  Returns true when native but store is unavailable (plugin missing / init failed)
-     *  so the UI doesn't get stuck on "Loading product…" — the user gets a real
-     *  "store-unavailable" error message when they tap Buy instead. */
+    /** True once the store init phase is done (or timed out), signalling that
+     *  the buy button should be enabled. Previously this required Google Play to
+     *  have returned pricing data, but that fetch can stall indefinitely (new SKU
+     *  propagation delay, Play Services hiccup) leaving the UI stuck on
+     *  "Loading product…" forever. Instead we unblock the button as soon as
+     *  _ready is true and let purchaseRemoveAds() surface any real error
+     *  ("product-not-loaded", "store-unavailable", etc.) on the actual tap.
+     *  getPriceString() already returns the $1.99 fallback so the label is never
+     *  blank. */
     function isRemoveAdsProductLoaded() {
-        if (!_ready) return false;
-        // Store unavailable on native (plugin missing / CdvPurchase not installed):
-        // treat as "loaded" so the button is enabled and shows a proper error on tap.
-        if (!_store) return true;
-        try {
-            const p = _store.get(PRODUCT_ID_REMOVE_ADS) || _product;
-            return !!(p && p.pricing && p.pricing.price);
-        } catch (e) { return false; }
+        return _ready;
     }
 
-    /** True once the Play Billing client has returned pricing data for founder_pass.
-     *  Returns true when native but store is unavailable — same rationale as above. */
+    /** Same rationale as isRemoveAdsProductLoaded — unblock the Founder Pass
+     *  button as soon as the store init phase completes. */
     function isFounderPassProductLoaded() {
-        if (!_ready) return false;
-        if (!_store) return true;
-        try {
-            const p = _store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
-            return !!(p && p.pricing && p.pricing.price);
-        } catch (e) { return false; }
+        return _ready;
     }
 
     /**
