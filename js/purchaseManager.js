@@ -483,6 +483,41 @@ const PurchaseManager = (() => {
     }
 
     /**
+     * Force the store to re-query the Play Billing catalogue and wait briefly
+     * for productUpdated() to populate `sku`. Used as a self-heal step when the
+     * user taps Buy but the initial catalogue fetch never returned pricing
+     * (common on fresh installs, account swaps, or while the Play app is busy).
+     * Returns the product (with pricing) or null if it never arrived.
+     */
+    async function _refreshProduct(sku, timeoutMs = 6000) {
+        const store = _store;
+        if (!store) return null;
+        // Trigger a re-fetch. cordova-plugin-purchase exposes either store.update()
+        // or store.refresh(); call whichever exists. Both are safe no-ops if Play
+        // Billing is already syncing.
+        try {
+            if (typeof store.update === 'function') {
+                // returns a promise in newer plugin versions; ignore failures
+                Promise.resolve(store.update()).catch(() => {});
+            } else if (typeof store.refresh === 'function') {
+                Promise.resolve(store.refresh()).catch(() => {});
+            }
+        } catch (_) {}
+        const deadline = Date.now() + timeoutMs;
+        while (Date.now() < deadline) {
+            const p = (store.get && store.get(sku)) ||
+                      (sku === PRODUCT_ID_REMOVE_ADS ? _product : _founderProduct);
+            if (p && p.pricing && p.pricing.price) return p;
+            await new Promise(r => setTimeout(r, 250));
+        }
+        // Last-ditch: return whatever we have, even without pricing — the order
+        // call may still succeed (Play Billing can show its own pricing UI).
+        return (store.get && store.get(sku)) ||
+               (sku === PRODUCT_ID_REMOVE_ADS ? _product : _founderProduct) ||
+               null;
+    }
+
+    /**
      * Initiate purchase of the Remove Ads product.
      * @returns {Promise<{ok:boolean, reason?:string}>}
      */
@@ -499,7 +534,14 @@ const PurchaseManager = (() => {
         // Wait for store.initialize() to finish so the product catalogue is loaded.
         await _waitForReady();
 
-        const product = store.get(PRODUCT_ID_REMOVE_ADS) || _product;
+        // Self-heal: if Play Billing never delivered pricing for this SKU
+        // (the root cause of the "indefinitely loading" reports), force a
+        // fresh catalogue fetch and wait up to ~6s for productUpdated().
+        let product = store.get(PRODUCT_ID_REMOVE_ADS) || _product;
+        if (!product || !product.pricing) {
+            _log('remove_ads not in catalogue — forcing refresh before order.');
+            product = await _refreshProduct(PRODUCT_ID_REMOVE_ADS);
+        }
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 
         try {
@@ -609,7 +651,13 @@ const PurchaseManager = (() => {
         // Wait for store.initialize() so the product catalogue is loaded.
         await _waitForReady();
 
-        const product = store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
+        // Self-heal: same retry path as Remove Ads — force a fresh catalogue
+        // fetch if the SKU never propagated to this device.
+        let product = store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
+        if (!product || !product.pricing) {
+            _log('founder_pass not in catalogue — forcing refresh before order.');
+            product = await _refreshProduct(PRODUCT_ID_FOUNDER_PASS);
+        }
         if (!product) return { ok: false, reason: 'product-not-loaded' };
 
         try {
