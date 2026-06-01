@@ -5108,11 +5108,23 @@
                                             Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'soft_prompt' });
                                         }
                                     } catch (_) {}
+                                    // Guard: if Play Billing hasn't loaded the product yet,
+                                    // redirect to Settings instead of silently failing.
+                                    const _PM = window.PurchaseManager;
+                                    if (!_PM || (typeof _PM.isRemoveAdsProductLoaded === 'function' && !_PM.isRemoveAdsProductLoaded())) {
+                                        _hidePrompt();
+                                        // Open the Settings panel so the user sees the loading state.
+                                        try {
+                                            const settingsBtn = document.getElementById('btn-settings');
+                                            if (settingsBtn) settingsBtn.click();
+                                        } catch (_) {}
+                                        return;
+                                    }
                                     promptBuy.disabled = true;
                                     let _spRes = null;
                                     try {
-                                        if (window.PurchaseManager && typeof PurchaseManager.purchaseRemoveAds === 'function') {
-                                            _spRes = await PurchaseManager.purchaseRemoveAds();
+                                        if (typeof _PM.purchaseRemoveAds === 'function') {
+                                            _spRes = await _PM.purchaseRemoveAds();
                                         }
                                     } catch (_) {}
                                     try {
