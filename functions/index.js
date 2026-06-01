@@ -97,6 +97,45 @@ const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || "10", 10);
 const ipCounter = new Map();
 
+// ── IP extraction ────────────────────────────────────────────────────────────
+// Cloud Functions v2 sets req.ip from the platform — it cannot be spoofed
+// by the client. Fall back to the LAST hop of X-Forwarded-For (rightmost =
+// last trusted proxy) only when req.ip is absent, never the leftmost hop
+// which is client-supplied and trivially spoofable.
+function getClientIp(req) {
+  return req.ip ||
+    (req.headers["x-forwarded-for"] || "").split(",").pop()?.trim() ||
+    "unknown";
+}
+
+// ── App Check verification ────────────────────────────────────────────────
+// ENFORCE_APP_CHECK=1 → reject requests without a valid App Check token.
+// When unset (default), tokens are verified and logged but never rejected
+// so the app keeps working before App Check is rolled out to all clients.
+const APP_CHECK_ENFORCE = process.env.ENFORCE_APP_CHECK === "1";
+
+async function checkAppCheck(req, res) {
+  const token = req.headers["x-firebase-appcheck"];
+  if (!token) {
+    if (APP_CHECK_ENFORCE) {
+      res.status(401).json({ error: "app_check_required" });
+      return false;
+    }
+    return true;
+  }
+  try {
+    await admin.appCheck().verifyToken(token);
+    return true;
+  } catch (e) {
+    console.warn("[appCheck] invalid token:", e && e.message);
+    if (APP_CHECK_ENFORCE) {
+      res.status(401).json({ error: "app_check_invalid" });
+      return false;
+    }
+    return true;
+  }
+}
+
 function checkRateLimit(ip) {
   const now = Date.now();
   const entry = ipCounter.get(ip) || { count: 0, firstTs: now };
@@ -205,17 +244,18 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
     return;
   }
 
+  // App Check — rejects non-app callers when ENFORCE_APP_CHECK=1
+  if (!(await checkAppCheck(req, res))) return;
+
   // Rate limit by IP
-  const ip =
-    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-    req.ip ||
-    "unknown";
+  const ip = getClientIp(req);
 
   if (!checkRateLimit(ip)) {
     res.status(429).json({ error: "rate_limited" });
     return;
   }
 
+  const MAX_SCORE = 9_999_999;
   const body = req.body || {};
   const score =
     typeof body.score === "number" ? Math.floor(body.score) : null;
@@ -244,7 +284,7 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
       ? Math.min(Math.floor(body.level), 9999)
       : 0;
 
-  if (score === null || score < 0) {
+  if (score === null || score < 0 || score > MAX_SCORE) {
     res.status(400).json({ error: "bad_score" });
     return;
   }
@@ -357,8 +397,10 @@ exports.setEntitlement = onRequest({ region: "us-central1", secrets: ["GOOGLE_PL
     res.status(405).json({ error: "method_not_allowed" });
     return;
   }
+  // App Check — rejects non-app callers when ENFORCE_APP_CHECK=1
+  if (!(await checkAppCheck(req, res))) return;
   // IP rate-limit (re-uses score limiter)
-  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
+  const ip = getClientIp(req);
   if (!checkRateLimit(ip)) {
     res.status(429).json({ error: "rate_limited" });
     return;
