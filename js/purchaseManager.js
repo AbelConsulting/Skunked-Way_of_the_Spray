@@ -558,18 +558,26 @@ const PurchaseManager = (() => {
         return '$1.99';
     }
 
-    /** True once the Play Billing client has returned pricing data for remove_ads. */
+    /** True once the Play Billing client has returned pricing data for remove_ads.
+     *  Returns true when native but store is unavailable (plugin missing / init failed)
+     *  so the UI doesn't get stuck on "Loading product…" — the user gets a real
+     *  "store-unavailable" error message when they tap Buy instead. */
     function isRemoveAdsProductLoaded() {
-        if (!_ready || !_store) return false;
+        if (!_ready) return false;
+        // Store unavailable on native (plugin missing / CdvPurchase not installed):
+        // treat as "loaded" so the button is enabled and shows a proper error on tap.
+        if (!_store) return true;
         try {
             const p = _store.get(PRODUCT_ID_REMOVE_ADS) || _product;
             return !!(p && p.pricing && p.pricing.price);
         } catch (e) { return false; }
     }
 
-    /** True once the Play Billing client has returned pricing data for founder_pass. */
+    /** True once the Play Billing client has returned pricing data for founder_pass.
+     *  Returns true when native but store is unavailable — same rationale as above. */
     function isFounderPassProductLoaded() {
-        if (!_ready || !_store) return false;
+        if (!_ready) return false;
+        if (!_store) return true;
         try {
             const p = _store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
             return !!(p && p.pricing && p.pricing.price);

@@ -5412,6 +5412,18 @@
                                             fpBtn.disabled = true;
                                             fpBtn.style.opacity = '0.6';
                                             fpBtn.textContent = '\u23F3 Loading product\u2026';
+                                        } else {
+                                            // Product loaded — ensure button is enabled and text restored.
+                                            fpBtn.disabled = false;
+                                            fpBtn.style.opacity = '';
+                                            if (!fpBtn.querySelector('#founder-pass-price')) {
+                                                fpBtn.innerHTML = '\u2B50 Support &amp; Claim Founder Pass &mdash; <span id="founder-pass-price">$0.99</span>';
+                                            }
+                                            const liveFpPrice = document.getElementById('founder-pass-price');
+                                            if (liveFpPrice && PM && PM.getFounderPassPriceString) {
+                                                const liveP = PM.getFounderPassPriceString();
+                                                if (liveP) liveFpPrice.textContent = liveP;
+                                            }
                                         }
                                     }
                                     if (fpStatus && isF) fpStatus.textContent = '';
