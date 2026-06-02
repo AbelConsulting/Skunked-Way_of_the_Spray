@@ -10,7 +10,8 @@ const config: CapacitorConfig = {
     // Disallow mixed content in production (HTTPS only)
     allowMixedContent: false,
     // Use hardware acceleration for our canvas game
-    webContentsDebuggingEnabled: false,
+    // TEMP: enabled for IAP diagnostics — set back to false before release
+    webContentsDebuggingEnabled: true,
   },
 
   server: {

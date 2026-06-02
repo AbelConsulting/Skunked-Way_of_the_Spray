@@ -307,7 +307,12 @@ const PurchaseManager = (() => {
             const CdvPurchase = window.CdvPurchase;
             const { ProductType, Platform, LogLevel } = CdvPurchase;
 
-            store.verbosity = LogLevel.WARNING;
+            // TEMP: DEBUG verbosity for IAP diagnostics — set back to
+            // LogLevel.WARNING before release. This pipes every BillingClient
+            // event (startConnection, queryProductDetails, launchBillingFlow
+            // responses, etc.) to logcat via CdvPurchase's internal logger,
+            // visible in Chrome Remote DevTools console and `adb logcat`.
+            store.verbosity = LogLevel.DEBUG;
 
             store.register([
                 {
@@ -695,6 +700,54 @@ const PurchaseManager = (() => {
         }
     }
 
+    /**
+     * Diagnostic dump — call from Chrome Remote DevTools console:
+     *   PurchaseManager.diagnose()
+     *
+     * Reports:
+     *  - Whether CdvPurchase plugin loaded
+     *  - Whether store.initialize() completed
+     *  - Raw product objects from the store (includes pricing, state, offers)
+     *  - Local entitlement flags
+     *  - Last known purchase tokens
+     *  - BillingClient connection state (if exposed by plugin)
+     */
+    function diagnose() {
+        const CdvPurchase = window.CdvPurchase;
+        const store = _store;
+        const out = {
+            isNative: isNative(),
+            pluginLoaded: !!(CdvPurchase && CdvPurchase.store),
+            storeRef: !!store,
+            initialized: _initialized,
+            ready: _ready,
+            storePollDone: _storePollDone,
+            adFree_localStorage: _readEntitlementFromStorage(),
+            adFree_runtime: _adFree,
+            founderPass_localStorage: _readFounderPassFromStorage(),
+            founderPass_runtime: _founderPass,
+            lastPurchaseTokens: Object.assign({}, _lastPurchaseToken),
+        };
+        // Dump raw product objects so we can see if pricing arrived
+        if (store) {
+            try {
+                out.products = {
+                    remove_ads:   store.get ? store.get(PRODUCT_ID_REMOVE_ADS)  : _product,
+                    founder_pass: store.get ? store.get(PRODUCT_ID_FOUNDER_PASS) : _founderProduct,
+                };
+            } catch (e) { out.products_error = String(e); }
+            // receipts — shows what Google Play has reported as owned
+            try { out.receipts = store.receipts; } catch (e) {}
+            // transactions
+            try { out.transactions = store.transactions; } catch (e) {}
+        }
+        if (CdvPurchase) {
+            try { out.CdvPurchase_version = CdvPurchase.version || 'unknown'; } catch (e) {}
+        }
+        console.log('[Purchase:diagnose]', JSON.stringify(out, null, 2));
+        return out;
+    }
+
     return {
         initialize,
         isAdFree,
@@ -722,6 +775,8 @@ const PurchaseManager = (() => {
         syncRemoteEntitlements: (force = false) => _pullEntitlementsRemote(!!force),
         PRODUCT_ID_REMOVE_ADS,
         PRODUCT_ID_FOUNDER_PASS,
+        /** Diagnostic dump. Call from Chrome Remote DevTools: PurchaseManager.diagnose() */
+        diagnose,
     };
 })();
 
