@@ -43,6 +43,8 @@ const PurchaseManager = (() => {
     let _storePollDone = false;    // True after first poll attempt (avoids 8s re-poll on every click)
     let _initialized   = false;
     let _ready         = false;    // True after initialize() resolves (success OR no-store)
+    let _readyMode     = 'not-ready'; // How _markReady was reached: 'store-init'|'init-error'|'watchdog'|'no-store'
+    let _storeInitError = null;    // Error message if store.initialize() threw/timed-out
     let _adFree        = _readEntitlementFromStorage();
     let _founderPass   = _readFounderPassFromStorage();
     let _product       = null;     // CdvPurchase.Product (remove_ads)
@@ -72,6 +74,7 @@ const PurchaseManager = (() => {
     function _markReady(reason) {
         if (_ready) return;
         _ready = true;
+        _readyMode = reason;
         _log('Ready (' + reason + '). Ad-free=' + _adFree);
         _readyListeners.forEach(fn => { try { fn(_adFree); } catch(e) {} });
         _readyListeners.clear();
@@ -466,6 +469,7 @@ const PurchaseManager = (() => {
             } catch (e) {}
 
         } catch (e) {
+            _storeInitError = String(e && (e.message || e));
             _warn('Store init failed:', e);
             clearTimeout(_watchdog);
             _markReady('init-error');
@@ -722,6 +726,8 @@ const PurchaseManager = (() => {
             storeRef: !!store,
             initialized: _initialized,
             ready: _ready,
+            readyMode: _readyMode,
+            storeInitError: _storeInitError || 'none',
             storePollDone: _storePollDone,
             adFree_localStorage: _readEntitlementFromStorage(),
             adFree_runtime: _adFree,

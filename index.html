@@ -5635,6 +5635,8 @@
                                 lines.push('  storeRef       : ' + d.storeRef);
                                 lines.push('  initialized    : ' + d.initialized);
                                 lines.push('  ready          : ' + d.ready);
+                                lines.push('  readyMode      : ' + (d.readyMode || 'n/a'));
+                                lines.push('  storeInitError : ' + (d.storeInitError || 'none'));
                                 lines.push('  storePollDone  : ' + d.storePollDone);
                                 lines.push('  CdvPurchase v  : ' + (d.CdvPurchase_version || 'n/a'));
                                 lines.push('');
