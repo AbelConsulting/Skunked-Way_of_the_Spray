@@ -147,6 +147,20 @@
             height: 100%;
         }
 
+        #ad-rail {
+            order: 2;
+            width: 0;
+            flex-shrink: 0;
+            background: #000;
+            display: none; /* shown via JS on web only */
+        }
+
+        #ad-rail ins.adsbygoogle {
+            display: block;
+            width: 160px;
+            height: 100%;
+        }
+
         #content-wrapper {
             order: 1;
         }
@@ -3284,6 +3298,14 @@
     height="0" width="0" class="gtm-noscript-iframe"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <div id="main-wrapper">
+        <!-- Right-side AdSense display rail (web only) -->
+        <div id="ad-rail">
+            <ins class="adsbygoogle"
+                 style="display:block;width:160px;height:100%"
+                 data-ad-client="ca-pub-8519140628365141"
+                 data-ad-format="auto"
+                 data-full-width-responsive="false"></ins>
+        </div>
         <div id="content-wrapper">
             <div id="rotate-message">
                 <div class="rotate-phone-icon">
@@ -7896,5 +7918,17 @@
 })();
 </script>
 <p class="seo-desc">Skunked: Way of the Spray is a free skunk spray game where you play as a ninja skunk, chain combos, and unleash devastating spray attacks across neon-soaked stages. Play the skunk spray game free in your browser or download on Android.</p>
+<!-- Activate AdSense right-rail on web only -->
+<script>
+(function () {
+    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) { return; }
+    var rail = document.getElementById('ad-rail');
+    if (!rail) { return; }
+    rail.style.display = 'block';
+    rail.style.width = '160px';
+    document.documentElement.style.setProperty('--ad-width', '160px');
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+})();
+</script>
 </body>
 </html>
