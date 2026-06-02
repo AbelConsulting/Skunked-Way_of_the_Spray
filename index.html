@@ -59,16 +59,12 @@
         })();
     </script>
     <!-- End Google Funding Choices CMP -->
-    <!-- Google AdSense (web only — skipped inside the Capacitor WebView) -->
-    <script>
-        if (!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform())) {
-            var _as = document.createElement('script');
-            _as.async = true;
-            _as.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8519140628365141';
-            _as.crossOrigin = 'anonymous';
-            document.head.appendChild(_as);
-        }
-    </script>
+    <!-- Google AdSense — static tag required for site verification by Google's crawler.
+         The ad-rail push is guarded by JS below so Auto Ads cannot inject into the
+         Capacitor WebView, but the script tag itself must be static for AdSense to
+         recognise the publisher ID during site review. -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8519140628365141"
+         crossorigin="anonymous"></script>
     <!-- End Google AdSense -->
     <link rel="manifest" href="manifest.json">
     <!-- webhint-disable compat-api/html � theme-color is supported in Chromium/Safari/Edge, which is exactly the audience that uses it. -->
