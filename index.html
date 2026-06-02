@@ -4853,18 +4853,20 @@
                                             Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'settings_card' });
                                         }
                                     } catch (_) {}
+                                    let _buyRes = null;
                                     try {
-                                        const res = await PurchaseManager.purchaseRemoveAds();
+                                        _buyRes = await PurchaseManager.purchaseRemoveAds();
                                         if (statusEl) {
-                                            if (res.ok) statusEl.textContent = res.reason === 'pending' ? 'Completing purchase\u2026' : 'Already owned. Thank you!';
-                                            else if (res.reason === 'web-not-supported') statusEl.textContent = 'Available only on the Android app.';
-                                            else if (res.reason === 'store-unavailable') statusEl.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
-                                            else if (res.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
-                                            else statusEl.textContent = 'Purchase did not complete: ' + res.reason;
+                                            if (_buyRes.ok) statusEl.textContent = _buyRes.reason === 'pending' ? 'Purchase submitted \u2014 complete it in the Google Play dialog\u2026' : 'Already owned. Thank you!';
+                                            else if (_buyRes.reason === 'web-not-supported') statusEl.textContent = 'Available only on the Android app.';
+                                            else if (_buyRes.reason === 'store-unavailable') statusEl.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
+                                            else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
+                                            else if (_buyRes.reason === 'user-cancelled' || _buyRes.reason === '1') statusEl.textContent = 'Purchase cancelled.';
+                                            else statusEl.textContent = 'Purchase did not complete: ' + _buyRes.reason;
                                         }
                                         try {
-                                            if (res && !res.ok && window.Analytics && Analytics.trackPurchaseFailed) {
-                                                Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: res.reason || 'unknown' });
+                                            if (_buyRes && !_buyRes.ok && window.Analytics && Analytics.trackPurchaseFailed) {
+                                                Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: _buyRes.reason || 'unknown' });
                                             }
                                         } catch (_) {}
                                     } catch (e) {
@@ -4876,7 +4878,19 @@
                                         } catch (_) {}
                                     } finally {
                                         clearTimeout(_safetyTimer);
-                                        setTimeout(_renderAdFreeState, 500);
+                                        // If Google Play dialog is still open (pending), do NOT reset
+                                        // the UI — the onChange() listener will fire when the purchase
+                                        // actually completes. Resetting here was the bug: the Buy
+                                        // button reappeared 500ms after the dialog opened, making
+                                        // the purchase look broken while it was still in progress.
+                                        // For definitive failures, delay the reset so the user can
+                                        // read the error message before the card reverts.
+                                        if (_buyRes && _buyRes.ok && _buyRes.reason === 'pending') {
+                                            buyBtn.disabled = true; // keep disabled until onChange fires
+                                        } else {
+                                            const _errorDelay = (_buyRes && !_buyRes.ok) ? 7000 : 500;
+                                            setTimeout(_renderAdFreeState, _errorDelay);
+                                        }
                                     }
                                 });
                             }
@@ -5511,8 +5525,10 @@
                                                 Analytics.trackPurchaseStart({ product: 'founder_pass', placement: 'settings_card' });
                                             }
                                         } catch (_) {}
+                                        let _fpRes = null;
                                         try {
                                             const res = await PurchaseManager.purchaseFounderPass();
+                                            _fpRes = res;
                                             try {
                                                 if (res && !res.ok && window.Analytics && Analytics.trackPurchaseFailed) {
                                                     Analytics.trackPurchaseFailed({ product: 'founder_pass', reason: res.reason || 'unknown' });
@@ -5523,7 +5539,7 @@
                                                     fpStatus.style.color = '#7CFFB2';
                                                     fpStatus.textContent = res.reason === 'already-owned'
                                                         ? 'Founder Pass already owned. Thank you!'
-                                                        : 'Completing purchase\u2026';
+                                                        : 'Purchase submitted \u2014 complete it in the Google Play dialog\u2026';
                                                 } else if (res.reason === 'web-not-supported') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Available only on the Android app.';
@@ -5533,6 +5549,9 @@
                                                 } else if (res.reason === 'product-not-loaded') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
+                                                } else if (res.reason === 'user-cancelled' || res.reason === '1') {
+                                                    fpStatus.style.color = '#FFB060';
+                                                    fpStatus.textContent = 'Purchase cancelled.';
                                                 } else {
                                                     fpStatus.style.color = '#FF8080';
                                                     fpStatus.textContent = 'Purchase did not complete: ' + res.reason;
@@ -5547,10 +5566,17 @@
                                             } catch (_) {}
                                         } finally {
                                             clearTimeout(_fpSafetyTimer);
-                                            setTimeout(() => {
-                                                fpBuyBtn.disabled = false;
-                                                _renderFounderState();
-                                            }, 500);
+                                            // Same fix as Remove Ads: don't reset UI while the
+                                            // Google Play dialog is still open (pending state).
+                                            if (_fpRes && _fpRes.ok && _fpRes.reason === 'pending') {
+                                                fpBuyBtn.disabled = true; // onChange will re-enable
+                                            } else {
+                                                const _fpErrorDelay = (_fpRes && !_fpRes.ok) ? 7000 : 500;
+                                                setTimeout(() => {
+                                                    fpBuyBtn.disabled = false;
+                                                    _renderFounderState();
+                                                }, _fpErrorDelay);
+                                            }
                                         }
                                     });
                                 }

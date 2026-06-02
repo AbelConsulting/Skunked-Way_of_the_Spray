@@ -561,7 +561,15 @@ const PurchaseManager = (() => {
             }
             if (orderErr) {
                 _warn('Purchase order rejected:', orderErr);
-                return { ok: false, reason: (orderErr.message || String(orderErr.code || 'order-error')) };
+                // CdvPurchase IError: code 1 = USER_CANCELED. Surface a clean
+                // reason string that includes the numeric code so the UI can
+                // show a targeted message and analytics can bucket errors.
+                const errCode = orderErr.code != null ? String(orderErr.code) : '';
+                const errMsg  = orderErr.message || '';
+                // Code 1 is USER_CANCELED — treat as benign (don't log as failure).
+                const reason  = (errCode === '1') ? 'user-cancelled'
+                              : (errMsg || ('error-' + (errCode || 'unknown')));
+                return { ok: false, reason };
             }
             // The actual entitlement flip happens in the .finished()/receiptUpdated()
             // handler asynchronously. Caller can poll `isAdFree()` or subscribe via onChange().
@@ -674,7 +682,11 @@ const PurchaseManager = (() => {
             }
             if (orderErr) {
                 _warn('Founder Pass order rejected:', orderErr);
-                return { ok: false, reason: (orderErr.message || String(orderErr.code || 'order-error')) };
+                const errCode = orderErr.code != null ? String(orderErr.code) : '';
+                const errMsg  = orderErr.message || '';
+                const reason  = (errCode === '1') ? 'user-cancelled'
+                              : (errMsg || ('error-' + (errCode || 'unknown')));
+                return { ok: false, reason };
             }
             return { ok: true, reason: 'pending' };
         } catch (e) {
