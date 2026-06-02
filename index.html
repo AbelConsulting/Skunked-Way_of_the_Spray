@@ -3882,13 +3882,24 @@
                             <button id="reset-tutorial-btn" class="menu-btn">&#128161; Reset Tutorial Hints</button>
                         </div>
                         <div class="menu-settings-card" id="remove-ads-card">
-                            <h3>&#128293; Remove Ads &amp; Unlock Skins</h3>
+                            <!-- 5 rapid taps on the title opens the IAP diagnostic panel -->
+                            <h3 id="remove-ads-diag-trigger" style="user-select:none">&#128293; Remove Ads &amp; Unlock Skins</h3>
                             <p id="remove-ads-desc">One-time purchase. Removes between-stage ads <strong>and unlocks 3 ninja skins</strong> (Sapphire, Amethyst, Steel). Supports the dev.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Remove Ads &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
                             </div>
                             <p id="remove-ads-status" class="settings-card-status"></p>
+                        </div>
+                        <!-- IAP Diagnostic Panel — hidden until 5 taps on the Remove Ads title -->
+                        <div class="menu-settings-card" id="iap-diag-card" style="display:none;border:1px solid rgba(255,200,0,0.35);background:rgba(20,14,4,0.92)">
+                            <h3 style="color:#FFD700;margin-bottom:8px">&#128270; IAP Diagnostics</h3>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+                                <button id="iap-diag-run-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#9654; Run Check</button>
+                                <button id="iap-diag-reconnect-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#8635; Force Reconnect</button>
+                                <button id="iap-diag-close-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px;opacity:0.7">&#10005; Close</button>
+                            </div>
+                            <pre id="iap-diag-output" style="font-size:11px;line-height:1.5;color:#cde;background:rgba(0,0,0,0.5);border-radius:8px;padding:10px;overflow:auto;max-height:260px;white-space:pre-wrap;word-break:break-all;margin:0">Tap "Run Check" to inspect billing state.</pre>
                         </div>
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status &amp; Skins</h3>
@@ -5590,6 +5601,132 @@
                             }
                             _renderFounderState();
                         } catch (e) { try { console.warn('[Founder UI]', e); } catch(_) {} }
+
+                        // --- IAP Diagnostic Panel wiring ------------------
+                        try {
+                            const diagCard       = document.getElementById('iap-diag-card');
+                            const diagTrigger    = document.getElementById('remove-ads-diag-trigger');
+                            const diagRunBtn     = document.getElementById('iap-diag-run-btn');
+                            const diagReconnect  = document.getElementById('iap-diag-reconnect-btn');
+                            const diagCloseBtn   = document.getElementById('iap-diag-close-btn');
+                            const diagOutput     = document.getElementById('iap-diag-output');
+
+                            // 5 rapid taps on the Remove Ads heading reveals the panel
+                            if (diagTrigger && diagCard) {
+                                let _diagTapCount = 0, _diagTapTimer = null;
+                                diagTrigger.addEventListener('click', () => {
+                                    _diagTapCount++;
+                                    clearTimeout(_diagTapTimer);
+                                    _diagTapTimer = setTimeout(() => { _diagTapCount = 0; }, 1500);
+                                    if (_diagTapCount >= 5) {
+                                        _diagTapCount = 0;
+                                        diagCard.style.display = '';
+                                        diagCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    }
+                                });
+                            }
+
+                            function _formatDiag(d) {
+                                if (!d) return 'No data returned.';
+                                const lines = [];
+                                lines.push('── ENVIRONMENT ─────────────────────');
+                                lines.push('  isNative       : ' + d.isNative);
+                                lines.push('  pluginLoaded   : ' + d.pluginLoaded);
+                                lines.push('  storeRef       : ' + d.storeRef);
+                                lines.push('  initialized    : ' + d.initialized);
+                                lines.push('  ready          : ' + d.ready);
+                                lines.push('  storePollDone  : ' + d.storePollDone);
+                                lines.push('  CdvPurchase v  : ' + (d.CdvPurchase_version || 'n/a'));
+                                lines.push('');
+                                lines.push('── ENTITLEMENTS ────────────────────');
+                                lines.push('  adFree (cache) : ' + d.adFree_localStorage);
+                                lines.push('  adFree (live)  : ' + d.adFree_runtime);
+                                lines.push('  founderPass    : ' + d.founderPass_runtime);
+                                lines.push('');
+                                lines.push('── PRODUCTS ────────────────────────');
+                                if (d.products) {
+                                    for (const [sku, p] of Object.entries(d.products)) {
+                                        if (!p) { lines.push('  ' + sku + ': NOT IN CATALOGUE ⚠'); continue; }
+                                        lines.push('  ' + sku);
+                                        lines.push('    title   : ' + (p.title || p.localizedTitle || '?'));
+                                        lines.push('    state   : ' + (p.state || '?'));
+                                        lines.push('    pricing : ' + (p.pricing ? p.pricing.price : 'NOT LOADED ⚠'));
+                                        lines.push('    offers  : ' + ((p.offers && p.offers.length) || 0));
+                                    }
+                                } else {
+                                    lines.push('  (no products — store may not be connected)');
+                                }
+                                lines.push('');
+                                lines.push('── LAST ORDER ERROR ────────────────');
+                                lines.push('  ' + (d.lastOrderError || 'none'));
+                                lines.push('');
+                                lines.push('── RECEIPTS / TRANSACTIONS ─────────');
+                                const rx = d.receipts;
+                                lines.push('  receipts count : ' + (Array.isArray(rx) ? rx.length : (rx ? 'object' : '0')));
+                                if (Array.isArray(rx) && rx.length) {
+                                    rx.slice(0, 3).forEach((r, i) => {
+                                        lines.push('  [' + i + '] platform: ' + (r.platform || '?') +
+                                                   '  transactions: ' + ((r.transactions && r.transactions.length) || 0));
+                                    });
+                                }
+                                lines.push('');
+                                lines.push('── PURCHASE TOKENS ─────────────────');
+                                const tok = d.lastPurchaseTokens || {};
+                                if (Object.keys(tok).length) {
+                                    for (const [k, v] of Object.entries(tok)) {
+                                        lines.push('  ' + k + ': ' + (v ? v.slice(0, 24) + '…' : 'none'));
+                                    }
+                                } else {
+                                    lines.push('  (none captured yet)');
+                                }
+                                return lines.join('\n');
+                            }
+
+                            async function _runDiag() {
+                                if (!diagOutput) return;
+                                diagOutput.textContent = 'Running…';
+                                await new Promise(r => setTimeout(r, 50)); // flush paint
+                                try {
+                                    const PM = window.PurchaseManager;
+                                    const d  = PM && typeof PM.diagnose === 'function' ? PM.diagnose() : null;
+                                    diagOutput.textContent = d ? _formatDiag(d)
+                                        : 'PurchaseManager not available on window.';
+                                } catch (e) {
+                                    diagOutput.textContent = 'Error running diagnose(): ' + e;
+                                }
+                            }
+
+                            if (diagRunBtn) diagRunBtn.addEventListener('click', _runDiag);
+
+                            if (diagReconnect) {
+                                diagReconnect.addEventListener('click', async () => {
+                                    if (!diagOutput) return;
+                                    diagOutput.textContent = 'Forcing reconnect…';
+                                    try {
+                                        const CdvPurchase = window.CdvPurchase;
+                                        const store = CdvPurchase && CdvPurchase.store;
+                                        if (!store) {
+                                            diagOutput.textContent = 'CdvPurchase.store not available — plugin not loaded.';
+                                            return;
+                                        }
+                                        const t0 = Date.now();
+                                        await Promise.race([
+                                            store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]),
+                                            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+                                        ]);
+                                        diagOutput.textContent = 'Reconnect OK (' + (Date.now() - t0) + 'ms)\n\nRe-running check…';
+                                        await new Promise(r => setTimeout(r, 400));
+                                        await _runDiag();
+                                    } catch (e) {
+                                        diagOutput.textContent = 'Reconnect failed: ' + e;
+                                    }
+                                });
+                            }
+
+                            if (diagCloseBtn && diagCard) {
+                                diagCloseBtn.addEventListener('click', () => { diagCard.style.display = 'none'; });
+                            }
+                        } catch (e) { try { console.warn('[IAP Diag]', e); } catch(_) {} }
 
                         // Back buttons
                         if (scoresBackBtn) {

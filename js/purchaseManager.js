@@ -51,6 +51,9 @@ const PurchaseManager = (() => {
     // .approved() / .finished() so we can forward it to the server-side
     // entitlement endpoint for receipt verification.
     const _lastPurchaseToken = Object.create(null);
+    // Last order error string (code + message) for both SKUs — shown in the
+    // in-app diagnostic panel without needing Chrome DevTools.
+    let _lastOrderError = 'none';
     function _captureToken(tx) {
         try {
             const token = (tx && (tx.transactionId
@@ -566,14 +569,11 @@ const PurchaseManager = (() => {
             }
             if (orderErr) {
                 _warn('Purchase order rejected:', orderErr);
-                // CdvPurchase IError: code 1 = USER_CANCELED. Surface a clean
-                // reason string that includes the numeric code so the UI can
-                // show a targeted message and analytics can bucket errors.
                 const errCode = orderErr.code != null ? String(orderErr.code) : '';
                 const errMsg  = orderErr.message || '';
-                // Code 1 is USER_CANCELED — treat as benign (don't log as failure).
                 const reason  = (errCode === '1') ? 'user-cancelled'
                               : (errMsg || ('error-' + (errCode || 'unknown')));
+                _lastOrderError = '[' + PRODUCT_ID_REMOVE_ADS + '] code=' + (errCode || '?') + ' msg=' + (errMsg || reason);
                 return { ok: false, reason };
             }
             // The actual entitlement flip happens in the .finished()/receiptUpdated()
@@ -691,6 +691,7 @@ const PurchaseManager = (() => {
                 const errMsg  = orderErr.message || '';
                 const reason  = (errCode === '1') ? 'user-cancelled'
                               : (errMsg || ('error-' + (errCode || 'unknown')));
+                _lastOrderError = '[' + PRODUCT_ID_FOUNDER_PASS + '] code=' + (errCode || '?') + ' msg=' + (errMsg || reason);
                 return { ok: false, reason };
             }
             return { ok: true, reason: 'pending' };
@@ -727,6 +728,7 @@ const PurchaseManager = (() => {
             founderPass_localStorage: _readFounderPassFromStorage(),
             founderPass_runtime: _founderPass,
             lastPurchaseTokens: Object.assign({}, _lastPurchaseToken),
+            lastOrderError: _lastOrderError,
         };
         // Dump raw product objects so we can see if pricing arrived
         if (store) {
