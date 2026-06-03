@@ -46,59 +46,20 @@ function copyRecursive(src, dest) {
 }
 
 // ── 3. Patch index.html for Steam ─────────────────────────────────────────────
-//  • Remove AdSense / GTM / Google Funding Choices scripts
-//  • Remove service-worker registration
-//  • Remove <link rel="manifest">
+//  Strategy: minimal safe changes only — no regex that can cross tag boundaries.
 //  • Inject window.PLATFORM = 'steam' as the very first script
-//
-// IMPORTANT: All script-content regexes use the non-crossing pattern
-//   (?:[^<]|<(?!\/script>))*
-// so they never swallow content across </script> boundaries.
+//  • Remove manifest link (no PWA on desktop)
+//  • Remove the GTM noscript iframe (harmless but clean)
+//  Everything else (ads, SW) is already handled at runtime by the game code
+//  (adManager.js checks window.electronAPI.platform === 'steam' and skips all ads).
 function patchIndexHtml() {
     const indexPath = path.join(DIST_STEAM, 'index.html');
     let html = fs.readFileSync(indexPath, 'utf8');
 
-    // ── Inject platform flag before everything else ──
+    // ── Inject platform flag as first thing in <head> ──
     html = html.replace(
-        '<head>',
-        '<head>\n    <script>window.PLATFORM="steam";</script>'
-    );
-
-    // ── Safe single-block script content pattern (never crosses </script>) ──
-    // Matches: <script ATTRS>CONTENT</script>  where CONTENT has no </script>
-    const SAFE_CONTENT = '(?:[^<]|<(?!\\/script>))*';
-
-    // Patterns that identify ad/tracking/SW script blocks by their content
-    const AD_CONTENT_PATTERNS = [
-        /googletagmanager\.com/,
-        /GTM-[A-Z0-9]+/,
-        /googlefc/,
-        /adsbygoogle/,
-        /pagead2\.googlesyndication/,
-        /serviceWorker\.register/,
-        /FundingChoices/,
-        /googleadservices/,
-    ];
-
-    // Walk all inline script blocks and remove only those containing ad/tracking code.
-    // External <script src="..."> tags are left untouched by this pass.
-    const inlineScriptRe = new RegExp(`<script([^>]*)>(${SAFE_CONTENT})<\\/script>`, 'gs');
-    html = html.replace(inlineScriptRe, (match, attrs, content) => {
-        // Reject by src attribute
-        if (/adsbygoogle|googlesyndication|googletagmanager|pagead2/i.test(attrs)) {
-            return '<!-- ad/tracking script removed for Steam build -->';
-        }
-        // Reject by inline content
-        if (AD_CONTENT_PATTERNS.some(p => p.test(content))) {
-            return '<!-- ad/tracking script removed for Steam build -->';
-        }
-        return match;
-    });
-
-    // ── Remove external AdSense/GTM script tags (self-closing or with src) ──
-    html = html.replace(
-        /<script[^>]*(?:adsbygoogle|googlesyndication|googletagmanager|pagead2)[^>]*(?:\/>|><\/script>)/gi,
-        '<!-- ad script removed for Steam build -->'
+        /(<head[^>]*>)/i,
+        '$1\n    <script>window.PLATFORM="steam";window.STEAM_APP_ID=4815180;</script>'
     );
 
     // ── Remove manifest link (no PWA on desktop) ──
@@ -107,15 +68,15 @@ function patchIndexHtml() {
         '<!-- manifest removed for Steam build -->'
     );
 
-    // ── Remove GTM noscript iframe ──
+    // ── Remove GTM noscript iframe (safe: no regex content, just src attr) ──
     html = html.replace(
-        /<noscript>\s*<iframe[^>]*googletagmanager[^>]*>[\s\S]*?<\/iframe>\s*<\/noscript>/g,
+        /<noscript><iframe src="https:\/\/www\.googletagmanager\.com[^"]*"[^>]*><\/iframe><\/noscript>/g,
         '<!-- GTM noscript removed for Steam build -->'
     );
 
     fs.writeFileSync(indexPath, html, 'utf8');
     const lines = html.split('\n').length;
-    console.log(`[steam-build] Patched index.html (${lines} lines — ads/GTM/SW removed, PLATFORM=steam injected)`);
+    console.log(`[steam-build] Patched index.html (${lines} lines — PLATFORM=steam injected, manifest removed)`);
 }
 
 // ── 4. Copy steam_appid.txt into dist-steam ───────────────────────────────────

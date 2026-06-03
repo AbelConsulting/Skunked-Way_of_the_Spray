@@ -124,8 +124,8 @@ function createWindow() {
     const indexPath = path.join(__dirname, '..', 'dist-steam', 'index.html');
     win.loadFile(indexPath);
 
-    // Uncomment to open DevTools in development:
-    // if (!app.isPackaged) win.webContents.openDevTools();
+    // Open DevTools in development to diagnose layout/console errors
+    if (!app.isPackaged) win.webContents.openDevTools();
 }
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
