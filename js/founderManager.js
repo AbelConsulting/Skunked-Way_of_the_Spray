@@ -132,11 +132,13 @@ const FounderManager = (() => {
     }
 
     function _hasRemoveAds() {
+        if (window.PLATFORM === 'steam') return true;
         try { return localStorage.getItem(STORAGE_KEY_AD_FREE) === '1'; }
         catch (e) { return false; }
     }
 
     function _hasFounderPass() {
+        if (window.PLATFORM === 'steam') return true;
         try { return localStorage.getItem(STORAGE_KEY_FOUNDER_PASS) === '1'; }
         catch (e) { return false; }
     }
@@ -291,6 +293,8 @@ const FounderManager = (() => {
      */
     function isSkinUnlocked(variantId) {
         if (!VALID_SKIN_VARIANTS.includes(variantId)) return false;
+        // Steam: game is sold complete — all skins included.
+        if (window.PLATFORM === 'steam') return true;
         if (variantId === 'gold') return _isFounder;
         // Sapphire, amethyst, and steel always require the remove_ads purchase,
         // even for Founders. Gold is the Founder-only early-access exclusive;
@@ -300,6 +304,7 @@ const FounderManager = (() => {
 
     /** Convenience: true if at least one variant is unlocked. */
     function hasAnyUnlockedSkin() {
+        if (window.PLATFORM === 'steam') return true;
         return _isFounder || _hasRemoveAds();
     }
 

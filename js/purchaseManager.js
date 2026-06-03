@@ -274,6 +274,15 @@ const PurchaseManager = (() => {
         if (_initialized) return;
         _initialized = true;
 
+        // Steam build: everything is included with the game purchase.
+        // Mark ad-free and founder pass as owned, skip all IAP initialisation.
+        if (window.PLATFORM === 'steam') {
+            _adFree = true;
+            _founderPass = true;
+            _markReady('steam');
+            return;
+        }
+
         // Sync localStorage entitlement → DOM (web ad rail) immediately on boot.
         if (_adFree) _setAdFree(true, 'storage');
 

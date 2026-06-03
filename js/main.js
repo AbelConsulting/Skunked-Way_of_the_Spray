@@ -982,7 +982,8 @@ class GameApp {
             this._initCapacitorBridge();
 
             // Warn if opened via file:// — audio and some assets may fail due to browser restrictions
-            if (location && location.protocol === 'file:') {
+            // Skip for Steam/Electron builds where file:// is intentional
+            if (location && location.protocol === 'file:' && window.PLATFORM !== 'steam') {
                 try {
                     // Prefer the friendly file-protocol overlay with a "Start Anyway" option
                     const fileOverlay = document.getElementById('file-protocol-overlay');

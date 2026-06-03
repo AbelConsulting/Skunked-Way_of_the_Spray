@@ -74,6 +74,12 @@ function patchIndexHtml() {
         '<!-- GTM noscript removed for Steam build -->'
     );
 
+    // ── Update main-menu Skins button — no purchase wording on Steam ──
+    html = html.replace(
+        '<span class="menu-btn-label">&#127912; Skins &amp; Remove Ads</span><span class="menu-btn-meta">Pick your ninja colour. One-time $1.99 unlocks 3 skins &amp; ad-free.</span>',
+        '<span class="menu-btn-label">&#127912; Ninja Skins</span><span class="menu-btn-meta">Pick your ninja colour. All skins unlocked!</span>'
+    );
+
     fs.writeFileSync(indexPath, html, 'utf8');
     const lines = html.split('\n').length;
     console.log(`[steam-build] Patched index.html (${lines} lines — PLATFORM=steam injected, manifest removed)`);

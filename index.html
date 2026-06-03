@@ -4779,6 +4779,14 @@
                             const statusEl    = document.getElementById('remove-ads-status');
                             const card        = document.getElementById('remove-ads-card');
 
+                            // Steam: game is fully unlocked — hide the purchase card entirely
+                            if (window.PLATFORM === 'steam') {
+                                if (card) card.style.display = 'none';
+                                const fpRow = document.getElementById('founder-pass-row');
+                                if (fpRow) fpRow.style.display = 'none';
+                                throw new Error('steam-skip');
+                            }
+
                             // UI-side fallback: even if PurchaseManager.isReady() never
                             // flips (e.g., catastrophic plugin failure), force the Buy
                             // button to become tappable after 18s so the user can at
