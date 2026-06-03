@@ -54,3 +54,13 @@ android/app/release/
 # Android Keystore rules
 *.keystore
 keystore.properties
+
+# Steamworks native SDK binaries (download from partner.steamgames.com — do not commit)
+steam_api64.dll
+steam_api64.lib
+libsteam_api.dylib
+libsteam_api.so
+
+# Electron build output
+dist-steam/
+release/
