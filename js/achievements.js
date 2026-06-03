@@ -39,6 +39,11 @@ class Achievements {
             if (this.audioManager) {
                 this.audioManager.playSound('achievement_unlock', { volume: 0.85, rate: 1.0 });
             }
+            // Steam: mirror achievement unlock via Electron IPC when running as desktop app.
+            // electronAPI.platform === 'steam' is set by electron/preload.js.
+            if (window.electronAPI && window.electronAPI.platform === 'steam') {
+                window.electronAPI.unlockAchievement(id).catch(() => { /* non-fatal */ });
+            }
         }
     }
 

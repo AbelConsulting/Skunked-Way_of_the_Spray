@@ -36,9 +36,75 @@
     "cap:open": "npx cap open android",
     "cap:run": "npx cap run android",
     "android:check-upload-key": "node tools/check_upload_key_fingerprint.js",
-    "android:bundle:release": "npm run cap:sync && npm run android:check-upload-key && cd android && gradlew.bat bundleRelease"
+    "android:bundle:release": "npm run cap:sync && npm run android:check-upload-key && cd android && gradlew.bat bundleRelease",
+    "electron:dev": "node scripts/build-steam.js && npx electron electron/main.js",
+    "electron:build": "node scripts/build-steam.js --release && npx electron-builder --config",
+    "electron:build:win": "node scripts/build-steam.js --release && npx electron-builder --win --config",
+    "electron:build:mac": "node scripts/build-steam.js --release && npx electron-builder --mac --config",
+    "electron:build:linux": "node scripts/build-steam.js --release && npx electron-builder --linux --config",
+    "steam:build": "node scripts/build-steam.js --release"
+  },
+  "build": {
+    "appId": "com.mephitideusinteractive.skunkedwayofthespray",
+    "productName": "Skunked: Way of the Spray",
+    "copyright": "Copyright © 2026 Mephitideus Interactive LLC",
+    "electronEntryPoint": "electron/main.js",
+    "files": [
+      "dist-steam/**/*",
+      "electron/**/*",
+      "assets/icons/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache/**/*",
+      "!node_modules/playwright/**/*",
+      "!node_modules/@playwright/**/*",
+      "!node_modules/typescript/**/*",
+      "!node_modules/wrangler/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon-512x512.png"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon-512x512.png",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon-512x512.png",
+      "category": "Game"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   },
   "devDependencies": {
+    "electron": "^36.9.5",
+    "electron-builder": "^26.8.1",
     "esbuild": "^0.28.0",
     "playwright": "^1.60.0",
     "typescript": "^6.0.3",
@@ -53,7 +119,8 @@
     "@capacitor/screen-orientation": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
-    "cordova-plugin-purchase": "^13.15.4"
+    "cordova-plugin-purchase": "^13.15.4",
+    "steamworks.js": "^0.3.2"
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "^0.28.0"

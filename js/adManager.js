@@ -280,6 +280,16 @@ const AdManager = (() => {
         if (_initialized) return;
         _initialized = true;
 
+        // Steam/Electron desktop — ads are never shown
+        const isSteam = typeof window !== 'undefined' &&
+            window.electronAPI &&
+            window.electronAPI.platform === 'steam';
+
+        if (isSteam) {
+            // No ads on Steam build — skip all ad initialisation
+            return;
+        }
+
         const isNative = typeof window !== 'undefined' &&
             window.Capacitor &&
             window.Capacitor.isNativePlatform &&
