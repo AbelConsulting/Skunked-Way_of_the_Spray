@@ -283,6 +283,10 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
     typeof body.level === "number" && body.level >= 0
       ? Math.min(Math.floor(body.level), 9999)
       : 0;
+  const runId =
+    typeof body.runId === "string" && /^[A-Za-z0-9_-]{8,80}$/.test(body.runId)
+      ? body.runId
+      : "";
 
   if (score === null || score < 0 || score > MAX_SCORE) {
     res.status(400).json({ error: "bad_score" });
@@ -290,7 +294,7 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
   }
 
   try {
-    await db.collection(SCORES_COLLECTION).add({
+    const payload = {
       initials,
       score,
       achievements,
@@ -299,7 +303,22 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
       achievementCount,
       level,
       date: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    };
+    if (runId) payload.runId = runId;
+
+    if (runId) {
+      const existing = await db
+        .collection(SCORES_COLLECTION)
+        .where("runId", "==", runId)
+        .limit(1)
+        .get();
+      if (!existing.empty) {
+        res.json({ success: true, duplicate: true });
+        return;
+      }
+    }
+
+    await db.collection(SCORES_COLLECTION).add(payload);
     res.json({ success: true });
   } catch (e) {
     console.error("submitScore error:", e);

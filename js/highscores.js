@@ -371,11 +371,13 @@ try {
    */
   async function loadScores(period) {
     try {
+      const healthy = await checkAPIHealth();
+      if (!healthy) return null;
       const scores = await getAPIHighScores(MAX_SCORES, period || 'alltime');
       return scores || [];
     } catch(e) { 
       console.warn('Failed to load highscores from skunked.io', e);
-      return []; 
+      return null; 
     }
   }
 
@@ -387,6 +389,7 @@ try {
   async function isHighScore(score){
     if (typeof score !== 'number') return false;
     const scores = await loadScores();
+    if (!Array.isArray(scores)) return false;
     if (scores.length < MAX_SCORES) return true;
     return score > scores[scores.length - 1].score;
   }
