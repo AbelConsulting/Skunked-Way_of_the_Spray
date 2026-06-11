@@ -84,10 +84,14 @@ public class PlayGamesPlugin extends Plugin {
 
         GamesSignInClient client = PlayGames.getGamesSignInClient(activity);
         client.isAuthenticated().addOnCompleteListener(task -> {
-            JSObject result = new JSObject();
             boolean authenticated = task.isSuccessful() && task.getResult().isAuthenticated();
-            result.put("isAuthenticated", authenticated);
-            call.resolve(result);
+            if (authenticated) {
+                resolvePlayerInfo(call);
+            } else {
+                JSObject result = new JSObject();
+                result.put("isAuthenticated", false);
+                call.resolve(result);
+            }
         });
     }
 

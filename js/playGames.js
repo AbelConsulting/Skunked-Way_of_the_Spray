@@ -35,6 +35,20 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
   let _playerId = '';
   let _playerDisplayName = '';
 
+  function cachePlayerIdentity(result) {
+    try {
+      if (result && result.isAuthenticated && typeof result.playerId === 'string' && result.playerId) {
+        _playerId = result.playerId;
+        _playerDisplayName = (typeof result.displayName === 'string') ? result.displayName : '';
+        try {
+          window.dispatchEvent(new CustomEvent('skunkfu-pgs-signed-in', {
+            detail: { playerId: _playerId, displayName: _playerDisplayName }
+          }));
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
   // ── Achievement ID Mapping ──
   // Maps the game's internal achievement IDs → Google Play Games achievement IDs.
   // After creating achievements in Play Console, replace each 'GPGS_...' placeholder
@@ -142,19 +156,7 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
       const result = await plugin.signIn();
       // Cache the player ID for cross-device entitlement sync. The native
       // plugin's resolvePlayerInfo() includes playerId in the resolve payload.
-      try {
-        if (result && result.isAuthenticated && typeof result.playerId === 'string' && result.playerId) {
-          _playerId = result.playerId;
-          _playerDisplayName = (typeof result.displayName === 'string') ? result.displayName : '';
-          // Fire a window event so other modules (PurchaseManager, etc.)
-          // can react to the player being known without polling.
-          try {
-            window.dispatchEvent(new CustomEvent('skunkfu-pgs-signed-in', {
-              detail: { playerId: _playerId, displayName: _playerDisplayName }
-            }));
-          } catch (_) {}
-        }
-      } catch (_) {}
+      cachePlayerIdentity(result);
       return result;
     } catch (e) {
       console.warn('[PlayGames] signIn failed', e);
@@ -167,7 +169,9 @@ try { if (typeof Config !== 'undefined' && Config.DEBUG) console.log('playGames.
     const plugin = getPlugin();
     if (!plugin) return { isAuthenticated: false };
     try {
-      return await plugin.isAuthenticated();
+      const result = await plugin.isAuthenticated();
+      cachePlayerIdentity(result);
+      return result;
     } catch (e) {
       return { isAuthenticated: false };
     }

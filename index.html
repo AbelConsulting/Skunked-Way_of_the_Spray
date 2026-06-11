@@ -5708,6 +5708,17 @@
                                 } else {
                                     lines.push('  (none captured yet)');
                                 }
+                                lines.push('');
+                                lines.push('── BACKEND SYNC ────────────────────');
+                                lines.push('  remote push    : ' + (d.lastRemotePushStatus || 'none'));
+                                const pending = d.pendingIapPurchases || {};
+                                if (Object.keys(pending).length) {
+                                    for (const [k, v] of Object.entries(pending)) {
+                                        lines.push('  pending ' + k + ': ' + ((v && v.purchaseToken) ? v.purchaseToken.slice(0, 24) + '…' : 'no token'));
+                                    }
+                                } else {
+                                    lines.push('  pending        : none');
+                                }
                                 return lines.join('\n');
                             }
 
