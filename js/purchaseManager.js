@@ -38,6 +38,7 @@ const PurchaseManager = (() => {
     const PRODUCT_ID_FOUNDER_PASS  = 'founder_pass';
     const STORAGE_KEY_AD_FREE      = 'skunkfu.adFree';
     const STORAGE_KEY_FOUNDER_PASS = 'skunkfu.founderPassOwned';
+    const STORAGE_KEY_PENDING_IAP  = 'skunkfu.pendingIapPurchases';
 
     let _store         = null;     // CdvPurchase.store reference
     let _storePollDone = false;    // True after first poll attempt (avoids 8s re-poll on every click)
@@ -56,14 +57,72 @@ const PurchaseManager = (() => {
     // Last order error string (code + message) for both SKUs — shown in the
     // in-app diagnostic panel without needing Chrome DevTools.
     let _lastOrderError = 'none';
+    let _lastRemotePushStatus = 'none';
+
+    function _readPendingPurchases() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_PENDING_IAP);
+            const parsed = raw ? JSON.parse(raw) : {};
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (e) { return {}; }
+    }
+
+    function _writePendingPurchases(pending) {
+        try { localStorage.setItem(STORAGE_KEY_PENDING_IAP, JSON.stringify(pending || {})); } catch (e) {}
+    }
+
+    function _rememberPendingPurchase(sku, purchaseToken, productId) {
+        if (!sku || !purchaseToken) return;
+        const pending = _readPendingPurchases();
+        pending[sku] = {
+            purchaseToken,
+            productId: productId || sku,
+            capturedAt: Date.now(),
+        };
+        _writePendingPurchases(pending);
+    }
+
+    function _clearPendingPurchase(sku) {
+        if (!sku) return;
+        const pending = _readPendingPurchases();
+        if (!pending[sku]) return;
+        delete pending[sku];
+        _writePendingPurchases(pending);
+    }
+
+    function _extractPurchaseToken(tx) {
+        try {
+            const candidates = [
+                tx && tx.nativePurchase && tx.nativePurchase.purchaseToken,
+                tx && tx.purchaseId,
+                tx && tx.purchaseToken,
+                tx && tx.purchase && tx.purchase.purchaseToken,
+                tx && tx.receipt && tx.receipt.purchaseToken,
+            ];
+            for (const candidate of candidates) {
+                if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+            }
+            // cordova-plugin-purchase sets transactionId to orderId when Google
+            // provides one (GPA....), otherwise to purchaseToken. Never send a
+            // GPA order id to the backend as a token because Play verification
+            // requires purchaseToken.
+            if (tx && typeof tx.transactionId === 'string' && tx.transactionId.trim()
+                && !/^GPA\./i.test(tx.transactionId.trim())) {
+                return tx.transactionId.trim();
+            }
+        } catch (e) {}
+        return '';
+    }
+
     function _captureToken(tx) {
         try {
-            const token = (tx && (tx.transactionId
-                || (tx.nativePurchase && tx.nativePurchase.purchaseToken)
-                || (tx.purchase && tx.purchase.purchaseToken))) || '';
+            const token = _extractPurchaseToken(tx);
             if (!token || !tx || !Array.isArray(tx.products)) return;
             for (const p of tx.products) {
-                if (p && p.id) _lastPurchaseToken[p.id] = token;
+                if (p && p.id) {
+                    _lastPurchaseToken[p.id] = token;
+                    _rememberPendingPurchase(p.id, token, p.id);
+                }
             }
         } catch (e) {}
     }
@@ -103,15 +162,31 @@ const PurchaseManager = (() => {
     function _pushEntitlementRemote(sku, opts) {
         const api = _getApi();
         const pid = _getPlayerId();
-        if (!api || !pid || !sku) return;
-        const purchaseToken = (opts && opts.purchaseToken) || _lastPurchaseToken[sku] || '';
-        const productId     = (opts && opts.productId) || sku;
+        if (!api || !pid || !sku) {
+            _lastRemotePushStatus = 'deferred: api=' + !!api + ' playerId=' + !!pid + ' sku=' + !!sku;
+            return;
+        }
+        const pending = _readPendingPurchases()[sku] || {};
+        const purchaseToken = (opts && opts.purchaseToken) || _lastPurchaseToken[sku] || pending.purchaseToken || '';
+        const productId     = (opts && opts.productId) || pending.productId || sku;
         try {
             api.setEntitlement(pid, sku, { purchaseToken, productId }).then(ok => {
-                if (ok) _log('Mirrored entitlement to server:', sku, purchaseToken ? '(verified)' : '(unverified)');
-                else    _warn('Server entitlement push reported failure:', sku);
-            }).catch(e => _warn('Server entitlement push threw:', e));
-        } catch (e) { _warn('Server entitlement push setup failed:', e); }
+                if (ok) {
+                    _lastRemotePushStatus = 'ok: ' + sku + (purchaseToken ? ' verified-token-sent' : ' no-token');
+                    _clearPendingPurchase(sku);
+                    _log('Mirrored entitlement to server:', sku, purchaseToken ? '(verified)' : '(unverified)');
+                } else {
+                    _lastRemotePushStatus = 'failed: ' + sku + (purchaseToken ? ' token-present' : ' no-token');
+                    _warn('Server entitlement push reported failure:', sku);
+                }
+            }).catch(e => {
+                _lastRemotePushStatus = 'threw: ' + sku + ' ' + ((e && e.message) || String(e));
+                _warn('Server entitlement push threw:', e);
+            });
+        } catch (e) {
+            _lastRemotePushStatus = 'setup-failed: ' + sku + ' ' + ((e && e.message) || String(e));
+            _warn('Server entitlement push setup failed:', e);
+        }
     }
     let _remotePullDone = false;
     async function _pullEntitlementsRemote(force) {
@@ -438,14 +513,20 @@ const PurchaseManager = (() => {
             // symptom early users reported). 12s is well past any healthy
             // init and below the patience threshold of someone tapping Buy.
             const initTimeoutMs = 12000;
-            await Promise.race([
+            const initResult = await Promise.race([
                 store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]),
                 new Promise((_resolve, reject) => setTimeout(
                     () => reject(new Error('store.initialize timeout after ' + initTimeoutMs + 'ms')),
                     initTimeoutMs
                 ))
             ]);
-            _log('Store initialized.');
+            const initHadError = !!(initResult && initResult.code != null);
+            if (initHadError) {
+                _storeInitError = '[' + initResult.code + '] ' + (initResult.message || 'store.initialize returned an error');
+                _warn('Store initialized with error:', initResult);
+            } else {
+                _log('Store initialized.');
+            }
 
             // Cross-check ownership on init.
             try {
@@ -458,7 +539,7 @@ const PurchaseManager = (() => {
             // restore probe below is fire-and-forget and will trigger
             // additional onChange() calls if it flips the entitlement.
             clearTimeout(_watchdog);
-            _markReady('store-init');
+            _markReady(initHadError ? 'store-init-error' : 'store-init');
 
             // First-launch auto-restore: covers reinstalls / device switches
             // where the user already paid but the local entitlement flag was
@@ -743,6 +824,8 @@ const PurchaseManager = (() => {
             founderPass_localStorage: _readFounderPassFromStorage(),
             founderPass_runtime: _founderPass,
             lastPurchaseTokens: Object.assign({}, _lastPurchaseToken),
+            pendingIapPurchases: _readPendingPurchases(),
+            lastRemotePushStatus: _lastRemotePushStatus,
             lastOrderError: _lastOrderError,
         };
         // Dump raw product objects so we can see if pricing arrived

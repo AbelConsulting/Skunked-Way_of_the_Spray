@@ -88,6 +88,7 @@ class Game {
         this._gameOverIsHighScore = false;  // Whether the score made the leaderboard
         this._gameOverLevelReached = 0;     // Level index reached when died
         this._gameOverLevelName = '';        // Level name reached when died
+        this._gameOverHsPromptDone = false; // Guard: hs prompt only fires once per game-over
 
         // Respawn/death flow
         this.isRespawning = false;
@@ -3263,6 +3264,7 @@ class Game {
                     : 5000
             );
             this._gameOverHsDelayMs = hsDelay;
+            this._gameOverHsPromptDone = false; // guard: only fire once per game-over
 
             // Lockout = full breakdown duration (+ small buffer). If a high
             // score is suspected, extend so initials modal is given time to
@@ -3274,9 +3276,11 @@ class Game {
                     ? Config.GAME_OVER_LOCKOUT * 1000 : 3000
             );
 
-            setTimeout(() => {
-                // Only show high score prompt if still in game over state
+            // Extracted so it can be retried after a revive ad closes mid-delay.
+            const _tryShowHsPrompt = () => {
+                if (this._gameOverHsPromptDone) return;
                 if (this.state !== 'GAME_OVER') return;
+                this._gameOverHsPromptDone = true;
 
                 // High score flow: prompt for initials if this score qualifies
                 try {
@@ -3303,6 +3307,18 @@ class Game {
                         }).catch(() => { /* ignore */ });
                     }
                 } catch (e) { /* ignore highscores errors */ }
+            };
+
+            setTimeout(() => {
+                if (this.state === 'GAME_OVER') {
+                    _tryShowHsPrompt();
+                } else if (this.state === 'PAUSED') {
+                    // A revive ad started while we were waiting — defer until the ad
+                    // closes and _resumeGameAfterAd() restores state back to GAME_OVER.
+                    // setTimeout(0) lets the state-restore in _resumeGameAfterAd run first.
+                    const onAdHide = () => { setTimeout(() => _tryShowHsPrompt(), 0); };
+                    window.addEventListener('gameAdHide', onAdHide, { once: true });
+                }
             }, hsDelay);
         }
     }
