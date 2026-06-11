@@ -14,6 +14,7 @@
 // unavailable — we call the Cloud Functions directly from any host.
 const PROJECT_ID = 'studio-3829586481-2a2cf';
 const API_BASE = 'https://us-central1-' + PROJECT_ID + '.cloudfunctions.net';
+const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents';
 
 // ── Network reliability tunables ──
 const REQUEST_TIMEOUT_MS = 8000;        // Hard cap so the UI never spins forever.
@@ -124,6 +125,91 @@ function _isValidEntry(e) {
     && e.score >= 0;
 }
 
+function _firestoreValue(value) {
+  if (!value || typeof value !== 'object') return undefined;
+  if ('stringValue' in value) return value.stringValue;
+  if ('integerValue' in value) return Number(value.integerValue);
+  if ('doubleValue' in value) return Number(value.doubleValue);
+  if ('booleanValue' in value) return value.booleanValue === true;
+  if ('timestampValue' in value) return value.timestampValue;
+  if ('arrayValue' in value) {
+    const values = value.arrayValue && Array.isArray(value.arrayValue.values) ? value.arrayValue.values : [];
+    return values.map(_firestoreValue).filter(item => item !== undefined);
+  }
+  return undefined;
+}
+
+function _mapFirestoreScore(doc) {
+  const fields = doc && doc.fields;
+  if (!fields || typeof fields !== 'object') return null;
+  return {
+    name: _firestoreValue(fields.initials) || _firestoreValue(fields.name) || '???',
+    score: _firestoreValue(fields.score),
+    timestamp: _firestoreValue(fields.date) || _firestoreValue(fields.timestamp) || null,
+    achievements: _firestoreValue(fields.achievements) || [],
+    prestige: _firestoreValue(fields.prestige) || 0,
+    title: _firestoreValue(fields.title) || '',
+    achievementCount: _firestoreValue(fields.achievementCount) || 0,
+    level: _firestoreValue(fields.level) || 0,
+  };
+}
+
+function _normalizeScores(scores) {
+  return scores
+    .filter(_isValidEntry)
+    .map(entry => ({
+      name: entry.name || entry.initials || '???',
+      score: entry.score,
+      timestamp: entry.timestamp ? new Date(entry.timestamp) : (entry.date ? new Date(entry.date) : null),
+      achievements: Array.isArray(entry.achievements) ? entry.achievements : [],
+      prestige: Number(entry.prestige) || 0,
+      title: entry.title || '',
+      achievementCount: Number(entry.achievementCount) || 0,
+      level: Number(entry.level) || 0,
+    }));
+}
+
+async function getHighScoresFromFirestore(count = 10, period = 'alltime') {
+  const safeCount = Math.max(1, Math.min(100, Number(count) || 10));
+  const safePeriod = ['week', 'month'].includes(period) ? period : 'alltime';
+  if (safePeriod === 'week' || safePeriod === 'month') {
+    const cutoff = new Date(Date.now() - (safePeriod === 'week' ? 7 : 30) * 24 * 60 * 60 * 1000).toISOString();
+    const res = await fetchWithRetry(FIRESTORE_BASE + ':runQuery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'scores' }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'date' },
+              op: 'GREATER_THAN_OR_EQUAL',
+              value: { timestampValue: cutoff },
+            },
+          },
+          orderBy: [{ field: { fieldPath: 'date' }, direction: 'DESCENDING' }],
+          limit: 500,
+        },
+      }),
+    }, 1);
+    if (!res.ok) throw new Error('Firestore leaderboard fallback HTTP ' + res.status);
+    const data = await res.json().catch(() => null);
+    const docs = Array.isArray(data) ? data.map(row => row && row.document).filter(Boolean) : [];
+    const scores = _normalizeScores(docs.map(_mapFirestoreScore).filter(Boolean));
+    scores.sort((a, b) => b.score - a.score);
+    return scores.slice(0, safeCount);
+  }
+
+  const url = FIRESTORE_BASE + '/scores?pageSize=' + encodeURIComponent(safeCount) + '&orderBy=' + encodeURIComponent('score desc');
+  const res = await fetchWithRetry(url, { method: 'GET' }, 1);
+  if (!res.ok) throw new Error('Firestore leaderboard fallback HTTP ' + res.status);
+  const data = await res.json().catch(() => null);
+  const docs = data && Array.isArray(data.documents) ? data.documents : [];
+  const scores = _normalizeScores(docs.map(_mapFirestoreScore).filter(Boolean));
+  scores.sort((a, b) => b.score - a.score);
+  return scores.slice(0, safeCount);
+}
+
 /**
  * Fetches the top scores from the leaderboard, ordered by score descending.
  * @param {number} [count=10] How many top scores to retrieve.
@@ -135,24 +221,18 @@ export async function getHighScores(count = 10, period = 'alltime') {
     const safeCount = Math.max(1, Math.min(100, Number(count) || 10));
     const safePeriod = ['week', 'month'].includes(period) ? period : 'alltime';
     const res = await fetchWithRetry(`${API_BASE}/getLeaderboard?count=${encodeURIComponent(safeCount)}&period=${encodeURIComponent(safePeriod)}`);
-    if (!res.ok) return [];
+    if (!res.ok) return getHighScoresFromFirestore(safeCount, safePeriod);
     const scores = await res.json().catch(() => null);
-    if (!Array.isArray(scores)) return [];
-    return scores
-      .filter(_isValidEntry)
-      .map(entry => ({
-        name: entry.name || entry.initials || '???',
-        score: entry.score,
-        timestamp: entry.timestamp ? new Date(entry.timestamp) : (entry.date ? new Date(entry.date) : null),
-        achievements: Array.isArray(entry.achievements) ? entry.achievements : [],
-        prestige: Number(entry.prestige) || 0,
-        title: entry.title || '',
-        achievementCount: Number(entry.achievementCount) || 0,
-        level: Number(entry.level) || 0,
-      }));
+    if (!Array.isArray(scores)) return getHighScoresFromFirestore(safeCount, safePeriod);
+    return _normalizeScores(scores);
   } catch (e) {
     console.error('Error fetching scores:', e);
-    return [];
+    try {
+      return await getHighScoresFromFirestore(count, period);
+    } catch (fallbackError) {
+      console.error('Error fetching scores from Firestore fallback:', fallbackError);
+      return [];
+    }
   }
 }
 
