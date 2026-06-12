@@ -5653,9 +5653,95 @@
                                 });
                             }
 
+                            // Map raw diagnostic state (and Google Play BillingClient
+                            // response codes) to a plain-English root cause + action.
+                            // BillingResponseCode: 0 OK, 1 USER_CANCELED, 2 SERVICE_UNAVAILABLE,
+                            // 3 BILLING_UNAVAILABLE, 4 ITEM_UNAVAILABLE, 5 DEVELOPER_ERROR,
+                            // 6 ERROR, 7 ITEM_ALREADY_OWNED.
+                            function _verdictDiag(d) {
+                                if (!d) return [];
+                                const v = [];
+                                const err = (d.lastOrderError || '').toLowerCase();
+                                const init = (d.storeInitError || '').toLowerCase();
+                                const products = d.products || {};
+                                const hasPricing = Object.values(products).some(p => p && p.pricing && p.pricing.price);
+                                const anyProduct = Object.values(products).some(p => !!p);
+                                const codeMatch = (s) => {
+                                    const m = /code=?\s*([0-9]+)/.exec(s || '');
+                                    return m ? m[1] : null;
+                                };
+                                const orderCode = codeMatch(err);
+
+                                if (!d.isNative) {
+                                    v.push('⚠ Running the WEB build — Google Play IAP is Android-only.');
+                                    v.push('  → Install the app from a Google Play track to test purchases.');
+                                    return v;
+                                }
+                                if (!d.pluginLoaded) {
+                                    v.push('✗ CdvPurchase plugin NOT loaded into the WebView.');
+                                    v.push('  → Run: npx cap sync android, then rebuild & reinstall.');
+                                    return v;
+                                }
+                                // Plugin is present from here on.
+                                if (init && init !== 'none') {
+                                    if (init.includes('3') || init.includes('billing_unavailable') || init.includes('unavailable')) {
+                                        v.push('✗ Billing UNAVAILABLE on init.');
+                                        v.push('  → App was NOT installed from Google Play, OR the device has no');
+                                        v.push('    Play account. Install from an Internal Testing track with a');
+                                        v.push('    license-tester Google account.');
+                                    } else if (init.includes('timeout')) {
+                                        v.push('✗ store.initialize() timed out connecting to Play Billing.');
+                                        v.push('  → Check network + that Google Play Store app is up to date.');
+                                    } else {
+                                        v.push('✗ store.initialize() returned an error: ' + d.storeInitError);
+                                    }
+                                }
+                                if (!anyProduct || !hasPricing) {
+                                    v.push('✗ Google Play returned NO product details (catalogue empty).');
+                                    v.push('  Most common causes — check in order:');
+                                    v.push('   1. Products not set to "Active" in Play Console → Products →');
+                                    v.push('      In-app products (remove_ads, founder_pass).');
+                                    v.push('   2. This build (versionCode) is not uploaded to a Play track the');
+                                    v.push('      signed-in account can access (Internal testing is enough).');
+                                    v.push('   3. App not signed with the key Play expects (use the upload key /');
+                                    v.push('      install the Play-distributed build, not a debug APK).');
+                                    v.push('   4. applicationId mismatch (must be com.skunksquad.skunkfu).');
+                                } else {
+                                    v.push('✓ Catalogue loaded with pricing — Play Billing connection is healthy.');
+                                }
+                                // Order-time diagnostics.
+                                if (orderCode === '1') {
+                                    v.push('• Last order: user cancelled (code 1) — not an error.');
+                                } else if (orderCode === '3') {
+                                    v.push('✗ Last order: BILLING_UNAVAILABLE (code 3) — not installed from Play');
+                                    v.push('  or no Play account on device.');
+                                } else if (orderCode === '4') {
+                                    v.push('✗ Last order: ITEM_UNAVAILABLE (code 4) — SKU not Active / not in this');
+                                    v.push('  build\'s track for this account.');
+                                } else if (orderCode === '5') {
+                                    v.push('✗ Last order: DEVELOPER_ERROR (code 5) — package name / signing key /');
+                                    v.push('  product config mismatch between the build and Play Console.');
+                                } else if (orderCode === '7') {
+                                    v.push('• Last order: ITEM_ALREADY_OWNED (code 7) — use Restore Purchases.');
+                                } else if (orderCode === '2' || orderCode === '6') {
+                                    v.push('✗ Last order: transient Play error (code ' + orderCode + ') — retry / check network.');
+                                }
+                                if (d.adFree_runtime && d.lastRemotePushStatus && d.lastRemotePushStatus.indexOf('deferred') === 0) {
+                                    v.push('• Entitlement owned locally but cross-device sync is deferred');
+                                    v.push('  (no Play Games sign-in yet) — sign in to Play Games to sync.');
+                                }
+                                return v;
+                            }
+
                             function _formatDiag(d) {
                                 if (!d) return 'No data returned.';
                                 const lines = [];
+                                const verdict = _verdictDiag(d);
+                                if (verdict.length) {
+                                    lines.push('── VERDICT ─────────────────────────');
+                                    verdict.forEach(l => lines.push(l));
+                                    lines.push('');
+                                }
                                 lines.push('── ENVIRONMENT ─────────────────────');
                                 lines.push('  isNative       : ' + d.isNative);
                                 lines.push('  pluginLoaded   : ' + d.pluginLoaded);
