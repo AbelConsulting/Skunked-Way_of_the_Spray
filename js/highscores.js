@@ -388,10 +388,19 @@ try {
     if (typeof score !== 'number') return false;
     const healthy = await checkAPIHealth();
     if (!healthy) return false;
-    const scores = await loadScores();
-    if (!Array.isArray(scores)) return false;
-    if (scores.length < MAX_SCORES) return true;
-    return score > scores[scores.length - 1].score;
+    // Check weekly and all-time boards in parallel. A score qualifies if it
+    // makes the top-N of *either* period so weekly/monthly boards stay
+    // populated even when the score doesn't reach the all-time threshold.
+    const [weekly, alltime] = await Promise.all([
+      loadScores('week'),
+      loadScores('alltime'),
+    ]);
+    for (const scores of [weekly, alltime]) {
+      if (!Array.isArray(scores)) continue;
+      if (scores.length < MAX_SCORES) return true;
+      if (score > scores[scores.length - 1].score) return true;
+    }
+    return false;
   }
 
   /**

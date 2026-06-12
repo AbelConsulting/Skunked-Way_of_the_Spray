@@ -1,7 +1,7 @@
-/*!
+﻿/*!
  * Skunked: Way of the Spray
  * Copyright (c) 2026 Mephitideus Interactive. All Rights Reserved.
- * Proprietary and confidential — unauthorized copying, distribution, or use
+ * Proprietary and confidential â€” unauthorized copying, distribution, or use
  * of this file, via any medium, is strictly prohibited. See LICENSE for terms.
  */
 /**
@@ -11,7 +11,7 @@
 
 const LEVEL_CONFIGS = [
     // =========================================================
-    // STAGE 1-1: FOREST OUTSKIRTS — THE RUN
+    // STAGE 1-1: FOREST OUTSKIRTS â€” THE RUN
     // =========================================================
     {
         name: "Forest Outskirts",
@@ -142,7 +142,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 2-1: SKUNK CITY — THE RUN
+    // STAGE 2-1: SKUNK CITY â€” THE RUN
     // =========================================================
     {
         name: "Skunk City",
@@ -281,7 +281,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 3-1: MOUNTAIN DOJO — THE RUN
+    // STAGE 3-1: MOUNTAIN DOJO â€” THE RUN
     // =========================================================
     {
         name: "Mountain Dojo",
@@ -426,7 +426,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 4-1: CRYSTAL CAVERNS — THE RUN
+    // STAGE 4-1: CRYSTAL CAVERNS â€” THE RUN
     // =========================================================
     {
         name: "Crystal Caverns",
@@ -575,7 +575,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 5-1: CRYSTAL CAVERNS DEPTHS — THE RUN
+    // STAGE 5-1: CRYSTAL CAVERNS DEPTHS â€” THE RUN
     // =========================================================
     {
         name: "Crystal Caverns Depths",
@@ -728,7 +728,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 6-1: NEON CROSSROADS — THE RUN
+    // STAGE 6-1: NEON CROSSROADS â€” THE RUN
     // =========================================================
     {
         name: "Neon Crossroads",
@@ -870,7 +870,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 7-1: CRYSTAL RIDGE — THE RUN
+    // STAGE 7-1: CRYSTAL RIDGE â€” THE RUN
     // =========================================================
     {
         name: "Crystal Ridge",
@@ -1022,14 +1022,14 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 8-1: ABYSSAL CAVERNS — THE RUN
+    // STAGE 8-1: ABYSSAL CAVERNS â€” THE RUN
     // =========================================================
     {
         name: "Abyssal Caverns",
         id: "level_8",
         width: 16000,
         completion: { exitX: 15900 },
-        background: 'bg_caves_crystal',
+        background: 'bg_alleyway',
         music: ['cave_ambient', 'ambient_cave_loop'],
         spawnPoints: [
             { x: 'right', y: 300 },
@@ -1045,20 +1045,20 @@ const LEVEL_CONFIGS = [
             { x: 14400, y: 300 }
         ],
         platforms: [
-            { x: 0, y: 600, width: 2600, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 0, y: 600, width: 2600, height: 40, type: 'static', tile: 'ground3_tile' },
             { x: 3050, y: 590, width: 3000, height: 40, type: 'static', tile: 'ground3_tile' },
-            { x: 6550, y: 610, width: 3200, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 6550, y: 610, width: 3200, height: 40, type: 'static', tile: 'ground3_tile' },
             { x: 10250, y: 600, width: 5750, height: 40, type: 'static', tile: 'ground3_tile' },
             // Abyssal Caverns: perilous gaps, narrow bridges, treacherous drops
             // Threshold: rocky ledges at the abyss entrance
             { x: 200, y: 520, width: 220, height: 24, type: 'static', tile: 'platform5_tile' },
-            { x: 600, y: 430, width: 150, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 600, y: 430, width: 150, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 950, y: 520, width: 180, height: 24, type: 'static', tile: 'platform5_tile' },
             { x: 1300, y: 440, width: 250, height: 24, type: 'static', tile: 'platform4_tile' },
 
             // Stalactite Drops: fast vertical movers simulating falling rocks
-            { x: 1800, y: 380, width: 100, height: 24, type: 'moving', axis: 'y', range: 220, speed: 3.0, tile: 'platform6_tile' },
-            { x: 2100, y: 320, width: 100, height: 24, type: 'moving', axis: 'y', range: 220, speed: 3.0, timeOffset: 1.0, tile: 'platform6_tile' },
+            { x: 1800, y: 380, width: 100, height: 24, type: 'moving', axis: 'y', range: 220, speed: 3.0, tile: 'platform_tile' },
+            { x: 2100, y: 320, width: 100, height: 24, type: 'moving', axis: 'y', range: 220, speed: 3.0, timeOffset: 1.0, tile: 'platform_tile' },
             { x: 2400, y: 440, width: 280, height: 24, type: 'static', tile: 'platform4_tile' },
 
             // Bone Bridge: very long narrow crossing over void
@@ -1066,37 +1066,37 @@ const LEVEL_CONFIGS = [
 
             // Lava Shelf: wide shelf then descending
             { x: 4000, y: 420, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
-            { x: 4400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 4400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 4800, y: 440, width: 250, height: 24, type: 'static', tile: 'platform5_tile' },
 
             // Pendulum Crossing: horizontal movers over gaps
-            { x: 5300, y: 480, width: 120, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.2, tile: 'platform6_tile' },
-            { x: 5800, y: 380, width: 120, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.2, timeOffset: 1.5, tile: 'platform6_tile' },
+            { x: 5300, y: 480, width: 120, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.2, tile: 'platform_tile' },
+            { x: 5800, y: 380, width: 120, height: 24, type: 'moving', axis: 'x', range: 160, speed: 2.2, timeOffset: 1.5, tile: 'platform_tile' },
             { x: 6300, y: 480, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
 
             // Mushroom Shelf: alternating heights
             { x: 6800, y: 530, width: 180, height: 24, type: 'static', tile: 'platform5_tile' },
             { x: 7100, y: 430, width: 160, height: 24, type: 'static', tile: 'platform4_tile' },
-            { x: 7400, y: 330, width: 160, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 7400, y: 330, width: 160, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 7700, y: 430, width: 200, height: 24, type: 'static', tile: 'platform4_tile' },
             { x: 8050, y: 530, width: 250, height: 24, type: 'static', tile: 'platform5_tile' },
 
             // Abyss Crossing: triple vertical movers
-            { x: 8500, y: 450, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, tile: 'platform6_tile' },
-            { x: 8850, y: 350, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, timeOffset: 0.7, tile: 'platform6_tile' },
-            { x: 9200, y: 450, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, timeOffset: 1.4, tile: 'platform6_tile' },
+            { x: 8500, y: 450, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, tile: 'platform_tile' },
+            { x: 8850, y: 350, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, timeOffset: 0.7, tile: 'platform_tile' },
+            { x: 9200, y: 450, width: 110, height: 24, type: 'moving', axis: 'y', range: 170, speed: 2.4, timeOffset: 1.4, tile: 'platform_tile' },
 
             // Deep Shelf: safety platform
             { x: 9600, y: 400, width: 500, height: 24, type: 'static', tile: 'platform4_tile' },
 
             // Final Descent: steep drops to boss approach
-            { x: 10400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 10400, y: 350, width: 200, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 10800, y: 450, width: 300, height: 24, type: 'static', tile: 'platform5_tile' },
-            { x: 11400, y: 380, width: 180, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 11400, y: 380, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
 
             // Boss Gauntlet
-            { x: 12000, y: 460, width: 140, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.2, tile: 'platform6_tile' },
-            { x: 12500, y: 380, width: 140, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.2, timeOffset: 1.0, tile: 'platform6_tile' },
+            { x: 12000, y: 460, width: 140, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.2, tile: 'platform_tile' },
+            { x: 12500, y: 380, width: 140, height: 24, type: 'moving', axis: 'x', range: 140, speed: 2.2, timeOffset: 1.0, tile: 'platform_tile' },
             { x: 13100, y: 470, width: 700, height: 24, type: 'static', tile: 'platform4_tile' },
             { x: 14100, y: 400, width: 400, height: 24, type: 'static', tile: 'platform5_tile' },
             { x: 14800, y: 500, width: 350, height: 24, type: 'static', tile: 'platform5_tile' }
@@ -1139,28 +1139,28 @@ const LEVEL_CONFIGS = [
         width: 5000,
         completion: { bossTriggerX: 4200, exitX: 4900 },
         boss: {
-            type: "BOSS2",
+            type: "BOSS8",
             spawnX: 4480,
             spawnY: 520,
             healthMultiplier: 15.5,
             speedMultiplier: 1.2,
             attackDamageMultiplier: 2.2
         },
-        background: 'bg_caves_crystal',
+        background: 'bg_alleyway',
         music: ['cave_ambient', 'ambient_cave_loop'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
         ],
         platforms: [
-            { x: 0, y: 600, width: 5000, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 0, y: 600, width: 5000, height: 40, type: 'static', tile: 'ground3_tile' },
             { x: 250, y: 520, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
-            { x: 700, y: 420, width: 170, height: 24, type: 'static', tile: 'platform6_tile' },
-            { x: 1200, y: 320, width: 160, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.5, tile: 'platform6_tile' },
+            { x: 700, y: 420, width: 170, height: 24, type: 'static', tile: 'platform_tile' },
+            { x: 1200, y: 320, width: 160, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.5, tile: 'platform_tile' },
             { x: 1750, y: 460, width: 220, height: 24, type: 'static', tile: 'platform4_tile' },
-            { x: 2300, y: 350, width: 180, height: 24, type: 'static', tile: 'platform6_tile' },
+            { x: 2300, y: 350, width: 180, height: 24, type: 'static', tile: 'platform_tile' },
             { x: 2900, y: 480, width: 200, height: 24, type: 'static', tile: 'platform5_tile' },
-            { x: 3450, y: 380, width: 160, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.5, timeOffset: 1.0, tile: 'platform6_tile' },
+            { x: 3450, y: 380, width: 160, height: 24, type: 'moving', axis: 'y', range: 180, speed: 2.5, timeOffset: 1.0, tile: 'platform_tile' },
             { x: 4000, y: 500, width: 240, height: 24, type: 'static', tile: 'platform4_tile' },
             { x: 4500, y: 420, width: 220, height: 24, type: 'static', tile: 'platform5_tile' }
         ],
@@ -1177,14 +1177,14 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 9-1: NEON NEXUS — THE RUN
+    // STAGE 9-1: NEON NEXUS â€” THE RUN
     // =========================================================
     {
         name: "Neon Nexus",
         id: "level_9",
         width: 12000,
         completion: { exitX: 11900 },
-        background: 'bg_neon',
+        background: 'bg_space',
         music: ['city_theme', 'action_theme', 'gameplay'],
         spawnPoints: [
             { x: 'right', y: 300 },
@@ -1200,7 +1200,7 @@ const LEVEL_CONFIGS = [
         ],
         platforms: [
             { x: 0, y: 590, width: 2300, height: 40, type: 'static', tile: 'ground3_tile' },
-            { x: 2750, y: 580, width: 2600, height: 40, type: 'static', tile: 'ground2_tile' },
+            { x: 2750, y: 580, width: 2600, height: 40, type: 'static', tile: 'ground3_tile' },
             { x: 5800, y: 600, width: 2500, height: 40, type: 'static', tile: 'ground3_tile' },
             { x: 8750, y: 590, width: 3250, height: 40, type: 'static', tile: 'ground3_tile' },
             // Neon Nexus: dense urban obstacle course, lots of moving parts
@@ -1288,14 +1288,14 @@ const LEVEL_CONFIGS = [
         width: 4000,
         completion: { bossTriggerX: 3200, exitX: 3900 },
         boss: {
-            type: "BOSS3",
+            type: "BOSS9",
             spawnX: 3480,
             spawnY: 520,
             healthMultiplier: 16.5,
             speedMultiplier: 1.2,
             attackDamageMultiplier: 2.3
         },
-        background: 'bg_neon',
+        background: 'bg_space',
         music: ['city_theme', 'action_theme', 'gameplay'],
         spawnPoints: [
             { x: 200, y: 300 },
@@ -1325,7 +1325,7 @@ const LEVEL_CONFIGS = [
     },
 
     // =========================================================
-    // STAGE 10-1: FINAL SHOWDOWN — THE RUN
+    // STAGE 10-1: FINAL SHOWDOWN â€” THE RUN
     // =========================================================
     {
         name: "Final Showdown",
@@ -1476,7 +1476,7 @@ const LEVEL_CONFIGS = [
 
 // --- SURVIVAL MODE ARENA ---
 // Compact fighting arena used exclusively for Survival Mode.
-// No boss, no exit — enemies come in escalating waves until the player falls.
+// No boss, no exit â€” enemies come in escalating waves until the player falls.
 const SURVIVAL_ARENA_CONFIG = {
     name: "Survival Arena",
     id: "survival_arena",

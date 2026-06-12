@@ -23,11 +23,13 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS4': { prefix: 'boss4', size: { width: 128, height: 128 }, fallback: 'boss3', attackAnim: 'boss4_attack', bossName: 'MALODOR', bossTitle: 'Enemy Kingpin', ability: 'projectile' },
     'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'STEAMPUNK WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
     'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' },
-    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Flower Chief', ability: 'crystalBarrage' }
+    'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Flower Chief', ability: 'crystalBarrage' },
+    'BOSS8': { prefix: 'boss8', size: { width: 128, height: 128 }, fallback: 'boss7', attackAnim: 'boss8_attack', bossName: 'VENOM FANG', bossTitle: 'Ruler of the Underbelly', ability: 'charge' },
+    'BOSS9': { prefix: 'boss9', size: { width: 128, height: 128 }, fallback: 'boss8', attackAnim: 'boss9_attack', bossName: 'ASTRAL TYRANT', bossTitle: 'Warden of the Void', ability: 'projectile' }
 };
 
-const HEAVY_BOSS_ATTACK_TYPES = new Set(['BOSS5', 'BOSS6', 'BOSS7']);
-const ALT_BOSS_SOUND_TYPES = new Set(['BOSS2', 'BOSS3', 'BOSS4', 'BOSS5', 'BOSS6', 'BOSS7']);
+const HEAVY_BOSS_ATTACK_TYPES = new Set(['BOSS5', 'BOSS6', 'BOSS7', 'BOSS8', 'BOSS9']);
+const ALT_BOSS_SOUND_TYPES = new Set(['BOSS2', 'BOSS3', 'BOSS4', 'BOSS5', 'BOSS6', 'BOSS7', 'BOSS8', 'BOSS9']);
 
 const BOSS_TYPE_INFO = Object.freeze(
     Object.fromEntries(
