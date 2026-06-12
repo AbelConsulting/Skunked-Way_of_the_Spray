@@ -19,13 +19,18 @@
  *
  * SETUP (Android, one-time):
  *   1. npm install cordova-plugin-purchase
- *   2. Create TWO managed products in Google Play Console:
+ *   2. Create managed products in Google Play Console:
+ *
+ *      PRIMARY REVENUE PRODUCT (main IAP — always active):
  *        Product ID: remove_ads      | Type: One-time (managed) | Price: $1.99
+ *        Grants: ad-free gameplay + Sapphire, Amethyst, Steel ninja skins.
+ *        During early-access window also auto-grants Gold skin + Founder badge.
+ *
+ *      SECONDARY / OPTIONAL (early-access only — deactivate after 2026-12-31):
  *        Product ID: founder_pass    | Type: One-time (managed) | Price: $0.99
- *      `founder_pass` is the standalone Early-Access reward (Gold Skunk skin
- *      + Founder badge) for players who don't want to remove ads. Buying
- *      `remove_ads` during the early-access window still auto-grants the
- *      same cosmetics; this is the additional purchase path.
+ *        Grants: Gold ninja skin + Founder badge ONLY. Does NOT remove ads.
+ *        For players who want to cloud-sync Founder status without buying
+ *        Remove Ads. This is NOT the primary revenue driver.
  *   3. npx cap sync android
  *   4. Upload a signed bundle to a Play Console internal testing track and add
  *      yourself as a license tester so the purchase flow works in test mode.
