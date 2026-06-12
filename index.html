@@ -1484,8 +1484,8 @@
             overflow: hidden;
         }
         .info-boss .boss-portrait {
-            width: 64px;
-            height: 64px;
+            width: 96px;
+            height: 96px;
             margin: 0 auto 6px;
             background-repeat: no-repeat;
             /* Sprite sheets are 4 frames laid out horizontally; show only the
@@ -3091,9 +3091,10 @@
         .stat-portrait--ninja       { background-image: url('assets/sprites/characters/ninja_idle.png'); }
         .stat-portrait--malodor     { background-image: url('assets/sprites/enemies/boss4_idle.png'); }
         .boss-portrait--ironclaw    { background-image: url('assets/sprites/enemies/boss2_idle.png'); }
-        .boss-portrait--malodor     { background-image: url('assets/sprites/enemies/boss4_idle.png'); }
+        .boss-portrait--malodor     { background-image: url('assets/sprites/enemies/boss4_idle.png'); background-size: 384px 96px; background-position: 0 0; }
         .boss-portrait--kyle        { background-image: url('assets/sprites/enemies/boss7_idle.png'); }
         .boss-portrait--venomfang   { background-image: url('assets/sprites/enemies/boss8_walk.png'); }
+        .boss-portrait--astraltyrant { background-image: url('assets/sprites/enemies/boss9_idle.png'); }
 
 
         .enemy-sprite-preview--basic  { background-image: url('assets/sprites/enemies/basic_idle.png'); }
@@ -3514,7 +3515,7 @@
 
                     <div class="menu-sub-section">
                         <h3 class="menu-sub-section-title">&#127919; Objective</h3>
-                        <p class="menu-sub-section-copy">Fight through <strong>10 stages</strong> of enemies and bosses. Defeat the boss in a stage to advance. Lose all your lives and it's game over &mdash; your final score is submitted to the leaderboard.</p>
+                        <p class="menu-sub-section-copy">Fight through <strong>10 worlds</strong> (20 stages) of enemies and bosses. Each world has a run stage followed by a boss showdown. Lose all your lives and it's game over &mdash; your final score is submitted to the leaderboard.</p>
                     </div>
 
                     <div class="menu-sub-section">
@@ -3671,6 +3672,11 @@
                                 <div class="boss-portrait boss-portrait--venomfang" role="img" aria-label="Venom Fang"></div>
                                 <span class="boss-name">VENOM FANG</span>
                                 <span class="boss-title">Ruler of the Underbelly</span>
+                            </div>
+                            <div class="info-boss">
+                                <div class="boss-portrait boss-portrait--astraltyrant" role="img" aria-label="Astral Tyrant"></div>
+                                <span class="boss-name">ASTRAL TYRANT</span>
+                                <span class="boss-title">Warden of the Void</span>
                             </div>
                         </div>
                         <div class="info-features">
@@ -4502,7 +4508,8 @@
                                         .map((stageConfig) => stageConfig && stageConfig.boss && stageConfig.boss.type)
                                         .filter(Boolean)
                                 ).size;
-                                infoStagesSummary.textContent = `The campaign escalates through ${LEVEL_CONFIGS.length} stages with tougher boss rematches and sharper enemy mixes. Every stage includes 3 Golden Idols, while ${uniqueBossCount} named bosses rotate back in with stronger stats later in the run.`;
+                                const runStageCount = LEVEL_CONFIGS.filter((s) => !s.boss).length;
+                                infoStagesSummary.textContent = `The campaign spans ${LEVEL_CONFIGS.length} stages across ${runStageCount} worlds. Run stages contain 3 hidden Golden Idols each; boss showdown stages are idol-free. ${uniqueBossCount} named bosses rotate back with escalating stats.`;
                             }
                         }
 
