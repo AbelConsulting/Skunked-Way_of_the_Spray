@@ -164,7 +164,7 @@ function setCors(req, res) {
     res.set("Access-Control-Allow-Origin", origin);
   }
   res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Content-Type");
+  res.set("Access-Control-Allow-Headers", "Content-Type, X-Firebase-AppCheck");
   if (req.method === "OPTIONS") {
     res.status(204).send("");
     return true;
@@ -184,9 +184,12 @@ exports.getLeaderboard = onRequest({ region: "us-central1" }, async (req, res) =
   try {
     const count = Math.min(parseInt(req.query.count || "10", 10), 100);
     // period: "week" | "month" | "alltime" (default).
-    // week/month use a date range filter + in-memory score sort (no composite index needed).
-    // alltime uses the existing (score DESC) index for O(1) top-N.
+    // week/month use a date range filter + in-memory score sort.
+    // alltime uses the (score DESC) index for O(1) top-N.
     const period = ["week", "month"].includes(req.query.period) ? req.query.period : "alltime";
+    // Scan ceiling for period queries: proportional to the requested count so
+    // the fetch stays bounded even at higher count values.
+    const PERIOD_SCAN_LIMIT = Math.min(count * 20, 500);
 
     let rawDocs;
     if (period === "week" || period === "month") {
@@ -197,7 +200,7 @@ exports.getLeaderboard = onRequest({ region: "us-central1" }, async (req, res) =
         .collection(SCORES_COLLECTION)
         .where("date", ">=", cutoff)
         .orderBy("date", "desc")
-        .limit(500)
+        .limit(PERIOD_SCAN_LIMIT)
         .get();
       rawDocs = snapshot.docs;
     } else {
@@ -378,6 +381,14 @@ function isValidPlayerId(s) {
 // GET /getEntitlements?playerId=...
 exports.getEntitlements = onRequest({ region: "us-central1" }, async (req, res) => {
   if (setCors(req, res)) return;
+  // App Check — rejects non-app callers when ENFORCE_APP_CHECK=1
+  if (!(await checkAppCheck(req, res))) return;
+  // Rate limit by IP
+  const ip = getClientIp(req);
+  if (!checkRateLimit(ip)) {
+    res.status(429).json({ error: "rate_limited" });
+    return;
+  }
   try {
     const playerId = (req.query.playerId || "").toString();
     if (!isValidPlayerId(playerId)) {
