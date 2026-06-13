@@ -73,6 +73,7 @@ class Game {
         this.gameMode = 'arcade';
         // Survival mode state
         this.survivalWave = 0;
+        this._survivalRunCount = 0; // increments each run; drives background rotation
         this.survivalWaveKillsAtStart = 0;
         this.survivalWaveKillTarget = 0;
         this.survivalWaveRestTimer = 0;
@@ -1093,7 +1094,10 @@ class Game {
             if (!config) return;
 
             // Map background types to ambient tracks
-            const bgType = (config.background || '').toLowerCase();
+            // In survival mode use the live backgroundName so rotation is reflected
+            const bgType = (this.gameMode === 'survival' && this.level && this.level.backgroundName
+                ? this.level.backgroundName
+                : (config.background || '')).toLowerCase();
             let ambientName = null;
             if (bgType.includes('forest') || bgType.includes('grass') || bgType.includes('park')) {
                 ambientName = 'ambient_forest';
@@ -1307,12 +1311,29 @@ class Game {
 
         /** Load the compact survival arena and kick off the first wave countdown. */
         _initSurvivalMode() {
+            // Increment run counter and pick a background (rotates every 2 runs)
+            this._survivalRunCount++;
+            const _survivalBgs = ['bg_city', 'bg_dojo', 'bg_alleyway'];
+            const _bgIndex = Math.floor((this._survivalRunCount - 1) / 2) % _survivalBgs.length;
+            const _chosenBg = _survivalBgs[_bgIndex];
+
             try {
                 if (typeof SURVIVAL_ARENA_CONFIG !== 'undefined') {
                     this.level.loadLevel(SURVIVAL_ARENA_CONFIG);
                     this.currentLevelIndex = -1; // not a regular arcade level
                     this.currentLevelId = 'survival_arena';
                     this.level.useMobileOptimizations = this.isMobile;
+                    // Apply the rotated background and ensure its sprite is loaded
+                    this.level.backgroundName = _chosenBg;
+                    this.level.cachedSprites[_chosenBg] = undefined; // force fresh lookup
+                    if (typeof spriteLoader !== 'undefined') {
+                        try {
+                            const _bgBase = _chosenBg.replace(/^bg_/, '');
+                            spriteLoader.loadSpriteBest(_chosenBg, `assets/sprites/backgrounds/${_bgBase}_bg`)
+                                .then(img => { try { this.level.cachedSprites[_chosenBg] = img; } catch (e) { __err('game', e); } })
+                                .catch(e => { __err('game', e); });
+                        } catch (e) { __err('game', e); }
+                    }
                     // Re-apply static layer so the new arena renders correctly
                     this.level._staticNeedsUpdate = true;
                 }
