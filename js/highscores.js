@@ -24,6 +24,10 @@ try {
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
   const MAX_SCORES = 10; // The number of scores to show on the leaderboard.
   const PLAYER_NAME_KEY = 'skunkfu.playerName'; // Last submitted name (for own-row highlight).
+  // Steam leaderboard API name — must match the leaderboard created in
+  // Steamworks (Stats & Achievements → Leaderboards). electron/main.js will
+  // findOrCreate it (Descending / Numeric) on first submit.
+  const STEAM_LEADERBOARD = 'global_highscores';
 
   function _savePlayerName(name) {
     if (typeof name !== 'string' || !name.trim()) return;
@@ -270,6 +274,17 @@ try {
         }
       } catch(e) { /* GPGS mirroring must never break gameplay */ }
 
+      // ── Mirror unlocks to Steam via Electron IPC (desktop build only) ──
+      // electronAPI.platform === 'steam' is set by electron/preload.js. The
+      // achievement `id` must match the Steam achievement API name exactly.
+      try {
+        if (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.platform === 'steam') {
+          for (const ach of newAchievements) {
+            try { window.electronAPI.unlockAchievement(ach.id).catch(() => {}); } catch(e){}
+          }
+        }
+      } catch(e) { /* Steam mirroring must never break gameplay */ }
+
       // ── Dispatch a CustomEvent so toast/rail UI can react ──
       try {
         if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
@@ -499,13 +514,28 @@ try {
         ? PlayGamesServices.submitScore(score)
         : Promise.resolve(false);
 
-      const [apiOk, playGamesOk] = await Promise.all([
+      // Steam leaderboard submit (desktop build only). electronAPI.platform
+      // === 'steam' is set by electron/preload.js. Best-effort: a Steam
+      // failure must not block the Cloud Functions submission.
+      const canSubmitSteam = !!(
+        window.electronAPI &&
+        window.electronAPI.platform === 'steam' &&
+        typeof window.electronAPI.submitScore === 'function'
+      );
+      const steamSubmitPromise = canSubmitSteam
+        ? window.electronAPI.submitScore(STEAM_LEADERBOARD, score)
+            .then(r => !!(r && r.success))
+            .catch(() => false)
+        : Promise.resolve(false);
+
+      const [apiOk, playGamesOk, steamOk] = await Promise.all([
         apiSubmitPromise,
         playGamesSubmitPromise,
+        steamSubmitPromise,
       ]);
 
-      if (!apiOk && !playGamesOk) {
-        console.error('Score submission failed for both Cloud Functions and Play Games');
+      if (!apiOk && !playGamesOk && !steamOk) {
+        console.error('Score submission failed for Cloud Functions, Play Games, and Steam');
       } else {
         // Mark this runId so a follow-up retry can't double-post.
         _submitCompleted.add(runId);
@@ -521,7 +551,7 @@ try {
           });
         }
       } catch (e) { /* */ }
-      return apiOk || playGamesOk;
+      return apiOk || playGamesOk || steamOk;
       } catch (e) {
         console.error("Failed to submit score to skunked.io", e);
         return false;

@@ -49,6 +49,9 @@
     "productName": "Skunked: Way of the Spray",
     "copyright": "Copyright © 2026 Mephitideus Interactive LLC",
     "electronEntryPoint": "electron/main.js",
+    "directories": {
+      "output": "release"
+    },
     "files": [
       "dist-steam/**/*",
       "electron/**/*",
@@ -88,6 +91,12 @@
       "target": [
         {
           "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "dir",
           "arch": [
             "x64"
           ]

@@ -1,0 +1,36 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe App Build Script — Skunked: Way of the Spray (AppID 4815180)
+//
+// Usage (from the Steamworks SDK ContentBuilder/builder_win folder, or via
+// the bundled steamcmd):
+//
+//   steamcmd +login <builder_account> +run_app_build "<full path>\steam\app_build_4815180.vdf" +quit
+//
+// or use the helper:  steam\upload.bat <builder_account>
+//
+// Notes:
+//   • "contentroot" points at the electron-builder UNPACKED output produced by
+//     `npm run electron:build:win` (release/win-unpacked). Steam ships that
+//     folder directly — do NOT upload the NSIS installer .exe.
+//   • Confirm the Windows depot ID (4815181 by default) on the SteamPipe tab:
+//     https://partner.steamgames.com/apps/depots/4815180
+//   • "setlive" is intentionally blank — set the build live from the
+//     Steamworks "Builds" page after it finishes processing, never from CI.
+// ─────────────────────────────────────────────────────────────────────────────
+"appbuild"
+{
+	"appid"	"4815180"
+	"desc"	"Skunked: Way of the Spray — Windows build"   // shown on the Builds page; bump per upload
+
+	"buildoutput"	"output\\"                              // local SteamPipe log/chunk cache (gitignored)
+	"contentroot"	"..\\release\\win-unpacked\\"           // electron-builder unpacked app
+
+	"setlive"	""                                          // leave blank — promote builds manually
+	"preview"	"0"                                         // set to "1" for a dry-run that uploads nothing
+	"local"	""
+
+	"depots"
+	{
+		"4815181"	"depot_build_4815181.vdf"
+	}
+}

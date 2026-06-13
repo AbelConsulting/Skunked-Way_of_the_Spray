@@ -1,0 +1,22 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe Depot Build Script — Linux depot (4815183) for AppID 4815180
+//
+// electron-builder's AppImage target is a single-file bundle, which is awkward
+// for SteamPipe. For Steam, prefer the unpacked "linux-unpacked" directory
+// (add a "dir" target in package.json build.linux.target, or extract the
+// AppImage). This contentroot assumes release/linux-unpacked/.
+// ─────────────────────────────────────────────────────────────────────────────
+"DepotBuildConfig"
+{
+	"DepotID"	"4815183"
+
+	"FileMapping"
+	{
+		"LocalPath"	"*"
+		"DepotPath"	"."
+		"recursive"	"1"
+	}
+
+	"FileExclusion"	"*.pdb"
+	"FileExclusion"	"*.map"
+}

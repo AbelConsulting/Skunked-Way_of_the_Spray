@@ -1,0 +1,25 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe Depot Build Script — macOS depot (4815182) for AppID 4815180
+//
+// electron-builder produces a .app bundle under release/mac (x64) and
+// release/mac-arm64 (Apple Silicon). For a universal build, point contentroot
+// at the universal output. Steam ships the .app directory contents.
+//
+// IMPORTANT: macOS builds must be code-signed AND notarized by Apple or Gatekeeper
+// will block launch. Do NOT enable the macOS checkbox in Steamworks until a
+// signed+notarized build is uploaded.
+// ─────────────────────────────────────────────────────────────────────────────
+"DepotBuildConfig"
+{
+	"DepotID"	"4815182"
+
+	"FileMapping"
+	{
+		"LocalPath"	"*"
+		"DepotPath"	"."
+		"recursive"	"1"
+	}
+
+	"FileExclusion"	"*.pdb"
+	"FileExclusion"	"*.map"
+}

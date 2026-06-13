@@ -1,0 +1,27 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe App Build Script — macOS — Skunked: Way of the Spray (AppID 4815180)
+//
+// Build on macOS first:  npm run electron:build:mac
+// Then upload from macOS: steamcmd +login <builder> +run_app_build "<path>/steam/app_build_mac.vdf" +quit
+//
+// contentroot must point at the SIGNED + NOTARIZED .app output. electron-builder
+// places the universal/x64 app under release/mac and arm64 under release/mac-arm64.
+// Adjust below to match your actual signed output directory.
+// ─────────────────────────────────────────────────────────────────────────────
+"appbuild"
+{
+	"appid"	"4815180"
+	"desc"	"Skunked: Way of the Spray — macOS build"
+
+	"buildoutput"	"output/"
+	"contentroot"	"../release/mac/"
+
+	"setlive"	""
+	"preview"	"0"
+	"local"	""
+
+	"depots"
+	{
+		"4815182"	"depot_build_4815182.vdf"
+	}
+}

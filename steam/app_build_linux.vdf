@@ -1,0 +1,27 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe App Build Script — Linux — Skunked: Way of the Spray (AppID 4815180)
+//
+// Build on Linux first:  npm run electron:build:linux
+// Then upload from Linux: steamcmd +login <builder> +run_app_build "<path>/steam/app_build_linux.vdf" +quit
+//
+// contentroot assumes an unpacked directory (release/linux-unpacked). The default
+// package.json target is AppImage (single file) — add a "dir" target under
+// build.linux.target, or extract the AppImage, to produce linux-unpacked.
+// ─────────────────────────────────────────────────────────────────────────────
+"appbuild"
+{
+	"appid"	"4815180"
+	"desc"	"Skunked: Way of the Spray — Linux build"
+
+	"buildoutput"	"output/"
+	"contentroot"	"../release/linux-unpacked/"
+
+	"setlive"	""
+	"preview"	"0"
+	"local"	""
+
+	"depots"
+	{
+		"4815183"	"depot_build_4815183.vdf"
+	}
+}

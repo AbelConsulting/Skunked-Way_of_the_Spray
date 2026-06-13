@@ -1,0 +1,22 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe Depot Build Script — Windows depot (4815181) for AppID 4815180
+//
+// FileMapping "*" with recursive "1" uploads the entire contentroot
+// (release/win-unpacked) into the depot. Adjust DepotID if Steamworks assigned
+// a different Windows depot on the SteamPipe tab.
+// ─────────────────────────────────────────────────────────────────────────────
+"DepotBuildConfig"
+{
+	"DepotID"	"4815181"
+
+	"FileMapping"
+	{
+		"LocalPath"	"*"
+		"DepotPath"	"."
+		"recursive"	"1"
+	}
+
+	// Strip debug symbols / build cruft that electron-builder may emit.
+	"FileExclusion"	"*.pdb"
+	"FileExclusion"	"*.map"
+}
