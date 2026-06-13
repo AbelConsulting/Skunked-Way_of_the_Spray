@@ -385,17 +385,31 @@ try {
    * @returns {Promise<boolean>} A promise that resolves to true if it is a high score.
    */
   async function isHighScore(score){
-    if (typeof score !== 'number') return false;
-    const healthy = await checkAPIHealth();
-    if (!healthy) return false;
-    // Check weekly and all-time boards in parallel. A score qualifies if it
-    // makes the top-N of *either* period so weekly/monthly boards stay
-    // populated even when the score doesn't reach the all-time threshold.
-    const [weekly, alltime] = await Promise.all([
-      loadScores('week'),
-      loadScores('alltime'),
-    ]);
-    for (const scores of [weekly, alltime]) {
+    if (!validateScore(score)) return false;
+    // Load the weekly, monthly and all-time boards in parallel. A score
+    // qualifies if it makes the top-N of *any* period so the weekly/monthly
+    // boards stay populated even when the score doesn't reach the all-time
+    // threshold.
+    //
+    // NOTE: we intentionally do NOT gate this on a /health probe. A flaky or
+    // cold-started health endpoint must never silently swallow a player's
+    // score. If the boards can't be loaded at all, we optimistically treat the
+    // run as qualifying and let the submit path (which the server validates and
+    // dedupes) make the final call.
+    let boards;
+    try {
+      boards = await Promise.all([
+        loadScores('week'),
+        loadScores('month'),
+        loadScores('alltime'),
+      ]);
+    } catch (e) {
+      console.warn('isHighScore: board load failed, allowing submission', e);
+      return true;
+    }
+    // If every board failed to load, optimistically allow the submission.
+    if (!boards.some(b => Array.isArray(b))) return true;
+    for (const scores of boards) {
       if (!Array.isArray(scores)) continue;
       if (scores.length < MAX_SCORES) return true;
       if (score > scores[scores.length - 1].score) return true;
