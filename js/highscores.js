@@ -395,6 +395,40 @@ try {
   }
 
   /**
+   * True when running inside the Electron/Steam desktop build with a working
+   * leaderboard IPC bridge.
+   */
+  function _isSteamDesktop() {
+    return !!(
+      typeof window !== 'undefined' &&
+      window.electronAPI &&
+      window.electronAPI.platform === 'steam' &&
+      typeof window.electronAPI.getLeaderboard === 'function'
+    );
+  }
+
+  /**
+   * Fetches the top entries from the Steam leaderboard and maps them into the
+   * shape renderScoreboard expects. Steam entries only carry name/score/rank,
+   * so achievement/prestige/date fields are intentionally absent.
+   * @returns {Promise<Array|null>}
+   */
+  async function loadSteamScores() {
+    if (!_isSteamDesktop()) return [];
+    try {
+      const entries = await window.electronAPI.getLeaderboard(STEAM_LEADERBOARD, MAX_SCORES);
+      if (!Array.isArray(entries)) return [];
+      return entries.map(e => ({
+        name: e.name || '???',
+        score: Number(e.score) || 0,
+      }));
+    } catch (e) {
+      console.warn('Failed to load Steam leaderboard', e);
+      return null;
+    }
+  }
+
+  /**
    * Checks if a score is high enough to make the leaderboard.
    * @param {number} score The player's score.
    * @returns {Promise<boolean>} A promise that resolves to true if it is a high score.
@@ -721,6 +755,10 @@ try {
         { period: 'month',   label: 'This Month' },
         { period: 'alltime', label: 'All Time' },
       ];
+      // Desktop/Steam build: add a Steam friends+global tab.
+      if (_isSteamDesktop()) {
+        tabDefs.push({ period: 'steam', label: 'Steam' });
+      }
       for (const def of tabDefs) {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -784,7 +822,7 @@ try {
     let scores = null;
     let loadFailed = false;
     try {
-      scores = await loadScores(period);
+      scores = period === 'steam' ? await loadSteamScores() : await loadScores(period);
     } catch (e) {
       loadFailed = true;
       console.warn('renderScoreboard: loadScores threw', e);
@@ -821,7 +859,7 @@ try {
     }, 10000);
 
     if (scores.length === 0) {
-      const labels = { week: 'this week', month: 'this month', alltime: '' };
+      const labels = { week: 'this week', month: 'this month', alltime: '', steam: 'on Steam' };
       const empty = document.createElement('div');
       empty.className = 'scoreboard-state scoreboard-state--empty';
       empty.textContent = labels[period]
