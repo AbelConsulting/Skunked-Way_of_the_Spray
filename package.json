@@ -62,12 +62,7 @@
       "dist-steam/**/*",
       "electron/**/*",
       "assets/icons/**/*",
-      "node_modules/**/*",
-      "!node_modules/.cache/**/*",
-      "!node_modules/playwright/**/*",
-      "!node_modules/@playwright/**/*",
-      "!node_modules/typescript/**/*",
-      "!node_modules/wrangler/**/*"
+      "node_modules/steamworks.js/**/*"
     ],
     "win": {
       "target": [
