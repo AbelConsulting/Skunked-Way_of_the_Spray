@@ -4,10 +4,10 @@ Generate Steam store + library graphical assets for
 
 Produces (assets/store-listing/steam/):
   Store capsules (shown on the store before you own it):
-    • small_capsule   231 x 87    (required — lists / search results, title must be legible)
-    • header_capsule  460 x 215   (required — top of store page, recommended hub)
-    • main_capsule    616 x 353   (front-page features / daily deals)
-    • vertical_capsule 374 x 448  (sales, "Discovery" pop-ups)
+    • small_capsule   462 x 174    (required — lists / search results, logo must nearly fill)
+    • header_capsule  920 x 430    (required — top of store page, recommended hub)
+    • main_capsule   1232 x 706    (front-page features / daily deals)
+    • vertical_capsule 748 x 896   (sales, "Discovery" pop-ups)
     • page_background 1438 x 810   (optional store page backdrop)
   Library assets (shown to owners in their Steam Library):
     • library_capsule 600 x 900   (vertical box-art in the library grid)
@@ -45,11 +45,12 @@ GOLD = (255, 215, 0)
 DARK_BROWN = (30, 15, 0)
 
 # Steam asset reference (filename -> (width, height, note))
+# Store capsules use Steam's current @2x dimensions.
 STEAM_SIZES = {
-    "small_capsule":    (231, 87,   "required — search/list, title legible"),
-    "header_capsule":   (460, 215,  "required — store page header"),
-    "main_capsule":     (616, 353,  "front-page features"),
-    "vertical_capsule": (374, 448,  "sales / discovery"),
+    "small_capsule":    (462, 174,  "required — search/list, logo must nearly fill"),
+    "header_capsule":   (920, 430,  "required — store page header"),
+    "main_capsule":     (1232, 706, "front-page features"),
+    "vertical_capsule": (748, 896,  "sales / discovery"),
     "page_background":  (1438, 810, "optional store backdrop"),
     "library_capsule":  (600, 900,  "library vertical box-art"),
     "library_header":   (460, 215,  "library small header"),
@@ -263,33 +264,43 @@ def gen_small_capsule():
     w, h = STEAM_SIZES["small_capsule"][:2]
     canvas = load_bg("city_bg.png", w, h, brightness=0.4, blur=2)
     canvas = vignette(canvas, margin_frac=0.12)
-    # Small ninja on the left, title fills the rest (must stay legible at tiny size)
+    # Small ninja on the left; logo nearly fills the rest (Steam requirement:
+    # logo must be legible at the smallest size).
     ninja = trim_transparent(extract_frame(os.path.join(CHARS, "ninja_idle.png")))
     ninja = scale_to_height(ninja, int(h * 0.92))
-    add_glow(canvas, ninja, (4, h - ninja.size[1] - 2), glow_color=(0, 255, 200), radius=5)
+    add_glow(canvas, ninja, (6, h - ninja.size[1] - 3), glow_color=(0, 255, 200), radius=8)
     draw = ImageDraw.Draw(canvas)
-    tf = get_font(34)
+    avail = w - ninja.size[0] - 16
+    # Fit the title to ~92% of the available width.
     title = "SKUNKED"
+    fs = 90
+    while fs > 20:
+        tf = get_font(fs)
+        tb = draw.textbbox((0, 0), title, font=tf)
+        if (tb[2] - tb[0]) <= avail * 0.96:
+            break
+        fs -= 2
+    tf = get_font(fs)
     tb = draw.textbbox((0, 0), title, font=tf)
-    tw = tb[2] - tb[0]
-    tx = ninja.size[0] + 10 + ((w - ninja.size[0] - 10) - tw) // 2
-    draw_text_outline(draw, (tx, (h - (tb[3] - tb[1])) // 2 - 6), title, tf, GOLD, width=3)
+    tw, th = tb[2] - tb[0], tb[3] - tb[1]
+    tx = ninja.size[0] + 12 + (avail - tw) // 2
+    draw_text_outline(draw, (tx, (h - th) // 2 - th // 6), title, tf, GOLD, width=4)
     return canvas
 
 
 def gen_header_capsule():
     w, h = STEAM_SIZES["header_capsule"][:2]
-    return hero_scene(w, h, bg_name="city_bg.png", title_scale=0.95, sparkle=45)
+    return hero_scene(w, h, bg_name="city_bg.png", title_scale=1.7, sparkle=70)
 
 
 def gen_main_capsule():
     w, h = STEAM_SIZES["main_capsule"][:2]
-    return hero_scene(w, h, bg_name="neon_bg.png", title_scale=1.15, sparkle=60)
+    return hero_scene(w, h, bg_name="neon_bg.png", title_scale=2.1, sparkle=90)
 
 
 def gen_vertical_capsule():
     w, h = STEAM_SIZES["vertical_capsule"][:2]
-    return vertical_scene(w, h, bg_name="neon_bg.png", title_scale=0.7)
+    return vertical_scene(w, h, bg_name="neon_bg.png", title_scale=1.35)
 
 
 def gen_page_background():
