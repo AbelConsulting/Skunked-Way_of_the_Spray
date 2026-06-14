@@ -1,6 +1,8 @@
 {
   "name": "skunkfu",
   "version": "1.1.9",
+  "description": "Skunked: Way of the Spray — a fast-paced ninja skunk action platformer.",
+  "author": "Mephitideus Interactive LLC",
   "main": "index.js",
   "private": true,
   "scripts": {
@@ -50,7 +52,9 @@
     "appId": "com.mephitideusinteractive.skunkedwayofthespray",
     "productName": "Skunked: Way of the Spray",
     "copyright": "Copyright © 2026 Mephitideus Interactive LLC",
-    "electronEntryPoint": "electron/main.js",
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
     "directories": {
       "output": "release"
     },
