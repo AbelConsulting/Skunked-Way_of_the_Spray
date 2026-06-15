@@ -83,7 +83,14 @@ class SpriteLoader {
             'boss7_idle': 4,
             'boss7_walk': 4,
             'boss7_attack': 4,
-            'boss7_hurt': 4
+            'boss7_hurt': 4,
+            'boss8_walk': 4,
+            'boss8_attack': 4,
+            'boss8_hurt': 4,
+            'boss9_idle': 4,
+            'boss9_walk': 4,
+            'boss9_attack': 4,
+            'boss9_hurt': 4
         };
     }
 
@@ -329,6 +336,13 @@ class SpriteLoader {
             ['boss7_walk', 'assets/sprites/enemies/boss7_walk.png'],
             ['boss7_attack', 'assets/sprites/enemies/boss7_attack.png'],
             ['boss7_hurt', 'assets/sprites/enemies/boss7_hurt.png'],
+            ['boss8_walk', 'assets/sprites/enemies/boss8_walk.png'],
+            ['boss8_attack', 'assets/sprites/enemies/boss8_attack.png'],
+            ['boss8_hurt', 'assets/sprites/enemies/boss8_hurt.png'],
+            ['boss9_idle', 'assets/sprites/enemies/boss9_idle.png'],
+            ['boss9_walk', 'assets/sprites/enemies/boss9_walk.png'],
+            ['boss9_attack', 'assets/sprites/enemies/boss9_attack.png'],
+            ['boss9_hurt', 'assets/sprites/enemies/boss9_hurt.png'],
 
             // Background / tile sprites
             ['ground_tile', 'assets/sprites/backgrounds/tiles/ground_tile.png'],
