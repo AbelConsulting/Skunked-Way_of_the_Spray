@@ -1842,13 +1842,18 @@ class Enemy {
                 if (this._spriteLoadAttempts < this._maxSpriteLoadAttempts) {
                     this._spriteLoadAttempts++;
                     
-                    // Check if sprites are actually available now
+                    // Check if sprites are actually available now.
+                    // Try idle first, then walk/attack as fallbacks for enemies
+                    // that have no _idle sheet (e.g. boss8).
                     const config = ENEMY_TYPE_CONFIG[this.enemyType] || ENEMY_TYPE_CONFIG['BASIC'];
                     const prefix = config.prefix;
-                    const testKey = `${prefix}_idle`;
-                    
+                    const fallbackPrefix = config.fallback ? ENEMY_TYPE_CONFIG[config.fallback]?.prefix : null;
+                    const probeKeys = [`${prefix}_idle`, `${prefix}_walk`, `${prefix}_attack`,
+                                       fallbackPrefix ? `${fallbackPrefix}_idle` : null].filter(Boolean);
+                    const spriteReady = spriteLoader && probeKeys.some(k => spriteLoader.getSprite(k));
+
                     // Only reload if the sprite is actually present in spriteLoader now
-                    if (spriteLoader && spriteLoader.getSprite(testKey)) {
+                    if (spriteReady) {
                         this.loadSprites();
                         // Update current animation reference after reload
                         if (this.animations && this.animations[this.animationState]) {
