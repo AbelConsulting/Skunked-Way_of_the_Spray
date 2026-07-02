@@ -142,6 +142,7 @@
     "steamworks.js": "^0.3.2"
   },
   "optionalDependencies": {
+    "@electron/windows-sign": "^1.2.2",
     "@esbuild/win32-x64": "^0.28.0"
   }
 }
