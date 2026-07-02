@@ -25,4 +25,7 @@
 	"FileExclusion"	"*.pdb"
 	"FileExclusion"	"*.map"
 	"FileExclusion"	"steam_appid.txt"
+	"FileExclusion"	"*/steam_appid.txt"
+	"FileExclusion"	"*/*/steam_appid.txt"
+	"FileExclusion"	"*/*/*/steam_appid.txt"
 }
