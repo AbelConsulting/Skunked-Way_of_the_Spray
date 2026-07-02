@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 
@@ -103,11 +103,16 @@ function createWindow() {
         return path.join(base, 'icon-512x512.png');
     })();
 
+    // On Steam Deck (Linux) launch fullscreen; elsewhere start windowed.
+    const isLinux = process.platform === 'linux';
+
     const win = new BrowserWindow({
         width: 1280,
-        height: 720,
+        height: 800,      // 1280×800 = Steam Deck native; 720 letterboxes cleanly inside
         minWidth: 960,
         minHeight: 540,
+        fullscreen: isLinux,          // fullscreen on Steam Deck / Linux
+        fullscreenable: true,
         title: 'Skunked: Way of the Spray',
         icon: fs.existsSync(iconFile) ? iconFile : undefined,
         backgroundColor: '#000000',
@@ -120,6 +125,13 @@ function createWindow() {
     });
 
     win.setMenuBarVisibility(false);
+
+    // F11 toggles fullscreen on all platforms
+    win.webContents.on('before-input-event', (_, input) => {
+        if (input.type === 'keyDown' && input.key === 'F11') {
+            win.setFullScreen(!win.isFullScreen());
+        }
+    });
 
     const indexPath = path.join(__dirname, '..', 'dist-steam', 'index.html');
     win.loadFile(indexPath);

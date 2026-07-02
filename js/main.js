@@ -688,6 +688,12 @@ class GameApp {
 
         // Check for Oculus/Meta Quest controllers by gamepad ID
         const hasOculusPad = pads.some((gp) => gp && gp.id && this._isOculusGamepad(gp.id));
+
+        // Any standard-mapping gamepad (Steam Deck, generic USB, etc.)
+        const hasStandardPad = pads.some((gp) => gp && gp.mapping === 'standard');
+
+        // On Electron/Steam desktop, always allow standard gamepads without VR gate
+        const isElectronDesktop = !!(typeof window !== 'undefined' && window.electronAPI && window.electronAPI.platform === 'steam');
         
         // Check if VR controllers are explicitly enabled or disabled
         let vrEnabled = false;
@@ -730,15 +736,15 @@ class GameApp {
             const hasVrController = !!(leftPad && (leftPad.mapping === 'xr-standard' || leftPad.hand)) ||
                                    !!(rightPad && (rightPad.mapping === 'xr-standard' || rightPad.hand));
             const isQuestBrowser = this._isQuestBrowser();
-            if (hasVrController || hasXboxPad || hasOculusPad || isQuestBrowser) {
+            if (hasVrController || hasXboxPad || hasOculusPad || isQuestBrowser || hasStandardPad || isElectronDesktop) {
                 try {
                     vrEnabled = true;
                     window._vrControllersEnabled = true;
                     if (this._vrDebugOnce !== 'auto-enabled') {
-                        console.log('[VR] Auto-enabled controller support - VR:', hasVrController, 'Xbox:', hasXboxPad, 'Oculus:', hasOculusPad, 'Quest browser:', isQuestBrowser);
+                        console.log('[Gamepad] Auto-enabled controller support - VR:', hasVrController, 'Xbox:', hasXboxPad, 'Oculus:', hasOculusPad, 'Standard:', hasStandardPad, 'Electron:', isElectronDesktop);
                         this._vrDebugOnce = 'auto-enabled';
                     }
-                    // Auto-disable touch controls when VR controllers take over
+                    // Auto-disable touch controls when gamepad takes over
                     this._disableTouchControlsForVr();
                 } catch (e) { __err('main', e); }
             } else {
@@ -760,12 +766,17 @@ class GameApp {
         const rightIsXr = !!(actionPad && actionPad.mapping === 'xr-standard');
         const isStandard = !!(actionPad && actionPad.mapping === 'standard');
 
-        // Left controller thumbstick: move left/right
+        // Left thumbstick: move left/right
         const axisX = this._getAxisX(movePad);
-        const leftDown = axisX < -0.25;
+        const leftDown  = axisX < -0.25;
         const rightDown = axisX > 0.25;
-        this._setKeyState('ArrowLeft', leftDown);
-        this._setKeyState('ArrowRight', rightDown);
+
+        // D-pad: left/right movement (standard mapping buttons 14/15)
+        const dpadLeft  = isStandard ? this._getButtonPressed(movePad, 14) : false;
+        const dpadRight = isStandard ? this._getButtonPressed(movePad, 15) : false;
+
+        this._setKeyState('ArrowLeft',  leftDown  || dpadLeft);
+        this._setKeyState('ArrowRight', rightDown || dpadRight);
 
         // Left trigger: skunk shot (KeyC)
         const leftTrigger = leftIsXr
@@ -774,10 +785,12 @@ class GameApp {
         
         // Left bumper: pause (Escape)
         // For VR: grip button on left controller
-        // For Xbox: left bumper (button 4)
+        // For Xbox/standard: left bumper (button 4)
+        // Start button (standard button 9): also pause
         const leftBumper = leftIsXr
             ? this._getButtonPressed(leftPad, 1)
             : this._getButtonPressed(leftPad, 4);
+        const startButton = isStandard ? this._getButtonPressed(actionPad, 9) : false;
 
         // Right controller buttons
         const aPressed = rightIsXr
@@ -810,8 +823,14 @@ class GameApp {
         // B button + Y: special attack (KeyZ)
         const specialPressed = bPressed || (isStandard && yPressed);
         this._setKeyState('z', specialPressed);
-        // Left bumper: pause (Escape)
-        this._setKeyState('Escape', leftBumper);
+        // Left bumper / Start button: pause (Escape)
+        this._setKeyState('Escape', leftBumper || startButton);
+
+        // Select button (standard button 8): Enter (confirm/restart)
+        const selectButton = isStandard ? this._getButtonPressed(actionPad, 8) : false;
+        if (selectButton && !this._selectLast) this._sendKeyEvent('Enter', 'keydown');
+        if (!selectButton && this._selectLast) this._sendKeyEvent('Enter', 'keyup');
+        this._selectLast = selectButton;
 
         // ── Gamepad-driven game start / Enter ──────────────────────────
         // Any face button or trigger can start the game from non-playing
