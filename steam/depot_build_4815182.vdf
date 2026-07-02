@@ -13,6 +13,11 @@
 {
 	"DepotID"	"4815182"
 
+	// Overrides the appbuild-level "contentroot" so this depot can be combined
+	// with the Windows/Linux depots in a single multi-platform build (see
+	// app_build_4815180_all.vdf). Must be a signed + notarized .app build.
+	"ContentRoot"	"../release/mac/"
+
 	"FileMapping"
 	{
 		"LocalPath"	"*"

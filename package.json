@@ -46,7 +46,8 @@
     "electron:build:linux": "node scripts/build-steam.js --release && npx electron-builder --linux --config",
     "steam:build": "node scripts/build-steam.js --release",
     "steam:assets": "python generate_steam_assets.py",
-    "steam:release:win": "steam\\release-win.bat"
+    "steam:release:win": "steam\\release-win.bat",
+    "steam:upload:all": "steam\\upload-all.bat"
   },
   "build": {
     "appId": "com.mephitideusinteractive.skunkedwayofthespray",

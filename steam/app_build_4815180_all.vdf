@@ -1,0 +1,44 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe App Build Script — Combined Windows + macOS + Linux
+// Skunked: Way of the Spray (AppID 4815180)
+//
+// Ships all three depots (4815181 Win, 4815182 mac, 4815183 Linux) in ONE
+// build so the live "default" branch always has all platforms attached
+// (fixes the Steamworks "All Depots Attached" release-checklist item).
+//
+// Prereqs — build each platform first (can be produced on separate machines/
+// CI runners and copied into these paths, or built locally if cross-building):
+//   Windows: npm run electron:build:win   -> release\win-unpacked
+//   macOS:   npm run electron:build:mac   -> release\mac        (signed+notarized)
+//   Linux:   npm run electron:build:linux -> release\linux-unpacked
+//
+// Usage (from the folder containing this file, or pass full path):
+//   steamcmd +login <builder_account> +run_app_build "<full path>\steam\app_build_4815180_all.vdf" +quit
+// or use the helper:  steam\upload-all.bat <builder_account>
+//
+// Note: each depot below sets its own "ContentRoot" override (see
+// depot_build_4815181/2/3.vdf), so the "contentroot" here is just a fallback
+// and is not actually used as long as every depot has its own ContentRoot.
+//
+// "setlive" is intentionally blank — set the build live from the Steamworks
+// "Builds" page after it finishes processing, never from CI.
+// ─────────────────────────────────────────────────────────────────────────────
+"appbuild"
+{
+	"appid"	"4815180"
+	"desc"	"Skunked: Way of the Spray — combined Win/mac/Linux build"   // bump per upload
+
+	"buildoutput"	"output\\"
+	"contentroot"	"..\\release\\win-unpacked\\"   // unused fallback; each depot overrides via ContentRoot
+
+	"setlive"	""
+	"preview"	"0"
+	"local"	""
+
+	"depots"
+	{
+		"4815181"	"depot_build_4815181.vdf"
+		"4815182"	"depot_build_4815182.vdf"
+		"4815183"	"depot_build_4815183.vdf"
+	}
+}
