@@ -17,6 +17,9 @@
 		"recursive"	"1"
 	}
 
+	// Strip debug symbols, build cruft, and local Steam auth files that
+	// should never be shipped inside a depot.
 	"FileExclusion"	"*.pdb"
 	"FileExclusion"	"*.map"
+	"FileExclusion"	"steam_appid.txt"
 }
