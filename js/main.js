@@ -34,6 +34,13 @@ class GameApp {
             right: { a: false, b: false, trigger: false }
         };
 
+        // Native Steam Input (ISteamInput) action-set state, pushed from the
+        // Electron main process. When present, takes priority over the raw
+        // browser Gamepad API in _handleGamepadInput().
+        this._steamInputState = null;
+        this._steamInputUnsubscribe = null;
+        this._steamInputActiveLogged = false;
+
         // VR controller enable/prime hooks
         this._vrHooksReady = false;
         this._gamepadPrimeTimer = null;
@@ -677,7 +684,79 @@ class GameApp {
         return { leftPad, rightPad };
     }
 
+    // ── Steam Input (ISteamInput) bridge ────────────────────────────
+    // Subscribes to native action-set state pushed from electron/main.js.
+    // When Steam Input reports a connected controller we prefer it over the
+    // raw browser Gamepad API (see the guard at the top of
+    // _handleGamepadInput) since it also covers Steam Controller / gyro /
+    // user-rebound layouts that the HTML5 Gamepad API can't see natively.
+    _initSteamInputBridge() {
+        try {
+            if (typeof window === 'undefined' || !window.electronAPI || typeof window.electronAPI.onSteamInputState !== 'function') return;
+            this._steamInputUnsubscribe = window.electronAPI.onSteamInputState((state) => {
+                this._steamInputState = state;
+            });
+            console.log('[SteamInput] Bridge listening for action-set updates.');
+        } catch (e) { __err('main', e); }
+    }
+
+    _applySteamInputState(state) {
+        if (!this._steamInputActiveLogged) {
+            this._steamInputActiveLogged = true;
+            try { this._disableTouchControlsForVr(); } catch (e) { __err('main', e); }
+            try { console.log('[SteamInput] Native action-set input active.'); } catch (e) { __err('main', e); }
+        }
+
+        const d = (state && state.digital) || {};
+        const analogX = (state && state.analog && typeof state.analog.x === 'number') ? state.analog.x : 0;
+
+        const leftDown  = !!d.MoveLeft  || analogX < -0.25;
+        const rightDown = !!d.MoveRight || analogX > 0.25;
+        this._setKeyState('ArrowLeft',  leftDown);
+        this._setKeyState('ArrowRight', rightDown);
+
+        this._setKeyState(' ', !!d.Jump);
+        this._setKeyState('x', !!d.Attack);
+        this._setKeyState('c', !!d.SkunkShot);
+        this._setKeyState('z', !!d.Special);
+        this._setKeyState('Escape', !!d.Pause);
+
+        // Confirm: rising/falling edge -> synthetic Enter, mirroring the
+        // browser-gamepad confirm handling below so menu/start/restart flows
+        // behave identically regardless of input source.
+        const confirmNow = !!d.Confirm;
+        const confirmPrev = !!this._gamepadConfirmLast;
+        this._gamepadConfirmLast = confirmNow;
+
+        if (confirmNow && !confirmPrev) {
+            this._sendKeyEvent('Enter', 'keydown');
+            try {
+                if (this.game) {
+                    const st = this.game.state;
+                    if (st === 'MENU' && window._startMenuVisible) { /* blocked by start overlay */ }
+                    else if (st === 'MENU' || st === 'VICTORY' || st === 'GAME_OVER') {
+                        if (st !== 'GAME_OVER' || typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
+                            try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
+                            this.game.startGame(0);
+                            try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
+                            try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) { __err('main', e); }
+                        }
+                    }
+                }
+            } catch (e) {
+                try { console.warn('[SteamInput] startGame from controller failed', e); } catch (ex) { __err('main', ex); }
+            }
+        }
+        if (!confirmNow && confirmPrev) {
+            this._sendKeyEvent('Enter', 'keyup');
+        }
+    }
+
     _handleGamepadInput() {
+        // Prefer native Steam Input action-set state when the Electron main
+        // process is reporting a connected controller (see _initSteamInputBridge).
+        if (this._steamInputState) { this._applySteamInputState(this._steamInputState); return; }
+
         if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
         const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
         const hasXboxPad = pads.some((gp) => {
@@ -999,6 +1078,9 @@ class GameApp {
         try {
             // ── Capacitor / native-app bridge ──────────────────────────
             this._initCapacitorBridge();
+
+            // ── Steam Input bridge (Electron/Steam builds only) ─────────
+            this._initSteamInputBridge();
 
             // Warn if opened via file:// — audio and some assets may fail due to browser restrictions
             // Skip for Steam/Electron builds where file:// is intentional

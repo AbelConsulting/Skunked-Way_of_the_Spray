@@ -1,0 +1,104 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Steam Input — In-Game Actions Manifest
+// Skunked: Way of the Spray (AppID 4815180)
+//
+// Defines the action set + actions read by electron/main.js via steamworks.js's
+// ISteamInput wrapper (see initSteamInput/pollSteamInput). Names below MUST
+// exactly match the string constants in electron/main.js:
+//   STEAM_INPUT_ACTION_SET      = "GameControls"
+//   STEAM_INPUT_ANALOG_ACTION   = "Move"
+//   STEAM_INPUT_DIGITAL_ACTIONS = MoveLeft, MoveRight, Jump, Attack,
+//                                  SkunkShot, Special, Pause, Confirm
+//
+// This file is NOT read directly by the Steam client at runtime — it's a
+// reference/offline-testing copy. To actually activate Steam Input for this
+// app, upload it once via:
+//   Steamworks App Admin → [App] → Steam Input → "Get Started" / "Upload File"
+//   https://partner.steamgames.com/apps/steaminput/4815180
+// Steam parses it into the web-based Action Editor, where you review/adjust
+// the auto-generated default controller bindings (Xbox/PS/Switch Pro/Steam
+// Deck/Steam Controller) per action and Publish. Until that upload+publish
+// step is done, ISteamInput::GetActionSetHandle() resolves to 0 and
+// electron/main.js's initSteamInput() silently bails out, leaving the game on
+// its existing browser Gamepad API fallback (Steam's Xbox-emulation layer) —
+// so nothing breaks in the meantime.
+//
+// For local offline testing before publishing, you can also drop a copy at:
+//   <Steam install dir>\controller_config\game_actions_4815180.vdf
+// ─────────────────────────────────────────────────────────────────────────────
+"In Game Actions"
+{
+	"actions"
+	{
+		"GameControls"
+		{
+			"title" "#Set_GameControls"
+
+			// Left stick / D-pad as a smooth analog vector. main.js still also
+			// reads MoveLeft/MoveRight as digital actions for parity with the
+			// existing keyboard bridge — Steam lets both point at the same
+			// physical stick by default.
+			"StickPadGyro"
+			{
+				"Move"
+				{
+					"title"      "#Action_Move"
+					"input_mode" "joystick_move"
+				}
+			}
+
+			"Button"
+			{
+				"MoveLeft"
+				{
+					"title" "#Action_MoveLeft"
+				}
+				"MoveRight"
+				{
+					"title" "#Action_MoveRight"
+				}
+				"Jump"
+				{
+					"title" "#Action_Jump"
+				}
+				"Attack"
+				{
+					"title" "#Action_Attack"
+				}
+				"SkunkShot"
+				{
+					"title" "#Action_SkunkShot"
+				}
+				"Special"
+				{
+					"title" "#Action_Special"
+				}
+				"Pause"
+				{
+					"title" "#Action_Pause"
+				}
+				"Confirm"
+				{
+					"title" "#Action_Confirm"
+				}
+			}
+		}
+	}
+
+	"localization"
+	{
+		"english"
+		{
+			"Set_GameControls"  "Gameplay"
+			"Action_Move"       "Move"
+			"Action_MoveLeft"   "Move Left"
+			"Action_MoveRight"  "Move Right"
+			"Action_Jump"       "Jump"
+			"Action_Attack"     "Attack"
+			"Action_SkunkShot"  "Skunk Shot"
+			"Action_Special"    "Special Attack"
+			"Action_Pause"      "Pause"
+			"Action_Confirm"    "Confirm / Start"
+		}
+	}
+}

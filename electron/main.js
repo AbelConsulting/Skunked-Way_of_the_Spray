@@ -22,11 +22,13 @@ const STEAM_APP_ID = (() => {
 
 // ── Steamworks ────────────────────────────────────────────────────────────────
 let steamClient = null;
+let steamworksModule = null;
 
 function initSteam() {
     try {
         // steamworks.js must be initialised synchronously before app is ready
         const steamworks = require('steamworks.js');
+        steamworksModule = steamworks;
         steamClient = steamworks.init(STEAM_APP_ID);
         console.log(`[Steam] Initialised. AppID=${STEAM_APP_ID}  Player="${steamClient.localplayer.getName()}"`);
     } catch (e) {
@@ -35,8 +37,108 @@ function initSteam() {
     }
 }
 
+// ── Steam Input (ISteamInput) ─────────────────────────────────────────────────
+// Action set / action names below MUST match steam/controller_vdf/game_actions_<appid>.vdf
+// (uploaded once via Steamworks App Admin → Steam Input) or the handles resolve to 0
+// and initSteamInput() bails out, leaving js/main.js on its existing browser
+// Gamepad API fallback (Steam's Xbox-emulation layer) — so nothing breaks either way.
+const STEAM_INPUT_ACTION_SET      = 'GameControls';
+const STEAM_INPUT_ANALOG_ACTION   = 'Move';
+const STEAM_INPUT_DIGITAL_ACTIONS = [
+    'MoveLeft', 'MoveRight', 'Jump', 'Attack', 'SkunkShot', 'Special', 'Pause', 'Confirm'
+];
+
+const steamInput = {
+    available: false,
+    actionSetHandle: null,
+    digitalHandles: {},
+    analogHandle: null,
+    pollTimer: null,
+    lastStateJson: null
+};
+
+function initSteamInput(win) {
+    if (!steamClient || !steamClient.input) return;
+    try {
+        steamClient.input.init();
+
+        steamInput.actionSetHandle = steamClient.input.getActionSet(STEAM_INPUT_ACTION_SET);
+        if (!steamInput.actionSetHandle) {
+            console.warn(`[SteamInput] Action set "${STEAM_INPUT_ACTION_SET}" not found — has steam/controller_vdf/game_actions_${STEAM_APP_ID}.vdf been uploaded via Steamworks App Admin → Steam Input yet? Falling back to the browser Gamepad API.`);
+            return;
+        }
+
+        for (const name of STEAM_INPUT_DIGITAL_ACTIONS) {
+            steamInput.digitalHandles[name] = steamClient.input.getDigitalAction(name);
+        }
+        steamInput.analogHandle = steamClient.input.getAnalogAction(STEAM_INPUT_ANALOG_ACTION);
+
+        steamInput.available = true;
+        console.log(`[SteamInput] Initialised action set "${STEAM_INPUT_ACTION_SET}" (${STEAM_INPUT_DIGITAL_ACTIONS.length} digital actions).`);
+
+        steamInput.pollTimer = setInterval(() => pollSteamInput(win), 16);
+    } catch (e) {
+        console.warn('[SteamInput] Unavailable — falling back to the browser Gamepad API:', e.message);
+        steamInput.available = false;
+    }
+}
+
+function pollSteamInput(win) {
+    if (!steamInput.available || !win || win.isDestroyed()) return;
+    try {
+        const controllers = steamClient.input.getControllers() || [];
+
+        let state = null;
+        if (controllers.length > 0) {
+            const digital = {};
+            for (const name of STEAM_INPUT_DIGITAL_ACTIONS) digital[name] = false;
+            const analog = { x: 0, y: 0 };
+
+            for (const controller of controllers) {
+                try { controller.activateActionSet(steamInput.actionSetHandle); } catch (e) { /* ignore per-controller errors */ }
+
+                for (const name of STEAM_INPUT_DIGITAL_ACTIONS) {
+                    try {
+                        if (controller.isDigitalActionPressed(steamInput.digitalHandles[name])) digital[name] = true;
+                    } catch (e) { /* ignore */ }
+                }
+
+                try {
+                    const vec = controller.getAnalogActionVector(steamInput.analogHandle);
+                    if (Math.abs(vec.x) > Math.abs(analog.x)) analog.x = vec.x;
+                    if (Math.abs(vec.y) > Math.abs(analog.y)) analog.y = vec.y;
+                } catch (e) { /* ignore */ }
+            }
+
+            state = { digital, analog };
+        }
+
+        const json = JSON.stringify(state);
+        if (json !== steamInput.lastStateJson) {
+            steamInput.lastStateJson = json;
+            win.webContents.send('steam:input:state', state);
+        }
+    } catch (e) {
+        // Swallow per-tick errors so a transient SDK hiccup can't spam the log or crash the timer.
+    }
+}
+
+function shutdownSteamInput() {
+    if (steamInput.pollTimer) {
+        clearInterval(steamInput.pollTimer);
+        steamInput.pollTimer = null;
+    }
+    if (steamInput.available && steamClient && steamClient.input) {
+        try { steamClient.input.shutdown(); } catch (e) { /* ignore */ }
+    }
+    steamInput.available = false;
+}
+
 // ── IPC handlers ──────────────────────────────────────────────────────────────
 function setupIPC() {
+    // Steam Input
+    ipcMain.handle('steam:input:available', () => steamInput.available);
+
     // Achievement
     ipcMain.handle('steam:unlockAchievement', (_, id) => {
         if (!steamClient) return false;
@@ -133,6 +235,9 @@ function createWindow() {
         }
     });
 
+    initSteamInput(win);
+    win.on('closed', shutdownSteamInput);
+
     const indexPath = path.join(__dirname, '..', 'dist-steam', 'index.html');
     win.loadFile(indexPath);
 
@@ -145,6 +250,14 @@ function createWindow() {
 // the DLL loading race on Windows.
 initSteam();
 
+// electronEnableSteamOverlay() appends GPU-related Chromium command-line
+// switches that only take effect if set before the app is "ready", so this
+// must happen here — NOT inside createWindow(). It also self-registers to
+// handle any windows created later (see steamworks.js's index.js).
+if (steamClient && steamworksModule) {
+    try { steamworksModule.electronEnableSteamOverlay(false); } catch (e) { console.warn('[Steam] electronEnableSteamOverlay failed:', e.message); }
+}
+
 app.whenReady().then(() => {
     setupIPC();
     createWindow();
@@ -155,5 +268,6 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+    shutdownSteamInput();
     if (process.platform !== 'darwin') app.quit();
 });

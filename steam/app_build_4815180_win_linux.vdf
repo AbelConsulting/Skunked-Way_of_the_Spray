@@ -1,0 +1,34 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// SteamPipe App Build Script — Combined Windows + Linux (NO macOS)
+// Skunked: Way of the Spray (AppID 4815180)
+//
+// Use this when uploading from a Windows machine where a signed+notarized
+// macOS build is unavailable. Ships depots 4815181 (Win) and 4815183 (Linux).
+// NOTE: the "All Depots Attached" checklist item will remain unsatisfied until
+// a build containing the macOS depot (4815182) is set live — use
+// app_build_4815180_all.vdf once release/mac exists.
+//
+// Usage:
+//   steamcmd +login <builder_account> +run_app_build "<full path>\steam\app_build_4815180_win_linux.vdf" +quit
+//
+// "setlive" is intentionally blank — set the build live from the Steamworks
+// "Builds" page after it finishes processing, never from CI.
+// ─────────────────────────────────────────────────────────────────────────────
+"appbuild"
+{
+	"appid"	"4815180"
+	"desc"	"Skunked: Way of the Spray — Win+Linux build"   // bump per upload
+
+	"buildoutput"	"output\\"
+	"contentroot"	"..\\release\\win-unpacked\\"   // unused fallback; each depot overrides via ContentRoot
+
+	"setlive"	""
+	"preview"	"0"
+	"local"	""
+
+	"depots"
+	{
+		"4815181"	"depot_build_4815181.vdf"
+		"4815183"	"depot_build_4815183.vdf"
+	}
+}

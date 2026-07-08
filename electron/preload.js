@@ -59,5 +59,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
      * @returns {Promise<Array<{name: string, score: number, rank: number}>>}
      */
     getLeaderboard: (leaderboardName, count = 10) =>
-        ipcRenderer.invoke('steam:getLeaderboard', { leaderboardName, count })
+        ipcRenderer.invoke('steam:getLeaderboard', { leaderboardName, count }),
+
+    // ── Steam Input ─────────────────────────────────────────────────
+    /**
+     * Whether ISteamInput was successfully initialised in the main process.
+     * @returns {Promise<boolean>}
+     */
+    isSteamInputAvailable: () => ipcRenderer.invoke('steam:input:available'),
+
+    /**
+     * Subscribe to native Steam Input action-set state updates (pushed
+     * whenever the state changes). Shape: { digital: { MoveLeft, MoveRight,
+     * Jump, Attack, SkunkShot, Special, Pause, Confirm }, analog: { x, y } },
+     * or `null` when no Steam Input controller is connected.
+     * @param {(state: object|null) => void} callback
+     * @returns {() => void} unsubscribe function
+     */
+    onSteamInputState: (callback) => {
+        const listener = (_event, state) => callback(state);
+        ipcRenderer.on('steam:input:state', listener);
+        return () => ipcRenderer.removeListener('steam:input:state', listener);
+    }
 });
