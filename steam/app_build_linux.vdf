@@ -14,7 +14,7 @@
 	"desc"	"Skunked: Way of the Spray — Linux build"
 
 	"buildoutput"	"output/"
-	"contentroot"	"../release/linux-unpacked/"
+	// contentroot omitted — each depot sets its own ContentRoot relative to this VDF file
 
 	"setlive"	""
 	"preview"	"0"
