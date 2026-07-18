@@ -921,6 +921,28 @@ class Game {
         dispatchGameStateChange() {
             const event = new CustomEvent('gameStateChange', { detail: { state: this.state } });
             window.dispatchEvent(event);
+            // Steam Rich Presence — update friends-list status on every state transition
+            try {
+                if (window.electronAPI && typeof window.electronAPI.setRichPresence === 'function') {
+                    let rp;
+                    const st = this.state;
+                    if (st === 'PLAYING') {
+                        const idx = this.currentLevelIndex || 0;
+                        const isBoss = this.currentLevelId && this.currentLevelId.includes('boss');
+                        const num = Math.ceil((idx + 1) / 2);
+                        rp = isBoss ? `Boss Fight — Stage ${num}` : `Playing Stage ${num}`;
+                    } else if (st === 'VICTORY') {
+                        rp = 'Victory!';
+                    } else if (st === 'GAME_OVER') {
+                        rp = 'Game Over';
+                    } else if (st === 'PAUSED') {
+                        rp = 'Paused';
+                    } else {
+                        rp = 'In Menu';
+                    }
+                    window.electronAPI.setRichPresence(rp).catch(() => {});
+                }
+            } catch (e) { /* Rich Presence must never break gameplay */ }
         }
 
         // Notify UI layers about score updates

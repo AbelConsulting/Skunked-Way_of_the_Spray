@@ -20,7 +20,7 @@
 "appbuild"
 {
 	"appid"	"4815180"
-	"desc"	"Skunked: Way of the Spray — Windows build"   // shown on the Builds page; bump per upload
+	"desc"	"Skunked: Way of the Spray — Windows build 2026-07-18 (Rich Presence, achievement sync, Steam name prefill)"   // shown on the Builds page; bump per upload
 
 	"buildoutput"	"output\\"                              // local SteamPipe log/chunk cache (gitignored)
 	"contentroot"	"..\\release\\win-unpacked\\"           // electron-builder unpacked app

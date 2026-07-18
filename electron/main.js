@@ -194,6 +194,17 @@ function setupIPC() {
             return [];
         }
     });
+
+    // Rich Presence — update friends-list status
+    ipcMain.handle('steam:setRichPresence', (_, { key, value }) => {
+        if (!steamClient) return false;
+        try {
+            if (typeof steamClient.localplayer.setRichPresence === 'function') {
+                steamClient.localplayer.setRichPresence(key, value);
+            }
+            return true;
+        } catch (e) { console.error('[Steam] setRichPresence:', e.message); return false; }
+    });
 }
 
 // ── Window ────────────────────────────────────────────────────────────────────

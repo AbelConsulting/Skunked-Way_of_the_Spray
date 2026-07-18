@@ -26,7 +26,13 @@ set "BUILDER=%~1"
 set "SCRIPT_DIR=%~dp0"
 set "VDF=%SCRIPT_DIR%app_build_4815180.vdf"
 
-if not defined STEAMCMD set "STEAMCMD=steamcmd"
+if not defined STEAMCMD (
+  if exist "C:\steamcmd\steamcmd.exe" (
+    set "STEAMCMD=C:\steamcmd\steamcmd.exe"
+  ) else (
+    set "STEAMCMD=steamcmd"
+  )
+)
 
 if not exist "%SCRIPT_DIR%..\release\win-unpacked\" (
   echo [upload] release\win-unpacked not found. Run "npm run electron:build:win" first.
@@ -44,4 +50,10 @@ if not "%RC%"=="0" (
 
 echo [upload] Done. Promote the build to a branch from the Steamworks Builds page:
 echo          https://partner.steamgames.com/apps/builds/4815180
+echo.
+echo [upload] Reminder: upload controller configs if not already done:
+echo          steam\controller_steamdeck.vdf  ^(Steam Deck^)
+echo          steam\controller_generic.vdf    ^(Xbox / generic gamepad^)
+echo          → Steamworks: App Admin ^> Community ^> Controller Configs
+echo            or  Technical Tools ^> Steam Input ^> Default Configs
 endlocal

@@ -1,0 +1,410 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Steam Input Default Configuration — Steam Deck
+// Skunked: Way of the Spray  (AppID 4815180)
+//
+// Binding strategy: XInput emulation.
+//   The game reads the Web Gamepad API (mapping='standard').  Steam Input
+//   passes the physical Steam Deck buttons through as virtual XInput buttons,
+//   which the game then reads in the normal way.  No game-code changes needed.
+//
+// How to upload:
+//   1. Steamworks partner portal → App Admin → Community → Controller Configs
+//      (or Technical Tools → Steam Input → Default Configs)
+//   2. Add new config → upload this file → set controller type = Steam Deck
+//   3. Publish Steamworks changes so the config goes live
+//
+// Button layout:
+//   A          = Jump
+//   B          = Shadow Strike (special attack)
+//   X          = Attack
+//   Y          = Shadow Strike (alternate)
+//   LT         = Skunk Shot (spray)
+//   RT         = Attack (alternate)
+//   LB         = Pause
+//   RB         = Skunk Shot (alternate)
+//   D-pad ←/→  = Move Left / Move Right
+//   D-pad ↑    = Jump (alternate)
+//   Left Stick = Move Left / Move Right
+//   Start (☰)  = Pause
+//   Select (⧉) = Confirm / Restart
+//   L4         = Jump (back paddle quality-of-life)
+//   R4         = Skunk Shot (back paddle quality-of-life)
+// ─────────────────────────────────────────────────────────────────────────────
+"controller_mappings"
+{
+	"version"		"3"
+	"revision"		"1"
+	"title"		"Skunked: Way of the Spray — Default Steam Deck"
+	"description"		"A=Jump · X=Attack · B/Y=Shadow Strike · LT/RB=Skunk Shot · RT=Attack · LB/Start=Pause"
+	"creator"		"0"
+	"progenitor"		""
+	"URL"		""
+	"export_type"		"template"
+	"controller_type"		"controller_steamdeck"
+	"controller_caps"		"8519679"
+	"major_revision"		"0"
+	"minor_revision"		"0"
+	"steam_input_enabled"		"1"
+	"Metadata"
+	{
+		"input_source"		"gamepad"
+	}
+
+	// ── Group 0: Face buttons (A / B / X / Y) ──────────────────────────────
+	"group"
+	{
+		"id"		"0"
+		"mode"		"four_buttons"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"button_A"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button A, Jump"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+				}
+			}
+			"button_B"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button B, Shadow Strike"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+				}
+			}
+			"button_X"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button X, Attack"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+				}
+			}
+			"button_Y"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button Y, Shadow Strike"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// ── Group 1: Left joystick → XInput left stick (move left / right) ─────
+	"group"
+	{
+		"id"		"1"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"output_joystick"		"0"
+		}
+	}
+
+	// ── Group 2: Right joystick → XInput right stick (unused — passthrough) ─
+	"group"
+	{
+		"id"		"2"
+		"mode"		"joystick_move"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+		}
+		"settings"
+		{
+			"output_joystick"		"1"
+		}
+	}
+
+	// ── Group 3: D-pad ─────────────────────────────────────────────────────
+	// Left/Right map to XInput DPAD_LEFT/RIGHT (game reads buttons[14/15]).
+	// Up maps to XInput A so D-pad up also jumps (common platformer feel).
+	"group"
+	{
+		"id"		"3"
+		"mode"		"dpad"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"dpad_north"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button A, Jump"
+						}
+					}
+				}
+			}
+			"dpad_south"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button DPAD_DOWN"
+						}
+					}
+				}
+			}
+			"dpad_east"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button DPAD_RIGHT, Move Right"
+						}
+					}
+				}
+			}
+			"dpad_west"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button DPAD_LEFT, Move Left"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// ── Group 4: Left trigger → Skunk Shot ─────────────────────────────────
+	// output_trigger "0" passes the analog value as buttons[6].value in the
+	// Gamepad API (standard mapping left trigger).
+	"group"
+	{
+		"id"		"4"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"click"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button LTRIGGER_FULL, Skunk Shot"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
+						}
+					}
+				}
+			}
+		}
+		"settings"
+		{
+			"output_trigger"		"0"
+		}
+	}
+
+	// ── Group 5: Right trigger → Attack ────────────────────────────────────
+	"group"
+	{
+		"id"		"5"
+		"mode"		"trigger"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"click"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button RTRIGGER_FULL, Attack"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
+						}
+					}
+				}
+			}
+		}
+		"settings"
+		{
+			"output_trigger"		"1"
+		}
+	}
+
+	// ── Group 6: Shoulder + system buttons ─────────────────────────────────
+	// button_escape = Steam Deck ☰ Menu  (→ XInput START = buttons[9] = Pause)
+	// button_menu   = Steam Deck ⧉ View  (→ XInput BACK  = buttons[8] = Confirm)
+	// left_bumper   = LB                 (→ XInput LBUMPER = buttons[4] = Pause)
+	// right_bumper  = RB                 (→ XInput RBUMPER = buttons[5] = Skunk Shot)
+	// back paddles L4/R4 for quality-of-life bindings
+	"group"
+	{
+		"id"		"6"
+		"mode"		"switches"
+		"name"		""
+		"description"		""
+		"inputs"
+		{
+			"button_escape"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button START, Pause"
+						}
+					}
+				}
+			}
+			"button_menu"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button BACK, Confirm"
+						}
+					}
+				}
+			}
+			"left_bumper"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button LBUMPER, Pause"
+						}
+					}
+				}
+			}
+			"right_bumper"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button RBUMPER, Skunk Shot"
+						}
+					}
+				}
+			}
+			"button_back_left_upper"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button A, Jump"
+						}
+					}
+				}
+			}
+			"button_back_right_upper"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"xinput_button LTRIGGER_FULL, Skunk Shot"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// ── Preset: bind all groups to their physical Steam Deck sources ────────
+	"preset"
+	{
+		"id"		"0"
+		"name"		"Default"
+		"group_source_bindings"
+		{
+			"0"		"button_diamond active"
+			"1"		"left_joystick active"
+			"2"		"right_joystick active"
+			"3"		"dpad active"
+			"4"		"left_trigger active"
+			"5"		"right_trigger active"
+			"6"		"switch active"
+		}
+	}
+}

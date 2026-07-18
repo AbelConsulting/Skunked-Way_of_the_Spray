@@ -80,5 +80,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         const listener = (_event, state) => callback(state);
         ipcRenderer.on('steam:input:state', listener);
         return () => ipcRenderer.removeListener('steam:input:state', listener);
-    }
+    },
+
+    /**
+     * Update Steam Rich Presence status shown in the friends list.
+     * @param {string} status  Plain-text status string (e.g. "Playing Level 3")
+     * @returns {Promise<boolean>}
+     */
+    setRichPresence: (status) =>
+        ipcRenderer.invoke('steam:setRichPresence', { key: 'steam_display', value: status }),
 });

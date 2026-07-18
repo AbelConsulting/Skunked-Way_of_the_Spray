@@ -645,6 +645,17 @@ try {
         input.style.borderColor = input.value.length > 0 ? '#4CAF50' : '#666';
       });
 
+      // Pre-fill Steam player name on desktop build (best-effort, async)
+      if (typeof window !== 'undefined' && window.electronAPI &&
+          typeof window.electronAPI.getPlayerName === 'function') {
+        window.electronAPI.getPlayerName().then(steamName => {
+          if (steamName && typeof steamName === 'string' && steamName.trim() && !input.value) {
+            input.value = steamName.trim().slice(0, 10);
+            input.style.borderColor = '#4CAF50';
+          }
+        }).catch(() => {});
+      }
+
       const btnRow = document.createElement('div');
       btnRow.className = 'highscore-prompt-buttons';
 
@@ -1106,6 +1117,25 @@ try {
   }
 
   // Expose the public API
+  /**
+   * Sync all locally-stored achievement unlocks to Steam on startup.
+   * Idempotent — steamworks.js activate() is a no-op on already-unlocked
+   * achievements.  Runs fire-and-forget; never throws.
+   */
+  function syncAchievementsToSteam() {
+    if (typeof window === 'undefined' || !window.electronAPI ||
+        window.electronAPI.platform !== 'steam' ||
+        typeof window.electronAPI.unlockAchievement !== 'function') return;
+    try {
+      const stored = loadAchievements();
+      for (const [id, data] of Object.entries(stored)) {
+        if (data && data.unlocked) {
+          window.electronAPI.unlockAchievement(id).catch(() => {});
+        }
+      }
+    } catch (e) { /* sync must never throw */ }
+  }
+
   window.Highscores = {
     // Global scores
     loadScores,
@@ -1127,6 +1157,8 @@ try {
     getPrestigeScore,
     getMaxPrestige,
     getTitleForCount,
+    // Steam
+    syncAchievementsToSteam,
     // Survival mode local leaderboard
     getSurvivalScores,
     addSurvivalScore,
