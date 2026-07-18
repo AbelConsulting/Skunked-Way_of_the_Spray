@@ -156,6 +156,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:8000",       // Python dev server
   "https://localhost",            // Capacitor Android WebView
   "capacitor://localhost",        // Capacitor iOS WebView
+  "null",                         // Electron desktop app (file:// pages send Origin: null)
 ];
 
 function setCors(req, res) {

@@ -170,34 +170,30 @@ function _normalizeScores(scores) {
 }
 
 async function getHighScoresFromFirestore(count = 10, period = 'alltime') {
-  const safeCount = Math.max(1, Math.min(100, Number(count) || 10));
+  const safeCount = Math.max(1, Math.min(100, Number(count) || 10));  
   const safePeriod = ['week', 'month'].includes(period) ? period : 'alltime';
+
   if (safePeriod === 'week' || safePeriod === 'month') {
-    const cutoff = new Date(Date.now() - (safePeriod === 'week' ? 7 : 30) * 24 * 60 * 60 * 1000).toISOString();
-    const res = await fetchWithRetry(FIRESTORE_BASE + ':runQuery', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        structuredQuery: {
-          from: [{ collectionId: 'scores' }],
-          where: {
-            fieldFilter: {
-              field: { fieldPath: 'date' },
-              op: 'GREATER_THAN_OR_EQUAL',
-              value: { timestampValue: cutoff },
-            },
-          },
-          orderBy: [{ field: { fieldPath: 'date' }, direction: 'DESCENDING' }],
-          limit: 500,
-        },
-      }),
-    }, 1);
+    // Fetch the most-recent 500 scores ordered by date, then filter + sort
+    // client-side.  This is more reliable than a POST :runQuery (which needs
+    // precise proto field formats) and avoids composite-index requirements.
+    const cutoffMs = Date.now() - (safePeriod === 'week' ? 7 : 30) * 24 * 60 * 60 * 1000;
+    const url = FIRESTORE_BASE + '/scores?pageSize=500&orderBy=' + encodeURIComponent('date desc');
+    const res = await fetchWithRetry(url, { method: 'GET' }, 1);
     if (!res.ok) throw new Error('Firestore leaderboard fallback HTTP ' + res.status);
     const data = await res.json().catch(() => null);
-    const docs = Array.isArray(data) ? data.map(row => row && row.document).filter(Boolean) : [];
-    const scores = _normalizeScores(docs.map(_mapFirestoreScore).filter(Boolean));
-    scores.sort((a, b) => b.score - a.score);
-    return scores.slice(0, safeCount);
+    const docs = data && Array.isArray(data.documents) ? data.documents : [];
+    const all = _normalizeScores(docs.map(_mapFirestoreScore).filter(Boolean));
+    // Client-side date filter — handles both Date objects and ISO strings
+    const filtered = all.filter(s => {
+      if (!s.timestamp) return false;
+      const ms = s.timestamp instanceof Date
+        ? s.timestamp.getTime()
+        : new Date(s.timestamp).getTime();
+      return !isNaN(ms) && ms >= cutoffMs;
+    });
+    filtered.sort((a, b) => b.score - a.score);
+    return filtered.slice(0, safeCount);
   }
 
   const url = FIRESTORE_BASE + '/scores?pageSize=' + encodeURIComponent(safeCount) + '&orderBy=' + encodeURIComponent('score desc');
