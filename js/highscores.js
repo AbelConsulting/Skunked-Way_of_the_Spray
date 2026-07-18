@@ -1136,6 +1136,27 @@ try {
     } catch (e) { /* sync must never throw */ }
   }
 
+  /**
+   * Submit a score to the Steam leaderboard and run achievement checks on
+   * every run end, regardless of whether the score qualifies for the web
+   * leaderboard.  Fire-and-forget; never throws.
+   *
+   * This is the companion to addScore() — it ensures Steam always receives
+   * the player's result even when the web board is already full.
+   */
+  async function submitSteamScore(score, gameStats) {
+    if (!validateScore(score)) return;
+    // Always run achievement checks — should fire on every completed run.
+    try { if (gameStats) checkAchievements(gameStats); } catch (_) {}
+    // Steam submit: only meaningful on the desktop build.
+    if (!_isSteamDesktop()) return;
+    try {
+      if (typeof window.electronAPI.submitScore === 'function') {
+        window.electronAPI.submitScore(STEAM_LEADERBOARD, score).catch(() => {});
+      }
+    } catch (_) { /* must never throw */ }
+  }
+
   window.Highscores = {
     // Global scores
     loadScores,
@@ -1159,6 +1180,7 @@ try {
     getTitleForCount,
     // Steam
     syncAchievementsToSteam,
+    submitSteamScore,
     // Survival mode local leaderboard
     getSurvivalScores,
     addSurvivalScore,

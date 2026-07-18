@@ -1728,6 +1728,11 @@ class Game {
                 }
             } catch (e) { console.warn('Achievement check (victory) failed', e); }
 
+            // Always submit to Steam + run achievements at campaign end.
+            try { if (window.Highscores && typeof Highscores.submitSteamScore === 'function') {
+                Highscores.submitSteamScore(this.score, this.gameStats);
+            } } catch (e) { __err('game', e); }
+
             // High score flow at campaign completion.
             // Brief lockout so players can read "MISSION ACCOMPLISHED!"
             // before either the prompt or any input snaps them away.
@@ -3270,6 +3275,12 @@ class Game {
                     });
                 }
             } catch (e) { /* analytics must never break gameplay */ }
+
+            // Always submit to Steam + run achievements for this run, even if the
+            // score doesn't make the web leaderboard (Steam uses personal-best tracking).
+            try { if (window.Highscores && typeof Highscores.submitSteamScore === 'function') {
+                Highscores.submitSteamScore(this.score, this.gameStats);
+            } } catch (e) { __err('game', e); }
 
             // Check for new high score (async, update flag when resolved)
             this._gameOverIsHighScore = false;
