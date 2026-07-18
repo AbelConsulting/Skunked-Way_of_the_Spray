@@ -171,6 +171,19 @@ function setupIPC() {
         try {
             const lb = await steamClient.leaderboard.findOrCreate(leaderboardName, 'Descending', 'Numeric');
             const result = await steamClient.leaderboard.uploadScore(lb, score, []);
+
+            // Also update the per-user INT stat of the same name (Steamworks stat ID 3,
+            // "global_highscores"). This keeps the personal-best stat in sync, which lets
+            // Steamworks fire score-based stat achievements automatically and shows the
+            // value on the player's profile.
+            try {
+                const cur = steamClient.stats.getStatInt(leaderboardName) || 0;
+                if (score > cur) {
+                    steamClient.stats.setStatInt(leaderboardName, score);
+                    await steamClient.stats.storeStats();
+                }
+            } catch (e) { console.warn('[Steam] stat sync:', e.message); }
+
             return { success: true, isNewBest: result.scoreChanged };
         } catch (e) {
             console.error('[Steam] submitScore:', e.message);
