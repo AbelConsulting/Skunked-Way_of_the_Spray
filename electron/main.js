@@ -29,6 +29,11 @@ function initSteam() {
         // steamworks.js must be initialised synchronously before app is ready
         const steamworks = require('steamworks.js');
         steamworksModule = steamworks;
+        if (app.isPackaged && steamworks.restartAppIfNecessary(STEAM_APP_ID)) {
+            console.log(`[Steam] Relaunching through Steam. AppID=${STEAM_APP_ID}`);
+            app.exit(0);
+            return;
+        }
         steamClient = steamworks.init(STEAM_APP_ID);
         console.log(`[Steam] Initialised. AppID=${STEAM_APP_ID}  Player="${steamClient.localplayer.getName()}"`);
     } catch (e) {
