@@ -138,6 +138,13 @@ class GameApp {
             window.addEventListener('gamepaddisconnected', () => {
                 // Release any stuck keys when a controller disconnects
                 this._clearGamepadKeys();
+                // Steam review requirement: auto-pause when controller is unplugged during gameplay
+                try {
+                    if (this.game && this.game.state === 'PLAYING' &&
+                        typeof this.game.togglePause === 'function') {
+                        this.game.togglePause();
+                    }
+                } catch (e) { __err('main', e); }
             });
         } catch (e) { __err('main', e); }
 
@@ -656,6 +663,41 @@ class GameApp {
         return a0;
     }
 
+    _getAxisY(gamepad) {
+        if (!gamepad || !gamepad.axes || gamepad.axes.length < 2) return 0;
+        const a1 = typeof gamepad.axes[1] === 'number' ? gamepad.axes[1] : 0;
+        const a3 = typeof gamepad.axes[3] === 'number' ? gamepad.axes[3] : 0;
+        // axis[3] = right-stick Y for XR; axis[1] = left-stick Y for standard
+        if (Math.abs(a3) > Math.abs(a1) + 0.05) return a3;
+        return a1;
+    }
+
+    /**
+     * Move keyboard focus forward (+1) or backward (-1) through all visible
+     * interactive elements on screen.  Used by the controller to navigate
+     * HTML menus without a keyboard or mouse.
+     */
+    _menuFocusMove(dir) {
+        try {
+            const SEL = 'button:not([disabled]), [role="button"]:not([aria-disabled="true"]), a[href], [tabindex]:not([tabindex="-1"])';
+            const els = Array.from(document.querySelectorAll(SEL)).filter(el => {
+                try {
+                    const r = el.getBoundingClientRect();
+                    if (r.width <= 0 || r.height <= 0) return false;
+                    const cs = getComputedStyle(el);
+                    return cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0';
+                } catch (_) { return false; }
+            });
+            if (!els.length) return;
+            const cur = document.activeElement;
+            const idx = els.indexOf(cur);
+            const next = idx < 0
+                ? (dir > 0 ? els[0] : els[els.length - 1])
+                : els[(idx + dir + els.length) % els.length];
+            if (next) { next.focus(); try { next.scrollIntoView({ block: 'nearest' }); } catch (_) {} }
+        } catch (e) { __err('main', e); }
+    }
+
     _pickGamepads() {
         const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
         let leftPad = null;
@@ -857,6 +899,24 @@ class GameApp {
         this._setKeyState('ArrowLeft',  leftDown  || dpadLeft);
         this._setKeyState('ArrowRight', rightDown || dpadRight);
 
+        // ── Menu navigation: D-pad up/down + left-stick Y ────────────────────
+        // Standard mapping: button 12 = D-pad Up, button 13 = D-pad Down.
+        // In MENU and PAUSED states these cycle focus through visible HTML
+        // buttons so the whole UI is reachable with only a controller.
+        const dpadUp    = isStandard ? this._getButtonPressed(movePad, 12) : false;
+        const dpadDown  = isStandard ? this._getButtonPressed(movePad, 13) : false;
+        const axisY     = this._getAxisY(movePad);
+        const stickUp   = axisY < -0.5;
+        const stickDn   = axisY >  0.5;
+        const gameState = this.game ? this.game.state : '';
+        const inMenu    = gameState === 'MENU' || gameState === 'PAUSED';
+        if (inMenu) {
+            if ((dpadUp   || stickUp) && !this._menuNavUpLast)   this._menuFocusMove(-1);
+            if ((dpadDn  || stickDn) && !this._menuNavDnLast)  this._menuFocusMove(1);
+        }
+        this._menuNavUpLast = dpadUp   || stickUp;
+        this._menuNavDnLast = dpadDown || stickDn;
+
         // Left trigger: skunk shot (KeyC)
         const leftTrigger = leftIsXr
             ? (this._getButtonPressed(leftPad, 0) || this._getButtonPressed(leftPad, 1))
@@ -930,8 +990,15 @@ class GameApp {
             try {
                 if (this.game) {
                     const st = this.game.state;
-                    if (st === 'MENU' && window._startMenuVisible) { /* blocked by start menu overlay */ }
-                    else if (st === 'MENU' || st === 'VICTORY') {
+                    if (st === 'MENU' && window._startMenuVisible) {
+                        // Start-menu overlay is HTML — click the currently focused button
+                        const el = document.activeElement;
+                        if (el && el !== document.body && typeof el.click === 'function') el.click();
+                    } else if (st === 'PAUSED') {
+                        // Pause menu is HTML — click the currently focused button
+                        const el = document.activeElement;
+                        if (el && el !== document.body && typeof el.click === 'function') el.click();
+                    } else if (st === 'MENU' || st === 'VICTORY') {
                         try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
                         this.game.startGame(0);
                         try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
