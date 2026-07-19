@@ -614,14 +614,21 @@ class UI {
                         ctx.fillStyle = '#FFFFFF';
                         ctx.fillText(ach.icon || '\uD83C\uDFC6', 0, -12);
 
-                        // Achievement name
-                        ctx.font = "bold 8px 'Press Start 2P', monospace";
+                        // Achievement name — truncate if wider than card (9px min for Steam Deck)
+                        ctx.font = "bold 9px 'Press Start 2P', monospace";
                         ctx.fillStyle = '#FFD700';
-                        ctx.fillText(ach.name || '', 0, 12);
+                        let achNameText = ach.name || '';
+                        if (ctx.measureText(achNameText).width > badgeCardW - 8) {
+                            while (achNameText.length > 3 && ctx.measureText(achNameText + '\u2026').width > badgeCardW - 8) {
+                                achNameText = achNameText.slice(0, -1);
+                            }
+                            achNameText += '\u2026';
+                        }
+                        ctx.fillText(achNameText, 0, 12);
 
-                        // Description — dimmer, smaller
+                        // Description — dimmer, minimum 9px
                         if (ach.desc) {
-                            ctx.font = "7px 'Press Start 2P', monospace";
+                            ctx.font = "9px 'Press Start 2P', monospace";
                             ctx.fillStyle = 'rgba(255, 220, 150, 0.6)';
                             // Truncate long descriptions to fit card width
                             let descText = ach.desc;
@@ -1515,7 +1522,7 @@ class UI {
 
                 // "WAVE" label tiny above number
                 ctx.save();
-                ctx.font         = "700 7px 'Press Start 2P', monospace";
+                ctx.font         = "700 9px 'Press Start 2P', monospace";
                 ctx.fillStyle    = `rgba(${waveRgb},0.7)`;
                 ctx.textAlign    = 'left';
                 ctx.textBaseline = 'alphabetic';
@@ -1556,7 +1563,7 @@ class UI {
                 if (!resting && wave > 0) {
                     // ── Kill label row ────────────────────────────────────────────
                     ctx.save();
-                    ctx.font         = "700 7px 'Press Start 2P', monospace";
+                    ctx.font         = "700 9px 'Press Start 2P', monospace";
                     ctx.textBaseline = 'alphabetic';
                     ctx.fillStyle    = 'rgba(255,255,255,0.45)';
                     ctx.textAlign    = 'left';
@@ -1653,7 +1660,7 @@ class UI {
 
                     // "NEXT WAVE" label
                     ctx.save();
-                    ctx.font         = "700 7px 'Press Start 2P', monospace";
+                    ctx.font         = "700 9px 'Press Start 2P', monospace";
                     ctx.fillStyle    = 'rgba(0,255,136,0.75)';
                     ctx.textAlign    = 'left';
                     ctx.textBaseline = 'alphabetic';
@@ -1692,7 +1699,7 @@ class UI {
                 // ── Revive-used badge ─────────────────────────────────────────
                 if (survivalInfo.reviveUsed) {
                     ctx.save();
-                    ctx.font         = "bold 8px 'Press Start 2P', monospace";
+                    ctx.font         = "bold 9px 'Press Start 2P', monospace";
                     ctx.textAlign    = 'right';
                     ctx.textBaseline = 'top';
                     ctx.globalAlpha  = 0.70;
