@@ -52,46 +52,57 @@ class TutorialHints {
         // ── Hint definitions ──
         // Each hint has a unique id, display lines, and duration in seconds.
         // Keyboard and touch versions are provided; the correct one is chosen
-        // based on isMobile at trigger time.
+        // based on isMobile at trigger time.  A "gamepad" version is used when
+        // a controller is the active input (Steam Deck, Xbox, etc.).
         this.HINTS = {
             move_jump: {
                 id: 'move_jump',
                 duration: 12,
-                kb:    ['← → to Move  •  SPACE to Jump',
+                gamepad: ['Left Stick / D-Pad to Move  \u2022  A to Jump',
+                          'Double-tap A for a double jump!'],
+                kb:    ['\u2190 \u2192 to Move  \u2022  SPACE to Jump',
                         'Double-tap SPACE for a double jump!'],
-                touch: ['Use ⟸ ⟹ to Move  •  ⤒ to Jump',
+                touch: ['Use \u27f8 \u27f9 to Move  \u2022  \u2912 to Jump',
                         'Tap Jump twice for a double jump!']
             },
             attack: {
                 id: 'attack',
                 duration: 10,
+                gamepad: ['X to Attack  \u2022  RT also works',
+                          'Chain hits within 2s for combos!'],
                 kb:    ['Press X to Attack enemies!',
                         'Chain hits within 2s for combos!'],
-                touch: ['Tap 🗡 to Attack enemies!',
+                touch: ['Tap \uD83D\uDDE1 to Attack enemies!',
                         'Chain hits within 2s for combos!']
             },
             attack_pity: {
                 id: 'attack_pity',
                 duration: 14,
+                gamepad: ['You can ATTACK enemies!',
+                          'Press X \u2014 they can\'t hurt you if they\'re down.'],
                 kb:    ['You can ATTACK enemies!',
-                        'Press X — they can\'t hurt you if they\'re down.'],
+                        'Press X \u2014 they can\'t hurt you if they\'re down.'],
                 touch: ['You can ATTACK enemies!',
-                        'Tap 🗡 — they can\'t hurt you if they\'re down.']
+                        'Tap \uD83D\uDDE1 \u2014 they can\'t hurt you if they\'re down.']
             },
             shadow_strike: {
                 id: 'shadow_strike',
                 duration: 10,
+                gamepad: ['B for Shadow Strike!',
+                          'Dash through attacks \u2014 invincible!'],
                 kb:    ['Press Z for Shadow Strike!',
-                        'Dash through attacks — invincible!'],
-                touch: ['Tap 💥 for Shadow Strike!',
-                        'Dash through attacks — invincible!']
+                        'Dash through attacks \u2014 invincible!'],
+                touch: ['Tap \uD83D\uDCA5 for Shadow Strike!',
+                        'Dash through attacks \u2014 invincible!']
             },
             skunk_shot: {
                 id: 'skunk_shot',
                 duration: 10,
+                gamepad: ['LT / RB for Skunk Shot!',
+                          'Ranged spray that stuns enemies.'],
                 kb:    ['Press C to fire Skunk Shot!',
                         'Ranged spray that stuns enemies.'],
-                touch: ['Tap 🦨 for Skunk Shot!',
+                touch: ['Tap \uD83E\uDA28 for Skunk Shot!',
                         'Ranged spray that stuns enemies.']
             },
             golden_idol: {
@@ -341,7 +352,10 @@ class TutorialHints {
 
     /** Internal: activate a hint definition */
     _show(def) {
-        const lines = this.isMobile ? def.touch : def.kb;
+        const isGamepad = !!(window._vrControllersEnabled ||
+            (typeof window !== 'undefined' && window.PLATFORM === 'steam'));
+        const lines = isGamepad && def.gamepad ? def.gamepad
+            : (this.isMobile ? def.touch : def.kb);
         this._active = {
             id: def.id,
             lines: lines,
@@ -543,7 +557,10 @@ class TutorialHints {
         const badgeWidth = Math.ceil(ctx.measureText(badgeText).width) + Math.round(20 * scale);
         ctx.letterSpacing = '0';
         ctx.font = `500 ${dismissSize}px ${tutorialFont}`;
-        const dismissText = this.isMobile ? 'Tap anywhere to close' : 'Press any key to close';
+        const isGamepadDismiss = !!(window._vrControllersEnabled ||
+            (typeof window !== 'undefined' && window.PLATFORM === 'steam'));
+        const dismissText = isGamepadDismiss ? 'Press any button to close'
+            : (this.isMobile ? 'Tap anywhere to close' : 'Press any key to close');
         const dismissWidth = Math.ceil(ctx.measureText(dismissText).width) + Math.round(18 * scale);
 
         ctx.font = `700 ${titleSize}px ${tutorialFont}`;

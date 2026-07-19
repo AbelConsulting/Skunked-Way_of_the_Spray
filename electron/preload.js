@@ -89,4 +89,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
      */
     setRichPresence: (status) =>
         ipcRenderer.invoke('steam:setRichPresence', { key: 'steam_display', value: status }),
+
+    /**
+     * Show the Steam Deck on-screen keyboard for text entry.
+     * Resolves with the entered string, or null if cancelled / unavailable.
+     * @param {string} [description]   Label shown above the keyboard.
+     * @param {string} [existingText]  Pre-filled text.
+     * @param {number} [maxChars=100]
+     * @returns {Promise<string|null>}
+     */
+    showKeyboard: (description, existingText, maxChars) =>
+        ipcRenderer.invoke('steam:showKeyboard', { description, existingText, maxChars }),
 });

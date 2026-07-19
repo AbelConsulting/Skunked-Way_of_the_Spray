@@ -656,6 +656,22 @@ try {
         }).catch(() => {});
       }
 
+      // On Steam Deck: trigger the on-screen keyboard when the input is focused.
+      // Falls back gracefully if the API isn\'t available (player can still type).
+      if (typeof window !== 'undefined' && window.electronAPI &&
+          typeof window.electronAPI.showKeyboard === 'function') {
+        input.addEventListener('focus', async () => {
+          try {
+            const entered = await window.electronAPI.showKeyboard(
+              'Enter Your Name', input.value, 10);
+            if (entered !== null && typeof entered === 'string') {
+              input.value = entered.trim().slice(0, 10);
+              input.style.borderColor = input.value.length > 0 ? '#4CAF50' : '#666';
+            }
+          } catch (_) {}
+        }, { once: true });
+      }
+
       const btnRow = document.createElement('div');
       btnRow.className = 'highscore-prompt-buttons';
 

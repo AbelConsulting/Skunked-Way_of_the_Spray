@@ -223,6 +223,24 @@ function setupIPC() {
             return true;
         } catch (e) { console.error('[Steam] setRichPresence:', e.message); return false; }
     });
+
+    // On-screen keyboard — shows the Steam Deck virtual keyboard for text entry
+    ipcMain.handle('steam:showKeyboard', async (_, { description = 'Enter text', existingText = '', maxChars = 100 } = {}) => {
+        if (!steamClient) return null;
+        try {
+            // Try floating text input (overlay-style, non-modal)
+            if (steamClient.utils && typeof steamClient.utils.showFloatingGamepadTextInput === 'function') {
+                const result = await steamClient.utils.showFloatingGamepadTextInput('normal', 0, 0, 500, 80);
+                return (typeof result === 'string') ? result : null;
+            }
+            // Fallback: modal gamepad text input
+            if (steamClient.utils && typeof steamClient.utils.showGamepadTextInput === 'function') {
+                const result = await steamClient.utils.showGamepadTextInput(description, existingText, maxChars);
+                return (typeof result === 'string') ? result : null;
+            }
+        } catch (e) { console.warn('[Steam] showKeyboard:', e.message); }
+        return null;
+    });
 }
 
 // ── Window ────────────────────────────────────────────────────────────────────
