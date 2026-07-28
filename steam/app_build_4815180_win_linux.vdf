@@ -20,7 +20,6 @@
 	"desc"	"Skunked: Way of the Spray — Win+Linux build"   // bump per upload
 
 	"buildoutput"	"output\\"
-	"contentroot"	"..\\release\\win-unpacked\\"   // unused fallback; each depot overrides via ContentRoot
 
 	"setlive"	""
 	"preview"	"0"
