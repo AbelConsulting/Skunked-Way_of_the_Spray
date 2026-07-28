@@ -140,7 +140,7 @@
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "cordova-plugin-purchase": "^13.15.4",
-    "steamworks.js": "^0.3.2"
+    "steamworks.js": "^0.4.0"
   },
   "optionalDependencies": {
     "@electron/windows-sign": "^1.2.2",
