@@ -40,6 +40,15 @@ class GameApp {
         this._steamInputState = null;
         this._steamInputUnsubscribe = null;
         this._steamInputActiveLogged = false;
+        this._steamOverlayCooldownUntil = 0;
+        this._homeButtonLast = false;
+
+        // Cursor auto-hide while actively playing on a controller.
+        this._cursorHiddenByGamepad = false;
+        this._lastMouseInputAt = 0;
+        this._lastGamepadInputAt = 0;
+        this._gamepadCursorMouseGraceMs = 1200;
+        this._wirePointerActivityHooks();
 
         // VR controller enable/prime hooks
         this._vrHooksReady = false;
@@ -64,6 +73,61 @@ class GameApp {
         ];
 
         this.init();
+    }
+
+    _wirePointerActivityHooks() {
+        const onPointerLikeInput = () => {
+            try {
+                this._lastMouseInputAt = Date.now();
+                this._setCursorHiddenByGamepad(false);
+            } catch (e) { __err('main', e); }
+        };
+
+        try {
+            window.addEventListener('mousemove', onPointerLikeInput, { passive: true });
+            window.addEventListener('mousedown', onPointerLikeInput, { passive: true });
+            window.addEventListener('wheel', onPointerLikeInput, { passive: true });
+        } catch (e) { __err('main', e); }
+    }
+
+    _setCursorHiddenByGamepad(hidden) {
+        const shouldHide = !!hidden;
+        if (this._cursorHiddenByGamepad === shouldHide) return;
+        this._cursorHiddenByGamepad = shouldHide;
+
+        try {
+            const value = shouldHide ? 'none' : '';
+            if (document && document.documentElement) document.documentElement.style.cursor = value;
+            if (document && document.body) document.body.style.cursor = value;
+            if (this.canvas) this.canvas.style.cursor = value;
+        } catch (e) { __err('main', e); }
+    }
+
+    _noteGamepadActivity() {
+        try {
+            this._lastGamepadInputAt = Date.now();
+            if ((this._lastGamepadInputAt - this._lastMouseInputAt) >= this._gamepadCursorMouseGraceMs) {
+                this._setCursorHiddenByGamepad(true);
+            }
+        } catch (e) { __err('main', e); }
+    }
+
+    async _requestSteamOverlay(dialog = 'Friends') {
+        const now = Date.now();
+        if (now < this._steamOverlayCooldownUntil) return false;
+        this._steamOverlayCooldownUntil = now + 600;
+
+        try {
+            if (!window.electronAPI || typeof window.electronAPI.activateOverlay !== 'function') return false;
+            const ok = await window.electronAPI.activateOverlay(dialog);
+            if (!ok) {
+                try { console.warn('[Steam] Overlay activation was not accepted by main process.'); } catch (e) { __err('main', e); }
+            }
+            return !!ok;
+        } catch (e) {
+            try { console.warn('[Steam] Overlay activation failed in renderer:', e); } catch (ex) { __err('main', ex); }
+            return false;
+        }
     }
 
     /** Start rotating loading tips every few seconds */
@@ -751,6 +815,7 @@ class GameApp {
 
         const d = (state && state.digital) || {};
         const analogX = (state && state.analog && typeof state.analog.x === 'number') ? state.analog.x : 0;
+        const analogY = (state && state.analog && typeof state.analog.y === 'number') ? state.analog.y : 0;
 
         const leftDown  = !!d.MoveLeft  || analogX < -0.25;
         const rightDown = !!d.MoveRight || analogX > 0.25;
@@ -762,6 +827,13 @@ class GameApp {
         this._setKeyState('c', !!d.SkunkShot);
         this._setKeyState('z', !!d.Special);
         this._setKeyState('Escape', !!d.Pause);
+
+        if (
+            !!d.MoveLeft || !!d.MoveRight || !!d.Jump || !!d.Attack || !!d.SkunkShot ||
+            !!d.Special || !!d.Pause || !!d.Confirm || Math.abs(analogX) > 0.18 || Math.abs(analogY) > 0.18
+        ) {
+            this._noteGamepadActivity();
+        }
 
         // Confirm: rising/falling edge -> synthetic Enter, mirroring the
         // browser-gamepad confirm handling below so menu/start/restart flows
@@ -965,6 +1037,13 @@ class GameApp {
         // Left bumper / Start button: pause (Escape)
         this._setKeyState('Escape', leftBumper || startButton);
 
+        // Guide/Home button (standard button 16): open Steam overlay.
+        const homeButton = isStandard ? this._getButtonPressed(actionPad, 16) : false;
+        if (homeButton && !this._homeButtonLast) {
+            this._requestSteamOverlay('Friends');
+        }
+        this._homeButtonLast = homeButton;
+
         // Select button (standard button 8): Enter (confirm/restart)
         const selectButton = isStandard ? this._getButtonPressed(actionPad, 8) : false;
         if (selectButton && !this._selectLast) this._sendKeyEvent('Enter', 'keydown');
@@ -978,6 +1057,15 @@ class GameApp {
         const confirmNow = aPressed || bPressed || rightTrigger || xPressed || yPressed;
         const confirmPrev = !!this._gamepadConfirmLast;
         this._gamepadConfirmLast = confirmNow;
+
+        if (
+            leftDown || rightDown || dpadLeft || dpadRight || dpadUp || dpadDown ||
+            leftTrigger || leftBumper || startButton || aPressed || bPressed || rightTrigger ||
+            xPressed || yPressed || rightGrip || selectButton || homeButton ||
+            Math.abs(axisX) > 0.18 || Math.abs(axisY) > 0.18
+        ) {
+            this._noteGamepadActivity();
+        }
 
         if (confirmNow && !confirmPrev) {
             // Send a synthetic Enter keydown so any UI listener that

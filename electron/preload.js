@@ -69,6 +69,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     isSteamInputAvailable: () => ipcRenderer.invoke('steam:input:available'),
 
     /**
+     * Open the Steam Overlay dialog (e.g. Friends / Achievements).
+     * @param {string} [dialog='Friends']
+     * @returns {Promise<boolean>}
+     */
+    activateOverlay: (dialog = 'Friends') =>
+        ipcRenderer.invoke('steam:overlay:activate', { dialog }),
+
+    /**
      * Subscribe to native Steam Input action-set state updates (pushed
      * whenever the state changes). Shape: { digital: { MoveLeft, MoveRight,
      * Jump, Attack, SkunkShot, Special, Pause, Confirm }, analog: { x, y } },

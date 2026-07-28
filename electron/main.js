@@ -144,6 +144,22 @@ function setupIPC() {
     // Steam Input
     ipcMain.handle('steam:input:available', () => steamInput.available);
 
+    // Steam Overlay
+    ipcMain.handle('steam:overlay:activate', (_, { dialog = 'Friends' } = {}) => {
+        if (!steamClient || !steamClient.overlay) return false;
+        try {
+            const dialogs = steamClient.overlay.Dialog || {};
+            const value = Object.prototype.hasOwnProperty.call(dialogs, dialog)
+                ? dialogs[dialog]
+                : dialogs.Friends;
+            steamClient.overlay.activateDialog(typeof value === 'number' ? value : 0);
+            return true;
+        } catch (e) {
+            console.warn('[Steam] overlay activate failed:', e.message);
+            return false;
+        }
+    });
+
     // Achievement
     ipcMain.handle('steam:unlockAchievement', (_, id) => {
         if (!steamClient) return false;
