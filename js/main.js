@@ -42,6 +42,7 @@ class GameApp {
         this._steamInputActiveLogged = false;
         this._steamOverlayCooldownUntil = 0;
         this._homeButtonLast = false;
+        this._overlayComboLast = false;
 
         // Cursor auto-hide while actively playing on a controller.
         this._cursorHiddenByGamepad = false;
@@ -96,6 +97,9 @@ class GameApp {
         this._cursorHiddenByGamepad = shouldHide;
 
         try {
+            if (document && document.documentElement) {
+                document.documentElement.classList.toggle('controller-cursor-hidden', shouldHide);
+            }
             const value = shouldHide ? 'none' : '';
             if (document && document.documentElement) document.documentElement.style.cursor = value;
             if (document && document.body) document.body.style.cursor = value;
@@ -828,6 +832,14 @@ class GameApp {
         this._setKeyState('z', !!d.Special);
         this._setKeyState('Escape', !!d.Pause);
 
+        // Fallback overlay shortcut for Steam Input action sets:
+        // Pause + Confirm pressed together.
+        const overlayCombo = !!d.Pause && !!d.Confirm;
+        if (overlayCombo && !this._overlayComboLast) {
+            this._requestSteamOverlay('Friends');
+        }
+        this._overlayComboLast = overlayCombo;
+
         if (
             !!d.MoveLeft || !!d.MoveRight || !!d.Jump || !!d.Attack || !!d.SkunkShot ||
             !!d.Special || !!d.Pause || !!d.Confirm || Math.abs(analogX) > 0.18 || Math.abs(analogY) > 0.18
@@ -1043,6 +1055,14 @@ class GameApp {
             this._requestSteamOverlay('Friends');
         }
         this._homeButtonLast = homeButton;
+
+        // Fallback overlay shortcut when Guide/Home is intercepted by Steam:
+        // Start + Select pressed together.
+        const overlayCombo = startButton && selectButton;
+        if (overlayCombo && !this._overlayComboLast) {
+            this._requestSteamOverlay('Friends');
+        }
+        this._overlayComboLast = overlayCombo;
 
         // Select button (standard button 8): Enter (confirm/restart)
         const selectButton = isStandard ? this._getButtonPressed(actionPad, 8) : false;

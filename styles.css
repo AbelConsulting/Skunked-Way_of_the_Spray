@@ -6,6 +6,12 @@
  */
 /* styles.css */
 
+/* Force-hide cursor while active controller input is driving gameplay. */
+html.controller-cursor-hidden,
+html.controller-cursor-hidden * {
+    cursor: none !important;
+}
+
 /* ─── Accessibility: Reduced motion ────────────────────────────────
    Honor the OS-level "reduce motion" preference. We strip continuous
    decorative animations (pulses, glows, background drifts, shimmers)
