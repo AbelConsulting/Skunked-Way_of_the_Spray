@@ -351,7 +351,22 @@ const PurchaseManager = (() => {
     }
 
     async function initialize() {
-        if (_initialized) return;
+        if (_initialized) {
+            // Recovery path: if init ran before the native bridge was ready,
+            // we may have latched into a no-store fallback on Android.
+            // Re-arm initialization once native is detectable so Billing can
+            // connect without requiring an app restart.
+            if (_readyMode === 'no-store' && isNative() && !_store) {
+                _log('Re-attempting store initialization after native bridge became available.');
+                _initialized = false;
+                _ready = false;
+                _readyMode = 'not-ready';
+                _storeInitError = null;
+                _storePollDone = false;
+            } else {
+                return;
+            }
+        }
         _initialized = true;
 
         // Steam build: everything is included with the game purchase.
@@ -631,7 +646,11 @@ const PurchaseManager = (() => {
     async function purchaseRemoveAds() {
         if (_adFree) return { ok: true, reason: 'already-owned' };
 
-        const store = await _getStore();
+        let store = await _getStore();
+        if (!store && isNative() && _readyMode === 'no-store') {
+            await initialize();
+            store = await _getStore();
+        }
         if (!store) {
             // Return a distinct reason so the UI can give a sensible message
             // whether we're on web or on Android with a missing plugin.
@@ -688,7 +707,11 @@ const PurchaseManager = (() => {
      * Restore previously purchased entitlements (e.g., after reinstall).
      */
     async function restorePurchases() {
-        const store = await _getStore();
+        let store = await _getStore();
+        if (!store && isNative() && _readyMode === 'no-store') {
+            await initialize();
+            store = await _getStore();
+        }
         if (!store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
         try {
             await store.restorePurchases();
@@ -757,7 +780,11 @@ const PurchaseManager = (() => {
     async function purchaseFounderPass() {
         if (_founderPass) return { ok: true, reason: 'already-owned' };
 
-        const store = await _getStore();
+        let store = await _getStore();
+        if (!store && isNative() && _readyMode === 'no-store') {
+            await initialize();
+            store = await _getStore();
+        }
         if (!store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
 
         // Wait for store.initialize() so the product catalogue is loaded.
