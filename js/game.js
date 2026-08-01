@@ -1029,7 +1029,9 @@ class Game {
                     const panel = overlay && overlay.querySelector('.pause-panel');
                     if (panel) {
                         const focusable = panel.querySelectorAll('button, input, [tabindex]');
-                        if (focusable.length) focusable[0].focus();
+                        const resumeBtn = panel.querySelector('#resume-btn');
+                        if (resumeBtn) resumeBtn.focus();
+                        else if (focusable.length) focusable[0].focus();
                     }
                 } catch (e) { __err('game', e); }
                 this.dispatchGameStateChange();

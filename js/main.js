@@ -43,6 +43,8 @@ class GameApp {
         this._steamOverlayCooldownUntil = 0;
         this._homeButtonLast = false;
         this._overlayComboLast = false;
+        this._menuRangeLeftLast = false;
+        this._menuRangeRightLast = false;
 
         // Cursor auto-hide while actively playing on a controller.
         this._cursorHiddenByGamepad = false;
@@ -378,6 +380,44 @@ class GameApp {
                     this._setKeyState('z', bBtn);
                     if (aBtn || bBtn || trig) anyButton = true;
                 }
+            }
+
+            const gameState = this.game ? this.game.state : '';
+            const inMenu = gameState === 'MENU' || gameState === 'PAUSED';
+            if (inMenu) {
+                const activeEl = document.activeElement;
+                const activeIsRange = !!(activeEl && activeEl.tagName === 'INPUT' && activeEl.type === 'range' && !activeEl.disabled);
+                let axisX = 0;
+                let axisY = 0;
+                for (const src of sources) {
+                    if (!src.gamepad) continue;
+                    const gp = src.gamepad;
+                    const hand = (src.handedness || '').toLowerCase();
+                    if (hand !== 'left' && sources.length > 1) continue;
+                    const x = (gp.axes && gp.axes.length > 2) ? gp.axes[2] : (gp.axes ? gp.axes[0] : 0);
+                    const y = (gp.axes && gp.axes.length > 3) ? gp.axes[3] : (gp.axes && gp.axes.length > 1 ? gp.axes[1] : 0);
+                    if (Math.abs(x) > Math.abs(axisX)) axisX = x;
+                    if (Math.abs(y) > Math.abs(axisY)) axisY = y;
+                }
+
+                if (activeIsRange) {
+                    const adjustLeft = axisX < -0.5;
+                    const adjustRight = axisX > 0.5;
+                    if (adjustLeft && !this._menuRangeLeftLast) this._adjustFocusedRange(-1);
+                    if (adjustRight && !this._menuRangeRightLast) this._adjustFocusedRange(1);
+                    this._menuRangeLeftLast = adjustLeft;
+                    this._menuRangeRightLast = adjustRight;
+                } else {
+                    const navUp = axisY < -0.5;
+                    const navDn = axisY > 0.5;
+                    if (navUp && !this._menuNavUpLast) this._menuFocusMove(-1);
+                    if (navDn && !this._menuNavDnLast) this._menuFocusMove(1);
+                    this._menuNavUpLast = navUp;
+                    this._menuNavDnLast = navDn;
+                }
+            } else {
+                this._menuRangeLeftLast = false;
+                this._menuRangeRightLast = false;
             }
 
             // Rising-edge confirm to start/restart game (same logic as
@@ -766,6 +806,28 @@ class GameApp {
         } catch (e) { __err('main', e); }
     }
 
+    _adjustFocusedRange(delta) {
+        try {
+            const el = document.activeElement;
+            if (!el || el.tagName !== 'INPUT' || el.type !== 'range' || el.disabled) return false;
+
+            const min = Number.isFinite(Number(el.min)) ? Number(el.min) : 0;
+            const max = Number.isFinite(Number(el.max)) ? Number(el.max) : 100;
+            const stepRaw = (typeof el.step === 'string' && el.step !== 'any') ? Number(el.step) : 1;
+            const step = Number.isFinite(stepRaw) && stepRaw > 0 ? stepRaw : 1;
+            const current = Number(el.value);
+            const base = Number.isFinite(current) ? current : min;
+            const next = Math.max(min, Math.min(max, base + (delta * step)));
+            if (next === current) return false;
+
+            el.value = String(next);
+            try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
+            try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+            return true;
+        } catch (e) { __err('main', e); }
+        return false;
+    }
+
     _pickGamepads() {
         const pads = (navigator.getGamepads && navigator.getGamepads()) ? Array.from(navigator.getGamepads()) : [];
         let leftPad = null;
@@ -831,6 +893,32 @@ class GameApp {
         this._setKeyState('c', !!d.SkunkShot);
         this._setKeyState('z', !!d.Special);
         this._setKeyState('Escape', !!d.Pause);
+
+        const gameState = this.game ? this.game.state : '';
+        const inMenu = gameState === 'MENU' || gameState === 'PAUSED';
+        if (inMenu) {
+            const activeEl = document.activeElement;
+            const activeIsRange = !!(activeEl && activeEl.tagName === 'INPUT' && activeEl.type === 'range' && !activeEl.disabled);
+            const leftPressed = !!d.MoveLeft || analogX < -0.25;
+            const rightPressed = !!d.MoveRight || analogX > 0.25;
+
+            if (activeIsRange) {
+                if (leftPressed && !this._menuRangeLeftLast) this._adjustFocusedRange(-1);
+                if (rightPressed && !this._menuRangeRightLast) this._adjustFocusedRange(1);
+                this._menuRangeLeftLast = leftPressed;
+                this._menuRangeRightLast = rightPressed;
+            } else {
+                this._menuRangeLeftLast = false;
+                this._menuRangeRightLast = false;
+                if (analogY < -0.5 && !this._menuNavUpLast) this._menuFocusMove(-1);
+                if (analogY > 0.5 && !this._menuNavDnLast) this._menuFocusMove(1);
+                this._menuNavUpLast = analogY < -0.5;
+                this._menuNavDnLast = analogY > 0.5;
+            }
+        } else {
+            this._menuRangeLeftLast = false;
+            this._menuRangeRightLast = false;
+        }
 
         // Fallback overlay shortcut for Steam Input action sets:
         // Pause + Confirm pressed together.
@@ -1001,6 +1089,20 @@ class GameApp {
         this._menuNavUpLast = dpadUp   || stickUp;
         this._menuNavDnLast = dpadDown || stickDn;
 
+        const activeEl = document.activeElement;
+        const activeIsRange = !!(inMenu && activeEl && activeEl.tagName === 'INPUT' && activeEl.type === 'range' && !activeEl.disabled);
+        if (activeIsRange) {
+            const adjustLeft = leftDown || dpadLeft || axisX < -0.5;
+            const adjustRight = rightDown || dpadRight || axisX > 0.5;
+            if (adjustLeft && !this._menuRangeLeftLast) this._adjustFocusedRange(-1);
+            if (adjustRight && !this._menuRangeRightLast) this._adjustFocusedRange(1);
+            this._menuRangeLeftLast = adjustLeft;
+            this._menuRangeRightLast = adjustRight;
+        } else {
+            this._menuRangeLeftLast = false;
+            this._menuRangeRightLast = false;
+        }
+
         // Left trigger: skunk shot (KeyC)
         const leftTrigger = leftIsXr
             ? (this._getButtonPressed(leftPad, 0) || this._getButtonPressed(leftPad, 1))
@@ -1056,6 +1158,12 @@ class GameApp {
         }
         this._homeButtonLast = homeButton;
 
+        // Select button (standard button 8): Enter (confirm/restart)
+        const selectButton = isStandard ? this._getButtonPressed(actionPad, 8) : false;
+        if (selectButton && !this._selectLast) this._sendKeyEvent('Enter', 'keydown');
+        if (!selectButton && this._selectLast) this._sendKeyEvent('Enter', 'keyup');
+        this._selectLast = selectButton;
+
         // Fallback overlay shortcut when Guide/Home is intercepted by Steam:
         // Start + Select pressed together.
         const overlayCombo = startButton && selectButton;
@@ -1063,12 +1171,6 @@ class GameApp {
             this._requestSteamOverlay('Friends');
         }
         this._overlayComboLast = overlayCombo;
-
-        // Select button (standard button 8): Enter (confirm/restart)
-        const selectButton = isStandard ? this._getButtonPressed(actionPad, 8) : false;
-        if (selectButton && !this._selectLast) this._sendKeyEvent('Enter', 'keydown');
-        if (!selectButton && this._selectLast) this._sendKeyEvent('Enter', 'keyup');
-        this._selectLast = selectButton;
 
         // ── Gamepad-driven game start / Enter ──────────────────────────
         // Any face button or trigger can start the game from non-playing
