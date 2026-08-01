@@ -1084,7 +1084,7 @@ class GameApp {
         const inMenu    = gameState === 'MENU' || gameState === 'PAUSED';
         if (inMenu) {
             if ((dpadUp   || stickUp) && !this._menuNavUpLast)   this._menuFocusMove(-1);
-            if ((dpadDn  || stickDn) && !this._menuNavDnLast)  this._menuFocusMove(1);
+            if ((dpadDown || stickDn) && !this._menuNavDnLast)  this._menuFocusMove(1);
         }
         this._menuNavUpLast = dpadUp   || stickUp;
         this._menuNavDnLast = dpadDown || stickDn;
