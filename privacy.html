@@ -116,11 +116,11 @@
         <h1>Privacy Policy</h1>
         <p class="subtitle">
             Skunked: Way of the Spray &mdash;
-            Effective: March 1, 2026 &mdash; Last updated: April 30, 2026
+            Effective: March 1, 2026 &mdash; Last updated: August 2, 2026
         </p>
 
         <div class="notice-box">
-        <p><strong>Summary:</strong> We do not run our own user-account system or collect personal data on our own servers. Game progress is saved locally on your device. The Game uses Google advertising services (AdSense / AdMob), which may collect device and usage data under Google's own privacy policies. The Android version supports an optional one-time in-app purchase ("Remove Ads", $1.99 USD) processed by Google Play Billing &mdash; we do not see your payment details. This Game is intended for users <strong>13 years of age and older</strong>.</p>
+        <p><strong>Summary:</strong> We do not run a traditional user-account system, but we do process limited game-related data on our backend for leaderboard and purchase-entitlement features. Game progress is also saved locally on your device. The Game uses Google advertising and analytics services (including AdSense/AdMob and Google Tag Manager), which may collect device and usage data under Google's own privacy policies. The Android version supports an optional one-time in-app purchase ("Remove Ads", $1.99 USD) processed by Google Play Billing &mdash; we do not see your full payment details. This Game is intended for users <strong>13 years of age and older</strong>.</p>
         </div>
 
         <nav class="toc">
@@ -155,8 +155,23 @@
 
         <!-- 2 -->
         <h2 id="data-we-collect">2. Information We Collect</h2>
-        <p>Mephitideus Interactive does <strong>not</strong> directly collect, transmit, or store personal information, gameplay telemetry, or account data on our own servers through the Game client.</p>
-        <p>We do not use our own analytics tracking, advertising identifiers, login systems, or crash-reporting pipelines. Any data described in this policy is either stored exclusively on your device (<a href="#local-storage">Section 3</a>) or processed by third-party services (<a href="#advertising">Section 4</a>, <a href="#iap">Section 4b</a>, <a href="#hosting">Section 5</a>) under their own policies.</p>
+        <p>We collect and process a limited amount of information needed to operate game features and monetization. We do not request or process sensitive Android permissions such as call logs or SMS for account verification.</p>
+
+        <h3>Data you actively submit</h3>
+        <ul>
+            <li><strong>Leaderboard submissions:</strong> when you submit a score, we process your short player name/initials, score, selected game stats (such as level, achievement count, prestige), and a technical run identifier used to prevent duplicate submissions.</li>
+            <li><strong>Purchase entitlement sync:</strong> on Android, when enabled in game, we process your Google Play Games player ID and entitlement state (for example, ad-free ownership) to support cross-device restore behavior.</li>
+        </ul>
+
+        <h3>Analytics and product telemetry</h3>
+        <p>The Game uses Google Tag Manager / Google Ads tagging on the web version and may send gameplay event telemetry (for example, game starts, level completions, ad and purchase funnel events). This helps us measure stability and product performance. You can opt out of this telemetry by setting <code>localStorage</code> key <code>skunkfu_analytics_optout</code> to <code>1</code>.</p>
+
+        <h3>Data we do not intentionally collect</h3>
+        <ul>
+            <li>We do not collect phone call logs or SMS message content.</li>
+            <li>We do not request phone-number verification via call-log permissions.</li>
+            <li>We do not currently integrate third-party generative AI models in the game client or backend production path.</li>
+        </ul>
 
         <!-- 3 -->
         <h2 id="local-storage">3. Local Storage</h2>
@@ -166,7 +181,7 @@
             <li>Achievement progress</li>
             <li>Display and performance preferences (e.g., performance mode, volume settings)</li>
         </ul>
-        <p>This data is stored entirely on your device. It is never transmitted to Mephitideus Interactive or any third party. You can delete this data at any time by clearing your browser's site data or app storage via your device settings.</p>
+        <p>Most local data remains on your device. If you choose to submit a leaderboard score or restore/sync an entitlement, relevant fields are transmitted to our Firebase backend and to Google services as described in this policy. You can delete local data at any time by clearing your browser's site data or app storage via your device settings.</p>
 
         <!-- 4 -->
         <h2 id="advertising">4. Third-Party Advertising &amp; Cookies</h2>
@@ -181,6 +196,9 @@
             <li>Ad interaction data (impressions, clicks)</li>
             <li>Diagnostic and performance data</li>
         </ul>
+
+        <h3>Location data disclosures (precise vs approximate)</h3>
+        <p>We do not intentionally collect or infer <strong>precise location</strong> from GPS, Wi-Fi triangulation, or similar signals in our own code paths. Google advertising services may process <strong>approximate location</strong> (such as country or region) from network signals to support ad delivery, fraud prevention, and reporting.</p>
 
         <h3>Cookies and similar technologies</h3>
         <p>Mephitideus Interactive does not set its own advertising cookies. However, Google's advertising services may set cookies or use equivalent technologies (e.g., pixel tags, mobile SDK identifiers) when ads are displayed in the web version. You can opt-out of personalized advertising via <a href="https://adssettings.google.com" rel="noopener">Google Ad Settings</a> or by visiting <a href="https://optout.aboutads.info" rel="noopener">optout.aboutads.info</a>.</p>
@@ -198,7 +216,7 @@
             <li>Your entitlement is mirrored locally on your device (<code>localStorage</code> key <code>skunkfu.adFree</code>) so the Game can apply it offline. No purchase information is transmitted to Mephitideus Interactive servers.</li>
         </ul>
         <h3>Restoring purchases</h3>
-        <p>If you reinstall the Game or switch devices using the same Google account, you can restore your Remove Ads entitlement at any time via <em>Settings &rarr; Restore Purchase</em> in-game. This action queries Google Play for your purchase history; no personal data is sent to us.</p>
+        <p>If you reinstall the Game or switch devices using the same Google account, you can restore your Remove Ads entitlement at any time via <em>Settings &rarr; Restore Purchase</em> in-game. This action queries Google Play for your purchase history. If cross-device entitlement sync is active, the app may also submit the entitlement state and your Play Games player ID to our backend as described in Section 2.</p>
         <h3>Refunds and disputes</h3>
         <p>Refund requests for in-app purchases are handled by Google Play under their <a href="https://support.google.com/googleplay/answer/2479637" rel="noopener">refund policy</a>. We do not process refunds directly.</p>
         <h3>Google's policies for purchases</h3>
@@ -232,7 +250,7 @@
             <li><strong>Right to object</strong> — Object to processing based on legitimate interests or for direct marketing.</li>
             <li><strong>Right to withdraw consent</strong> — Where processing is based on consent, withdraw it at any time.</li>
         </ul>
-        <p>Because Mephitideus Interactive does not collect personal data on its own servers, most of these rights are most effectively exercised directly with Google for advertising data. To exercise rights over Google-held data, visit the <a href="https://myaccount.google.com/data-and-privacy" rel="noopener">Google Data &amp; Privacy</a> portal.</p>
+        <p>Some rights may be exercised directly with Mephitideus Interactive for backend-held records (such as leaderboard and entitlement metadata), while advertising-related rights are often most effectively exercised directly with Google. To exercise rights over Google-held data, visit the <a href="https://myaccount.google.com/data-and-privacy" rel="noopener">Google Data &amp; Privacy</a> portal.</p>
         <p>For any data requests directed to us, contact <a href="mailto:legal@mephitideusinteractive.com">legal@mephitideusinteractive.com</a>. We will respond within 30 days.</p>
 
         <h3>Lawful basis for processing</h3>
@@ -255,17 +273,18 @@
         <!-- 9 -->
         <h2 id="retention">9. Data Retention</h2>
         <p>Local game data (high scores, achievements, preferences) is stored on your device indefinitely until you manually clear it via browser or app storage settings.</p>
+        <p>Leaderboard and entitlement records stored in our Firebase backend are retained while needed to provide leaderboard ranking integrity, restore paid entitlements, fraud prevention, and abuse mitigation.</p>
         <p>Data collected by Google's advertising services is subject to <a href="https://policies.google.com/technologies/retention" rel="noopener">Google's data retention policy</a>.</p>
         <p>If you contact us by email, we retain correspondence for up to 2 years or as long as necessary to resolve the matter.</p>
 
         <!-- 10 -->
         <h2 id="security">10. Security</h2>
-        <p>Because Mephitideus Interactive does not transmit or server-store player data, the primary attack surface is the device itself. We recommend users keep their browsers and operating systems up to date. The web version is served over HTTPS and uses a Content Security Policy (CSP) to mitigate script injection risks.</p>
+        <p>We use administrative, technical, and organizational safeguards for both client and backend systems, including HTTPS transport, constrained API input validation, and infrastructure access controls where available. We recommend users keep browsers and operating systems up to date. The web version is served over HTTPS and uses a Content Security Policy (CSP) to mitigate script injection risks.</p>
         <p>No method of electronic storage or transmission is 100% secure. We cannot guarantee absolute security of third-party services such as Google Ads.</p>
 
         <!-- 11 -->
         <h2 id="international">11. International Data Transfers</h2>
-        <p>Mephitideus Interactive does not transfer your personal data internationally on its own systems. Google's advertising services operate globally and may transfer data to servers outside your country of residence. Google participates in frameworks designed to ensure adequate protection for international data transfers. Refer to <a href="https://policies.google.com/privacy" rel="noopener">Google's Privacy Policy</a> for details.</p>
+        <p>Our service providers (including Google and Firebase infrastructure) may process data in countries other than your own. Where applicable, those providers use contractual and legal transfer mechanisms described in their privacy terms. Refer to <a href="https://policies.google.com/privacy" rel="noopener">Google's Privacy Policy</a> for details.</p>
 
         <!-- 12 -->
         <h2 id="changes">12. Changes to This Policy</h2>

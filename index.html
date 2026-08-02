@@ -4825,16 +4825,29 @@
                                     if (stillNotReady && window.Analytics && typeof Analytics.trackEvent === 'function') {
                                         Analytics.trackEvent('iap_ui_fallback_fired', {
                                             placement: 'settings_card',
-                                            isNative: !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
+                                            isNative: !!((window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+                                                (window.cordova && (window.cordova.platformId === 'android' || window.cordova.platformId === 'ios')) ||
+                                                (window.CdvPurchase && window.CdvPurchase.store))
                                         });
                                     }
                                 } catch (_) {}
                                 try { _renderAdFreeState(); } catch (_) {}
                             }, 18000);
 
+                            function _isNativeIapRuntime() {
+                                try {
+                                    const PM = window.PurchaseManager;
+                                    if (PM && typeof PM.isNativeRuntime === 'function' && PM.isNativeRuntime()) return true;
+                                    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) return true;
+                                    if (window.cordova && (window.cordova.platformId === 'android' || window.cordova.platformId === 'ios')) return true;
+                                    if (window.CdvPurchase && window.CdvPurchase.store) return true;
+                                    return false;
+                                } catch (_) { return false; }
+                            }
+
                             function _renderAdFreeState() {
                                 const PM = window.PurchaseManager;
-                                const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                const isNative = _isNativeIapRuntime();
                                 const owned = !!(PM && PM.isAdFree && PM.isAdFree());
                                 // Show a neutral "checking..." state during the brief window
                                 // between page load and the native store finishing init.
@@ -4919,7 +4932,20 @@
                                         if (statusEl) {
                                             if (_buyRes.ok) statusEl.textContent = _buyRes.reason === 'pending' ? 'Purchase submitted \u2014 complete it in the Google Play dialog\u2026' : 'Already owned. Thank you!';
                                             else if (_buyRes.reason === 'web-not-supported') statusEl.textContent = 'Available only on the Android app.';
-                                            else if (_buyRes.reason === 'store-unavailable') statusEl.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
+                                            else if (_buyRes.reason === 'store-unavailable') {
+                                                let hint = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
+                                                try {
+                                                    if (window.PurchaseManager && typeof PurchaseManager.diagnose === 'function') {
+                                                        const d = PurchaseManager.diagnose();
+                                                        if (!d.pluginLoaded) {
+                                                            hint = 'Billing bridge not loaded in this runtime. Rebuild and reinstall the Android app after cap sync, then open the installed app (not browser).';
+                                                        } else if (d.pluginLoaded && !d.storeRef) {
+                                                            hint = 'Billing plugin loaded but store handle is missing. Force-stop the app, relaunch, then retry purchase.';
+                                                        }
+                                                    }
+                                                } catch (_) {}
+                                                statusEl.textContent = hint;
+                                            }
                                             else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
                                             else if (_buyRes.reason === 'user-cancelled' || _buyRes.reason === '1') statusEl.textContent = 'Purchase cancelled.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + _buyRes.reason;
@@ -5148,9 +5174,7 @@
                             function _shouldShow() {
                                 if (_shownThisSession) return false;
                                 // Only on native (Android) where IAP can actually run.
-                                const isNative = !!(window.Capacitor
-                                    && window.Capacitor.isNativePlatform
-                                    && window.Capacitor.isNativePlatform());
+                                const isNative = _isNativeIapRuntime();
                                 if (!isNative) return false;
                                 // Skip if already ad-free.
                                 if (window.PurchaseManager && PurchaseManager.isAdFree
@@ -5426,7 +5450,7 @@
                                         // a moment later (returning customer w/ wiped
                                         // localStorage). Render a neutral pulse instead.
                                         const PM = window.PurchaseManager;
-                                        const isNativeP = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                        const isNativeP = _isNativeIapRuntime();
                                         const checking = isNativeP && PM && typeof PM.isReady === 'function' && !PM.isReady() && !unlocked;
                                         let statusText = '';
                                         if (active) {
@@ -5457,7 +5481,7 @@
                                     const fpBtn      = document.getElementById('founder-pass-buy-btn');
                                     const fpStatus   = document.getElementById('founder-pass-status');
                                     const PM         = window.PurchaseManager;
-                                    const isNativeP  = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                                    const isNativeP  = _isNativeIapRuntime();
                                     const fpOwned    = !!(PM && PM.isFounderPassOwned && PM.isFounderPassOwned());
                                     const earlyAccessStillOpen = Date.now() < new Date('2026-12-31T23:59:59Z').getTime();
                                     if (fpRow) {
@@ -5605,7 +5629,18 @@
                                                     fpStatus.textContent = 'Available only on the Android app.';
                                                 } else if (res.reason === 'store-unavailable') {
                                                     fpStatus.style.color = '#FFB060';
-                                                    fpStatus.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
+                                                    let hint = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
+                                                    try {
+                                                        if (window.PurchaseManager && typeof PurchaseManager.diagnose === 'function') {
+                                                            const d = PurchaseManager.diagnose();
+                                                            if (!d.pluginLoaded) {
+                                                                hint = 'Billing bridge not loaded in this runtime. Rebuild and reinstall the Android app after cap sync, then open the installed app (not browser).';
+                                                            } else if (d.pluginLoaded && !d.storeRef) {
+                                                                hint = 'Billing plugin loaded but store handle is missing. Force-stop the app, relaunch, then retry purchase.';
+                                                            }
+                                                        }
+                                                    } catch (_) {}
+                                                    fpStatus.textContent = hint;
                                                 } else if (res.reason === 'product-not-loaded') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';

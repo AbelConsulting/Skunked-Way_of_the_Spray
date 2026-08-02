@@ -306,9 +306,56 @@ const PurchaseManager = (() => {
         return () => _listeners.delete(fn);
     }
 
+    function _isLikelyAndroidWebView() {
+        try {
+            const ua = String((navigator && navigator.userAgent) || '').toLowerCase();
+            // Android WebView UAs usually contain "wv" and/or "version/x".
+            return /android/.test(ua) && (/\bwv\b/.test(ua) || /version\/\d+/.test(ua));
+        } catch (e) {
+            return false;
+        }
+    }
+
     function isNative() {
-        return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
-                  && window.Capacitor.isNativePlatform());
+        try {
+
+    function _nativeRuntimeSignals() {
+        let capacitor = false;
+        let cordova = false;
+        let cdvPurchaseBridge = false;
+        let uaAndroidWebView = false;
+        try {
+            capacitor = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+        } catch (e) {}
+        try {
+            cordova = !!(window.cordova && (window.cordova.platformId === 'android' || window.cordova.platformId === 'ios'));
+        } catch (e) {}
+        try {
+            cdvPurchaseBridge = !!(window.CdvPurchase && window.CdvPurchase.store);
+        } catch (e) {}
+        try {
+            uaAndroidWebView = _isLikelyAndroidWebView();
+        } catch (e) {}
+        return { capacitor, cordova, cdvPurchaseBridge, uaAndroidWebView };
+    }
+            if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
+                && window.Capacitor.isNativePlatform()) {
+                return true;
+            }
+            // Cordova bridge can be present even if window.Capacitor is not.
+            if (window.cordova && (window.cordova.platformId === 'android' || window.cordova.platformId === 'ios')) {
+                return true;
+            }
+            // If the purchase plugin bridge is injected, we are definitely in native.
+            if (window.CdvPurchase && window.CdvPurchase.store) {
+                return true;
+            }
+            // Last-resort heuristic for Android WebView shells.
+            if (_isLikelyAndroidWebView()) {
+                return true;
+            }
+        } catch (e) {}
+        return false;
     }
 
     /**
@@ -682,6 +729,9 @@ const PurchaseManager = (() => {
                 orderErr = await offer.order();
             } else if (typeof product.order === 'function') {
                 orderErr = await product.order();
+            } else if (store && typeof store.order === 'function') {
+                // Fallback for plugin variants that expose order() on store only.
+                orderErr = await store.order(product);
             } else {
                 return { ok: false, reason: 'order-api-missing' };
             }
@@ -808,6 +858,9 @@ const PurchaseManager = (() => {
                 orderErr = await offer.order();
             } else if (typeof product.order === 'function') {
                 orderErr = await product.order();
+            } else if (store && typeof store.order === 'function') {
+                // Fallback for plugin variants that expose order() on store only.
+                orderErr = await store.order(product);
             } else {
                 return { ok: false, reason: 'order-api-missing' };
             }
@@ -845,6 +898,7 @@ const PurchaseManager = (() => {
         const out = {
             isNative: isNative(),
             pluginLoaded: !!(CdvPurchase && CdvPurchase.store),
+            nativeSignals: _nativeRuntimeSignals(),
             storeRef: !!store,
             initialized: _initialized,
             ready: _ready,
@@ -901,6 +955,7 @@ const PurchaseManager = (() => {
         onFounderPassChange,
         purchaseFounderPass,
         getFounderPassPriceString,
+        isNativeRuntime: isNative,
         // Cross-device sync: pulls server-side entitlements for the current
         // signed-in Play Games player and mirrors any owned SKUs locally.
         // Safe to call repeatedly; no-op until the player ID is known.
@@ -929,20 +984,26 @@ window.PurchaseManager = PurchaseManager;
             try { console.warn('[Purchase] auto-init failed:', e); } catch (_) {}
         }
     }
+    let started = false;
+    function goOnce() {
+        if (started) return;
+        started = true;
+        go();
+    }
     try {
         // On Cordova/Capacitor the bridge fires `deviceready` once native is
         // available. Hook both that and the DOM ready event so we always
         // initialize regardless of which fires first / whether the bridge is
         // present (web build just runs immediately).
         if (typeof document !== 'undefined') {
-            document.addEventListener('deviceready', go, { once: true });
+            document.addEventListener('deviceready', goOnce, { once: true });
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                setTimeout(go, 0);
+                setTimeout(goOnce, 0);
             } else {
-                document.addEventListener('DOMContentLoaded', go, { once: true });
+                document.addEventListener('DOMContentLoaded', goOnce, { once: true });
             }
         } else {
-            setTimeout(go, 0);
+            setTimeout(goOnce, 0);
         }
     } catch (_) {}
 })();
