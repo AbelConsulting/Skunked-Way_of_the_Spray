@@ -162,8 +162,13 @@ function setupIPC() {
 
     // Achievement
     ipcMain.handle('steam:unlockAchievement', (_, id) => {
-        if (!steamClient) return false;
-        try { steamClient.achievement.activate(id); return true; }
+        if (!steamClient) { console.warn('[Steam] unlockAchievement: no steamClient for', id); return false; }
+        try {
+            const ok = steamClient.achievement.activate(id);
+            if (!ok) console.warn(`[Steam] unlockAchievement: activate("${id}") returned false — check the API name matches Steamworks exactly`);
+            else console.log(`[Steam] Achievement unlocked: ${id}`);
+            return ok;
+        }
         catch (e) { console.error('[Steam] unlockAchievement:', e.message); return false; }
     });
 
