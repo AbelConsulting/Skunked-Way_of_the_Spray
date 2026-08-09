@@ -8,6 +8,13 @@
  * Visual effects - damage numbers, hit sparks, etc.
  */
 
+function getEffectsScale() {
+    const raw = (typeof Config !== 'undefined' && typeof Config.EFFECTS_SCALE === 'number')
+        ? Config.EFFECTS_SCALE
+        : 1;
+    return Math.max(0.2, Math.min(1.5, raw));
+}
+
 class DamageNumber {
     constructor(x, y, damage, critical = false, opts = null) {
         this.x = x;
@@ -158,6 +165,7 @@ class HitSpark {
             if (typeof opts.speedMax === 'number') speedMax = opts.speedMax;
             if (typeof opts.lifetime === 'number') this.lifetime = opts.lifetime;
         }
+        particleCount = Math.max(1, Math.round(particleCount * getEffectsScale()));
         for (let i = 0; i < particleCount; i++) {
             // Slight randomness in angle so it doesn't look mechanical.
             const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.4;
@@ -284,10 +292,14 @@ class MovementFX {
         this.particles = [];
         this.stepTimer = 0;
         this.stepInterval = (typeof opts.stepInterval === 'number') ? opts.stepInterval : 0.12;
-        // On mobile the config caps movement particles to save CPU; fall back to 180 on desktop.
+        // On mobile the config caps movement particles to save CPU; desktop uses
+        // DESKTOP_MAX_MOVEMENT_PARTICLES when present.
+        const desktopCap = (typeof Config !== 'undefined' && typeof Config.DESKTOP_MAX_MOVEMENT_PARTICLES === 'number' && Config.DESKTOP_MAX_MOVEMENT_PARTICLES >= 0)
+            ? Config.DESKTOP_MAX_MOVEMENT_PARTICLES
+            : 180;
         const configCap = (typeof Config !== 'undefined' && typeof Config.MOBILE_MAX_MOVEMENT_PARTICLES === 'number' && Config.MOBILE_MAX_MOVEMENT_PARTICLES >= 0)
             ? Config.MOBILE_MAX_MOVEMENT_PARTICLES
-            : 180;
+            : desktopCap;
         this.maxParticles = (typeof opts.maxParticles === 'number') ? opts.maxParticles : configCap;
     }
 
@@ -319,7 +331,7 @@ class MovementFX {
 
     emitRun(x, y, dir, level, intensity = 1) {
         const theme = this._themeForLevel(level);
-        const count = Math.max(2, Math.floor(4 * intensity));
+        const count = Math.max(1, Math.floor(4 * intensity * getEffectsScale()));
         for (let i = 0; i < count; i++) {
             const spread = Utils.randomFloat(-20, 20);
             const speed = Utils.randomFloat(30, 90) * (dir || 1);
@@ -337,7 +349,7 @@ class MovementFX {
 
     emitLand(x, y, level, force = 1) {
         const theme = this._themeForLevel(level);
-        const count = Math.max(4, Math.floor(8 * force));
+        const count = Math.max(2, Math.floor(8 * force * getEffectsScale()));
         for (let i = 0; i < count; i++) {
             const angle = Utils.randomFloat(Math.PI, Math.PI * 2);
             const speed = Utils.randomFloat(60, 200) * force;

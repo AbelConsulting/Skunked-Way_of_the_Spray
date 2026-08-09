@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     /** Identifies the runtime so game code can branch on platform. */
     platform: 'steam',
 
+    /** Runtime profile from the main process (platform/arch/deck detection). */
+    getRuntimeProfile: () => ipcRenderer.invoke('platform:getRuntimeProfile'),
+
     // ── Achievements ────────────────────────────────────────────────
     /**
      * Unlock a Steam achievement by its API name.

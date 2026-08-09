@@ -30,6 +30,13 @@ const Config = {
     SCREEN_WIDTH: 1280,
     SCREEN_HEIGHT: 720,
     FPS: 60,
+    EFFECTS_SCALE: 1.0,
+    DESKTOP_MAX_MOVEMENT_PARTICLES: 180,
+
+    // Steam Deck desktop presets
+    STEAMDECK_DEFAULT_MODE: 'performance', // 'performance' (60 FPS) or 'battery' (30 FPS)
+    STEAMDECK_FPS_PERFORMANCE: 60,
+    STEAMDECK_FPS_BATTERY: 30,
 
     // Game physics
     GRAVITY: 1500, // pixels per second squared

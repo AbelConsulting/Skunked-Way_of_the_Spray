@@ -43,10 +43,12 @@
     "electron:build": "node scripts/build-steam.js --release && npx electron-builder --config",
     "electron:build:win": "node scripts/build-steam.js --release && npx electron-builder --win --config",
     "electron:build:mac": "node scripts/build-steam.js --release && npx electron-builder --mac --config",
-    "electron:build:linux": "node scripts/build-steam.js --release && npx electron-builder --linux --config",
+    "electron:build:linux": "node scripts/build-steam.js --release && npx electron-builder --linux dir --config",
+    "electron:build:linux:appimage": "node scripts/build-steam.js --release && npx electron-builder --linux AppImage --config",
     "steam:build": "node scripts/build-steam.js --release",
     "steam:assets": "python generate_steam_assets.py",
     "steam:release:win": "steam\\release-win.bat",
+    "steam:upload:linux": "steam\\upload-linux.bat",
     "steam:upload:all": "steam\\upload-all.bat"
   },
   "build": {

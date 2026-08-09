@@ -24,6 +24,72 @@ const STEAM_APP_ID = (() => {
 let steamClient = null;
 let steamworksModule = null;
 
+function detectSteamDeckHardware() {
+    if (process.platform !== 'linux') return false;
+
+    // Fast env checks commonly present when launched from Steam/Game Mode.
+    if (process.env.STEAM_DECK === '1') return true;
+    if (process.env.GAMESCOPE_WAYLAND_DISPLAY) return true;
+
+    // Hardware fingerprint checks on Steam Deck (Jupiter / Galileo boards).
+    const probes = [
+        '/sys/devices/virtual/dmi/id/board_vendor',
+        '/sys/devices/virtual/dmi/id/product_name',
+        '/sys/devices/virtual/dmi/id/product_version'
+    ];
+    try {
+        const joined = probes
+            .filter((p) => fs.existsSync(p))
+            .map((p) => {
+                try { return fs.readFileSync(p, 'utf8').trim(); }
+                catch (_) { return ''; }
+            })
+            .join(' ')
+            .toLowerCase();
+        if (!joined) return false;
+        return joined.includes('valve') || joined.includes('jupiter') || joined.includes('galileo') || joined.includes('steam deck');
+    } catch (_) {
+        return false;
+    }
+}
+
+function getRuntimeProfile() {
+    const isLinux = process.platform === 'linux';
+    const isSteamDeck = detectSteamDeckHardware();
+    const isDeckLikeSession = !!(
+        process.env.STEAM_RUNTIME ||
+        process.env.STEAM_COMPAT_CLIENT_INSTALL_PATH ||
+        process.env.GAMESCOPE_WAYLAND_DISPLAY
+    );
+
+    return {
+        platform: process.platform,
+        arch: process.arch,
+        isLinux,
+        isSteamDeck,
+        isDeckLikeSession
+    };
+}
+
+function configureLinuxDeckRuntimeFlags() {
+    if (process.platform !== 'linux') return;
+
+    // Steam Deck runs games through gamescope; force Ozone/Wayland paths for
+    // better fullscreen/input behavior and avoid accidental background throttling.
+    const isDeckLike = !!(
+        process.env.STEAM_RUNTIME ||
+        process.env.STEAM_COMPAT_CLIENT_INSTALL_PATH ||
+        process.env.GAMESCOPE_WAYLAND_DISPLAY ||
+        process.env.STEAM_DECK
+    );
+
+    app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform,WaylandWindowDecorations');
+    app.commandLine.appendSwitch('ozone-platform-hint', isDeckLike ? 'auto' : 'wayland');
+    app.commandLine.appendSwitch('disable-renderer-backgrounding');
+    app.commandLine.appendSwitch('disable-background-timer-throttling');
+    app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+}
+
 function initSteam() {
     try {
         // steamworks.js must be initialised synchronously before app is ready
@@ -141,6 +207,8 @@ function shutdownSteamInput() {
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────
 function setupIPC() {
+    ipcMain.handle('platform:getRuntimeProfile', () => getRuntimeProfile());
+
     // Steam Input
     ipcMain.handle('steam:input:available', () => steamInput.available);
 
@@ -316,6 +384,7 @@ function createWindow() {
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 // Steamworks.js must be initialised before app.whenReady() to avoid
 // the DLL loading race on Windows.
+configureLinuxDeckRuntimeFlags();
 initSteam();
 
 // electronEnableSteamOverlay() appends GPU-related Chromium command-line

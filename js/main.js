@@ -21,6 +21,9 @@ class GameApp {
         this.lastRenderTime = 0;
         this.running = false;
         this._accumulator = 0;
+        this.runtimeProfile = null;
+        this.isSteamDeck = false;
+        this._steamDeckGraphicsMode = null;
 
         // Non-essential audio gets loaded after startup to keep the
         // loading screen snappy (especially on mobile).
@@ -723,6 +726,66 @@ class GameApp {
         });
     }
 
+    async _resolveRuntimeProfile() {
+        const fallback = {
+            platform: (typeof navigator !== 'undefined' && /Win|Mac|Linux/i.test(navigator.platform || '')) ? navigator.platform : 'web',
+            arch: null,
+            isLinux: (typeof navigator !== 'undefined') ? /Linux/i.test(navigator.platform || '') : false,
+            isSteamDeck: false,
+            isDeckLikeSession: false
+        };
+        try {
+            if (window && window.electronAPI && typeof window.electronAPI.getRuntimeProfile === 'function') {
+                const profile = await window.electronAPI.getRuntimeProfile();
+                return Object.assign({}, fallback, profile || {});
+            }
+        } catch (e) { __err('main', e); }
+        return fallback;
+    }
+
+    _applySteamDeckGraphicsMode(mode, opts = {}) {
+        if (!this.isSteamDeck) return false;
+
+        const persist = opts.persist !== false;
+        const log = opts.log !== false;
+        const resolved = mode === 'battery' ? 'battery' : 'performance';
+
+        const fps = resolved === 'battery'
+            ? (Config.STEAMDECK_FPS_BATTERY || 30)
+            : (Config.STEAMDECK_FPS_PERFORMANCE || 60);
+
+        Config.FPS = fps;
+        Config.EFFECTS_SCALE = resolved === 'battery' ? 0.65 : 1.0;
+        Config.MOBILE_FLAT_PARTICLES = resolved === 'battery';
+        Config.MOBILE_DISABLE_SHADOW_BLUR = resolved === 'battery';
+
+        if (this.game && this.game.movementFX) {
+            this.game.movementFX.maxParticles = resolved === 'battery' ? 70 : 180;
+        }
+
+        this._steamDeckGraphicsMode = resolved;
+        try { window.__steamDeckGraphicsMode = resolved; } catch (e) { __err('main', e); }
+        if (persist) {
+            try { localStorage.setItem('steamDeckGraphicsMode', resolved); } catch (e) { __err('main', e); }
+        }
+
+        try {
+            window.dispatchEvent(new CustomEvent('steamDeckGraphicsModeChanged', {
+                detail: {
+                    mode: resolved,
+                    fps,
+                    effectsScale: Config.EFFECTS_SCALE
+                }
+            }));
+        } catch (e) { __err('main', e); }
+
+        if (log) {
+            try { console.log('[Deck] Graphics mode', resolved, { fps, effectsScale: Config.EFFECTS_SCALE }); } catch (e) { __err('main', e); }
+        }
+
+        return true;
+    }
+
     _sendKeyEvent(key, type) {
         try {
             if (typeof window.triggerKeyEvent === 'function') {
@@ -1359,6 +1422,11 @@ class GameApp {
             // ── Steam Input bridge (Electron/Steam builds only) ─────────
             this._initSteamInputBridge();
 
+            // Runtime profile (platform/arch/deck detection from Electron main process)
+            this.runtimeProfile = await this._resolveRuntimeProfile();
+            this.isSteamDeck = !!(this.runtimeProfile && this.runtimeProfile.isSteamDeck);
+            try { window.__runtimeProfile = this.runtimeProfile; } catch (e) { __err('main', e); }
+
             // Warn if opened via file:// — audio and some assets may fail due to browser restrictions
             // Skip for Steam/Electron builds where file:// is intentional
             if (location && location.protocol === 'file:' && window.PLATFORM !== 'steam') {
@@ -1469,6 +1537,21 @@ class GameApp {
                 } catch (e) { console.warn('setMobilePerformanceMode failed', e); return false; }
             };
 
+            // Steam Deck graphics presets: 'performance' (60 FPS) | 'battery' (30 FPS)
+            window.setSteamDeckGraphicsMode = (mode, persist = true) => {
+                try {
+                    return this._applySteamDeckGraphicsMode(mode, { persist, log: true });
+                } catch (e) {
+                    console.warn('setSteamDeckGraphicsMode failed', e);
+                    return false;
+                }
+            };
+            window.cycleSteamDeckGraphicsMode = () => {
+                const next = (this._steamDeckGraphicsMode === 'performance') ? 'battery' : 'performance';
+                this._applySteamDeckGraphicsMode(next, { persist: true, log: true });
+                return next;
+            };
+
             // Apply persisted mobile performance preset if present
             try {
                 const pm = localStorage.getItem('mobilePerfMode');
@@ -1477,10 +1560,30 @@ class GameApp {
                 }
             } catch (e) { __err('main', e); }
 
+            // Auto-apply Steam Deck graphics preset (or URL override) when running on Deck.
+            if (this.isSteamDeck) {
+                try {
+                    const params = new URLSearchParams(location.search);
+                    const fromUrl = params.get('deckPerf');
+                    const saved = localStorage.getItem('steamDeckGraphicsMode');
+                    const fallback = Config.STEAMDECK_DEFAULT_MODE || 'performance';
+                    const desired = (fromUrl === 'battery' || fromUrl === 'performance')
+                        ? fromUrl
+                        : (saved === 'battery' || saved === 'performance')
+                            ? saved
+                            : fallback;
+                    this._applySteamDeckGraphicsMode(desired, { persist: fromUrl ? true : !saved, log: true });
+                } catch (e) { __err('main', e); }
+            }
+
             // Create game instance (pass mobile flag)
             this.game = new Game(this.canvas, this.audioManager, this.isMobile);
             // Expose for diagnostic tests and external tooling
             try { window.game = this.game; window.gameApp = this; } catch (e) { /* ignore in strict contexts */ }
+
+            if (this.isSteamDeck && this._steamDeckGraphicsMode) {
+                try { this._applySteamDeckGraphicsMode(this._steamDeckGraphicsMode, { persist: false, log: false }); } catch (e) { __err('main', e); }
+            }
 
             // Analytics: identify user properties (platform, screen, etc.)
             try { if (typeof Analytics !== 'undefined') Analytics.identify(); } catch (e) { /* */ }

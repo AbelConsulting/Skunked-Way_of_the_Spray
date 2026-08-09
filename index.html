@@ -7100,22 +7100,61 @@
 
         // --- MOBILE START & FULLSCREEN ---
 
-        // Mobile performance button wiring (cycles low/mid/high)
+        // Performance button wiring:
+        // - Mobile: cycles low/mid/high
+        // - Steam Deck: cycles performance/battery
         (function(){
             const btn = document.getElementById('perf-mode-btn');
             if (!btn) return;
-            const modes = ['low','mid','high'];
-            let idx = 2; // default to 'high'
-            try { const saved = localStorage.getItem('mobilePerfMode'); if (saved) idx = modes.indexOf(saved) !== -1 ? modes.indexOf(saved) : idx; } catch (e) {}
-            const updateText = () => { btn.textContent = 'Perf: ' + modes[idx]; };
+
+            const mobileModes = ['low','mid','high'];
+            const deckModes = ['performance','battery'];
+
+            const runtimeProfile = (typeof window !== 'undefined' && window.__runtimeProfile) ? window.__runtimeProfile : null;
+            const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+            const steamDesktop = !!(window.electronAPI && window.electronAPI.platform === 'steam');
+            const linuxPlatform = (typeof navigator !== 'undefined') ? /Linux/i.test(navigator.platform || '') : false;
+            const deckResolution = (Math.min(screen.width || 0, screen.height || 0) === 800 && Math.max(screen.width || 0, screen.height || 0) === 1280);
+            const isDeck = !!(
+                (runtimeProfile && runtimeProfile.isSteamDeck) ||
+                /SteamOS|Steam Deck|gamescope/i.test(ua) ||
+                (steamDesktop && linuxPlatform && deckResolution)
+            );
+
+            const modeType = isDeck ? 'deck' : 'mobile';
+            const modes = isDeck ? deckModes : mobileModes;
+
+            let idx = isDeck ? 0 : 2;
+            try {
+                const key = isDeck ? 'steamDeckGraphicsMode' : 'mobilePerfMode';
+                const saved = localStorage.getItem(key);
+                if (saved && modes.indexOf(saved) !== -1) idx = modes.indexOf(saved);
+            } catch (e) {}
+
+            const updateText = () => {
+                if (modeType === 'deck') {
+                    const short = modes[idx] === 'performance' ? '60' : '30';
+                    btn.textContent = 'Deck: ' + short;
+                } else {
+                    btn.textContent = 'Perf: ' + modes[idx];
+                }
+            };
             updateText();
+
             const applyPerfMode = (e) => {
                 try { e && e.preventDefault(); e && e.stopPropagation(); } catch (e) {}
                 btn._lastPerfPress = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                 idx = (idx + 1) % modes.length;
                 updateText();
-                try { if (typeof window.setMobilePerformanceMode === 'function') window.setMobilePerformanceMode(modes[idx]); } catch (e) { console.warn('perf mode click failed', e); }
+                try {
+                    if (modeType === 'deck') {
+                        if (typeof window.setSteamDeckGraphicsMode === 'function') window.setSteamDeckGraphicsMode(modes[idx]);
+                    } else if (typeof window.setMobilePerformanceMode === 'function') {
+                        window.setMobilePerformanceMode(modes[idx]);
+                    }
+                } catch (e) { console.warn('perf mode click failed', e); }
             };
+
             btn.addEventListener('touchstart', applyPerfMode, { passive: false });
             btn.addEventListener('pointerdown', applyPerfMode);
             btn.addEventListener('click', (e) => {
@@ -7123,8 +7162,28 @@
                 if (btn._lastPerfPress && (now - btn._lastPerfPress) < 350) return;
                 applyPerfMode(e);
             });
-            // Show button only on mobile
-            try { if (isMobile()) { btn.style.display = 'flex'; btn.style.alignItems = 'center'; } } catch (e) {}
+
+            // Keep label in sync when mode changes outside this button.
+            const syncFromStorage = () => {
+                try {
+                    const key = modeType === 'deck' ? 'steamDeckGraphicsMode' : 'mobilePerfMode';
+                    const saved = localStorage.getItem(key);
+                    if (saved && modes.indexOf(saved) !== -1) {
+                        idx = modes.indexOf(saved);
+                        updateText();
+                    }
+                } catch (e) {}
+            };
+            window.addEventListener('steamDeckGraphicsModeChanged', syncFromStorage);
+            window.addEventListener('focus', syncFromStorage);
+
+            // Show button on mobile or Steam Deck.
+            try {
+                if (isDeck || isMobile()) {
+                    btn.style.display = 'flex';
+                    btn.style.alignItems = 'center';
+                }
+            } catch (e) {}
         })();
 
         const mobileStartOverlay = document.getElementById('mobile-start-overlay');
