@@ -68,10 +68,18 @@ function patchIndexHtml() {
         '<!-- manifest removed for Steam build -->'
     );
 
-    // ── Remove GTM noscript iframe (safe: no regex content, just src attr) ──
+    // ── Remove ad/analytics scripts that are irrelevant on desktop Steam ──
     html = html.replace(
-        /<noscript><iframe src="https:\/\/www\.googletagmanager\.com[^"]*"[^>]*><\/iframe><\/noscript>/g,
-        '<!-- GTM noscript removed for Steam build -->'
+        /<!-- Google Tag Manager \(web only[\s\S]*?<!-- End Google Tag Manager -->/g,
+        '<!-- GTM removed for Steam build -->'
+    );
+    html = html.replace(
+        /<!-- Google Funding Choices CMP[\s\S]*?<!-- End Google Funding Choices CMP -->/g,
+        '<!-- Funding Choices CMP removed for Steam build -->'
+    );
+    html = html.replace(
+        /<script async src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-8519140628365141"[\s\S]*?<\/script>/g,
+        '<!-- AdSense script removed for Steam build -->'
     );
 
     // ── Update main-menu Skins button — no purchase wording on Steam ──

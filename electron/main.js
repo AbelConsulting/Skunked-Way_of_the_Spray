@@ -341,16 +341,25 @@ function createWindow() {
         return path.join(base, 'icon-512x512.png');
     })();
 
-    // On Steam Deck (Linux) launch fullscreen; elsewhere start windowed.
+    // On Steam Deck / Deck-like Linux sessions, launch fullscreen; otherwise start windowed.
     const isLinux = process.platform === 'linux';
+    const isDeckLikeLinux = isLinux && !!(
+        process.env.STEAM_DECK === '1' ||
+        process.env.STEAM_RUNTIME ||
+        process.env.STEAM_COMPAT_CLIENT_INSTALL_PATH ||
+        process.env.GAMESCOPE_WAYLAND_DISPLAY ||
+        detectSteamDeckHardware()
+    );
 
     const win = new BrowserWindow({
         width: 1280,
         height: 800,      // 1280×800 = Steam Deck native; 720 letterboxes cleanly inside
         minWidth: 960,
         minHeight: 540,
-        fullscreen: isLinux,          // fullscreen on Steam Deck / Linux
+        fullscreen: isDeckLikeLinux,
         fullscreenable: true,
+        autoHideMenuBar: true,
+        show: false,
         title: 'Skunked: Way of the Spray',
         icon: fs.existsSync(iconFile) ? iconFile : undefined,
         backgroundColor: '#000000',
@@ -359,6 +368,17 @@ function createWindow() {
             contextIsolation: true,
             nodeIntegration: false,
             sandbox: false  // preload needs require() for IPC
+        }
+    });
+
+    win.once('ready-to-show', () => {
+        try {
+            win.show();
+            if (isDeckLikeLinux) {
+                win.setFullScreen(true);
+            }
+        } catch (e) {
+            console.warn('[Steam] ready-to-show handling failed:', e.message);
         }
     });
 
