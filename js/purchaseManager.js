@@ -147,6 +147,87 @@ const PurchaseManager = (() => {
     function _log(...args) { try { console.log('[Purchase]', ...args); } catch(e) {} }
     function _warn(...args) { try { console.warn('[Purchase]', ...args); } catch(e) {} }
 
+    let _cordovaBridgeLoadPromise = null;
+
+    function _scriptUrl(path) {
+        try {
+            if (!path) return '';
+            if (/^(https?:)?\/\//i.test(path)) return path;
+            if (path.startsWith('/')) return path;
+            const base = (window.location && window.location.href) ? window.location.href : '';
+            return new URL(path, base).toString();
+        } catch (e) {
+            return path;
+        }
+    }
+
+    function _loadScript(src) {
+        return new Promise((resolve) => {
+            try {
+                if (!document || !document.createElement) {
+                    resolve(false);
+                    return;
+                }
+                const existing = Array.from(document.getElementsByTagName('script') || []).find(s => {
+                    try { return !!(s && s.src && s.src.indexOf(src) !== -1); } catch (_) { return false; }
+                });
+                if (existing) {
+                    if (existing.dataset.loaded === '1') {
+                        resolve(true);
+                        return;
+                    }
+                    existing.addEventListener('load', () => {
+                        existing.dataset.loaded = '1';
+                        resolve(true);
+                    }, { once: true });
+                    existing.addEventListener('error', () => resolve(false), { once: true });
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = _scriptUrl(src);
+                script.async = true;
+                script.onload = () => {
+                    script.dataset.loaded = '1';
+                    resolve(true);
+                };
+                script.onerror = () => resolve(false);
+                const head = document.head || document.getElementsByTagName('head')[0];
+                if (head) head.appendChild(script);
+                else resolve(false);
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
+
+    async function _ensureCordovaBridgeLoaded() {
+        if (window.CdvPurchase && window.CdvPurchase.store) return true;
+        if (!isNative()) return false;
+        if (_cordovaBridgeLoadPromise) return _cordovaBridgeLoadPromise;
+
+        _cordovaBridgeLoadPromise = (async () => {
+            const scripts = ['cordova.js', 'cordova_plugins.js'];
+            for (const src of scripts) {
+                const ok = await _loadScript(src);
+                if (!ok && src === 'cordova.js') {
+                    _warn('Failed to load Cordova bootstrap script:', src);
+                }
+            }
+
+            // Give the bridge a brief moment to initialize after the scripts load.
+            for (let i = 0; i < 8; i++) {
+                if (window.CdvPurchase && window.CdvPurchase.store) return true;
+                await new Promise(r => setTimeout(r, 250));
+            }
+            return !!(window.CdvPurchase && window.CdvPurchase.store);
+        })().catch((e) => {
+            _warn('Cordova bridge bootstrap failed:', e);
+            return false;
+        });
+
+        return _cordovaBridgeLoadPromise;
+    }
+
     // ---- Cross-device entitlement sync (Firestore-backed via Cloud Fns) -----
     // Identity: Google Play Games player ID, populated by
     // PlayGamesServices.signIn(). Until then, syncs are no-ops.
@@ -381,11 +462,15 @@ const PurchaseManager = (() => {
         // is installed. We don't `import` it because we don't want a hard build dep.
         let CdvPurchase = window.CdvPurchase;
         if (!CdvPurchase || !CdvPurchase.store) {
-            const deadline = Date.now() + 8000;
-            while (Date.now() < deadline) {
-                await new Promise(r => setTimeout(r, 200));
-                CdvPurchase = window.CdvPurchase;
-                if (CdvPurchase && CdvPurchase.store) break;
+            const loaded = await _ensureCordovaBridgeLoaded();
+            CdvPurchase = window.CdvPurchase;
+            if (!CdvPurchase || !CdvPurchase.store) {
+                const deadline = Date.now() + 8000;
+                while (Date.now() < deadline) {
+                    await new Promise(r => setTimeout(r, 200));
+                    CdvPurchase = window.CdvPurchase;
+                    if (CdvPurchase && CdvPurchase.store) break;
+                }
             }
         }
         _storePollDone = true; // remember result so future calls don't re-poll
