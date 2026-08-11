@@ -71,7 +71,7 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
     <meta name="msapplication-TileColor" content="#1a1a2e">
-    <meta name="description" content="The ultimate skunk spray game — Skunked: Way of the Spray. Play as the Ninja Skunk: chain savage combos, unleash toxic spray attacks, and brawl through neon stages. Free in browser or on Android.">
+    <meta name="description" content="Skunked: Way of the Spray is a neon arcade beat-'em-up where the Ninja Skunk chains brutal combos, survives boss waves, and builds momentum in fast replayable runs. Play in your browser or on Android.">
     <meta name="keywords" content="skunk spray game, skunked way of the spray, ninja skunk game, 2D beat em up, action platformer, free fighting game, skunk ninja, combo fighter, android game, mobile beat em up, side scroller fighter, arcade action game, shadow strike, skunk spray attack">
     <meta name="author" content="Mephitideus Interactive">
     <meta name="robots" content="index, follow">
@@ -165,6 +165,77 @@
             flex-grow: 1;
             height: 100%;
             position: relative;
+            overflow: hidden;
+        }
+
+        .site-landing {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            right: min(26vw, 360px);
+            max-width: 620px;
+            z-index: 12;
+            padding: 24px 24px 20px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(10, 14, 24, 0.96), rgba(34, 19, 54, 0.92));
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.38);
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+            color: #fff;
+        }
+
+        .site-landing__eyebrow {
+            margin: 0 0 10px;
+            font-size: 0.75rem;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: #ffcf4b;
+            font-weight: 700;
+        }
+
+        .site-landing h2 {
+            margin: 0 0 10px;
+            font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+            line-height: 1.25;
+            color: #fff8d9;
+        }
+
+        .site-landing p {
+            margin: 0 0 12px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.84);
+        }
+
+        .site-landing__highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0;
+            margin: 16px 0 0;
+            list-style: none;
+        }
+
+        .site-landing__highlights li {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 0.84rem;
+            color: #fce9a9;
+        }
+
+        @media (max-width: 900px) {
+            .site-landing {
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
+                max-width: none;
+                margin: 16px;
+                pointer-events: auto;
+            }
         }
 
         #game-container {
@@ -3290,6 +3361,29 @@
         }
     </script>
     <!-- End Google Ads (gtag.js) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Skunked: Way of the Spray",
+      "genre": ["Action", "Arcade", "Fighting"],
+      "gamePlatform": ["Web Browser", "Android"],
+      "url": "https://skunked.io/",
+      "description": "A neon arcade beat-'em-up where the Ninja Skunk chains brutal combos, survives boss waves, and pushes through replayable survival runs.",
+      "applicationCategory": "Game",
+      "operatingSystem": ["Web", "Android"],
+      "publisher": {
+        "@type": "Organization",
+        "name": "Mephitideus Interactive"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
 </head>
 <body>
     <!-- Google Tag Manager (noscript) -->
@@ -3307,6 +3401,17 @@
                  data-full-width-responsive="false"></ins>
         </div>
         <div id="content-wrapper">
+            <section class="site-landing" aria-labelledby="site-landing-title">
+                <p class="site-landing__eyebrow">Original arcade action game</p>
+                <h2 id="site-landing-title">Skunked: Way of the Spray is a neon beat-'em-up packed with combo chains, boss pressure, and replayable survival runs.</h2>
+                <p>Guide the Ninja Skunk through brutal encounters, master spray-fueled attacks, and climb the leaderboards in a fast-paced browser game built around momentum, timing, and style.</p>
+                <ul class="site-landing__highlights">
+                    <li>Fast combo combat</li>
+                    <li>Boss waves and survival runs</li>
+                    <li>Unlockable skins and support purchases</li>
+                </ul>
+                <p><a href="about.html" style="color:#ffcf4b;text-decoration:none;font-weight:700;">Learn more about the game</a> · <a href="faq.html" style="color:#ffcf4b;text-decoration:none;font-weight:700;">Read the FAQ</a></p>
+            </section>
             <div id="rotate-message">
                 <div class="rotate-phone-icon">
                     <div class="phone-body"></div>
