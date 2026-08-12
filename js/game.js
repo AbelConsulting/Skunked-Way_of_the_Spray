@@ -703,6 +703,7 @@ class Game {
             this._victoryPromptOpen = false;
             this._victoryShownAt = 0;
             this._victoryInputLockoutMs = 0;
+            this._victorySequenceTimer = 0;
             this._isFinalStageComplete = false;
 
             // Game mode
@@ -1742,6 +1743,8 @@ class Game {
             this._victoryInputLockoutMs = 2200;
             this._victoryPromptOpen = false;
             this._victoryReturning = false;
+            this._victorySequenceTimer = 7.5;
+            this.gameStats.victoryEpilogueText = 'The city exhales. The stench of fear is gone, and the Way of the Spray still burns bright.';
             try {
                 if (window.Highscores && typeof Highscores.isHighScore === 'function') {
                     Promise.resolve(Highscores.isHighScore(this.score)).then((isHigh) => {
@@ -1900,6 +1903,14 @@ class Game {
                     // Update the game over particle/shake animation
                     if (this._gameOverAnim && this._gameOverAnim.isActive()) {
                         this._gameOverAnim.update(dt);
+                    }
+                } else if (this.state === 'VICTORY') {
+                    if (this._victorySequenceTimer > 0) {
+                        this._victorySequenceTimer -= dt;
+                        if (this._victorySequenceTimer <= 0) {
+                            this._victorySequenceTimer = 0;
+                            this._returnToMenuAfterVictory();
+                        }
                     }
                 }
                 return;
