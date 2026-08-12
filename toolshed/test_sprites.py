@@ -76,15 +76,18 @@ def main():
         ("enemies/boss8_walk.png", (128, 128), 4),
         ("enemies/boss8_attack.png", (128, 128), 4),
         ("enemies/boss8_hurt.png", (128, 128), 4),
+        ("enemies/boss8_idle.png", (128, 128), 4),
         ("enemies/boss9_idle.png", (128, 128), 4),
         ("enemies/boss9_walk.png", (128, 128), 4),
         ("enemies/boss9_attack.png", (128, 128), 4),
         ("enemies/boss9_hurt.png", (128, 128), 4),
+        ("enemies/boss10_idle.png", (128, 128), 4),
+        ("enemies/boss10_walk.png", (128, 128), 4),
+        ("enemies/boss10_attack.png", (128, 128), 4),
+        ("enemies/boss10_hurt.png", (128, 128), 4),
     ]
 
-    optional_sheets = [
-        "enemies/boss8_idle.png",
-    ]
+    optional_sheets = []
 
     player_sheets = [
         ("characters/ninja_idle.png", (64, 64), 4),
