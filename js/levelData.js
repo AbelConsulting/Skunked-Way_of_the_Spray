@@ -1439,9 +1439,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS4",
             spawnX: 4480,
             spawnY: 520,
-            healthMultiplier: 19.0,
-            speedMultiplier: 1.25,
-            attackDamageMultiplier: 2.5
+            healthMultiplier: 20.0,
+            speedMultiplier: 1.3,
+            attackDamageMultiplier: 2.7
         },
         background: 'bg_final',
         music: ['boss_theme', 'action_theme', 'city_theme'],

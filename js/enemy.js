@@ -26,7 +26,7 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Flower Chief', ability: 'crystalBarrage' },
     'BOSS8': { prefix: 'boss8', size: { width: 128, height: 128 }, fallback: 'boss7', attackAnim: 'boss8_attack', bossName: 'VENOM FANG', bossTitle: 'Ruler of the Underbelly', ability: 'charge' },
     'BOSS9': { prefix: 'boss9', size: { width: 128, height: 128 }, fallback: 'boss8', attackAnim: 'boss9_attack', bossName: 'ASTRAL TYRANT', bossTitle: 'Warden of the Void', ability: 'projectile' },
-    'BOSS10': { prefix: 'boss10', size: { width: 128, height: 128 }, fallback: 'boss9', attackAnim: 'boss10_attack', bossName: 'BOSS10', bossTitle: 'The Unseen', ability: 'projectile' }
+    'BOSS10': { prefix: 'boss10', size: { width: 128, height: 128 }, fallback: 'boss9', attackAnim: 'boss10_attack', bossName: 'ETHEREO NIFTY', bossTitle: 'The Unseen', ability: 'projectile' }
 };
 
 const HEAVY_BOSS_ATTACK_TYPES = new Set(['BOSS5', 'BOSS6', 'BOSS7', 'BOSS8', 'BOSS9', 'BOSS10']);
