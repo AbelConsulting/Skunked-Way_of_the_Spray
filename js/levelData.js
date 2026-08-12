@@ -836,9 +836,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS10",
             spawnX: 3480,
             spawnY: 520,
-            healthMultiplier: 13.5,
-            speedMultiplier: 1.15,
-            attackDamageMultiplier: 2.0
+            healthMultiplier: 12.5,
+            speedMultiplier: 1.1,
+            attackDamageMultiplier: 1.8
         },
         background: 'bg_neon',
         music: ['city_theme', 'action_theme', 'gameplay'],
@@ -1142,9 +1142,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS8",
             spawnX: 4480,
             spawnY: 520,
-            healthMultiplier: 15.5,
-            speedMultiplier: 1.2,
-            attackDamageMultiplier: 2.2
+            healthMultiplier: 14.5,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.0
         },
         background: 'bg_alleyway',
         music: ['cave_ambient', 'ambient_cave_loop'],
@@ -1291,9 +1291,9 @@ const LEVEL_CONFIGS = [
             type: "BOSS9",
             spawnX: 3480,
             spawnY: 520,
-            healthMultiplier: 16.5,
-            speedMultiplier: 1.2,
-            attackDamageMultiplier: 2.3
+            healthMultiplier: 15.5,
+            speedMultiplier: 1.15,
+            attackDamageMultiplier: 2.2
         },
         background: 'bg_space',
         music: ['city_theme', 'action_theme', 'gameplay'],
