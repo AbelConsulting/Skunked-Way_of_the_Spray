@@ -183,6 +183,12 @@
             backdrop-filter: blur(10px);
             pointer-events: none;
             color: #fff;
+            transition: opacity 600ms ease, transform 600ms ease;
+        }
+        /* Dim during active gameplay so the overlay doesn't compete with the action */
+        .site-landing.is-playing {
+            opacity: 0.15;
+            transform: scale(0.97);
         }
 
         .site-landing__eyebrow {
@@ -2124,6 +2130,54 @@
         .game-over-cta--revive:focus-visible {
             outline: 2px solid rgba(120,255,160,0.95);
         }
+        .game-over-cta--store-steam {
+            color: #A8DEFF;
+            background: linear-gradient(180deg, rgba(54,123,188,0.30), rgba(11,29,54,0.82));
+            border-color: rgba(120,192,255,0.50);
+            box-shadow:
+                0 12px 28px rgba(0,0,0,0.45),
+                0 0 22px rgba(100,180,255,0.18);
+            text-decoration: none;
+        }
+        .game-over-cta--store-steam:focus-visible {
+            outline: 2px solid rgba(120,192,255,0.95);
+        }
+        .game-over-cta--store-google {
+            color: #A8FFD0;
+            background: linear-gradient(180deg, rgba(31,187,113,0.28), rgba(10,44,30,0.82));
+            border-color: rgba(96,242,172,0.45);
+            box-shadow:
+                0 12px 28px rgba(0,0,0,0.45),
+                0 0 22px rgba(80,220,150,0.18);
+            text-decoration: none;
+        }
+        .game-over-cta--store-google:focus-visible {
+            outline: 2px solid rgba(96,242,172,0.95);
+        }
+        #victory-store-bar {
+            position: absolute;
+            left: 50%;
+            bottom: 60px;
+            transform: translateX(-50%);
+            z-index: 151;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            max-width: calc(100vw - 24px);
+            pointer-events: none;
+        }
+        #victory-store-bar[hidden] { display: none; }
+        #victory-store-bar .game-over-cta {
+            position: static;
+            left: auto;
+            right: auto;
+            bottom: auto;
+        }
+        #victory-store-bar .game-over-cta { transform: translateY(8px); pointer-events: auto; }
+        #victory-store-bar .game-over-cta.visible { transform: translateY(0); }
+        #victory-store-bar .game-over-cta:active { transform: translateY(0) scale(0.97); }
 
         /* ── Survival Mode Extra-Life Interstitial ─────────────────────────
            Full-screen modal that appears after the game-over lockout in
@@ -3555,6 +3609,40 @@
                         <span class="game-over-cta-icon" aria-hidden="true">&#9776;</span>
                         <span class="game-over-cta-label">Menu</span>
                     </button>
+                    <a id="game-over-steam-btn"
+                       class="game-over-cta game-over-cta--store-steam"
+                       href="https://store.steampowered.com/app/4815180/"
+                       target="_blank" rel="noopener noreferrer"
+                       hidden>
+                        <span class="game-over-cta-icon" aria-hidden="true">&#128187;</span>
+                        <span class="game-over-cta-label">Full Game on Steam</span>
+                    </a>
+                    <a id="game-over-google-btn"
+                       class="game-over-cta game-over-cta--store-google"
+                       href="https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu"
+                       target="_blank" rel="noopener noreferrer"
+                       hidden>
+                        <span class="game-over-cta-icon" aria-hidden="true">&#128241;</span>
+                        <span class="game-over-cta-label">Full Game on Play</span>
+                    </a>
+                </div>
+
+                <!-- Victory store bar: shown on demo-complete VICTORY state only -->
+                <div id="victory-store-bar" hidden>
+                    <a id="victory-steam-btn"
+                       class="game-over-cta game-over-cta--store-steam"
+                       href="https://store.steampowered.com/app/4815180/"
+                       target="_blank" rel="noopener noreferrer">
+                        <span class="game-over-cta-icon" aria-hidden="true">&#128187;</span>
+                        <span class="game-over-cta-label">Full Game on Steam</span>
+                    </a>
+                    <a id="victory-google-btn"
+                       class="game-over-cta game-over-cta--store-google"
+                       href="https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu"
+                       target="_blank" rel="noopener noreferrer">
+                        <span class="game-over-cta-icon" aria-hidden="true">&#128241;</span>
+                        <span class="game-over-cta-label">Full Game on Play</span>
+                    </a>
                 </div>
 
                 <div id="mobile-start-overlay" hidden>
@@ -6997,6 +7085,107 @@
                             showInterstitial(window.game.survivalWave || 0);
                         } catch (ex) { /* noop */ }
                     }, lockoutMs + 400);
+                });
+            })();
+
+            // -- Demo-Complete Store CTAs (Game-Over) --
+            // After the input lockout, show Steam/Google Play links when the
+            // run ended at the web demo cap so the player can continue the
+            // full campaign immediately.
+            (function wireGameOverStoreCtas() {
+                const steamBtn  = document.getElementById('game-over-steam-btn');
+                const googleBtn = document.getElementById('game-over-google-btn');
+                if (!steamBtn && !googleBtn) return;
+                let revealTimer = null;
+                const hide = (btn) => { if (!btn) return; btn.classList.remove('visible'); btn.setAttribute('hidden', ''); };
+                const show = (btn) => { if (!btn) return; btn.removeAttribute('hidden'); requestAnimationFrame(() => btn.classList.add('visible')); };
+                const trackClick = (store) => {
+                    try {
+                        Analytics.trackDemoCompleteStoreClick({
+                            store,
+                            context: 'game_over',
+                            score: (window.game && window.game.score) || 0,
+                            level: window.game ? (window.game.currentLevelIndex || 0) + 1 : 0
+                        });
+                    } catch (_) {}
+                };
+                if (steamBtn)  steamBtn.addEventListener('click',  () => trackClick('steam'));
+                if (googleBtn) googleBtn.addEventListener('click', () => trackClick('google_play'));
+                window.addEventListener('gameStateChange', (e) => {
+                    const isGameOver = e && e.detail && e.detail.state === 'GAME_OVER';
+                    if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+                    if (!isGameOver) { hide(steamBtn); hide(googleBtn); return; }
+                    if (!(window.game && window.game._isCappedWebDemo)) return;
+                    hide(steamBtn); hide(googleBtn);
+                    const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
+                        ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
+                    revealTimer = setTimeout(() => {
+                        try {
+                            if (!window.game || window.game.state !== 'GAME_OVER') return;
+                            show(steamBtn);
+                            show(googleBtn);
+                        } catch (_) {}
+                    }, lockoutMs + 200);
+                });
+            })();
+
+            // -- Demo-Complete Store CTAs (Victory) --
+            // When the victory screen lands for a demo-capped run, surface
+            // the store links alongside the canvas "Continue on Steam or
+            // Google Play" text so they're immediately clickable.
+            (function wireVictoryStoreCtas() {
+                const bar       = document.getElementById('victory-store-bar');
+                const steamBtn  = document.getElementById('victory-steam-btn');
+                const googleBtn = document.getElementById('victory-google-btn');
+                if (!bar) return;
+                let revealTimer = null;
+                const hide = () => {
+                    bar.setAttribute('hidden', '');
+                    if (steamBtn)  steamBtn.classList.remove('visible');
+                    if (googleBtn) googleBtn.classList.remove('visible');
+                };
+                const show = () => {
+                    bar.removeAttribute('hidden');
+                    requestAnimationFrame(() => {
+                        if (steamBtn)  steamBtn.classList.add('visible');
+                        if (googleBtn) googleBtn.classList.add('visible');
+                    });
+                };
+                const trackClick = (store) => {
+                    try {
+                        Analytics.trackDemoCompleteStoreClick({
+                            store,
+                            context: 'victory',
+                            score: (window.game && window.game.score) || 0,
+                            level: window.game ? (window.game.currentLevelIndex || 0) + 1 : 0
+                        });
+                    } catch (_) {}
+                };
+                if (steamBtn)  steamBtn.addEventListener('click',  () => trackClick('steam'));
+                if (googleBtn) googleBtn.addEventListener('click', () => trackClick('google_play'));
+                window.addEventListener('gameStateChange', (e) => {
+                    const isVictory = e && e.detail && e.detail.state === 'VICTORY';
+                    if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+                    if (!isVictory || !(window.game && window.game._isCappedWebDemo)) { hide(); return; }
+                    hide();
+                    // Delay matches _victoryInputLockoutMs (2200 ms) + buffer
+                    revealTimer = setTimeout(() => {
+                        try {
+                            if (!window.game || window.game.state !== 'VICTORY') return;
+                            show();
+                        } catch (_) {}
+                    }, 2400);
+                });
+            })();
+
+            // -- Dim site-landing overlay during active gameplay --
+            (function dimLandingDuringPlay() {
+                const landing = document.querySelector('.site-landing');
+                if (!landing) return;
+                const PLAYING_STATES = new Set(['PLAYING', 'PAUSED']);
+                window.addEventListener('gameStateChange', (e) => {
+                    const st = e && e.detail && e.detail.state;
+                    landing.classList.toggle('is-playing', PLAYING_STATES.has(st));
                 });
             })();
 

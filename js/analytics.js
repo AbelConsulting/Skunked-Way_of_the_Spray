@@ -362,6 +362,15 @@ const Analytics = (() => {
         push('menu_action', { action: action || '' });
     }
 
+    function trackDemoCompleteStoreClick(data = {}) {
+        push('demo_complete_store_click', {
+            store:   data.store   || 'unknown', // 'steam' | 'google_play'
+            context: data.context || 'unknown', // 'game_over' | 'victory'
+            score:   data.score   || 0,
+            level:   data.level   || 0
+        });
+    }
+
     function trackPause(data = {}) {
         push('game_pause', {
             level: data.level || 0,
@@ -479,6 +488,7 @@ const Analytics = (() => {
         trackRetry,
         trackSettingsChange,
         trackMenuAction,
+        trackDemoCompleteStoreClick,
         trackPause,
         trackResume,
         trackTutorialStep,
