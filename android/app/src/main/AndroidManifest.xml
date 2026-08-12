@@ -31,7 +31,6 @@
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true"
-            android:screenOrientation="sensorLandscape"
             android:resizeableActivity="true"
             android:keepScreenOn="true">
 
