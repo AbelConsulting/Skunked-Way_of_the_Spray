@@ -73,6 +73,17 @@ def main():
         ("enemies/boss7_walk.png", (128, 128), 4),
         ("enemies/boss7_attack.png", (128, 128), 4),
         ("enemies/boss7_hurt.png", (128, 128), 4),
+        ("enemies/boss8_walk.png", (128, 128), 4),
+        ("enemies/boss8_attack.png", (128, 128), 4),
+        ("enemies/boss8_hurt.png", (128, 128), 4),
+        ("enemies/boss9_idle.png", (128, 128), 4),
+        ("enemies/boss9_walk.png", (128, 128), 4),
+        ("enemies/boss9_attack.png", (128, 128), 4),
+        ("enemies/boss9_hurt.png", (128, 128), 4),
+    ]
+
+    optional_sheets = [
+        "enemies/boss8_idle.png",
     ]
 
     player_sheets = [
@@ -84,13 +95,16 @@ def main():
         ("characters/ninja_hurt.png", (64, 64), 2),
     ]
 
-    def check_sheet(path, frame_size, frames):
+    def check_sheet(path, frame_size, frames, required=True):
         full_path = os.path.join(sprite_loader.base_path, path)
         exists = os.path.exists(full_path)
         status = "✓" if exists else "✗"
         print(f"  {path}: {status} Found")
         if not exists:
-            failures.append(path)
+            if required:
+                failures.append(path)
+            else:
+                print(f"    ! Optional asset intentionally omitted for {path}")
             return
         try:
             sprite_loader.load_spritesheet(path, frame_size[0], frame_size[1], frames, frame_size)
@@ -100,7 +114,9 @@ def main():
 
     print("Enemy Sprites:")
     for sprite_path, size, frames in enemy_sheets:
-        check_sheet(sprite_path, size, frames)
+        check_sheet(sprite_path, size, frames, required=True)
+    for sprite_path in optional_sheets:
+        check_sheet(sprite_path, (128, 128), 4, required=False)
 
     print()
     print("Ninja Skunk Sprites:")
