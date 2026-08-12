@@ -24,7 +24,7 @@ const ENEMY_TYPE_CONFIG = {
     'BOSS5': { prefix: 'boss5', size: { width: 128, height: 128 }, fallback: 'boss4', attackAnim: 'boss5_attack', bossName: 'STEAMPUNK WRAITH', bossTitle: 'Depths Dweller', ability: 'teleport' },
     'BOSS6': { prefix: 'boss6', size: { width: 128, height: 128 }, fallback: 'boss5', attackAnim: 'boss6_attack', bossName: 'DR OBSIDIAN', bossTitle: 'Cavern Sentinel', ability: 'summon' },
     'BOSS7': { prefix: 'boss7', size: { width: 128, height: 128 }, fallback: 'boss6', attackAnim: 'boss7_attack', bossName: 'KYLE', bossTitle: 'Crystal Flower Chief', ability: 'crystalBarrage' },
-    'BOSS8': { prefix: 'boss8', size: { width: 128, height: 128 }, fallback: 'boss7', attackAnim: 'boss8_attack', bossName: 'VENOM FANG', bossTitle: 'Ruler of the Underbelly', ability: 'charge' },
+    'BOSS8': { prefix: 'boss8', size: { width: 128, height: 128 }, fallback: 'boss7', attackAnim: 'boss8_attack', bossName: 'VENOM TOOTH', bossTitle: 'Ruler of the Underbelly', ability: 'charge' },
     'BOSS9': { prefix: 'boss9', size: { width: 128, height: 128 }, fallback: 'boss8', attackAnim: 'boss9_attack', bossName: 'ASTRAL TYRANT', bossTitle: 'Warden of the Void', ability: 'projectile' },
     'BOSS10': { prefix: 'boss10', size: { width: 128, height: 128 }, fallback: 'boss9', attackAnim: 'boss10_attack', bossName: 'ETHEREO NIFTY', bossTitle: 'The Unseen', ability: 'projectile' }
 };
