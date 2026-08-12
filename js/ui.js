@@ -877,6 +877,7 @@ class UI {
     drawVictory(ctx, score, gameStats = {}) {
         const now = Date.now();
         const cx = this.width / 2;
+        const isWebDemoComplete = !!gameStats.isWebDemoComplete;
 
         // ── Golden radial background ──
         const gradient = ctx.createRadialGradient(cx, this.height * 0.25, 0, cx, this.height * 0.5, this.height);
@@ -923,10 +924,10 @@ class UI {
         ctx.shadowColor = '#FFD700';
         ctx.shadowBlur = titlePulse;
         ctx.letterSpacing = '0.04em';
-        ctx.fillText('MISSION ACCOMPLISHED!', cx, titleY);
+        ctx.fillText(isWebDemoComplete ? 'DEMO COMPLETE!' : 'MISSION ACCOMPLISHED!', cx, titleY);
         ctx.shadowBlur = titlePulse * 2;
         ctx.globalAlpha = 0.25;
-        ctx.fillText('MISSION ACCOMPLISHED!', cx, titleY);
+        ctx.fillText(isWebDemoComplete ? 'DEMO COMPLETE!' : 'MISSION ACCOMPLISHED!', cx, titleY);
         ctx.restore();
 
         // ── Victory narrative line ──
@@ -938,12 +939,18 @@ class UI {
         ctx.shadowColor = 'rgba(255, 120, 0, 0.85)';
         ctx.shadowBlur = 10;
         ctx.letterSpacing = '0.03em';
-        ctx.fillText("Congratulations \u2014 you defeated the minions of Malodor!", cx, titleY + 42);
+        const headline = isWebDemoComplete
+            ? 'You cleared the web demo gauntlet!'
+            : 'Congratulations \u2014 you defeated the minions of Malodor!';
+        ctx.fillText(headline, cx, titleY + 42);
         ctx.font = "16px 'Space Grotesk', 'Segoe UI', sans-serif";
         ctx.fillStyle = 'rgba(255, 215, 0, 0.85)';
         ctx.shadowColor = 'rgba(255, 215, 0, 0.55)';
         ctx.shadowBlur = 8;
-        ctx.fillText('The streets are safe \u2014 for now. The Way of the Spray endures.', cx, titleY + 66);
+        const subLine = isWebDemoComplete
+            ? 'Continue the full campaign on Steam or Google Play.'
+            : 'The streets are safe \u2014 for now. The Way of the Spray endures.';
+        ctx.fillText(subLine, cx, titleY + 66);
 
         const epilogueText = gameStats.victoryEpilogueText || 'The city exhales. The stench of fear is gone, and the Way of the Spray still burns bright.';
         ctx.fillStyle = 'rgba(255,255,255,0.9)';

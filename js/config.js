@@ -210,5 +210,9 @@ const Config = {
     // All score reads/writes go through this endpoint.
     // Empty string = same origin (relative URLs). Set a full URL only if
     // the leaderboard service lives on a different host.
-    SCORES_API_BASE: ''
+    SCORES_API_BASE: '',
+
+    // Web funnel strategy: browser build is a demo, native/Steam stay full game.
+    // This caps how many campaign stages are playable on web before demo clear.
+    WEB_DEMO_STAGE_CAP: 2
 };

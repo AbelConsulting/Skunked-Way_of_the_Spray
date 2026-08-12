@@ -69,6 +69,21 @@ class Game {
         this.score = 0;
         this.lives = 3;
 
+        // Runtime profile for funneling: web build runs as demo, Steam/Android remain full.
+        const totalCampaignStages = (typeof LEVEL_CONFIGS !== 'undefined' && Array.isArray(LEVEL_CONFIGS)) ? LEVEL_CONFIGS.length : 0;
+        this._totalCampaignStages = totalCampaignStages;
+        this._isSteamRuntime = !!(
+            (typeof window !== 'undefined' && window.PLATFORM === 'steam')
+            || (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.platform === 'steam')
+        );
+        this._isNativeRuntime = !!(typeof window !== 'undefined' && window._isNativeApp);
+        this._isWebDemoRuntime = !this._isSteamRuntime && !this._isNativeRuntime;
+        const configuredDemoCap = Math.max(1, parseInt((Config && Config.WEB_DEMO_STAGE_CAP) || 2, 10) || 2);
+        this._campaignStageCap = this._isWebDemoRuntime
+            ? Math.min(totalCampaignStages || configuredDemoCap, configuredDemoCap)
+            : totalCampaignStages;
+        this._isCappedWebDemo = this._isWebDemoRuntime && totalCampaignStages > 0 && this._campaignStageCap < totalCampaignStages;
+
         // Game mode: 'arcade' = normal campaign; 'survival' = endless wave mode
         this.gameMode = 'arcade';
         // Survival mode state
@@ -1587,7 +1602,7 @@ class Game {
             // jingle and the interstitial cue — both feel jarring right
             // before the victory screen.
             const _isFinalStage = (typeof LEVEL_CONFIGS !== 'undefined')
-                && ((this.currentLevelIndex || 0) + 1) >= LEVEL_CONFIGS.length;
+                && ((this.currentLevelIndex || 0) + 1) >= (this._campaignStageCap || LEVEL_CONFIGS.length);
             this._isFinalStageComplete = _isFinalStage;
             if (!_isFinalStage) {
                 this.audioManager.playSound && this.audioManager.playSound('level_complete', 0.8);
@@ -1705,7 +1720,8 @@ class Game {
                         maxCombo: this.gameStats.maxCombo,
                         sprayAccuracy: sprayAcc,
                         deathsTotal: this.gameStats.deathsThisRun || 0,
-                        totalRuns: this.gameStats.totalRuns || 0
+                        totalRuns: this.gameStats.totalRuns || 0,
+                        demoComplete: !!this._isCappedWebDemo
                     });
                 }
             } catch (e) { /* analytics must never break gameplay */ }
@@ -1744,7 +1760,12 @@ class Game {
             this._victoryPromptOpen = false;
             this._victoryReturning = false;
             this._victorySequenceTimer = 7.5;
-            this.gameStats.victoryEpilogueText = 'The city exhales. The stench of fear is gone, and the Way of the Spray still burns bright.';
+            this.gameStats.isWebDemoComplete = !!this._isCappedWebDemo;
+            this.gameStats.demoStageCap = this._campaignStageCap || 0;
+            this.gameStats.totalCampaignStages = this._totalCampaignStages || 0;
+            this.gameStats.victoryEpilogueText = this._isCappedWebDemo
+                ? 'Web demo clear. Continue the full campaign on Steam or Google Play.'
+                : 'The city exhales. The stench of fear is gone, and the Way of the Spray still burns bright.';
             try {
                 if (window.Highscores && typeof Highscores.isHighScore === 'function') {
                     Promise.resolve(Highscores.isHighScore(this.score)).then((isHigh) => {
@@ -1873,7 +1894,7 @@ class Game {
                         
                         // Execute level switch
                         const nextIndex = this.currentLevelIndex + 1;
-                        if (typeof LEVEL_CONFIGS !== 'undefined' && nextIndex < LEVEL_CONFIGS.length) {
+                        if (typeof LEVEL_CONFIGS !== 'undefined' && nextIndex < (this._campaignStageCap || LEVEL_CONFIGS.length)) {
                             this.loadLevel(nextIndex);
                             this.state = 'PLAYING';
                             this.dispatchGameStateChange();

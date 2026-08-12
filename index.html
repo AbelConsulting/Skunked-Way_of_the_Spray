@@ -12,7 +12,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>Skunked: Way of the Spray - 2D Beat 'em Up</title>
+    <title>Skunked: Way of the Spray - Web Demo | Full Game on Steam & Google Play</title>
     <!-- Google Tag Manager (web only — skipped inside the Capacitor WebView so
          GTM-driven AdSense Auto Ads / anchor banners can't cover the game.
          Bumped on top of build cb4f78d / 58d5bc2 which already gated the
@@ -71,7 +71,7 @@
     <meta name="theme-color" content="#1a1a2e">
     <meta name="color-scheme" content="dark">
     <meta name="msapplication-TileColor" content="#1a1a2e">
-    <meta name="description" content="Skunked: Way of the Spray is a neon arcade beat-'em-up where the Ninja Skunk chains brutal combos, survives boss waves, and builds momentum in fast replayable runs. Play in your browser or on Android.">
+    <meta name="description" content="Play the free web demo of Skunked: Way of the Spray, then continue the full campaign on Steam or Google Play with complete progression, bosses, and platform features.">
     <meta name="keywords" content="skunk spray game, skunked way of the spray, ninja skunk game, 2D beat em up, action platformer, free fighting game, skunk ninja, combo fighter, android game, mobile beat em up, side scroller fighter, arcade action game, shadow strike, skunk spray attack">
     <meta name="author" content="Mephitideus Interactive">
     <meta name="robots" content="index, follow">
@@ -81,8 +81,8 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://skunked.io/">
     <meta property="og:site_name" content="Skunked: Way of the Spray">
-    <meta property="og:title" content="Skunked: Way of the Spray — Free 2D Ninja Beat 'Em Up">
-    <meta property="og:description" content="Play as the Ninja Skunk — chain savage combos, master the Shadow Strike, and brawl through neon stages. Free in your browser or on Android.">
+    <meta property="og:title" content="Skunked: Way of the Spray — Web Demo + Full Game on Steam/Google Play">
+    <meta property="og:description" content="Jump into the free web demo, then unlock the full Ninja Skunk campaign on Steam and Google Play.">
     <meta property="og:image" content="https://skunked.io/assets/store-listing/feature-graphic-1024x500.png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="500">
@@ -90,8 +90,8 @@
     <meta property="og:locale" content="en_US">
     <!-- Twitter / X Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Skunked: Way of the Spray — Free 2D Ninja Beat 'Em Up">
-    <meta name="twitter:description" content="Play as the Ninja Skunk — chain savage combos, master the Shadow Strike, and brawl through neon stages. Free in your browser or on Android.">
+    <meta name="twitter:title" content="Skunked: Way of the Spray — Web Demo + Full Game">
+    <meta name="twitter:description" content="Play the web demo, then continue the full game on Steam or Google Play.">
     <meta name="twitter:image" content="https://skunked.io/assets/store-listing/feature-graphic-1024x500.png">
     <meta name="twitter:image:alt" content="Skunked: Way of the Spray gameplay screenshot">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
@@ -224,6 +224,45 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
             font-size: 0.84rem;
             color: #fce9a9;
+        }
+
+        .site-landing__cta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 16px 0 0;
+        }
+
+        .site-landing__cta-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font: 700 13px/1.2 'Space Grotesk', 'Segoe UI', sans-serif;
+            letter-spacing: 0.02em;
+            text-decoration: none;
+            transition: transform 140ms ease, filter 180ms ease, box-shadow 180ms ease;
+            box-shadow: 0 10px 22px rgba(0,0,0,0.34);
+            pointer-events: auto;
+        }
+
+        .site-landing__cta-link:hover {
+            filter: brightness(1.12);
+            transform: translateY(-1px);
+        }
+
+        .site-landing__cta-link--steam {
+            background: linear-gradient(180deg, rgba(54, 123, 188, 0.42), rgba(11, 29, 54, 0.82));
+            border-color: rgba(120, 192, 255, 0.4);
+        }
+
+        .site-landing__cta-link--google {
+            background: linear-gradient(180deg, rgba(31, 187, 113, 0.38), rgba(10, 44, 30, 0.82));
+            border-color: rgba(96, 242, 172, 0.35);
         }
 
         @media (max-width: 900px) {
@@ -1005,6 +1044,10 @@
             gap: 4px;
         }
 
+        .start-menu-actions a.menu-btn {
+            text-decoration: none;
+        }
+
         .start-menu-actions .menu-btn .menu-btn-label {
             display: block;
             color: #fff;
@@ -1045,6 +1088,22 @@
         }
 
         .menu-btn--play:hover { filter: brightness(1.18); transform: translateY(-2px) scale(1.01); }
+
+        .menu-btn--store-steam {
+            border-color: rgba(120, 192, 255, 0.42) !important;
+            background: linear-gradient(180deg, rgba(54, 123, 188, 0.24), rgba(7, 28, 50, 0.72)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 22px rgba(84, 167, 255, 0.2) !important;
+        }
+
+        .menu-btn--store-google {
+            border-color: rgba(96, 242, 172, 0.38) !important;
+            background: linear-gradient(180deg, rgba(31, 187, 113, 0.26), rgba(8, 42, 28, 0.74)) !important;
+            box-shadow:
+                0 14px 28px rgba(0,0,0,0.35),
+                0 0 22px rgba(63, 232, 149, 0.18) !important;
+        }
 
         .menu-btn--survival {
             grid-column: 1 / -1;
@@ -3369,7 +3428,7 @@
       "genre": ["Action", "Arcade", "Fighting"],
       "gamePlatform": ["Web Browser", "Android"],
       "url": "https://skunked.io/",
-      "description": "A neon arcade beat-'em-up where the Ninja Skunk chains brutal combos, survives boss waves, and pushes through replayable survival runs.",
+            "description": "A stylized action-platformer featuring the Ninja Skunk. Play the web demo instantly, then continue the full game on Steam and Google Play.",
       "applicationCategory": "Game",
       "operatingSystem": ["Web", "Android"],
       "publisher": {
@@ -3402,14 +3461,18 @@
         </div>
         <div id="content-wrapper">
             <section class="site-landing" aria-labelledby="site-landing-title">
-                <p class="site-landing__eyebrow">Original arcade action game</p>
-                <h2 id="site-landing-title">Skunked: Way of the Spray is a neon beat-'em-up packed with combo chains, boss pressure, and replayable survival runs.</h2>
-                <p>Guide the Ninja Skunk through brutal encounters, master spray-fueled attacks, and climb the leaderboards in a fast-paced browser game built around momentum, timing, and style.</p>
+                <p class="site-landing__eyebrow">Playable Web Demo</p>
+                <h2 id="site-landing-title">Try Skunked instantly in your browser, then jump to the full campaign on Steam or Google Play.</h2>
+                <p>The web version is now a focused demo run: fast combat, boss pressure, and score-chasing action designed to preview the full Ninja Skunk experience.</p>
                 <ul class="site-landing__highlights">
-                    <li>Fast combo combat</li>
-                    <li>Boss waves and survival runs</li>
-                    <li>Unlockable skins and support purchases</li>
+                    <li>Instant browser demo</li>
+                    <li>Full campaign on Steam</li>
+                    <li>Mobile progression on Google Play</li>
                 </ul>
+                <div class="site-landing__cta" aria-label="Store links">
+                    <a id="landing-steam-link" class="site-landing__cta-link site-landing__cta-link--steam" href="https://store.steampowered.com/app/4815180/" target="_blank" rel="noopener noreferrer">Get Full Game on Steam</a>
+                    <a id="landing-google-link" class="site-landing__cta-link site-landing__cta-link--google" href="https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu" target="_blank" rel="noopener noreferrer">Get It on Google Play</a>
+                </div>
                 <p><a href="about.html" style="color:#ffcf4b;text-decoration:none;font-weight:700;">Learn more about the game</a> · <a href="faq.html" style="color:#ffcf4b;text-decoration:none;font-weight:700;">Read the FAQ</a></p>
             </section>
             <div id="rotate-message">
@@ -3568,8 +3631,8 @@
                             <h1 class="start-menu-title">SKUNKED:</h1>
                             <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
                             <div class="start-menu-divider"></div>
-                            <p class="start-menu-tagline">Ninja Skunk Campaign</p>
-                            <p class="start-menu-copy">Storm the city, unleash skunk spray attacks, chase weekly leaderboard runs, earn achievements, and master The Way of the Spray! </p>
+                            <p class="start-menu-tagline">Web Demo Build</p>
+                            <p class="start-menu-copy">Play a curated browser demo, then continue the full campaign with complete progression on Steam and Google Play.</p>
                             <div class="start-menu-meta">
                                 <div class="start-menu-stat start-menu-stat--boss">
                                     <div class="stat-portrait stat-portrait--ironclaw" role="img" aria-label="Iron Claw"></div>
@@ -3588,9 +3651,11 @@
                         <div class="start-menu-hub">
                             <div class="start-menu-hub-header">
                                 <h3 class="start-menu-hub-title">Choose Your Route</h3>
-                                <p class="start-menu-hub-note">Classics Inspired Casual Gameplay.</p>
+                                <p class="start-menu-hub-note">Web demo here. Full game on stores.</p>
                             </div>
                             <div class="start-menu-actions" role="navigation" aria-label="Main menu">
+                                <a id="menu-steam-store-btn" class="menu-btn menu-btn--store-steam" href="https://store.steampowered.com/app/4815180/" target="_blank" rel="noopener noreferrer"><span class="menu-btn-label">&#128187; Steam Full Game</span><span class="menu-btn-meta">Complete campaign, achievements, and desktop play.</span></a>
+                                <a id="menu-google-store-btn" class="menu-btn menu-btn--store-google" href="https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu" target="_blank" rel="noopener noreferrer"><span class="menu-btn-label">&#128241; Google Play Full Game</span><span class="menu-btn-meta">Full mobile progression with touch-first sessions.</span></a>
                                 <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label">&#9654; Launch Run</span><span class="menu-btn-meta">Drop straight into Stage 1 and keep momentum.</span></button>
                                 <button id="menu-survival-btn" class="menu-btn menu-btn--survival"><span class="menu-btn-label">&#128293; Survival Mode</span><span class="menu-btn-meta">Endless enemy waves — fight until you fall.</span></button>
                                 <button id="menu-howtoplay-btn" class="menu-btn menu-btn--howtoplay"><span class="menu-btn-label">&#128214; How to Play</span><span class="menu-btn-meta">Learn scoring, idols, time attack, and combat.</span></button>
@@ -4475,6 +4540,10 @@
                         const settingsOverlay   = document.getElementById('menu-settings-overlay');
                         const howtoplayOverlay  = document.getElementById('menu-howtoplay-overlay');
                         const playBtn           = document.getElementById('menu-play-btn');
+                        const steamStoreBtn     = document.getElementById('menu-steam-store-btn');
+                        const googleStoreBtn    = document.getElementById('menu-google-store-btn');
+                        const landingSteamLink  = document.getElementById('landing-steam-link');
+                        const landingGoogleLink = document.getElementById('landing-google-link');
                         const howtoplayBtn      = document.getElementById('menu-howtoplay-btn');
                         const scoresBtn         = document.getElementById('menu-scores-btn');
                         const infoBtn           = document.getElementById('menu-info-btn');
@@ -4743,6 +4812,28 @@
                                 ev.stopPropagation();
                                 try { Analytics.trackMenuAction('play'); } catch(e) {}
                                 startGameFromMenu();
+                            });
+                        }
+
+                        // Store CTA links (tracking only; navigation stays native)
+                        if (steamStoreBtn) {
+                            steamStoreBtn.addEventListener('click', () => {
+                                try { Analytics.trackMenuAction('steam_store'); } catch (e) {}
+                            });
+                        }
+                        if (googleStoreBtn) {
+                            googleStoreBtn.addEventListener('click', () => {
+                                try { Analytics.trackMenuAction('google_play_store'); } catch (e) {}
+                            });
+                        }
+                        if (landingSteamLink) {
+                            landingSteamLink.addEventListener('click', () => {
+                                try { Analytics.trackMenuAction('landing_steam_store'); } catch (e) {}
+                            });
+                        }
+                        if (landingGoogleLink) {
+                            landingGoogleLink.addEventListener('click', () => {
+                                try { Analytics.trackMenuAction('landing_google_play'); } catch (e) {}
                             });
                         }
 
