@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skunked: Way of the Spray — Complete Strategy Guide</title>
+  <meta name="description" content="Full walkthrough, enemy guide, boss strategies, combo tips, Golden Idol locations, and achievement guide for Skunked: Way of the Spray.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://skunked.io/guide.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --accent: #ffcf4b;
+      --accent2: #00ff88;
+      --accent3: #ff6644;
+      --bg: #06070d;
+      --surface: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.12);
+      --text: #f0ece0;
+      --muted: rgba(255,255,255,0.62);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+    a:hover { color: #ffe899; }
+
+    /* Layout */
+    .page-shell {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 0;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    @media (max-width: 860px) {
+      .page-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    /* Top nav */
+    .top-bar {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .top-bar a {
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .top-bar .guide-badge {
+      background: linear-gradient(135deg, rgba(255,207,75,0.22), rgba(255,100,68,0.18));
+      border-color: rgba(255,207,75,0.45);
+      color: var(--accent);
+    }
+
+    /* Sticky sidebar TOC */
+    .sidebar {
+      padding: 32px 0 80px 20px;
+      border-right: 1px solid var(--border);
+    }
+    .toc {
+      position: sticky;
+      top: 24px;
+    }
+    .toc-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 12px;
+    }
+    .toc ol {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      counter-reset: toc;
+    }
+    .toc li {
+      counter-increment: toc;
+    }
+    .toc a {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      padding: 5px 0;
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color 150ms;
+    }
+    .toc a::before {
+      content: counter(toc) ".";
+      color: var(--accent);
+      font-size: 0.75rem;
+      min-width: 18px;
+    }
+    .toc a:hover { color: var(--text); }
+    .toc-sub {
+      padding-left: 24px;
+    }
+    .toc-sub a { font-size: 0.78rem; }
+    .toc-sub a::before { display: none; }
+
+    /* Main content */
+    main {
+      padding: 40px 32px 100px;
+    }
+    @media (max-width: 600px) {
+      main { padding: 24px 16px 80px; }
+    }
+
+    /* Hero */
+    .guide-hero {
+      background: linear-gradient(135deg, rgba(10,18,38,0.97), rgba(45,14,68,0.94));
+      border: 1px solid rgba(255,207,75,0.28);
+      border-radius: 22px;
+      padding: 32px 28px;
+      margin-bottom: 40px;
+      box-shadow: 0 0 60px rgba(255,100,0,0.08);
+    }
+    .guide-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 8px;
+    }
+    .guide-hero h1 {
+      font-family: 'Bangers', 'Arial Black', Impact, sans-serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      letter-spacing: 0.04em;
+      margin: 0 0 10px;
+      background: linear-gradient(180deg, #FFA040 0%, #FF2200 60%, #FFA040 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .guide-hero p {
+      margin: 0;
+      max-width: 64ch;
+      color: rgba(255,255,255,0.82);
+      font-size: 1rem;
+    }
+    .guide-meta {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .guide-tag {
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* Chapter sections */
+    .chapter {
+      margin-bottom: 56px;
+    }
+    .chapter-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(255,207,75,0.22);
+    }
+    .chapter-number {
+      font-family: 'Bangers', Impact, sans-serif;
+      font-size: 2rem;
+      color: var(--accent);
+      line-height: 1;
+      min-width: 36px;
+    }
+    .chapter h2 {
+      margin: 0;
+      font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Section sub-heads */
+    h3 {
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 24px 0 8px;
+    }
+    h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.82);
+      margin: 16px 0 4px;
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .card h4 { margin: 0 0 6px; font-size: 0.98rem; color: var(--accent); }
+    .card p { margin: 0; font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+
+    /* Tips / callout boxes */
+    .tip-box {
+      background: rgba(0,255,136,0.07);
+      border: 1px solid rgba(0,255,136,0.28);
+      border-left: 4px solid var(--accent2);
+      border-radius: 0 12px 12px 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+    }
+    .tip-box strong { color: var(--accent2); }
+    .warn-box {
+      background: rgba(255,100,68,0.07);
+      border: 1px solid rgba(255,100,68,0.28);
+      border-left: 4px solid var(--accent3);
+      border-radius: 0 12px 12px 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+    }
+    .warn-box strong { color: var(--accent3); }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin: 16px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th {
+      text-align: left;
+      padding: 9px 14px;
+      background: rgba(255,255,255,0.07);
+      color: var(--accent);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    td strong { color: var(--text); }
+    td em { color: var(--accent2); font-style: normal; }
+
+    /* Stage cards */
+    .stage-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px 22px;
+      margin-bottom: 20px;
+    }
+    .stage-block-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .stage-num {
+      font-family: 'Bangers', Impact, sans-serif;
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .stage-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+    .stage-block p { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); }
+    .stage-block ul { margin: 6px 0; padding-left: 20px; }
+    .stage-block li { font-size: 0.9rem; color: var(--muted); margin-bottom: 4px; }
+    .idol-note { color: var(--accent); font-weight: 600; }
+    .boss-name { color: var(--accent3); font-weight: 700; }
+
+    /* Boss cards */
+    .boss-card {
+      background: linear-gradient(135deg, rgba(255,100,68,0.07), rgba(10,5,20,0.6));
+      border: 1px solid rgba(255,100,68,0.25);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    .boss-card-header {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .boss-card h3 {
+      color: var(--accent3);
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    .boss-card .boss-title-tag {
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+    }
+    .boss-card .boss-world-tag {
+      font-size: 0.78rem;
+      color: var(--accent);
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(255,207,75,0.09);
+      border: 1px solid rgba(255,207,75,0.28);
+    }
+    .boss-card p { margin: 0 0 10px; font-size: 0.9rem; color: var(--muted); }
+    .boss-phases { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .phase-pill {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .phase-pill--normal { background: rgba(0,200,100,0.15); border: 1px solid rgba(0,200,100,0.35); color: #80ffcc; }
+    .phase-pill--enraged { background: rgba(255,130,0,0.15); border: 1px solid rgba(255,130,0,0.35); color: #ffcc88; }
+    .phase-pill--desperate { background: rgba(255,60,60,0.15); border: 1px solid rgba(255,60,60,0.35); color: #ffaaaa; }
+
+    /* Combo tier table accent */
+    .tier-nice  { color: #FFD93D; font-weight: 700; }
+    .tier-great { color: #FF9500; font-weight: 700; }
+    .tier-awesome { color: #FF4500; font-weight: 700; }
+    .tier-incredible { color: #FF00FF; font-weight: 700; }
+    .tier-unstoppable { color: #00FFFF; font-weight: 700; }
+    .tier-legendary { color: #FFD700; font-weight: 700; }
+    .tier-godmode { color: #FF0000; font-weight: 700; }
+
+    /* Achievement tiers */
+    .ach-icon { font-size: 1.1em; margin-right: 4px; }
+    .ach-cat {
+      margin: 16px 0 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    /* Controls grid */
+    .controls-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+    }
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 28px;
+      padding: 0 6px;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .key-action { color: var(--muted); }
+
+    /* Idol locations */
+    .idol-row { color: var(--accent); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 20px;
+      max-width: 1280px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <nav class="top-bar" aria-label="Main navigation">
+    <a href="index.html">▶ Play the Game</a>
+    <a href="about.html">About</a>
+    <a href="faq.html">FAQ</a>
+    <a class="guide-badge" href="guide.html" aria-current="page">📖 Strategy Guide</a>
+    <a href="privacy.html">Privacy</a>
+  </nav>
+</header>
+
+<div class="page-shell">
+
+  <!-- Sticky table of contents (desktop) -->
+  <aside class="sidebar" aria-label="Table of contents">
+    <nav class="toc">
+      <p class="toc-title">Contents</p>
+      <ol>
+        <li><a href="#controls">Controls &amp; Mechanics</a></li>
+        <li><a href="#enemies">Enemy Field Guide</a></li>
+        <li><a href="#walkthrough">Stage Walkthrough</a>
+          <ol class="toc-sub">
+            <li><a href="#world-1">World 1 — Forest</a></li>
+            <li><a href="#world-2">World 2 — Skunk City</a></li>
+            <li><a href="#world-3">World 3 — Mountain Dojo</a></li>
+            <li><a href="#world-4">World 4 — Crystal Caverns</a></li>
+            <li><a href="#world-5">World 5 — Cavern Depths</a></li>
+            <li><a href="#world-6">World 6 — Neon Crossroads</a></li>
+            <li><a href="#world-7">World 7 — Crystal Ridge</a></li>
+            <li><a href="#world-8">World 8 — Abyssal Caverns</a></li>
+            <li><a href="#world-9">World 9 — Neon Nexus</a></li>
+            <li><a href="#world-10">World 10 — Final Showdown</a></li>
+          </ol>
+        </li>
+        <li><a href="#bosses">Boss Guide</a></li>
+        <li><a href="#idols">Golden Idol Locations</a></li>
+        <li><a href="#scoring">Scoring &amp; Combos</a></li>
+        <li><a href="#powerups">Power-Ups &amp; Items</a></li>
+        <li><a href="#achievements">Achievements</a></li>
+        <li><a href="#survival">Survival Mode</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <main>
+
+    <!-- Hero -->
+    <div class="guide-hero">
+      <p class="guide-eyebrow">Complete Strategy Guide</p>
+      <h1>Skunked: Way of the Spray</h1>
+      <p>Walkthroughs, boss strategies, Golden Idol locations, combo tips, and a full achievement guide for every stage of the Ninja Skunk's campaign.</p>
+      <div class="guide-meta">
+        <span class="guide-tag">10 Worlds · 20 Stages</span>
+        <span class="guide-tag">10 Bosses</span>
+        <span class="guide-tag">30 Achievements</span>
+        <span class="guide-tag">Survival Mode</span>
+        <span class="guide-tag">Updated 2026</span>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 1. CONTROLS & MECHANICS -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="controls">
+      <div class="chapter-header">
+        <span class="chapter-number">01</span>
+        <h2>Controls &amp; Core Mechanics</h2>
+      </div>
+
+      <h3>Keyboard Controls</h3>
+      <div class="controls-grid">
+        <div class="control-row"><span class="key">A</span> / <span class="key">←</span><span class="key-action">Move left</span></div>
+        <div class="control-row"><span class="key">D</span> / <span class="key">→</span><span class="key-action">Move right</span></div>
+        <div class="control-row"><span class="key">W</span> / <span class="key">↑</span> / <span class="key">Space</span><span class="key-action">Jump / Double jump</span></div>
+        <div class="control-row"><span class="key">J</span> / <span class="key">Z</span><span class="key-action">Attack</span></div>
+        <div class="control-row"><span class="key">K</span> / <span class="key">X</span><span class="key-action">Shadow Strike</span></div>
+        <div class="control-row"><span class="key">L</span> / <span class="key">C</span><span class="key-action">Skunk Shot</span></div>
+        <div class="control-row"><span class="key">Esc</span><span class="key-action">Pause / Menu</span></div>
+      </div>
+
+      <h3>Gamepad Controls</h3>
+      <div class="controls-grid">
+        <div class="control-row"><span class="key">L-Stick / D-Pad</span><span class="key-action">Move</span></div>
+        <div class="control-row"><span class="key">A / ✕</span><span class="key-action">Jump</span></div>
+        <div class="control-row"><span class="key">X / □</span><span class="key-action">Attack</span></div>
+        <div class="control-row"><span class="key">B / ○</span><span class="key-action">Shadow Strike</span></div>
+        <div class="control-row"><span class="key">Y / △</span><span class="key-action">Skunk Shot</span></div>
+        <div class="control-row"><span class="key">Start</span><span class="key-action">Pause</span></div>
+      </div>
+
+      <h3>Key Mechanics</h3>
+
+      <h4>Double Jump</h4>
+      <p>Press jump again while airborne for a second jump. Includes a short coyote window (0.15s after walking off a ledge) so jumps still register even if you step off an edge.</p>
+
+      <h4>Shadow Strike</h4>
+      <p>A directional dash attack that covers roughly 120px and deals full attack damage. It has a very short activation window — learn to use it to punish bosses after their recovery frames and to cross gaps. Shadow Strike kills count toward their own achievement chain.</p>
+
+      <div class="tip-box">
+        <strong>Pro tip:</strong> Shadow Strike in the direction an enemy is facing so the damage hitbox connects during their movement, not behind them. It reads cleanly even through shield enemies if you hit the side not covered by the shield bubble.
+      </div>
+
+      <h4>Skunk Shot</h4>
+      <p>A ranged spray projectile that hits enemies at distance and applies a 5-second Skunk debuff — temporarily disabling them so they stand still and can be combo'd freely. Ammo is found as pickups scattered through each run stage. You start with zero ammo; grab pickups actively.</p>
+
+      <div class="tip-box">
+        <strong>Pro tip:</strong> Skunk Shot a Shield Tank, then close in for melee while their bubble is down. On bosses in phase 2, a skunked debuff does not suppress them — save ammo for elite enemy clusters instead.
+      </div>
+
+      <h4>Combo System</h4>
+      <p>Every kill extends a 2-second combo window. Chain kills faster to build the multiplier: each combo stack adds 25% to all subsequent scores (maximum 10×). Hitting multiple enemies in the same attack grants a flat +150 points per additional enemy and boosts the combo counter faster.</p>
+
+      <h4>Golden Idols</h4>
+      <p>Three hidden collectibles per run stage. Each one you grab gives an instant <strong>+30 HP</strong> and <strong>2s of invulnerability</strong>. The bigger payoff is the stacked bonus: 1 idol = +5% speed &amp; damage, 2 idols = +10% speed &amp; damage, all 3 = +25% speed / +30% damage. That full-set bonus makes a noticeable difference on later boss fights.</p>
+
+      <h4>Lives</h4>
+      <p>You start with 3 lives. Extra lives have a 3% drop chance from any enemy. Lose all lives and it's game over — your score goes to the leaderboard.</p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 2. ENEMY FIELD GUIDE -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="enemies">
+      <div class="chapter-header">
+        <span class="chapter-number">02</span>
+        <h2>Enemy Field Guide</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Enemy</th>
+              <th>HP</th>
+              <th>Speed</th>
+              <th>Points</th>
+              <th>First Appears</th>
+              <th>Strategy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Grunt</strong><br><small>BASIC</small></td>
+              <td>50</td>
+              <td>Normal</td>
+              <td><em>100</em></td>
+              <td>World 1</td>
+              <td>Standard melee enemy. Approach from above for an easy combo starter.</td>
+            </tr>
+            <tr>
+              <td><strong>Speedster</strong><br><small>FAST_BASIC</small></td>
+              <td>40</td>
+              <td>1.5×</td>
+              <td><em>120</em></td>
+              <td>World 2</td>
+              <td>Weaker than a Grunt but fast. Shadow Strike from behind to punish their dash. Their low HP means a single clean combo clears them quickly.</td>
+            </tr>
+            <tr>
+              <td><strong>Shield Tank</strong><br><small>SECOND_BASIC</small></td>
+              <td>50</td>
+              <td>0.7×</td>
+              <td><em>150</em></td>
+              <td>World 1</td>
+              <td>Projects a 1.5s bubble shield on a 2.2s cooldown. Wait for the shield to drop, then punish. Skunk Shot ignores the shield direction — use it to break their cycle. Never attack their front while shielded.</td>
+            </tr>
+            <tr>
+              <td><strong>Kamikaze</strong><br><small>THIRD_BASIC</small></td>
+              <td>25</td>
+              <td>2× base</td>
+              <td><em>200</em></td>
+              <td>World 3</td>
+              <td>Fragile but deadly. Fuse ignites at 160px range (1.6s), then it enters a 3.5× speed dash toward you. <strong>Jump over the dash path</strong> — they detonate on proximity (50px) or after 1.2s of dashing. A detonation near another Kamikaze causes a chain explosion worth +500 points per depth. Kill them early with a Shadow Strike before the fuse ignites for safe scoring.</td>
+            </tr>
+            <tr>
+              <td><strong>Jumper</strong><br><small>FOURTH_BASIC</small></td>
+              <td>60</td>
+              <td>0 horiz.</td>
+              <td><em>200</em></td>
+              <td>World 3</td>
+              <td>No horizontal movement — stands still and does up to 5 consecutive vertical jumps to reach you. Bait them to a high platform, then drop below to break their targeting. They deal heavy damage on landing so avoid standing beneath them during a jump arc.</td>
+            </tr>
+            <tr>
+              <td><strong>Thrower</strong><br><small>FIFTH_BASIC</small></td>
+              <td>60</td>
+              <td>0.85×</td>
+              <td><em>250</em></td>
+              <td>World 2</td>
+              <td>Fires purple spray projectiles every 2.8s from up to 400px range. They prefer distance — close the gap quickly. The projectile deals 1.4× normal damage. A Skunk Shot silences their ranged cycle for 5 seconds, making them trivial melee targets.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <strong>General enemy tip:</strong> Enemies drop health regen items at a 20% rate. Staying in motion and chaining kills keeps pickups coming — don't camp in one spot waiting for them.
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 3. STAGE WALKTHROUGH -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="walkthrough">
+      <div class="chapter-header">
+        <span class="chapter-number">03</span>
+        <h2>Stage Walkthrough</h2>
+      </div>
+
+      <p>Each world has two stages: a <strong>run stage</strong> (reach the exit) followed by a <strong>boss showdown</strong>. Golden Idol locations are listed under <a href="#idols">Chapter 5</a>.</p>
+
+      <!-- WORLD 1 -->
+      <h3 id="world-1">World 1 — Forest</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">1-1</span>
+          <span class="stage-name">Forest Outskirts</span>
+        </div>
+        <p>A 10,000px wide forest run. The opening vertical section ("The Tall Oak") teaches platforming before enemies get dense. The Canopy Run at the 3,600–4,500px mark is the first real combo opportunity with close platform spacing.</p>
+        <ul>
+          <li>Enemies: Grunts and Shield Tanks only — a gentle difficulty curve.</li>
+          <li>The Great Ravine (5,200–7,000px) has two high-tier platforms at x=6,300 — use them to land the first idol of the run.</li>
+          <li>Grab both Skunk Shot pickups at x=2,350 and x=8,500 — you enter the boss stage with them.</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Tall Oak peak, Canopy Run platform, and top of the Ravine.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">1-2</span>
+          <span class="stage-name">Forest Showdown — Boss: <span class="boss-name">KYLE</span></span>
+        </div>
+        <p>A compact 4,000px arena leading to Kyle, the Crystal Flower Chief. Grab the Speed Boost at x=900 and Damage Boost at x=2,600 before triggering the boss at x=3,200.</p>
+        <p>Kyle's special is <strong>Crystal Barrage</strong> — see the <a href="#bosses">Boss Guide</a> for full tactics.</p>
+      </div>
+
+      <!-- WORLD 2 -->
+      <h3 id="world-2">World 2 — Skunk City</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">2-1</span>
+          <span class="stage-name">Skunk City</span>
+        </div>
+        <p>A 12,000px urban rooftop run. Moving platforms appear for the first time (elevator at x=800 and a horizontal platform in the Construction Zone). Speedsters and Throwers are introduced — prioritize Throwers so they don't chip your HP from range.</p>
+        <ul>
+          <li>Highway Bridge (x=3,200–4,000) is the first long flat fight. Let enemies cluster, then sweep them with a single Shadow Strike for quick combo build.</li>
+          <li>The Billboard Run (x=7,900–9,000) uses vertically moving platforms — time your jumps and don't attack mid-jump or you'll lose momentum.</li>
+          <li>Grab the Damage Boost at x=9,700 before the boss trigger.</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Urban District platform, Highway Bridge, Billboard rooftop.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">2-2</span>
+          <span class="stage-name">City Showdown — Boss: <span class="boss-name">IRON CLAW</span></span>
+        </div>
+        <p>Iron Claw is the first true damage sponge (8.5× HP). A vertically moving platform at x=1,950 divides the arena — use it to dodge his ground slam. Grab the Speed Boost at x=800 before engaging. His Damage Boost at x=2,500 is inside his patrol range; time a pick-up dash carefully.</p>
+      </div>
+
+      <!-- WORLD 3 -->
+      <h3 id="world-3">World 3 — Mountain Dojo</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">3-1</span>
+          <span class="stage-name">Mountain Dojo</span>
+        </div>
+        <p>The longest run so far at 15,000px. All six enemy types appear together from here on. The Gauntlet (x=3,500–5,100) is a tight staircase of 100px platforms — avoid standing on the same platform as a Kamikaze when its fuse is lit.</p>
+        <ul>
+          <li>Moving Pillars (x=2,200–2,500) oscillate at different phases. Time the jump between them — waiting for phase alignment is safer than rushing.</li>
+          <li>Hanging Lanterns (x=9,800–10,500) are vertical movers at depth phase offsets; treat them like a rhythm game — jump at the high point of each arc.</li>
+          <li>Save at least one Skunk Shot for the dense cluster in the Upper Ridge (x=11,200–12,500).</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Training Hall platform, Upper Walkway, Upper Ridge ledge.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">3-2</span>
+          <span class="stage-name">Dojo Showdown — Boss: <span class="boss-name">BURGER FURY</span></span>
+        </div>
+        <p>Burger Fury uses Rapid Strike — the fastest melee output of any boss so far. A moving platform at x=1,100 creates a dodge lane. Pick up the Skunk Shot at x=2,000 mid-fight during his post-attack recovery window if you need range options.</p>
+      </div>
+
+      <!-- WORLD 4 -->
+      <h3 id="world-4">World 4 — Crystal Caverns</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">4-1</span>
+          <span class="stage-name">Crystal Caverns</span>
+        </div>
+        <p>A visually dense 16,000px cave with stalactite vertical movers in the entrance and horizontally oscillating Crystal Chamber platforms mid-run. The Deep Chasm (x=5,600–7,000) is a descending zigzag — fall deliberately to the lower platforms rather than trying to fight up top.</p>
+        <ul>
+          <li>The Floating Crystals section (x=9,300–10,000) has three vertically moving platforms. Their combined timing creates a wave — ride one all the way up before jumping to the next.</li>
+          <li>Precarious Path (x=13,000–13,800) has two horizontal movers; they shift in opposite directions, so jump at the moment they pass each other.</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Cavern Entrance peak, Underground River platform, Upper Ledges.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">4-2</span>
+          <span class="stage-name">Crystal Showdown — Boss: <span class="boss-name">DR OBSIDIAN</span></span>
+        </div>
+        <p>Dr Obsidian's special is Summon — he spawns additional enemies mid-fight. Clear the summons before re-engaging Obsidian; fighting both layers simultaneously is how most players die here. Two moving platforms keep the arena dynamic. The horizontally moving platform at x=2,400 is a consistent escape lane from summon clusters.</p>
+      </div>
+
+      <!-- WORLD 5 -->
+      <h3 id="world-5">World 5 — Crystal Caverns Depths</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">5-1</span>
+          <span class="stage-name">Crystal Caverns Depths</span>
+        </div>
+        <p>No more basic Grunts — the Depths drops you straight into Speedsters, Shield Tanks, Kamikazes, Jumpers, and Throwers. Sinking Columns (x=1,500–2,400) are three vertical oscillators at different phases — treat the safe zone between them as a combat platform and bait enemies onto it.</p>
+        <ul>
+          <li>The Echo Chamber (x=5,500–6,600) features horizontal movers over a pit. Fight on the static platform at x=6,400 by baiting enemies there.</li>
+          <li>Crystal Maze (x=9,000–10,000) mixes vertical movers with static platforms — use the static ledge at x=9,400 as a base and let enemies come to you.</li>
+          <li>Three Damage Boosts in this stage (x=3,650, x=10,700, x=14,500) — they stack with Idol bonuses, so grab all three.</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Sinking Column platform, Echo Chamber mover, High Ledge Run.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">5-2</span>
+          <span class="stage-name">Depths Showdown — Boss: <span class="boss-name">STEAMPUNK WRAITH</span></span>
+        </div>
+        <p>The Wraith teleports, making him the first boss who invalidates your positional read. Watch for the brief pre-teleport flash and <em>stop attacking</em> — let him re-materialize, then punish the arrival animation. Vertical movers at x=1,200 and x=2,300 let you break his targeting after a teleport by changing elevation quickly.</p>
+      </div>
+
+      <!-- WORLD 6 -->
+      <h3 id="world-6">World 6 — Neon Crossroads</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">6-1</span>
+          <span class="stage-name">Neon Crossroads</span>
+        </div>
+        <p>Back to urban terrain with neon aesthetics. Billboard Elevators (x=3,500–4,100) use tall 200px vertical movers — the widest oscillation so far. Let them reach the top before boarding so you get maximum platform time.</p>
+        <ul>
+          <li>Crossroads Plaza (x=2,700–3,300) is the widest open platform in the game — perfect for chaining large combos. Funnel enemies onto it before using the elevators.</li>
+          <li>Floating Neon Bars (x=7,200–7,800) are horizontal movers at opposite phase offsets — cross at the closest approach point.</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Neon Sign Hop top platform, Rooftop Highway, Antenna Perch.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">6-2</span>
+          <span class="stage-name">Neon Showdown — Boss: <span class="boss-name">ETHEREO NIFTY</span></span>
+        </div>
+        <p>Ethereo Nifty fires projectiles and is classified as The Unseen. Stay mobile — standing still is how his projectile pattern converges on you. Use the moving platform at x=1,600 as a platform hop to break his aim. Grab the Speed Boost early to maintain the evasion advantage throughout the fight.</p>
+      </div>
+
+      <!-- WORLD 7 -->
+      <h3 id="world-7">World 7 — Crystal Ridge</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">7-1</span>
+          <span class="stage-name">Crystal Ridge</span>
+        </div>
+        <p>A mountain run with an aggressive enemy spawn rate (1.6s interval, 11 max, 1.05 aggression). The ridge geometry rewards staying on upper platforms — enemies that fall off narrow ledges do your work for you. Use Kamikazes to chain into each other for score bonuses whenever you see two in proximity.</p>
+        <ul>
+          <li><span class="idol-note">3 Golden Idols</span>: Early ridge ascent, mid-ridge peak, late approach to boss arena.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">7-2</span>
+          <span class="stage-name">Ridge Showdown — Boss: <span class="boss-name">SHADOW FANG</span></span>
+        </div>
+        <p>Shadow Fang charges — a telegraphed linear dash across the arena floor. Jump the charge and counter-attack from above. His enrage at 50% HP increases charge frequency significantly. Save a Skunk Shot for the Phase 3 (25% HP) window when he becomes desperate; the 5s pause is enough to deal serious damage safely.</p>
+      </div>
+
+      <!-- WORLD 8 -->
+      <h3 id="world-8">World 8 — Abyssal Caverns</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">8-1</span>
+          <span class="stage-name">Abyssal Caverns</span>
+        </div>
+        <p>Deep cave environment with tight platform spacing and a short spawn interval of 1.4s. The ambient pressure here is constant — keep the kill chain going rather than playing defensively or the screen fills up.</p>
+        <ul>
+          <li>Three-boss health multiplier (14×) awaits — farm every Damage Boost this stage, there are two.</li>
+          <li><span class="idol-note">3 Golden Idols</span>: Entrance, deep mid section, upper ledge approach.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">8-2</span>
+          <span class="stage-name">Abyss Showdown — Boss: <span class="boss-name">VENOM TOOTH</span></span>
+        </div>
+        <p>Venom Tooth charges like Shadow Fang but with a higher health multiplier (14×) and greater attack damage (2.2×). The key difference: his arena is underground — you cannot jump over him if he charges into a wall. Position yourself at least half the arena width away when he winds up for a charge, then dodge to the opposite end.</p>
+      </div>
+
+      <!-- WORLD 9 -->
+      <h3 id="world-9">World 9 — Neon Nexus</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">9-1</span>
+          <span class="stage-name">Neon Nexus</span>
+        </div>
+        <p>The penultimate run. Enemy spawn rate is at 1.2s — the fastest you will face until the Final Showdown. All enemy types appear with maximum aggression (1.4). Stay airborne as much as possible; jumping over clumps of Kamikazes and letting them detonate into each other is the best scoring play here.</p>
+        <ul>
+          <li><span class="idol-note">3 Golden Idols</span>: Nexus entrance high platform, mid-nexus route, late approach ledge.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">9-2</span>
+          <span class="stage-name">Nexus Showdown — Boss: <span class="boss-name">ASTRAL TYRANT</span></span>
+        </div>
+        <p>The Astral Tyrant fires projectiles with a 17× HP multiplier and 2.5× attack damage. His projectile arcs are wider in Phase 2, so the floor becomes a kill zone. Fight from platforms exclusively. Moving platforms at x=1,100 and x=3,400 in the arena provide elevation — use both throughout the fight.</p>
+      </div>
+
+      <!-- WORLD 10 -->
+      <h3 id="world-10">World 10 — Final Showdown</h3>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">10-1</span>
+          <span class="stage-name">Final Showdown</span>
+        </div>
+        <p>The last run stage throws only Kamikazes, Jumpers, and Throwers at you — no grunts, no shields. The spawn rate is 1.2s with maximum aggression (1.5) and up to 8 enemies on screen. Your combo potential here is enormous: Kamikazes chain, Jumpers are high-value, Throwers at 250pts each. Go in with a full Idol set if possible.</p>
+        <ul>
+          <li>Grab the Speed Boost at x=850 and Damage Boost at x=2,700 early — they will carry you into the final boss.</li>
+          <li>The arena uses moving platforms at x=1,100, x=2,250, and x=3,400 — the most complex movement puzzle of the campaign.</li>
+          <li>No idols in the boss stage — make sure you cleared all three in 10-1.</li>
+        </ul>
+      </div>
+
+      <div class="stage-block">
+        <div class="stage-block-header">
+          <span class="stage-num">10-2</span>
+          <span class="stage-name">Final Confrontation — Boss: <span class="boss-name">MALODOR</span></span>
+        </div>
+        <p>Malodor is the Enemy Kingpin and the true final boss with a 20× health multiplier, 1.3× speed, and 2.7× attack damage. He fires projectiles that cover ground and air, and Phase 2 (below 50%) dramatically increases their density. See the <a href="#bosses">Boss Guide</a> for the full approach.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 4. BOSS GUIDE -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="bosses">
+      <div class="chapter-header">
+        <span class="chapter-number">04</span>
+        <h2>Boss Guide</h2>
+      </div>
+
+      <p>Every boss has three phases: normal, enraged (below 50% HP), and desperate (below 25% HP). Combat speed and attack frequency increase at each threshold. Always save a Skunk Shot for the transition into Phase 3 — the 5s window is the safest damage opportunity in any boss fight.</p>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>KYLE</h3>
+          <span class="boss-title-tag">Crystal Flower Chief</span>
+          <span class="boss-world-tag">World 1-2</span>
+        </div>
+        <p><strong>Special — Crystal Barrage:</strong> Kyle fires a spread of crystal projectiles that fan outward from his position. The spread widens in Phase 2. Stay directly above him on a platform to avoid the fan arc — the crystals travel horizontally.</p>
+        <p><strong>Phase 1:</strong> Slow crystal bursts, predictable timing. Get above and time drops for big damage. Grab the Speed Boost early.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Barrage frequency doubles. Stay on platforms and use jump timing to dodge between bursts. Shadow Strike during his recovery window.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Spray pattern becomes near-continuous. Skunk Shot here to create a safe damage window.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Standard barrage</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Double frequency</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Continuous spray</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>IRON CLAW</h3>
+          <span class="boss-title-tag">Enforcer of Skunk City</span>
+          <span class="boss-world-tag">World 2-2</span>
+        </div>
+        <p><strong>Special — Ground Slam:</strong> Iron Claw leaps and slams the ground, creating a shockwave that travels the arena floor. Jump the slam — both the impact and the wave. He pauses briefly after landing.</p>
+        <p><strong>Phase 1:</strong> One slam per cycle. After the slam, he walks toward you — counter-attack during the walk, not the pause.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Two slams per cycle with a short pause between. Jump both, then punish the second.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Slam speed increases. Use the moving platform at x=1,950 to maintain elevation advantage. A Skunk Shot mid-Phase 3 shuts down his slam cycle entirely.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Single slam</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Double slam combo</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Rapid slam flurry</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>BURGER FURY</h3>
+          <span class="boss-title-tag">Master of the Dojo</span>
+          <span class="boss-world-tag">World 3-2</span>
+        </div>
+        <p><strong>Special — Rapid Strike:</strong> A five-hit melee flurry delivered in quick succession. The tell is a brief stance wind-up before the first hit. Back away the moment you see the stance — jumping away mid-flurry will still clip you if you're too close.</p>
+        <p><strong>Phase 1:</strong> Flurry every 3–4 seconds. Attack two to three times between flurries and back off cleanly.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Flurry becomes a six-hit chain with tighter windows. Stick to a strict attack-and-retreat rhythm.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Constant pressure. The moving platform at x=1,100 is the main dodge tool — use height to bait him into the platform cycle, then drop in behind.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: 5-hit flurry</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: 6-hit extended chain</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Continuous pressure</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>DR OBSIDIAN</h3>
+          <span class="boss-title-tag">Cavern Sentinel</span>
+          <span class="boss-world-tag">World 4-2</span>
+        </div>
+        <p><strong>Special — Summon:</strong> Obsidian summons two to three standard enemies mid-fight. The adds must die before you re-engage Obsidian or you will be overwhelmed. Summoned enemies are weaker versions but still deal normal damage.</p>
+        <p><strong>Phase 1:</strong> One summon wave. Clear adds quickly with a Shadow Strike sweep, then return to Obsidian during his idle animation.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Summons more frequently and at higher enemy count. The horizontal platform at x=2,400 is your best staging area — stand there and let adds come to you in a line rather than surrounding you.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Nearly continuous summons. Skip the adds in Phase 3 — hit Obsidian hard and fast. He cannot summon while actively attacking.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: 1 summon wave</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Frequent summons</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Attack through summons</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>STEAMPUNK WRAITH</h3>
+          <span class="boss-title-tag">Depths Dweller</span>
+          <span class="boss-world-tag">World 5-2</span>
+        </div>
+        <p><strong>Special — Teleport:</strong> The Wraith vanishes and reappears in a new position. He always re-materializes near the player. The arrival animation has a brief vulnerable window (~0.3s) — that is the only consistent damage window he gives you.</p>
+        <p><strong>Phase 1:</strong> Teleport once per engagement cycle. After each teleport, land one or two hits immediately then back off.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Double teleport per cycle — he blinks, attacks, blinks again. Track his glow and don't commit to long combo strings.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Chain teleport. Stay central in the arena and react to the arrival flash. Skunk Shot on arrival freezes him for a full damage burst.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Single teleport</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Double teleport cycle</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Chain teleport</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>ETHEREO NIFTY</h3>
+          <span class="boss-title-tag">The Unseen</span>
+          <span class="boss-world-tag">World 6-2</span>
+        </div>
+        <p><strong>Special — Projectile:</strong> Fires a spread of tracking projectiles. The tracking is not perfect — lateral movement at medium distance confuses the aim. Never stand still or jump in place.</p>
+        <p><strong>Phase 1:</strong> Wide spacing between projectile bursts. Counter-attack between bursts while staying mobile.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Burst frequency increases and projectiles travel faster. The moving platform at x=1,600 is key — change elevation mid-burst to break tracking.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Constant projectile pressure. Shadow Strike toward him between bursts for the shortest possible exposure time.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Tracking spread</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Fast burst cycles</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Continuous barrage</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>SHADOW FANG</h3>
+          <span class="boss-title-tag">Guardian of the Forest</span>
+          <span class="boss-world-tag">World 7-2</span>
+        </div>
+        <p><strong>Special — Charge:</strong> Telegraphed with a brief crouch before a full-arena linear dash. The safe response is to jump the moment you see the crouch — the charge hitbox is low. Land behind him for a free punish window.</p>
+        <p><strong>Phase 1:</strong> One charge per cycle. Consistent pattern — jump, land, punish.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Double charge with a short gap between. Jump both; the second charge can catch you if you land before it fires.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Triple charge at high speed. Skunk Shot into Phase 3 to suppress the charge cycle. Focus damage entirely — the speed in Phase 3 makes prolonged fights risky.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Single charge</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Double charge</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Triple high-speed charge</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>VENOM TOOTH</h3>
+          <span class="boss-title-tag">Ruler of the Underbelly</span>
+          <span class="boss-world-tag">World 8-2</span>
+        </div>
+        <p><strong>Special — Charge:</strong> Like Shadow Fang but 14× health and 2.2× damage. The underground arena walls stop the charge — Venom Tooth bounces off a wall and charges back. Track which wall he hits and move to a third-point position to avoid both the forward and return dash.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Back-and-forth charge combo. The only reliable safe position is directly above him on a platform after the first charge — he cannot reverse mid-dash.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Use Skunk Shot immediately. The 5s freeze is essential at this HP multiplier.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Wall-bounce charge</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Combo charge</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Skunk Shot required</span>
+        </div>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-card-header">
+          <h3>ASTRAL TYRANT</h3>
+          <span class="boss-title-tag">Warden of the Void</span>
+          <span class="boss-world-tag">World 9-2</span>
+        </div>
+        <p><strong>Special — Projectile:</strong> Like Ethereo but with 17× HP and wider arcs that cover both floor and midair. The ground is unreliable — use both moving platforms throughout the fight. Never stand at floor level for more than one second.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Platform spacing becomes vital — make sure you understand which mover is ascending before committing to it. A Skunk Shot here gives you the cleanest damage window of the entire fight.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Wide projectile arcs</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Floor + air coverage</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Platform-only combat</span>
+        </div>
+      </div>
+
+      <div class="boss-card" style="border-color: rgba(255,207,75,0.45); background: linear-gradient(135deg, rgba(255,100,0,0.10), rgba(10,5,20,0.7));">
+        <div class="boss-card-header">
+          <h3 style="color: var(--accent);">MALODOR</h3>
+          <span class="boss-title-tag">Enemy Kingpin</span>
+          <span class="boss-world-tag">World 10-2 — FINAL BOSS</span>
+        </div>
+        <p><strong>Special — Projectile:</strong> Malodor fires heavy tracking projectiles with 20× HP, 1.3× speed, and 2.7× attack damage. One hit at low HP can be fatal. He is the fastest boss in the game and his projectiles cover both planes.</p>
+        <p><strong>Setup:</strong> Enter with all three Idols, the Speed Boost from 10-1, and the Damage Boost from x=2,700. Do not skip those pickups — they cut the fight duration significantly.</p>
+        <p><strong>Phase 1:</strong> Predictable single-arc projectile followed by a walk cycle. Counter-attack in the gap between his arc and his next movement step.</p>
+        <p><strong>Phase 2 (50% HP):</strong> Dual projectile arcs with overlapping tracking. Stay on the moving platforms at x=1,100 and x=3,400 — ground fighting in Phase 2 is nearly impossible. Shadow Strike between arc windows only.</p>
+        <p><strong>Phase 3 (25% HP):</strong> Maximum aggression. Deploy the Skunk Shot immediately. Use all remaining combo stack to push maximum damage in the 5s window. If you have no Skunk Shot left, mirror his movement from platform height and wait for a projectile pause to Shadow Strike in.</p>
+        <div class="boss-phases">
+          <span class="phase-pill phase-pill--normal">Phase 1: Single arc</span>
+          <span class="phase-pill phase-pill--enraged">Phase 2: Dual overlap arcs</span>
+          <span class="phase-pill phase-pill--desperate">Phase 3: Full aggression — Skunk Shot critical</span>
+        </div>
+        <div class="tip-box" style="margin-top:14px;">
+          <strong>Final boss tip:</strong> Malodor's attack damage is 2.7× the base value. A full hit at low HP is 40+ damage. Keep your health above 40 entering Phase 3 or you risk a one-shot.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 5. GOLDEN IDOL LOCATIONS -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="idols">
+      <div class="chapter-header">
+        <span class="chapter-number">05</span>
+        <h2>Golden Idol Locations</h2>
+      </div>
+
+      <p>Three idols per run stage. Boss stages contain none. All three in a single stage grant the maximum bonus: <strong>+25% speed, +30% damage</strong>. Each pickup also restores 30 HP instantly.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Stage</th><th>Idol 1</th><th>Idol 2</th><th>Idol 3</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1-1 Forest Outskirts</strong></td>
+              <td>Far left at the top of the Tall Oak vertical climb (x=50, high platform)</td>
+              <td>Canopy Run section, on the platform at x=4,400/4,500 mid-jump</td>
+              <td>Peak of the Great Ravine, top platform at x=6,300 / y=180</td>
+            </tr>
+            <tr>
+              <td><strong>2-1 Skunk City</strong></td>
+              <td>Urban District 1 — platform above the first moving elevator at x=560</td>
+              <td>Highway Bridge at x=3,500 — mid-bridge on the long platform</td>
+              <td>Billboard Run — upper rooftop at x=8,300 / y=400</td>
+            </tr>
+            <tr>
+              <td><strong>3-1 Mountain Dojo</strong></td>
+              <td>Training Hall upper platform at x=1,500 / y=370</td>
+              <td>Upper Walkway at x=5,600 — far left end of the long platform</td>
+              <td>Upper Ridge at x=11,250 — edge of the ridge ledge</td>
+            </tr>
+            <tr>
+              <td><strong>4-1 Crystal Caverns</strong></td>
+              <td>Cavern Entrance — top of the ascending staircase at x=980 / y=320</td>
+              <td>Underground River — platform at x=2,700 / y=490</td>
+              <td>Upper Ledges section at x=10,600 / y=330</td>
+            </tr>
+            <tr>
+              <td><strong>5-1 Cavern Depths</strong></td>
+              <td>On the first vertical moving column at x=1,700 — ride it to the top</td>
+              <td>Echo Chamber — on the first horizontal mover at x=5,700 / y=350</td>
+              <td>High Ledge Run at x=12,150 / y=430</td>
+            </tr>
+            <tr>
+              <td><strong>6-1 Neon Crossroads</strong></td>
+              <td>Neon Sign Hop — top of the small rooftop at x=1,000 / y=300</td>
+              <td>Rooftop Highway — upper ledge at x=6,950 / y=290</td>
+              <td>Antenna Perch at x=8,000 / y=350</td>
+            </tr>
+            <tr>
+              <td><strong>7-1 Crystal Ridge</strong></td>
+              <td>Early ridge — first major ascent platform</td>
+              <td>Mid-ridge peak — topmost crystal outcrop</td>
+              <td>Late ridge — approach to boss arena high ledge</td>
+            </tr>
+            <tr>
+              <td><strong>8-1 Abyssal Caverns</strong></td>
+              <td>Entrance — first major upper platform</td>
+              <td>Deep mid section — upper crystal ledge</td>
+              <td>Upper ledge approach — final high platform before boss trigger</td>
+            </tr>
+            <tr>
+              <td><strong>9-1 Neon Nexus</strong></td>
+              <td>Nexus entrance — high neon platform</td>
+              <td>Mid-nexus route — top of billboard stack</td>
+              <td>Late approach ledge</td>
+            </tr>
+            <tr>
+              <td><strong>10-1 Final Showdown</strong></td>
+              <td>Entrance area high platform (first vertical mover arc)</td>
+              <td>Mid-arena — moving platform at x=2,250 upper position</td>
+              <td>Final platform before boss trigger</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <strong>Routing tip:</strong> The full-set Idol bonus (+25% speed / +30% damage) lasts for the entire stage it was collected in and carries your stat baseline into the boss fight. Always prioritize idols before engaging dense enemy clusters — the boost makes those fights easier, not the other way around.
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 6. SCORING & COMBOS -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="scoring">
+      <div class="chapter-header">
+        <span class="chapter-number">06</span>
+        <h2>Scoring &amp; Combos</h2>
+      </div>
+
+      <h3>Base Point Values</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Enemy</th><th>Base Points</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Grunt</strong></td><td>100</td><td>—</td></tr>
+            <tr><td><strong>Speedster</strong></td><td>120</td><td>—</td></tr>
+            <tr><td><strong>Shield Tank</strong></td><td>150</td><td>—</td></tr>
+            <tr><td><strong>Kamikaze</strong></td><td>200</td><td>+500 per chain explosion depth when detonation triggers another Kamikaze</td></tr>
+            <tr><td><strong>Jumper</strong></td><td>200</td><td>—</td></tr>
+            <tr><td><strong>Thrower</strong></td><td>250</td><td>Highest base value enemy</td></tr>
+            <tr><td><strong>Golden Idol</strong></td><td>250</td><td>+2,000 for collecting all 3 in one stage (full set bonus)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Combo Multiplier System</h3>
+      <p>Kill within <strong>2 seconds</strong> of the last kill to extend the combo. Each kill adds one stack. Hitting multiple enemies with a single attack gives +1 stack per additional enemy hit, plus a flat <strong>+150 points</strong> per extra target.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Combo Count</th><th>Label</th><th>Score Multiplier</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1–2</td><td>—</td><td>1.0×</td></tr>
+            <tr><td>3</td><td class="tier-nice">NICE!</td><td>1.5×</td></tr>
+            <tr><td>5</td><td class="tier-great">GREAT!</td><td>2.0×</td></tr>
+            <tr><td>10</td><td class="tier-awesome">AWESOME!</td><td>3.25×</td></tr>
+            <tr><td>15</td><td class="tier-incredible">INCREDIBLE!</td><td>4.5×</td></tr>
+            <tr><td>20</td><td class="tier-unstoppable">UNSTOPPABLE!</td><td>5.75×</td></tr>
+            <tr><td>30</td><td class="tier-legendary">LEGENDARY!</td><td>8.25×</td></tr>
+            <tr><td>50+</td><td class="tier-godmode">GOD MODE!</td><td>10.0× (cap)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <strong>Score farming tip:</strong> Once you hit the 10× cap, every kill is worth 10× base value + multi-hit bonuses. Use Skunk Shot to paralyze a cluster of 3–4 enemies, then hit them all with one sweeping attack: that's (3 kills × base score × 10) + (2 × 150 multi-hit bonus) in a single button press.
+      </div>
+
+      <h3>Combo Timing Windows</h3>
+      <p>The standard combo window is <strong>2.0 seconds</strong>. Hitting multiple enemies in one attack adds <strong>+0.3s per extra enemy</strong> to the window, letting a clean sweep extend your streak well beyond 2 seconds. Use this to bridge between enemy clusters that aren't immediately adjacent.</p>
+
+      <h3>Chain Explosion Bonus</h3>
+      <p>When a Kamikaze's detonation triggers another Kamikaze nearby, you earn <strong>+500 points per chain depth</strong>. A three-Kamikaze chain is worth +1,500 bonus on top of their base points. In Worlds 8–10 where Kamikazes spawn in groups, deliberately holding off on killing one so it explodes into two others is a high-value play.</p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 7. POWER-UPS & ITEMS -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="powerups">
+      <div class="chapter-header">
+        <span class="chapter-number">07</span>
+        <h2>Power-Ups &amp; Items</h2>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>⚡ Speed Boost</h4>
+          <p>+50% movement speed for 8 seconds. Always placed in run stages before boss triggers. On bosses, use immediately at the start of a fight to out-pace their attack patterns in Phase 1.</p>
+        </div>
+        <div class="card">
+          <h4>⚔️ Damage Boost</h4>
+          <p>+75% damage for 10 seconds. Best used with a combo already active — entering the boost window at 20× combo means every hit is dealing roughly 17× base damage. Always grab before boss encounters.</p>
+        </div>
+        <div class="card">
+          <h4>💚 Health Regen</h4>
+          <p>+10 HP per second while active (6s duration, total +60 HP). Drops from enemies at 20% rate. Collect them immediately — they don't stack but they can refill you between bursts.</p>
+        </div>
+        <div class="card">
+          <h4>🏅 Golden Idol</h4>
+          <p>+250 points, +30 HP instant, 2s invulnerability, and a stacking combat bonus. Collect all three for the +2,000 point set bonus plus +25%/+30% speed/damage that carries into the boss fight.</p>
+        </div>
+        <div class="card">
+          <h4>💨 Skunk Shot Ammo</h4>
+          <p>Each pickup grants ammo for the Skunk Shot. Run stages contain two pickups each; boss stages one. Used wisely, each shot is worth a clean Phase 3 damage window on any boss. Never waste a shot on a single low-tier enemy.</p>
+        </div>
+        <div class="card">
+          <h4>❤️ Extra Life</h4>
+          <p>3% drop chance per enemy kill. Do not rely on farming this — keep HP above 40 at all times so any surprise drop is a bonus rather than a necessity.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 8. ACHIEVEMENTS -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="achievements">
+      <div class="chapter-header">
+        <span class="chapter-number">08</span>
+        <h2>Achievements</h2>
+      </div>
+
+      <p>All achievements are checked at the end of each run based on your run stats. There are 30 in total. Harder achievements carry more prestige weight toward your leaderboard title.</p>
+
+      <p class="ach-cat">Combat</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🩸</span><strong>First Blood</strong></td><td>Defeat 1 enemy</td><td>Automatic on any run.</td></tr>
+            <tr><td><span class="ach-icon">⚔️</span><strong>Enemy Slayer</strong></td><td>Defeat 50 enemies in one run</td><td>Achievable on most mid-run completions by World 3–4.</td></tr>
+            <tr><td><span class="ach-icon">☠️</span><strong>Exterminator</strong></td><td>Defeat 150 enemies in one run</td><td>Requires reaching at least World 6–7. Stay aggressive.</td></tr>
+            <tr><td><span class="ach-icon">💀</span><strong>Unstoppable</strong></td><td>Defeat 300 enemies in one run</td><td>Full campaign clear — naturally achieved on a complete run.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Combo Mastery</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🔥</span><strong>Combo Starter</strong></td><td>Reach a 5-hit combo</td><td>World 1 is sufficient — chain 5 Grunts on the Canopy Run.</td></tr>
+            <tr><td><span class="ach-icon">🔥</span><strong>Combo Adept</strong></td><td>Reach a 10-hit combo</td><td>Use the wide-open sections in World 2 (Highway Bridge) to chain 10.</td></tr>
+            <tr><td><span class="ach-icon">🌪️</span><strong>Combo Legend</strong></td><td>Reach a 20-hit combo</td><td>Skunk Shot a cluster of 4–5 enemies, then sweep. Extends the combo window.</td></tr>
+            <tr><td><span class="ach-icon">💫</span><strong>Combo God</strong></td><td>Reach a 50-hit combo</td><td>Requires World 8–10 enemy density. Use the extended window from multi-hit attacks to bridge sparse moments. Prioritize staying in motion.</td></tr>
+            <tr><td><span class="ach-icon">🗡️</span><strong>Cleave Master</strong></td><td>Land 10 multi-hit attacks</td><td>Any attack that hits 2+ enemies counts. Achievable in World 3+.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Score</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">💎</span><strong>High Scorer</strong></td><td>Score 50,000 points</td><td>Standard by World 4–5 with a reasonable combo chain.</td></tr>
+            <tr><td><span class="ach-icon">👑</span><strong>Score Attack</strong></td><td>Score 150,000 points</td><td>Full Idol sets + sustained 10× combo in Worlds 6–8.</td></tr>
+            <tr><td><span class="ach-icon">🏆</span><strong>Score Legend</strong></td><td>Score 500,000 points</td><td>Requires full campaign with near-perfect combo maintenance, all Idol sets, and Kamikaze chain bonuses in the final worlds.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Shadow Strike</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🌑</span><strong>Shadow Initiate</strong></td><td>Use Shadow Strike 10 times in a run</td><td>Activate it at every safe opportunity — free habit building.</td></tr>
+            <tr><td><span class="ach-icon">🌘</span><strong>Shadow Master</strong></td><td>Kill 25 enemies with Shadow Strike</td><td>Target weakened enemies with it — the kill credit requires the final hit to be Shadow Strike.</td></tr>
+            <tr><td><span class="ach-icon">👻</span><strong>Phantom Blade</strong></td><td>Kill 75 enemies with Shadow Strike</td><td>Needs a full campaign run with Shadow Strike as primary finisher. Use it to finish off Shield Tanks after their shield drops.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Skunk Spray</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">💨</span><strong>Spray Novice</strong></td><td>Fire 5 Skunk Shots in a run</td><td>Simple — grab every ammo pickup and fire on enemy clusters, not bosses.</td></tr>
+            <tr><td><span class="ach-icon">🦨</span><strong>Stink Bomber</strong></td><td>Skunk 20 enemies in a run</td><td>One Skunk Shot can hit multiple targets. Fire into dense clusters to hit 3–4 at once.</td></tr>
+            <tr><td><span class="ach-icon">☁️</span><strong>Toxic Cloud</strong></td><td>Skunk 50 enemies in a run</td><td>Requires gathering all ammo pickups across the full campaign and using each shot on maximum-density groups.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Aerial Combat</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🦅</span><strong>Air Juggler</strong></td><td>Defeat 5 enemies while airborne</td><td>Double jump over an enemy group and attack on the way down.</td></tr>
+            <tr><td><span class="ach-icon">✈️</span><strong>Sky Warrior</strong></td><td>Defeat 25 enemies while airborne</td><td>Commit to a jump-attack style in Worlds 5–7. Works well on Jumpers — hit them during your own jump.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Accuracy</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🎯</span><strong>Precision Striker</strong></td><td>75% accuracy after 20+ attacks</td><td>Only attack when an enemy is in range. Do not mash.</td></tr>
+            <tr><td><span class="ach-icon">🎯</span><strong>Sharpshooter</strong></td><td>90% accuracy after 50+ attacks</td><td>Requires disciplined play through at least three worlds. Wait for clear hitbox windows.</td></tr>
+            <tr><td><span class="ach-icon">💯</span><strong>Never Miss</strong></td><td>100% accuracy after 30+ attacks</td><td>Only attack when you are certain the hitbox connects. Shadow Strike counts — it rarely whiffs if you're close.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Boss Hunting</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🐲</span><strong>Boss Slayer</strong></td><td>Defeat your first boss</td><td>Automatic after World 1-2.</td></tr>
+            <tr><td><span class="ach-icon">⚒️</span><strong>Boss Crusher</strong></td><td>Defeat 3 bosses in one run</td><td>Reach World 3-2 and defeat Kyle, Iron Claw, and Burger Fury.</td></tr>
+            <tr><td><span class="ach-icon">🏹</span><strong>Boss Hunter</strong></td><td>Defeat 6 bosses in one run</td><td>Survive through World 6-2. Requires strong Idol and item management.</td></tr>
+            <tr><td><span class="ach-icon">🗡️</span><strong>Veteran Hunter</strong></td><td>Defeat 20 bosses across all runs</td><td>Accumulates over multiple sessions — just keep playing.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="ach-cat">Survival &amp; Precision</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Achievement</th><th>Condition</th><th>Tips</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ach-icon">🛡️</span><strong>Untouchable</strong></td><td>Complete a level without taking damage</td><td>Easiest on 1-1 Forest Outskirts — enemies are sparse and predictable. Use platform height advantage and attack from above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 9. SURVIVAL MODE -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <section class="chapter" id="survival">
+      <div class="chapter-header">
+        <span class="chapter-number">09</span>
+        <h2>Survival Mode</h2>
+      </div>
+
+      <p>Survival Mode puts you in a compact 2,800px arena with no exit and no campaign progression — just escalating enemy waves until you die. It uses its own leaderboard, and score is measured by wave reached rather than raw points.</p>
+
+      <h3>What Changes in Survival</h3>
+      <ul>
+        <li>Enemies spawn in structured waves rather than continuous streaming. A wave clears when all enemies are dead. A 4-second rest period follows before the next wave.</li>
+        <li>Enemy types escalate with each wave — later waves mix all six types simultaneously.</li>
+        <li>One life only. When you die, it's over.</li>
+        <li>A rewarded ad (Watch Ad — Revive) can restore you once per run if you choose to use it.</li>
+        <li>No Golden Idols, but Speed Boosts and Damage Boosts appear as the arena rewards.</li>
+      </ul>
+
+      <h3>Survival Strategy</h3>
+      <div class="tip-box">
+        <strong>Use the arena walls:</strong> Enemies funnel from both sides in Survival. The center of the arena is a kill zone — stand slightly off-center toward one wall, let enemies cluster to your left, then Shadow Strike through them in a sweeping line.
+      </div>
+      <div class="tip-box">
+        <strong>Kamikaze chains are your wave-clear:</strong> In later waves, 2–4 Kamikazes may appear. Do not kill them immediately — let them group up by staying mobile, then set off one detonation chain for massive score and fast wave clear.
+      </div>
+      <div class="warn-box">
+        <strong>Shield Tanks block the center:</strong> In later waves, Shield Tanks planted in the middle split the arena into two half-width lanes. Hit them from the side or use Skunk Shot to pause their cycle, then clear them before they set up permanently.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>Skunked: Way of the Spray — Strategy Guide · <a href="index.html">Play the game</a> · <a href="about.html">About</a> · &copy; 2026 Mephitideus Interactive</p>
+</footer>
+
+</body>
+</html>
