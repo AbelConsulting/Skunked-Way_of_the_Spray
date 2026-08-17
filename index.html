@@ -5255,6 +5255,7 @@
                                                 } catch (_) {}
                                                 statusEl.textContent = hint;
                                             }
+                                            else if (_buyRes.reason === 'store-connecting') statusEl.textContent = 'Still connecting to Google Play\u2026 please wait a few seconds and tap Buy again.';
                                             else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
                                             else if (_buyRes.reason === 'user-cancelled' || _buyRes.reason === '1') statusEl.textContent = 'Purchase cancelled.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + _buyRes.reason;
@@ -5950,6 +5951,9 @@
                                                         }
                                                     } catch (_) {}
                                                     fpStatus.textContent = hint;
+                                                } else if (res.reason === 'store-connecting') {
+                                                    fpStatus.style.color = '#FFB060';
+                                                    fpStatus.textContent = 'Still connecting to Google Play\u2026 please wait a few seconds and tap Buy again.';
                                                 } else if (res.reason === 'product-not-loaded') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';

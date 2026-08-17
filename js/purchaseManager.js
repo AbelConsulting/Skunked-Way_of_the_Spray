@@ -51,6 +51,13 @@ const PurchaseManager = (() => {
     let _ready         = false;    // True after initialize() resolves (success OR no-store)
     let _readyMode     = 'not-ready'; // How _markReady was reached: 'store-init'|'init-error'|'watchdog'|'no-store'
     let _storeInitError = null;    // Error message if store.initialize() threw/timed-out
+    // True once the REAL store.initialize() promise has settled (resolved or
+    // rejected), as opposed to `_ready`, which can flip true early via the 12s
+    // race timeout or the 22s watchdog while the real plugin call is still
+    // pending in the background. cordova-plugin-purchase's own store.update()
+    // is a silent no-op until its internal ready state is true, so calling it
+    // before this flips just wastes the self-heal window in _refreshProduct().
+    let _storeInitSettled = false;
     let _adFree        = _readEntitlementFromStorage();
     let _founderPass   = _readFounderPassFromStorage();
     let _product       = null;     // CdvPurchase.Product (remove_ads)
@@ -665,8 +672,15 @@ const PurchaseManager = (() => {
             // symptom early users reported). 12s is well past any healthy
             // init and below the patience threshold of someone tapping Buy.
             const initTimeoutMs = 12000;
+            // Keep a handle to the REAL initialize() promise so we can track
+            // when it actually settles, independent of the race below timing
+            // out early. Racing away from it does NOT cancel it — Play
+            // Billing keeps connecting in the background and will still
+            // fire productUpdated()/receiptUpdated() whenever it finishes.
+            const realInitPromise = store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]);
+            realInitPromise.then(() => { _storeInitSettled = true; }, () => { _storeInitSettled = true; });
             const initResult = await Promise.race([
-                store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]),
+                realInitPromise,
                 new Promise((_resolve, reject) => setTimeout(
                     () => reject(new Error('store.initialize timeout after ' + initTimeoutMs + 'ms')),
                     initTimeoutMs
@@ -746,22 +760,28 @@ const PurchaseManager = (() => {
     async function _refreshProduct(sku, timeoutMs = 6000) {
         const store = _store;
         if (!store) return null;
-        // Trigger a re-fetch. cordova-plugin-purchase exposes either store.update()
-        // or store.refresh(); call whichever exists. Both are safe no-ops if Play
-        // Billing is already syncing.
-        try {
-            if (typeof store.update === 'function') {
-                // returns a promise in newer plugin versions; ignore failures
-                Promise.resolve(store.update()).catch(() => {});
-            } else if (typeof store.refresh === 'function') {
-                Promise.resolve(store.refresh()).catch(() => {});
-            }
-        } catch (_) {}
+        // store.update() is a real re-fetch, but cordova-plugin-purchase makes
+        // it a silent no-op (just a console warning) until the plugin's OWN
+        // internal init has settled — calling it too early wastes this whole
+        // self-heal window for nothing. store.refresh() is deprecated and
+        // throws. So only call update() once the real store.initialize()
+        // promise has resolved (_storeInitSettled); until then the original
+        // initialize() call is still connecting in the background and will
+        // deliver pricing via productUpdated() on its own — just keep polling
+        // and fire the real update() the moment it becomes usable.
+        let _updateIssued = false;
+        const _tryUpdate = () => {
+            if (_updateIssued || !_storeInitSettled) return;
+            _updateIssued = true;
+            try { Promise.resolve(store.update()).catch(() => {}); } catch (_) {}
+        };
+        _tryUpdate();
         const deadline = Date.now() + timeoutMs;
         while (Date.now() < deadline) {
             const p = (store.get && store.get(sku)) ||
                       (sku === PRODUCT_ID_REMOVE_ADS ? _product : _founderProduct);
             if (p && p.pricing && p.pricing.price) return p;
+            _tryUpdate();
             await new Promise(r => setTimeout(r, 250));
         }
         // Last-ditch: return whatever we have, even without pricing — the order
@@ -800,7 +820,12 @@ const PurchaseManager = (() => {
             _log('remove_ads not in catalogue — forcing refresh before order.');
             product = await _refreshProduct(PRODUCT_ID_REMOVE_ADS);
         }
-        if (!product) return { ok: false, reason: 'product-not-loaded' };
+        if (!product) {
+            // If the plugin's own init never actually settled, this is a slow/
+            // still-connecting billing session, not a missing catalogue entry —
+            // retrying in a few seconds is likely to work once it does settle.
+            return { ok: false, reason: _storeInitSettled ? 'product-not-loaded' : 'store-connecting' };
+        }
 
         try {
             // CdvPurchase v13: order() returns Promise<IError | undefined>.
@@ -932,7 +957,9 @@ const PurchaseManager = (() => {
             _log('founder_pass not in catalogue — forcing refresh before order.');
             product = await _refreshProduct(PRODUCT_ID_FOUNDER_PASS);
         }
-        if (!product) return { ok: false, reason: 'product-not-loaded' };
+        if (!product) {
+            return { ok: false, reason: _storeInitSettled ? 'product-not-loaded' : 'store-connecting' };
+        }
 
         try {
             // CdvPurchase v13: order() returns Promise<IError | undefined>.
@@ -988,6 +1015,7 @@ const PurchaseManager = (() => {
             initialized: _initialized,
             ready: _ready,
             readyMode: _readyMode,
+            storeInitSettled: _storeInitSettled,
             storeInitError: _storeInitError || 'none',
             storePollDone: _storePollDone,
             adFree_localStorage: _readEntitlementFromStorage(),
