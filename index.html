@@ -13,6 +13,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <title>Skunked: Way of the Spray - Web Demo | Full Game on Steam & Google Play</title>
+    <!-- Native app gate: mark <html> before first paint so the web-only funnel
+         chrome (site-landing banner, store CTA buttons) never renders inside
+         the Capacitor WebView — the player is already inside the full app. -->
+    <script>(function(w,d){
+        var isNative = !!(w.Capacitor && typeof w.Capacitor.isNativePlatform === 'function' && w.Capacitor.isNativePlatform());
+        if (isNative) { d.documentElement.classList.add('is-native-app'); }
+    })(window,document);</script>
     <!-- Google Tag Manager (web only — skipped inside the Capacitor WebView so
          GTM-driven AdSense Auto Ads / anchor banners can't cover the game.
          Bumped on top of build cb4f78d / 58d5bc2 which already gated the
@@ -189,6 +196,15 @@
         .site-landing.is-playing {
             opacity: 0.15;
             transform: scale(0.97);
+        }
+        /* Native app (Capacitor/Google Play): the web-only conversion banner
+           and store CTAs make no sense inside the already-installed app and
+           were covering the game. Hide them entirely. */
+        .is-native-app .site-landing,
+        .is-native-app .game-over-cta--store-steam,
+        .is-native-app .game-over-cta--store-google,
+        .is-native-app #victory-store-bar {
+            display: none !important;
         }
 
         .site-landing__eyebrow {
