@@ -7147,6 +7147,11 @@
             (function wireDemoCapBanner() {
                 const banner = document.getElementById('demo-cap-banner');
                 if (!banner) return;
+                const isWebDemoCapMessageAllowed = () => !!(
+                    window.game &&
+                    window.game._isWebDemoRuntime &&
+                    window.game._isCappedWebDemo
+                );
                 const setVisible = (visible) => {
                     if (!banner) return;
                     if (visible) {
@@ -7157,20 +7162,24 @@
                 };
                 window.addEventListener('gameStateChange', (e) => {
                     const state = e && e.detail && e.detail.state;
-                    const isCapped = !!(window.game && window.game._isCappedWebDemo);
-                    if (state === 'GAME_OVER' && isCapped) {
+                    const isAllowed = isWebDemoCapMessageAllowed();
+                    if (!isAllowed) {
+                        setVisible(false);
+                        return;
+                    }
+                    if (state === 'GAME_OVER') {
                         setVisible(true);
                         banner.innerHTML = '<span class="demo-cap-banner__icon" aria-hidden="true">⚠</span><span>Demo cap reached: browser build includes the first 2 stages only. Continue on Steam or Google Play.</span>';
                         return;
                     }
-                    if (state === 'VICTORY' && isCapped) {
+                    if (state === 'VICTORY') {
                         setVisible(true);
                         banner.innerHTML = '<span class="demo-cap-banner__icon" aria-hidden="true">🏁</span><span>Demo completed: full campaign continues on Steam or Google Play.</span>';
                         return;
                     }
                     setVisible(false);
                 });
-                if (window.game && window.game._isCappedWebDemo) {
+                if (isWebDemoCapMessageAllowed()) {
                     setVisible(true);
                     banner.innerHTML = '<span class="demo-cap-banner__icon" aria-hidden="true">⚠</span><span>Demo cap reached: browser build includes the first 2 stages only. Continue on Steam or Google Play.</span>';
                 } else {
