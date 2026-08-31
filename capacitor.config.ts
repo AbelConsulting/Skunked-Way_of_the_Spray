@@ -9,9 +9,8 @@ const config: CapacitorConfig = {
   android: {
     // Disallow mixed content in production (HTTPS only)
     allowMixedContent: false,
-    // Use hardware acceleration for our canvas game
-    // TEMP: enabled for IAP diagnostics — set back to false before release
-    webContentsDebuggingEnabled: true,
+    // Never ship a debuggable WebView in production builds.
+    webContentsDebuggingEnabled: false,
   },
 
   server: {
