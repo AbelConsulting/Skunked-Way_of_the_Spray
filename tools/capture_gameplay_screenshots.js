@@ -61,10 +61,12 @@ const fs = require('fs');
       }
     });
   });
+  await hideOverlays();
 
   const canvasEl = page.locator('#game-canvas');
   const shot = async (name) => {
     const p = path.join(OUT, name);
+    await hideOverlays();
     await canvasEl.screenshot({ path: p });
     console.log('  captured', name);
   };
