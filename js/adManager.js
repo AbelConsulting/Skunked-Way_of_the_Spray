@@ -97,6 +97,13 @@ const AdManager = (() => {
     let _adShowing          = false; // true while a rewarded/interstitial is on screen
     let _pausedStateBeforeAd = null; // game.state value captured at pause time
 
+    // ── UMP (Google User Messaging Platform) consent state ─────────
+    // Google requires a certified CMP consent message for EEA/UK users;
+    // without gathering consent, AdMob serves no ads there at all.
+    let _canRequestAds           = true;    // false only when UMP says consent is required and missing
+    let _privacyOptionsRequired  = false;   // true → show a "Privacy options" entry in settings
+    let _consentStatus           = 'UNKNOWN';
+
     // ── Web (AdSense adBreak) rewarded state ─────────────────────────────
     let _webInitDone = false;
     let _webAdReady  = false; // true once adConfig onReady fires
@@ -276,6 +283,78 @@ const AdManager = (() => {
     }
 
     // ── Initialization ─────────────────────────────────────────────
+    // ── UMP consent flow ───────────────────────────────────────────
+    /**
+     * Gather user consent via the UMP SDK (Google-certified CMP) before
+     * loading any ads. Required for EEA/UK since Jan 2024 — the GDPR
+     * message itself is configured in AdMob Console → Privacy & messaging.
+     *
+     * Sets _canRequestAds / _privacyOptionsRequired. Never throws.
+     */
+    async function _gatherConsent() {
+        try {
+            let info = await _plugin.requestConsentInfo({});
+            _consentStatus = (info && info.status) || 'UNKNOWN';
+
+            // Show the consent form when required and available.
+            if (info && info.status === 'REQUIRED' && info.isConsentFormAvailable) {
+                try {
+                    info = await _plugin.showConsentForm();
+                    _consentStatus = (info && info.status) || _consentStatus;
+                } catch (e) {
+                    _warn('showConsentForm failed:', e);
+                }
+            }
+
+            // canRequestAds is authoritative (v7.0.3+). Fall back to status
+            // if an older plugin build omits it.
+            if (info && typeof info.canRequestAds === 'boolean') {
+                _canRequestAds = info.canRequestAds;
+            } else {
+                _canRequestAds = _consentStatus === 'OBTAINED' || _consentStatus === 'NOT_REQUIRED';
+            }
+            _privacyOptionsRequired = !!(info && info.privacyOptionsRequirementStatus === 'REQUIRED');
+            _log('Consent gathered: status=' + _consentStatus +
+                 ' canRequestAds=' + _canRequestAds +
+                 ' privacyOptions=' + _privacyOptionsRequired);
+        } catch (e) {
+            // UMP unreachable (offline, Play Services hiccup). Proceed with ad
+            // init — the Mobile Ads SDK itself enforces consent persisted from
+            // prior sessions, so this cannot serve non-compliant ads; it just
+            // avoids bricking ads worldwide on a transient UMP failure.
+            _warn('requestConsentInfo failed (continuing with prior consent):', e);
+            _canRequestAds = true;
+        }
+    }
+
+    /**
+     * Re-open the UMP privacy options form so EEA users can change their
+     * choices (Google requires this entry point whenever
+     * privacyOptionsRequirementStatus is REQUIRED). Safe no-op elsewhere.
+     * @returns {Promise<boolean>} true if the form was shown.
+     */
+    async function showPrivacyOptions() {
+        if (!_plugin || typeof _plugin.showPrivacyOptionsForm !== 'function') return false;
+        try {
+            await _plugin.showPrivacyOptionsForm();
+            // Choices may have changed — refresh consent state and reload ads.
+            await _gatherConsent();
+            if (_available && _canRequestAds) {
+                if (!_rewardedReady)     _prepareRewarded();
+                if (!_interstitialReady) _prepareInterstitial();
+            }
+            return true;
+        } catch (e) {
+            _warn('showPrivacyOptionsForm failed:', e);
+            return false;
+        }
+    }
+
+    /** True when the settings menu should surface a "Privacy options" entry. */
+    function isPrivacyOptionsRequired() {
+        return _privacyOptionsRequired;
+    }
+
     async function initialize() {
         if (_initialized) return;
         _initialized = true;
@@ -314,6 +393,9 @@ const AdManager = (() => {
                 return;
             }
 
+            // Gather UMP consent BEFORE initializing/loading any ads.
+            await _gatherConsent();
+
             await _plugin.initialize({
                 initializeForTesting: CONFIG.testing,
             });
@@ -321,9 +403,13 @@ const AdManager = (() => {
             _available = true;
             _log('AdMob initialized successfully (testing=' + CONFIG.testing + ').');
 
-            // Pre-load ads in the background
-            _prepareRewarded();
-            _prepareInterstitial();
+            // Pre-load ads in the background (only when consent allows requests)
+            if (_canRequestAds) {
+                _prepareRewarded();
+                _prepareInterstitial();
+            } else {
+                _log('Ad loading deferred — consent not (yet) granted.');
+            }
 
         } catch (e) {
             _warn('AdMob init failed:', e);
@@ -350,7 +436,7 @@ const AdManager = (() => {
     }
 
     async function _prepareRewarded() {
-        if (!_available || !_plugin) return;
+        if (!_available || !_plugin || !_canRequestAds) return;
         const prepare = _rewardedPrepareFn();
         if (typeof prepare !== 'function') {
             _warn('Rewarded prepare method not found on plugin (format=' + CONFIG.rewardedFormat + ').');
@@ -434,7 +520,7 @@ const AdManager = (() => {
 
     // ── Interstitial ─────────────────────────────────────────────────────
     async function _prepareInterstitial() {
-        if (!_available || !_plugin) return;
+        if (!_available || !_plugin || !_canRequestAds) return;
         try {
             await _plugin.prepareInterstitial({
                 adId: _getInterstitialId(),
@@ -628,6 +714,10 @@ const AdManager = (() => {
         showRewarded,
         onStageComplete,
         resetSession,
+        /** UMP privacy options — re-open the consent form (EEA users). */
+        showPrivacyOptions,
+        /** True when Google requires a "Privacy options" entry in settings. */
+        isPrivacyOptionsRequired,
         /** True while a full-screen ad (rewarded/interstitial) is on screen. */
         isAdShowing() { return _adShowing; },
         /** True if ads are available on this platform. */

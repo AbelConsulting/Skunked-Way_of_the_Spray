@@ -4238,6 +4238,13 @@
                             </div>
                             <p id="remove-ads-status" class="settings-card-status"></p>
                         </div>
+                        <!-- Ad privacy options (UMP) — hidden unless Google requires the
+                             entry point for this user (EEA/UK GDPR message, regulated US states). -->
+                        <div class="menu-settings-card" id="ad-privacy-card" style="display:none">
+                            <h3>&#128274; Ad Privacy</h3>
+                            <p>Manage your consent choices for personalized ads.</p>
+                            <button id="ad-privacy-options-btn" class="menu-btn" type="button">&#9881;&#65039; Privacy Options</button>
+                        </div>
                         <!-- IAP Diagnostic Panel — hidden until 5 taps on the Remove Ads title -->
                         <div class="menu-settings-card" id="iap-diag-card" style="display:none;border:1px solid rgba(255,200,0,0.35);background:rgba(20,14,4,0.92)">
                             <h3 style="color:#FFD700;margin-bottom:8px">&#128270; IAP Diagnostics</h3>
@@ -5130,6 +5137,35 @@
                                     const v = menuMusicSlider.value / 100;
                                     if (menuMusicVal) menuMusicVal.textContent = menuMusicSlider.value + '%';
                                     try { if (window.game && window.game.audioManager) { window.game.audioManager._pendingMusicVol = v; window.game.audioManager.setMusicVolume && window.game.audioManager.setMusicVolume(v); } } catch (e) {}
+                                });
+                            }
+                        } catch (e) {}
+
+                        // --- Ad privacy options (UMP consent re-open) ------
+                        // Google requires a way to change consent choices when
+                        // privacyOptionsRequirementStatus is REQUIRED (EEA/UK).
+                        // AdManager.initialize() runs async at startup, so poll
+                        // briefly for the flag instead of checking once.
+                        try {
+                            const privacyCard = document.getElementById('ad-privacy-card');
+                            const privacyBtn  = document.getElementById('ad-privacy-options-btn');
+                            if (privacyCard && privacyBtn && window.PLATFORM !== 'steam') {
+                                let tries = 0;
+                                const privacyPoll = setInterval(() => {
+                                    tries++;
+                                    try {
+                                        if (window.AdManager && AdManager.isPrivacyOptionsRequired && AdManager.isPrivacyOptionsRequired()) {
+                                            privacyCard.style.display = '';
+                                            clearInterval(privacyPoll);
+                                        } else if (tries > 30) { // give up after ~30s
+                                            clearInterval(privacyPoll);
+                                        }
+                                    } catch (e) { clearInterval(privacyPoll); }
+                                }, 1000);
+                                privacyBtn.addEventListener('click', async () => {
+                                    privacyBtn.disabled = true;
+                                    try { await AdManager.showPrivacyOptions(); } catch (e) {}
+                                    privacyBtn.disabled = false;
                                 });
                             }
                         } catch (e) {}
