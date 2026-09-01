@@ -354,11 +354,11 @@ const PurchaseManager = (() => {
             // FounderManager handles its own no-op if already granted.
             try {
                 if (_founderPass && window.FounderManager && typeof FounderManager.grant === 'function') {
-                    FounderManager.grant('founder-pass-' + source);remote-revoke' && source !== '
+                    FounderManager.grant('founder-pass-' + source);
                 }
             } catch (e) { _warn('FounderManager.grant failed:', e); }
             // Mirror to server (skip if this flip CAME from the server).
-            if (_founderPass && source !== 'remote-restore' && source !== 'storage') {
+            if (_founderPass && source !== 'remote-restore' && source !== 'remote-revoke' && source !== 'storage') {
                 _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
             }
             _founderListeners.forEach(fn => { try { fn(_founderPass); } catch (e) {} });
