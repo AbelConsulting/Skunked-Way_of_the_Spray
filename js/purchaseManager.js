@@ -262,14 +262,18 @@ const PurchaseManager = (() => {
         const pending = _readPendingPurchases()[sku] || {};
         const purchaseToken = (opts && opts.purchaseToken) || _lastPurchaseToken[sku] || pending.purchaseToken || '';
         const productId     = (opts && opts.productId) || pending.productId || sku;
+        if (!purchaseToken) {
+            _lastRemotePushStatus = 'deferred: missing-purchase-token sku=' + sku;
+            return;
+        }
         try {
             api.setEntitlement(pid, sku, { purchaseToken, productId }).then(ok => {
                 if (ok) {
-                    _lastRemotePushStatus = 'ok: ' + sku + (purchaseToken ? ' verified-token-sent' : ' no-token');
+                    _lastRemotePushStatus = 'ok: ' + sku + ' verified-token-sent';
                     _clearPendingPurchase(sku);
-                    _log('Mirrored entitlement to server:', sku, purchaseToken ? '(verified)' : '(unverified)');
+                    _log('Mirrored entitlement to server:', sku, '(verified)');
                 } else {
-                    _lastRemotePushStatus = 'failed: ' + sku + (purchaseToken ? ' token-present' : ' no-token');
+                    _lastRemotePushStatus = 'failed: ' + sku + ' token-present';
                     _warn('Server entitlement push reported failure:', sku);
                 }
             }).catch(e => {
@@ -291,21 +295,25 @@ const PurchaseManager = (() => {
         try {
             const remote = await api.getEntitlements(pid);
             if (!remote) return;
-            // Only ever mirror remote -> local TRUE values; we never revoke
-            // a local entitlement based on a missing server record (avoids
-            // first-launch-after-offline-purchase regressions).
-            if (remote.adFree && !_adFree) {
+            // Explicit Play refund/cancel (RTDN) may clear server ownership.
+            // Missing server records still do not revoke local unlocks (offline purchase).
+            if (remote.adFreeRevoked && _adFree) {
+                _log('Revoked ad-free from server (Play refund/cancel)');
+                _setAdFree(false, 'remote-revoke');
+            } else if (remote.adFree && !_adFree) {
                 _log('Restored ad-free from server (player ' + pid.slice(0, 6) + '…)');
                 _setAdFree(true, 'remote-restore');
             }
-            if (remote.founderPass && !_founderPass) {
+            if (remote.founderPassRevoked && _founderPass) {
+                _log('Revoked founder pass from server (Play refund/cancel)');
+                _setFounderPassOwned(false, 'remote-revoke');
+            } else if (remote.founderPass && !_founderPass) {
                 _log('Restored founder pass from server (player ' + pid.slice(0, 6) + '…)');
                 _setFounderPassOwned(true, 'remote-restore');
             }
-            // If we own something locally that the server doesn't, push it up
-            // so a fresh device gets it next time.
-            if (_adFree && !remote.adFree) _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
-            if (_founderPass && !remote.founderPass) _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
+            // Re-push only when we still have a Play purchase token to verify.
+            if (_adFree && !remote.adFree && !remote.adFreeRevoked) _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
+            if (_founderPass && !remote.founderPass && !remote.founderPassRevoked) _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
         } catch (e) {
             _warn('Remote entitlement pull failed:', e);
         }
@@ -346,7 +354,7 @@ const PurchaseManager = (() => {
             // FounderManager handles its own no-op if already granted.
             try {
                 if (_founderPass && window.FounderManager && typeof FounderManager.grant === 'function') {
-                    FounderManager.grant('founder-pass-' + source);
+                    FounderManager.grant('founder-pass-' + source);remote-revoke' && source !== '
                 }
             } catch (e) { _warn('FounderManager.grant failed:', e); }
             // Mirror to server (skip if this flip CAME from the server).
@@ -375,7 +383,7 @@ const PurchaseManager = (() => {
                 }
             } catch (e) { _warn('AdManager reconcile failed:', e); }
             // Mirror to server (skip if this flip CAME from the server).
-            if (_adFree && source !== 'remote-restore' && source !== 'storage') {
+            if (_adFree && source !== 'remote-restore' && source !== 'remote-revoke' && source !== 'storage') {
                 _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
             }
             // Notify subscribers

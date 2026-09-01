@@ -261,6 +261,8 @@ export async function getEntitlements(playerId) {
     return {
       adFree:           data.adFree === true,
       founderPass:      data.founderPass === true,
+      adFreeRevoked:    data.adFreeRevoked === true,
+      founderPassRevoked: data.founderPassRevoked === true,
       adFreeSince:      typeof data.adFreeSince === 'string'      ? data.adFreeSince      : null,
       founderPassSince: typeof data.founderPassSince === 'string' ? data.founderPassSince : null,
     };

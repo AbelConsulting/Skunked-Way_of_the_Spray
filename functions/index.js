@@ -4,25 +4,21 @@
  */
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const iap = require("./iap");
 
 admin.initializeApp();
 const db = admin.firestore();
 const SCORES_COLLECTION = "scores";
 
-// ── Google Play receipt verification (optional) ─────────────────────────────
+// ── Google Play receipt verification ────────────────────────────────────────
 // Active when ALL of the following are true:
 //   1. The `googleapis` package is installed in functions/.
-//   2. `PLAY_PACKAGE_NAME` env var is set (e.g. com.skunksquad.skunkfu).
-//   3. A service account key is available — either via Application Default
-//      Credentials (preferred on Cloud Functions) or `GOOGLE_PLAY_SA_JSON`
-//      env var containing the service account JSON.
-// When `STRICT_PURCHASE_VERIFY=1` is set, setEntitlement REJECTS any push
-// that lacks a verifiable purchaseToken. Otherwise verification is best-
-// effort: tokens that verify get a `verified:true` flag stamped on the
-// Firestore doc, and unverified tokens still flip the entitlement (the
-// existing rate-limit + GPGS playerId trust model).
-const PLAY_PACKAGE_NAME = process.env.PLAY_PACKAGE_NAME || "";
-const STRICT_PURCHASE_VERIFY = process.env.STRICT_PURCHASE_VERIFY === "1";
+//   2. A Play package name is known (PLAY_PACKAGE_NAME or the Android app id).
+//   3. A service account key is available — ADC or `GOOGLE_PLAY_SA_JSON`.
+// STRICT_PURCHASE_VERIFY defaults ON. Set STRICT_PURCHASE_VERIFY=0 only as an
+// emergency rollback to the old honor-system grant path.
+const PLAY_PACKAGE_NAME = process.env.PLAY_PACKAGE_NAME || "com.skunksquad.skunkfu";
+const STRICT_PURCHASE_VERIFY = process.env.STRICT_PURCHASE_VERIFY !== "0";
 let _playApi = null;
 let _playApiLoaded = false;
 async function _getPlayApi() {
@@ -89,6 +85,34 @@ async function verifyPlayPurchase(productId, purchaseToken) {
   } catch (e) {
     const status = e && e.response && e.response.status;
     return { ok: false, reason: "play_api_error", status, message: e && e.message };
+  }
+}
+
+/**
+ * Acknowledge a one-time product so Play does not auto-refund after 3 days.
+ * Already-acknowledged tokens are treated as success.
+ */
+async function acknowledgePlayPurchase(productId, purchaseToken) {
+  const api = await _getPlayApi();
+  if (!api) return { ok: false, reason: "verifier_unavailable" };
+  if (!PLAY_PACKAGE_NAME || !productId || !purchaseToken) {
+    return { ok: false, reason: "missing_args" };
+  }
+  try {
+    await api.purchases.products.acknowledge({
+      packageName: PLAY_PACKAGE_NAME,
+      productId,
+      token: purchaseToken,
+      requestBody: {},
+    });
+    return { ok: true };
+  } catch (e) {
+    const status = e && e.response && e.response.status;
+    const message = (e && e.message) || "";
+    if (status === 400 || /already acknowledged/i.test(message)) {
+      return { ok: true, already: true };
+    }
+    return { ok: false, reason: "ack_failed", status, message };
   }
 }
 
@@ -331,29 +355,12 @@ exports.submitScore = onRequest({ region: "us-central1" }, async (req, res) => {
 });
 
 // ── Entitlements (cross-device sync) ────────────────────────────────────────
-// Stored at /entitlements/{playerId} where playerId is the Google Play Games
-// player ID returned by PlayGamesServices.signIn().
-//
-// Document shape:
-//   {
-//     adFree:       bool,
-//     founderPass:  bool,
-//     adFreeSince:       Timestamp (server),
-//     founderPassSince:  Timestamp (server),
-//     updatedAt:    Timestamp (server)
-//   }
-//
-// Verification model (pragmatic): the writer is trusted; rate-limited per IP
-// and per playerId. SKUs are whitelisted. The playerId itself is an opaque
-// 21-char Google Play Games identifier — guessing another player's ID is
-// non-trivial. Upgrade path: replace the trust model with server-side Google
-// Play Developer API receipt verification.
-const ENTITLEMENTS_COLLECTION = "entitlements";
-const VALID_SKUS = new Set(["remove_ads", "founder_pass"]);
-const SKU_TO_FIELD = {
-  remove_ads:   { ownedField: "adFree",      sinceField: "adFreeSince" },
-  founder_pass: { ownedField: "founderPass", sinceField: "founderPassSince" },
-};
+// Stored at /entitlements/{playerId}. Grants require a Google Play
+// purchaseToken that verifies + binds uniquely (token hash and orderId).
+// Refunds/cancels arrive via playRtdn (Play RTDN / Pub/Sub).
+const ENTITLEMENTS_COLLECTION = iap.ENTITLEMENTS_COLLECTION;
+const VALID_SKUS = iap.VALID_SKUS;
+const SKU_TO_FIELD = iap.SKU_TO_FIELD;
 
 // Per-playerId rate limit (shorter window than the score endpoint — entitlements
 // are written rarely, so anything more than a handful per hour is suspicious).
@@ -374,9 +381,7 @@ function checkEntitlementRate(playerId) {
 }
 
 function isValidPlayerId(s) {
-  // Google Play Games IDs are alphanumeric (sometimes with underscores), 16-32
-  // chars in practice. Be liberal but bounded.
-  return typeof s === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(s);
+  return iap.isValidPlayerId(s);
 }
 
 // GET /getEntitlements?playerId=...
@@ -398,13 +403,15 @@ exports.getEntitlements = onRequest({ region: "us-central1" }, async (req, res) 
     }
     const doc = await db.collection(ENTITLEMENTS_COLLECTION).doc(playerId).get();
     if (!doc.exists) {
-      res.json({ adFree: false, founderPass: false });
+      res.json({ adFree: false, founderPass: false, adFreeRevoked: false, founderPassRevoked: false });
       return;
     }
     const d = doc.data() || {};
     res.json({
       adFree:           d.adFree === true,
       founderPass:      d.founderPass === true,
+      adFreeRevoked:    d.adFreeRevoked === true,
+      founderPassRevoked: d.founderPassRevoked === true,
       adFreeSince:      d.adFreeSince      ? d.adFreeSince.toDate().toISOString()      : null,
       founderPassSince: d.founderPassSince ? d.founderPassSince.toDate().toISOString() : null,
     });
@@ -414,23 +421,16 @@ exports.getEntitlements = onRequest({ region: "us-central1" }, async (req, res) 
   }
 });
 
-// POST /setEntitlement  body:{ playerId, sku, purchaseToken?, productId? }
-// Always sets the entitlement to TRUE. Revocation is intentionally not
-// supported via this endpoint (refunds should be handled out-of-band).
-//
-// If `purchaseToken` + `productId` are supplied AND the Play Developer API
-// is configured, the token is verified before the entitlement flip and the
-// resulting Firestore doc gets `verified: true` (plus the orderId). When
-// `STRICT_PURCHASE_VERIFY=1`, missing/invalid tokens are rejected outright.
+// POST /setEntitlement  body:{ playerId, sku, purchaseToken, productId? }
+// Grants require a Play purchaseToken. Tokens and orderIds bind to one
+// playerId. Refunds are handled by playRtdn, not this endpoint.
 exports.setEntitlement = onRequest({ region: "us-central1", secrets: ["GOOGLE_PLAY_SA_JSON"] }, async (req, res) => {
   if (setCors(req, res)) return;
   if (req.method !== "POST") {
     res.status(405).json({ error: "method_not_allowed" });
     return;
   }
-  // App Check — rejects non-app callers when ENFORCE_APP_CHECK=1
   if (!(await checkAppCheck(req, res))) return;
-  // IP rate-limit (re-uses score limiter)
   const ip = getClientIp(req);
   if (!checkRateLimit(ip)) {
     res.status(429).json({ error: "rate_limited" });
@@ -450,53 +450,126 @@ exports.setEntitlement = onRequest({ region: "us-central1", secrets: ["GOOGLE_PL
     res.status(400).json({ error: "bad_sku" });
     return;
   }
+  if (!iap.isValidPurchaseToken(purchaseToken)) {
+    res.status(400).json({ error: "purchase_token_required" });
+    return;
+  }
   if (!checkEntitlementRate(playerId)) {
     res.status(429).json({ error: "rate_limited_player" });
     return;
   }
 
-  // Optional Play receipt verification.
-  let verification = null;
-  if (purchaseToken) {
-    verification = await verifyPlayPurchase(productId, purchaseToken);
-    if (!verification.ok) {
-      console.warn("[setEntitlement] verification failed:", sku, verification);
-      if (STRICT_PURCHASE_VERIFY) {
-        res.status(403).json({ error: "verification_failed", reason: verification.reason });
-        return;
-      }
+  const verification = await verifyPlayPurchase(productId, purchaseToken);
+  if (!verification.ok) {
+    console.warn("[setEntitlement] verification failed:", sku, verification);
+    if (STRICT_PURCHASE_VERIFY || verification.reason !== "verifier_unavailable") {
+      const status = verification.reason === "verifier_unavailable" ? 503 : 403;
+      res.status(status).json({ error: "verification_failed", reason: verification.reason });
+      return;
     }
-  } else if (STRICT_PURCHASE_VERIFY) {
-    res.status(400).json({ error: "purchase_token_required" });
-    return;
   }
 
-  const { ownedField, sinceField } = SKU_TO_FIELD[sku];
   try {
-    const ref = db.collection(ENTITLEMENTS_COLLECTION).doc(playerId);
-    const snap = await ref.get();
-    const update = {
-      [ownedField]: true,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-    // Only stamp sinceField on first grant so we preserve the original date
-    // even if the client re-pushes.
-    if (!snap.exists || snap.data()[ownedField] !== true) {
-      update[sinceField] = admin.firestore.FieldValue.serverTimestamp();
+    if (verification.ok) {
+      await iap.grantVerifiedPurchase(db, admin.firestore.FieldValue, {
+        playerId,
+        sku,
+        productId,
+        purchaseToken,
+        orderId: verification.orderId || "",
+      });
+      if (verification.ackState !== 1) {
+        const ack = await acknowledgePlayPurchase(productId, purchaseToken);
+        if (!ack.ok) {
+          console.warn("[setEntitlement] acknowledge failed:", sku, ack);
+        }
+      }
+    } else {
+      // STRICT_PURCHASE_VERIFY=0 emergency path only.
+      const { ownedField, sinceField } = SKU_TO_FIELD[sku];
+      const ref = db.collection(ENTITLEMENTS_COLLECTION).doc(playerId);
+      const snap = await ref.get();
+      const update = {
+        [ownedField]: true,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      if (!snap.exists || snap.data()[ownedField] !== true) {
+        update[sinceField] = admin.firestore.FieldValue.serverTimestamp();
+      }
+      await ref.set(update, { merge: true });
     }
-    if (verification && verification.ok) {
-      update[`${ownedField}Verified`] = true;
-      if (verification.orderId) update[`${ownedField}OrderId`] = verification.orderId;
-    }
-    await ref.set(update, { merge: true });
     res.json({
       success: true,
       sku,
       playerId,
-      verified: !!(verification && verification.ok),
+      verified: !!verification.ok,
     });
   } catch (e) {
+    if (e && e.code === "token_bound_other_player") {
+      res.status(409).json({ error: "token_bound_other_player" });
+      return;
+    }
+    if (e && e.code === "order_bound_other_player") {
+      res.status(409).json({ error: "order_bound_other_player" });
+      return;
+    }
+    if (e && e.code === "purchase_revoked") {
+      res.status(403).json({ error: "purchase_revoked" });
+      return;
+    }
     console.error("setEntitlement error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// POST /playRtdn — Google Play Real-Time Developer Notifications (Pub/Sub push).
+// Configure Play Console → Monetization setup → Real-time developer notifications
+// to a Pub/Sub topic that pushes to this HTTPS function.
+exports.playRtdn = onRequest({ region: "us-central1", secrets: ["GOOGLE_PLAY_SA_JSON"] }, async (req, res) => {
+  if (req.method === "GET") {
+    res.json({ status: "ok", endpoint: "playRtdn" });
+    return;
+  }
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "method_not_allowed" });
+    return;
+  }
+
+  const notification = iap.parseRtdnEnvelope(req.body);
+  if (!notification) {
+    res.status(400).json({ error: "bad_rtdn" });
+    return;
+  }
+  if (notification.packageName && notification.packageName !== PLAY_PACKAGE_NAME) {
+    res.status(400).json({ error: "bad_package" });
+    return;
+  }
+
+  const actions = iap.revokeActionsFromRtdn(notification);
+  try {
+    const results = [];
+    for (const action of actions) {
+      const hash = iap.tokenHash(action.purchaseToken);
+      const purchaseSnap = await db.collection(iap.PURCHASES_COLLECTION).doc(hash).get();
+      const sku = action.sku || (purchaseSnap.exists && purchaseSnap.get("sku")) || "";
+      if (sku && iap.VALID_SKUS.has(sku)) {
+        const live = await verifyPlayPurchase(sku, action.purchaseToken);
+        if (live.ok && live.purchaseState === 0 && action.reason !== "voided") {
+          results.push({ reason: action.reason, skipped: "still_purchased" });
+          continue;
+        }
+      }
+      const result = await iap.revokePurchaseByToken(
+        db,
+        admin.firestore.FieldValue,
+        action.purchaseToken,
+        sku
+      );
+      results.push({ reason: action.reason, ...result });
+    }
+    res.json({ success: true, revoked: results.length, results });
+  } catch (e) {
+    console.error("playRtdn error:", e);
     res.status(500).json({ error: "server_error" });
   }
 });

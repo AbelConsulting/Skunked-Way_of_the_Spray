@@ -15,6 +15,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Play purchase token bindings (sha256(token) doc id) and orderId index.
+    match /purchases/{tokenHash} {
+      allow read, write: if false;
+    }
+    match /purchaseOrders/{orderId} {
+      allow read, write: if false;
+    }
+
     // Default: deny everything else
     match /{document=**} {
       allow read, write: if false;

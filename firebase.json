@@ -28,6 +28,18 @@
         "function": "submitScore"
       },
       {
+        "source": "/api/entitlements",
+        "function": "getEntitlements"
+      },
+      {
+        "source": "/api/set-entitlement",
+        "function": "setEntitlement"
+      },
+      {
+        "source": "/api/play-rtdn",
+        "function": "playRtdn"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
