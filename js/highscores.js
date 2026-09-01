@@ -418,9 +418,11 @@ try {
     try {
       const entries = await window.electronAPI.getLeaderboard(STEAM_LEADERBOARD, MAX_SCORES);
       if (!Array.isArray(entries)) return [];
-      return entries.map(e => ({
+      return entries.map((e, i) => ({
         name: e.name || '???',
         score: Number(e.score) || 0,
+        rank: Number(e.rank) || (i + 1),
+        isSelf: !!e.isSelf,
       }));
     } catch (e) {
       console.warn('Failed to load Steam leaderboard', e);
@@ -777,15 +779,20 @@ try {
       const tabs = document.createElement('div');
       tabs.className = 'scoreboard-tabs';
       tabs.setAttribute('role', 'tablist');
-      const tabDefs = [
-        { period: 'week',    label: 'This Week' },
-        { period: 'month',   label: 'This Month' },
-        { period: 'alltime', label: 'All Time' },
-      ];
-      // Desktop/Steam build: add a Steam friends+global tab.
-      if (_isSteamDesktop()) {
-        tabDefs.push({ period: 'steam', label: 'Steam' });
-      }
+      const steamDesktop = _isSteamDesktop();
+      const defaultPeriod = steamDesktop ? 'steam' : 'alltime';
+      const tabDefs = steamDesktop
+        ? [
+            { period: 'steam',   label: 'Steam' },
+            { period: 'week',    label: 'Web Week' },
+            { period: 'month',   label: 'Web Month' },
+            { period: 'alltime', label: 'Web All Time' },
+          ]
+        : [
+            { period: 'week',    label: 'This Week' },
+            { period: 'month',   label: 'This Month' },
+            { period: 'alltime', label: 'All Time' },
+          ];
       for (const def of tabDefs) {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -793,7 +800,7 @@ try {
         btn.dataset.period = def.period;
         btn.textContent = def.label;
         btn.setAttribute('role', 'tab');
-        if (def.period === 'alltime') {
+        if (def.period === defaultPeriod) {
           btn.classList.add('is-active');
           btn.setAttribute('aria-selected', 'true');
         } else {
@@ -820,7 +827,9 @@ try {
         container._scoreboardPeriod = btn.dataset.period;
         _fillScoreboard(container);
       });
-
+{
+      container._scoreboardPeriod = _isSteamDesktop() ? 'steam' : 'alltime';
+    }
       refreshBtn.addEventListener('click', () => { _fillScoreboard(container); });
     }
 
@@ -841,7 +850,9 @@ try {
     const updatedEl = container.querySelector('.scoreboard-updated');
     const refreshBtn = container.querySelector('.scoreboard-refresh');
 
-    // Loading state (preserves header + tabs so controls stay visible)
+    // Loading state period === 'steam'
+      ? '<div class="scoreboard-state scoreboard-state--loading">Loading Steam scores…</div>'
+      : (preserves header + tabs so controls stay visible)
     if (refreshBtn) refreshBtn.disabled = true;
     list.innerHTML = '<div class="scoreboard-state scoreboard-state--loading">Loading global scores…</div>';
     if (updatedEl) updatedEl.textContent = '';
@@ -899,13 +910,13 @@ try {
         const entry = document.createElement('div');
         entry.className = 'scoreboard-entry';
         if (i === 0) entry.classList.add('gold');
-        if (i === 1) entry.classList.add('silver');
-        if (i === 2) entry.classList.add('bronze');
-        if (myName && scoreData.name && scoreData.name.toLowerCase() === myName) {
+        if (scoreData.isSelf || (myName && scoreData.name && scoreData.name.toLowerCase() === myName)) {
           entry.classList.add('scoreboard-entry--me');
         }
 
         const rank = document.createElement('div');
+        rank.className = 'scoreboard-rank';
+        rank.textContent = `${Number(scoreData.rank) || (i + 1)eElement('div');
         rank.className = 'scoreboard-rank';
         rank.textContent = `${i + 1}.`;
 

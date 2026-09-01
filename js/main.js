@@ -1605,8 +1605,16 @@ class GameApp {
             try { if (window.FounderManager && typeof FounderManager.initialize === 'function') FounderManager.initialize(); } catch (e) { __err('main', e); }
 
             // Steam: push any locally-unlocked achievements to Steam on startup
-            // (idempotent — steamworks activate() is a no-op on already-unlocked ones)
-            try { if (window.Highscores && typeof Highscores.syncAchievementsToSteam === 'function') Highscores.syncAchievementsToSteam(); } catch (e) { __err('main', e); }
+            // (idempotent — steamworks activate() is a no-op on already-unlocked ones).
+            // Retry once after Steam has had time to finish RequestCurrentStats.
+            try {
+                if (window.Highscores && typeof Highscores.syncAchievementsToSteam === 'function') {
+                    Highscores.syncAchievementsToSteam();
+                    setTimeout(() => {
+                        try { Highscores.syncAchievementsToSteam(); } catch (e) { __err('main', e); }
+                    }, 2500);
+                }
+            } catch (e) { __err('main', e); }
 
             // Initialize AdMob (no-ops on web, only runs on native Android)
             try { if (window.AdManager && typeof AdManager.initialize === 'function') AdManager.initialize(); } catch (e) { __err('main', e); }

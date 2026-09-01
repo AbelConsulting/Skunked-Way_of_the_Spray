@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // ── Achievements ────────────────────────────────────────────────
     /**
      * Unlock a Steam achievement by its API name.
-     * @param {string} id  Steam achievement API name (e.g. "ACH_FIRST_KILL")
+     * @param {string} id  Steam achievement API name (must match Steamworks, e.g. "first_kill")
      * @returns {Promise<boolean>}
      */
     unlockAchievement: (id) => ipcRenderer.invoke('steam:unlockAchievement', id),

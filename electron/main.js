@@ -108,6 +108,110 @@ function initSteam() {
     }
 }
 
+function storeUserStats() {
+    if (!steamClient || !steamClient.stats) return false;
+    try {
+        if (typeof steamClient.stats.store === 'function') return !!steamClient.stats.store();
+        if (typeof steamClient.stats.storeStats === 'function') return !!steamClient.stats.storeStats();
+    } catch (e) {
+        console.warn('[Steam] storeStats:', e.message);
+    }
+    return false;
+}
+
+function getStatInt(name) {
+    if (!steamClient || !steamClient.stats) return 0;
+    try {
+        if (typeof steamClient.stats.getInt === 'function') return steamClient.stats.getInt(name) || 0;
+        if (typeof steamClient.stats.getStatInt === 'function') return steamClient.stats.getStatInt(name) || 0;
+    } catch (_) { /* missing stat */ }
+    return 0;
+}
+
+function setStatInt(name, value) {
+    if (!steamClient || !steamClient.stats) return false;
+    try {
+        if (typeof steamClient.stats.setInt === 'function') return !!steamClient.stats.setInt(name, value);
+        if (typeof steamClient.stats.setStatInt === 'function') return !!steamClient.stats.setStatInt(name, value);
+    } catch (_) { return false; }
+    return false;
+}
+
+function syncPersonalBestStat(statName, score) {
+    const cur = getStatInt(statName);
+    if (score <= cur) return { ok: true, isNewBest: false };
+    if (!setStatInt(statName, score)) return { ok: false, isNewBest: false };
+    storeUserStats();
+    return { ok: true, isNewBest: true };
+}
+
+function pickLeaderboardFn(obj, names) {
+    if (!obj) return null;
+    for (const name of names) {
+        if (typeof obj[name] === 'function') return obj[name].bind(obj);
+    }
+    return null;
+}
+
+async function uploadSteamLeaderboardScore(leaderboardName, score) {
+    const lbApi = steamClient && steamClient.leaderboard;
+    if (!lbApi) return { ok: false };
+    try {
+        const find = pickLeaderboardFn(lbApi, ['findOrCreate', 'findOrCreateLeaderboard', 'find']);
+        const upload = pickLeaderboardFn(lbApi, ['uploadScore', 'upload']);
+        if (!find || !upload) return { ok: false };
+        const lb = await find(leaderboardName, 'Descending', 'Numeric');
+        if (!lb) return { ok: false };
+        let result;
+        try {
+            result = await upload(lb, score, 'KeepBest');
+        } catch (_) {
+            result = await upload(lb, score, []);
+        }
+        const isNewBest = !!(result && (result.scoreChanged || result.isNewBest || result.success));
+        return { ok: true, isNewBest: result ? isNewBest : true };
+    } catch (e) {
+        console.warn('[Steam] leaderboard upload:', e.message);
+        return { ok: false };
+    }
+}
+
+function mapLeaderboardEntry(entry, index) {
+    if (!entry || typeof entry !== 'object') return null;
+    const rank = Number(entry.rank || entry.globalRank || index + 1) || (index + 1);
+    const score = Number(entry.score || entry.Score || 0) || 0;
+    const name =
+        (entry.name) ||
+        (entry.steamId && entry.steamId.name) ||
+        (entry.user && entry.user.name) ||
+        '???';
+    return { name, score, rank };
+}
+
+async function downloadSteamLeaderboardScores(leaderboardName, count) {
+    const lbApi = steamClient && steamClient.leaderboard;
+    if (!lbApi) return [];
+    try {
+        const find = pickLeaderboardFn(lbApi, ['findOrCreate', 'findOrCreateLeaderboard', 'find']);
+        const download = pickLeaderboardFn(lbApi, ['getScores', 'downloadScores', 'download']);
+        if (!find || !download) return [];
+        const lb = await find(leaderboardName, 'Descending', 'Numeric');
+        if (!lb) return [];
+        const n = Math.max(1, Math.min(100, Number(count) || 10));
+        let entries;
+        try {
+            entries = await download(lb, 1, n);
+        } catch (_) {
+            entries = await download(lb, 0, n - 1);
+        }
+        if (!Array.isArray(entries)) return [];
+        return entries.map(mapLeaderboardEntry).filter(Boolean);
+    } catch (e) {
+        console.warn('[Steam] leaderboard download:', e.message);
+        return [];
+    }
+}
+
 // ── Steam Input (ISteamInput) ─────────────────────────────────────────────────
 // Action set / action names below MUST match steam/controller_vdf/game_actions_<appid>.vdf
 // (uploaded once via Steamworks App Admin → Steam Input) or the handles resolve to 0
@@ -228,14 +332,22 @@ function setupIPC() {
         }
     });
 
-    // Achievement
+    // Achievement — steamworks.js 0.4 `activate()` already calls StoreStats.
+    // Skip SetAchievement when Steam already has the unlock so startup sync
+    // does not spam false failures for every previously earned id.
     ipcMain.handle('steam:unlockAchievement', (_, id) => {
         if (!steamClient) { console.warn('[Steam] unlockAchievement: no steamClient for', id); return false; }
         try {
+            if (steamClient.achievement.isActivated(id)) return true;
             const ok = steamClient.achievement.activate(id);
-            if (!ok) console.warn(`[Steam] unlockAchievement: activate("${id}") returned false — check the API name matches Steamworks exactly`);
-            else console.log(`[Steam] Achievement unlocked: ${id}`);
-            return ok;
+            if (!ok) {
+                console.warn(`[Steam] unlockAchievement: activate("${id}") returned false — API name must match Steamworks exactly (e.g. first_kill)`);
+                return false;
+            }
+            // Extra StoreStats flush: overlay popups can lag one callback tick.
+            try { storeUserStats(); } catch (_) { /* ignore */ }
+            console.log(`[Steam] Achievement unlocked: ${id}`);
+            return true;
         }
         catch (e) { console.error('[Steam] unlockAchievement:', e.message); return false; }
     });
@@ -260,42 +372,49 @@ function setupIPC() {
     });
 
     // Leaderboard — submit
+    // steamworks.js 0.4 has no ISteamUserStats leaderboard bindings. If a
+    // future native build exposes `client.leaderboard`, use it; otherwise
+    // persist a personal-best INT stat (API name must exist in Steamworks
+    // Stats, typically matching the board name `global_highscores`).
     ipcMain.handle('steam:submitScore', async (_, { leaderboardName, score }) => {
         if (!steamClient) return { success: false };
+        const numeric = Math.round(Number(score) || 0);
+        if (!Number.isFinite(numeric) || numeric < 0) return { success: false };
         try {
-            const lb = await steamClient.leaderboard.findOrCreate(leaderboardName, 'Descending', 'Numeric');
-            const result = await steamClient.leaderboard.uploadScore(lb, score, []);
-
-            // Also update the per-user INT stat of the same name (Steamworks stat ID 3,
-            // "global_highscores"). This keeps the personal-best stat in sync, which lets
-            // Steamworks fire score-based stat achievements automatically and shows the
-            // value on the player's profile.
-            try {
-                const cur = steamClient.stats.getStatInt(leaderboardName) || 0;
-                if (score > cur) {
-                    steamClient.stats.setStatInt(leaderboardName, score);
-                    await steamClient.stats.storeStats();
+            const uploaded = await uploadSteamLeaderboardScore(leaderboardName, numeric);
+            if (uploaded.ok) {
+                try { syncPersonalBestStat(leaderboardName, numeric); } catch (e) {
+                    console.warn('[Steam] stat sync:', e.message);
                 }
-            } catch (e) { console.warn('[Steam] stat sync:', e.message); }
+                return { success: true, isNewBest: !!uploaded.isNewBest };
+            }
 
-            return { success: true, isNewBest: result.scoreChanged };
+            const pb = syncPersonalBestStat(leaderboardName, numeric);
+            if (!pb.ok) {
+                console.warn('[Steam] submitScore: no leaderboard API in steamworks.js 0.4 and stat store failed. Create INT stat "' + leaderboardName + '" in Steamworks or wait for a steamworks.js leaderboard build.');
+                return { success: false, reason: 'leaderboard_unsupported' };
+            }
+            return { success: true, isNewBest: pb.isNewBest, personalBestOnly: true };
         } catch (e) {
             console.error('[Steam] submitScore:', e.message);
             return { success: false };
         }
     });
 
-    // Leaderboard — fetch top N
+    // Leaderboard — fetch top N (1-based Steam ranks when the API exists)
     ipcMain.handle('steam:getLeaderboard', async (_, { leaderboardName, count = 10 }) => {
         if (!steamClient) return [];
         try {
-            const lb = await steamClient.leaderboard.findOrCreate(leaderboardName, 'Descending', 'Numeric');
-            const entries = await steamClient.leaderboard.getScores(lb, 0, count - 1);
-            return entries.map(e => ({
-                name:  e.steamId.name,
-                score: e.score,
-                rank:  e.rank
-            }));
+            const downloaded = await downloadSteamLeaderboardScores(leaderboardName, count);
+            if (Array.isArray(downloaded) && downloaded.length) return downloaded;
+
+            const name = (() => {
+                try { return steamClient.localplayer.getName(); }
+                catch (_) { return 'You'; }
+            })();
+            const pb = getStatInt(leaderboardName);
+            if (!pb) return [];
+            return [{ name: name || 'You', score: pb, rank: 1, isSelf: true }];
         } catch (e) {
             console.error('[Steam] getLeaderboard:', e.message);
             return [];
