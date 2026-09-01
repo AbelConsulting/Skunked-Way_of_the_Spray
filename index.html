@@ -17,8 +17,18 @@
          chrome (site-landing banner, store CTA buttons) never renders inside
          the Capacitor WebView — the player is already inside the full app. -->
     <script>(function(w,d){
-        var isNative = !!(w.Capacitor && typeof w.Capacitor.isNativePlatform === 'function' && w.Capacitor.isNativePlatform());
-        if (isNative) { d.documentElement.classList.add('is-native-app'); }
+        function markNative() {
+            try {
+                var cap = w.Capacitor;
+                var isNative = !!(cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform())
+                    || !!(w.cordova && (w.cordova.platformId === 'android' || w.cordova.platformId === 'ios'))
+                    || !!(w.location && w.location.protocol === 'capacitor:');
+                if (isNative) d.documentElement.classList.add('is-native-app');
+            } catch (e) {}
+        }
+        markNative();
+        d.addEventListener('deviceready', markNative);
+        w.addEventListener('capacitorReady', markNative);
     })(window,document);</script>
     <!-- Google Tag Manager (web only — skipped inside the Capacitor WebView so
          GTM-driven AdSense Auto Ads / anchor banners can't cover the game.
@@ -203,8 +213,26 @@
         .is-native-app .site-landing,
         .is-native-app .game-over-cta--store-steam,
         .is-native-app .game-over-cta--store-google,
-        .is-native-app #victory-store-bar {
+        .is-native-app #victory-store-bar,
+        .is-native-app .menu-btn--store-steam,
+        .is-native-app .menu-btn--store-google,
+        .is-native-app #demo-cap-banner,
+        .is-native-app .start-menu-enter-hint,
+        .is-native-app .web-only {
             display: none !important;
+        }
+        .native-only { display: none !important; }
+        .is-native-app .native-only { display: revert !important; }
+        .is-native-app span.native-only.menu-btn-label,
+        .is-native-app span.native-only.menu-btn-meta {
+            display: block !important;
+        }
+        .is-native-app .start-menu-hub-title .native-only,
+        .is-native-app .start-menu-hub-note .native-only,
+        .is-native-app .start-menu-tagline .native-only,
+        .is-native-app .start-menu-copy .native-only,
+        .is-native-app .start-menu-eyebrow .native-only {
+            display: inline !important;
         }
 
         .site-landing__eyebrow {
@@ -3759,12 +3787,12 @@
                 <div class="start-menu-panel">
                     <div class="start-menu-layout">
                         <div class="start-menu-hero">
-                            <p class="start-menu-eyebrow">Main Hub<span id="founder-badge" class="founder-badge" hidden><span class="founder-badge__label">FOUNDER</span></span></p>
+                            <p class="start-menu-eyebrow"><span class="web-only">Main Hub</span><span class="native-only">Google Play</span><span id="founder-badge" class="founder-badge" hidden><span class="founder-badge__label">FOUNDER</span></span></p>
                             <h1 class="start-menu-title">SKUNKED:</h1>
                             <h2 class="start-menu-subtitle">WAY OF THE SPRAY</h2>
                             <div class="start-menu-divider"></div>
-                            <p class="start-menu-tagline">Web Demo Build</p>
-                            <p class="start-menu-copy">Play a curated browser demo, then continue the full campaign with complete progression on Steam and Google Play.</p>
+                            <p class="start-menu-tagline"><span class="web-only">Web Demo Build</span><span class="native-only">Full Campaign</span></p>
+                            <p class="start-menu-copy"><span class="web-only">Play a curated browser demo, then continue the full campaign with complete progression on Steam and Google Play.</span><span class="native-only">Chain combos, spray bosses, and fight through 10 worlds. Touch controls, Play Games, and the complete campaign.</span></p>
                             <div id="demo-cap-banner" class="demo-cap-banner" hidden>
                                 <span class="demo-cap-banner__icon" aria-hidden="true">⚠</span>
                                 <span>Demo cap reached: browser build includes the first 2 stages only.</span>
@@ -3786,13 +3814,13 @@
                         </div>
                         <div class="start-menu-hub">
                             <div class="start-menu-hub-header">
-                                <h3 class="start-menu-hub-title">Choose Your Route</h3>
-                                <p class="start-menu-hub-note">Web demo here. Full game on stores.</p>
+                                <h3 class="start-menu-hub-title"><span class="web-only">Choose Your Route</span><span class="native-only">Main Menu</span></h3>
+                                <p class="start-menu-hub-note"><span class="web-only">Web demo here. Full game on stores.</span><span class="native-only">Arcade campaign, Survival, scores, and skins.</span></p>
                             </div>
                             <div class="start-menu-actions" role="navigation" aria-label="Main menu">
-                                <a id="menu-steam-store-btn" class="menu-btn menu-btn--store-steam" href="https://store.steampowered.com/app/4815180/" target="_blank" rel="noopener noreferrer"><span class="menu-btn-label">&#128187; Steam Full Game</span><span class="menu-btn-meta">Complete campaign, achievements, and desktop play.</span></a>
-                                <a id="menu-google-store-btn" class="menu-btn menu-btn--store-google" href="https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu" target="_blank" rel="noopener noreferrer"><span class="menu-btn-label">&#128241; Google Play Full Game</span><span class="menu-btn-meta">Full mobile progression with touch-first sessions.</span></a>
-                                <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label">&#9654; Launch Run</span><span class="menu-btn-meta">Drop straight into Stage 1 and keep momentum.</span></button>
+                                <a id="menu-steam-store-btn" class="menu-btn menu-btn--store-steam web-only" href="https://store.steampowered.com/app/4815180/" target="_blank" rel="noopener noreferrer"><span class="menu-btn-label">&#128187; Steam Full Game</span><span class="menu-btn-meta">Complete campaign, achievements, and desktop play.</span></a>
+                                <a id="menu-google-store-btn" class="menu-btn menu-btn--store-google web-only" href="https://play.google.com/store/apps/details?id=com.skunksquad.skunkfu" target="_blank" rel="noopener noreferrer"><span class="menu-btn-label">&#128241; Google Play Full Game</span><span class="menu-btn-meta">Full mobile progression with touch-first sessions.</span></a>
+                                <button id="menu-play-btn" class="menu-btn menu-btn--play"><span class="menu-btn-label web-only">&#9654; Launch Run</span><span class="menu-btn-label native-only">&#9654; Start Game</span><span class="menu-btn-meta web-only">Drop straight into Stage 1 and keep momentum.</span><span class="menu-btn-meta native-only">Full 10-world campaign. Touch-ready.</span></button>
                                 <button id="menu-survival-btn" class="menu-btn menu-btn--survival"><span class="menu-btn-label">&#128293; Survival Mode</span><span class="menu-btn-meta">Endless enemy waves — fight until you fall.</span></button>
                                 <button id="menu-howtoplay-btn" class="menu-btn menu-btn--howtoplay"><span class="menu-btn-label">&#128214; How to Play</span><span class="menu-btn-meta">Learn scoring, idols, time attack, and combat.</span></button>
                                 <button id="menu-scores-btn" class="menu-btn menu-btn--scores"><span class="menu-btn-label">&#127942; High Scores</span><span class="menu-btn-meta">Check the board and chase the next target score.</span></button>

@@ -1301,6 +1301,9 @@ class GameApp {
         const isCap = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
         window._isCapacitor = !!isCap;
         window._isNativeApp = !!isCap;
+        if (isCap) {
+            try { document.documentElement.classList.add('is-native-app'); } catch (e) { /* ignore */ }
+        }
 
         if (!isCap) return; // nothing else to do in a browser
 
