@@ -833,14 +833,12 @@ try {
         container._scoreboardPeriod = btn.dataset.period;
         _fillScoreboard(container);
       });
-{
-      container._scoreboardPeriod = _isSteamDesktop() ? 'steam' : 'alltime';
-    }
+
       refreshBtn.addEventListener('click', () => { _fillScoreboard(container); });
     }
 
     // Set default period if not already set, then load
-    if (!container._scoreboardPeriod) container._scoreboardPeriod = 'alltime';
+    if (!container._scoreboardPeriod) container._scoreboardPeriod = _isSteamDesktop() ? 'steam' : 'alltime';
     await _fillScoreboard(container);
     return container;
   }
@@ -856,11 +854,11 @@ try {
     const updatedEl = container.querySelector('.scoreboard-updated');
     const refreshBtn = container.querySelector('.scoreboard-refresh');
 
-    // Loading state period === 'steam'
-      ? '<div class="scoreboard-state scoreboard-state--loading">Loading Steam scores…</div>'
-      : (preserves header + tabs so controls stay visible)
+    // Loading state (preserves header + tabs so controls stay visible)
     if (refreshBtn) refreshBtn.disabled = true;
-    list.innerHTML = '<div class="scoreboard-state scoreboard-state--loading">Loading global scores…</div>';
+    list.innerHTML = period === 'steam'
+      ? '<div class="scoreboard-state scoreboard-state--loading">Loading Steam scores...</div>'
+      : '<div class="scoreboard-state scoreboard-state--loading">Loading global scores...</div>';
     if (updatedEl) updatedEl.textContent = '';
 
     let scores = null;
@@ -922,9 +920,7 @@ try {
 
         const rank = document.createElement('div');
         rank.className = 'scoreboard-rank';
-        rank.textContent = `${Number(scoreData.rank) || (i + 1)eElement('div');
-        rank.className = 'scoreboard-rank';
-        rank.textContent = `${i + 1}.`;
+        rank.textContent = `${Number(scoreData.rank) || (i + 1)}.`;
 
         const info = document.createElement('div');
         info.className = 'scoreboard-info';
