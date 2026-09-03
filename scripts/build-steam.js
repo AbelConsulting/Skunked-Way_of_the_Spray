@@ -83,10 +83,21 @@ function patchIndexHtml() {
     );
 
     // ── Update main-menu Skins button — no purchase wording on Steam ──
+    // Target by stable selector (id="menu-skins-btn") so content tweaks in
+    // index.html don't silently break Steam text patching.
+    const skinsButtonPattern = /(<button[^>]*id=["']menu-skins-btn["'][^>]*>)([\s\S]*?)(<\/button>)/i;
+    const skinsButtonMatch = html.match(skinsButtonPattern);
+    if (!skinsButtonMatch) {
+        throw new Error('[steam-build] Expected #menu-skins-btn in index.html but it was not found.');
+    }
     html = html.replace(
-        '<span class="menu-btn-label">&#127912; Skins &amp; Remove Ads</span><span class="menu-btn-meta">Pick your ninja colour. One-time $1.99 unlocks 3 skins &amp; ad-free.</span>',
-        '<span class="menu-btn-label">&#127912; Ninja Skins</span><span class="menu-btn-meta">Pick your ninja colour. All skins unlocked!</span>'
+        skinsButtonPattern,
+        '$1<span class="menu-btn-label">&#127912; Ninja Skins</span><span class="menu-btn-meta">Pick your ninja colour. All skins unlocked!</span>$3'
     );
+
+    if (!html.includes('All skins unlocked!')) {
+        throw new Error('[steam-build] Failed to rewrite #menu-skins-btn text for Steam build.');
+    }
 
     fs.writeFileSync(indexPath, html, 'utf8');
     const lines = html.split('\n').length;

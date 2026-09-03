@@ -702,7 +702,13 @@ try {
         }, 2500);
         
         if (onDone) {
-            const newScores = await loadScores();
+            let newScores = null;
+            if (_isSteamDesktop()) {
+              newScores = await loadSteamScores();
+            }
+            if (!Array.isArray(newScores)) {
+              newScores = await loadScores();
+            }
             onDone(newScores);
         }
       };
