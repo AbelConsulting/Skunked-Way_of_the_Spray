@@ -11,8 +11,12 @@ const fs   = require('fs');
 // ── Steam App ID ──────────────────────────────────────────────────────────────
 // Replace 480 with your real Steam App ID once your Steamworks app is created.
 // 480 = Valve's "SpaceWar" demo — safe for SDK testing only.
+// SKUNKFU_DEMO=1 (set only by electron/main-demo.js) switches to the demo build
+// output + demo App ID without touching the regular Steam release path/appid.
+const IS_DEMO_BUILD = process.env.SKUNKFU_DEMO === '1';
+const DIST_STEAM_DIR = IS_DEMO_BUILD ? 'dist-steam-demo' : 'dist-steam';
 const STEAM_APP_ID = (() => {
-    const txt = path.join(__dirname, 'steam_appid.txt');
+    const txt = path.join(__dirname, IS_DEMO_BUILD ? 'steam_appid.demo.txt' : 'steam_appid.txt');
     if (fs.existsSync(txt)) {
         const id = parseInt(fs.readFileSync(txt, 'utf8').trim(), 10);
         if (!isNaN(id) && id > 0) return id;
@@ -513,7 +517,7 @@ function createWindow() {
     initSteamInput(win);
     win.on('closed', shutdownSteamInput);
 
-    const indexPath = path.join(__dirname, '..', 'dist-steam', 'index.html');
+    const indexPath = path.join(__dirname, '..', DIST_STEAM_DIR, 'index.html');
     win.loadFile(indexPath);
 
     // Open DevTools in development to diagnose layout/console errors

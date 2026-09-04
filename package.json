@@ -49,7 +49,10 @@
     "steam:assets": "python generate_steam_assets.py",
     "steam:release:win": "steam\\release-win.bat",
     "steam:upload:linux": "steam\\upload-linux.bat",
-    "steam:upload:all": "steam\\upload-all.bat"
+    "steam:upload:all": "steam\\upload-all.bat",
+    "steam:demo:build": "node scripts/build-steam-demo.js --release",
+    "electron:demo:dev": "node scripts/build-steam-demo.js && npx electron electron/main-demo.js",
+    "electron:demo:build:win": "node scripts/build-steam-demo.js --release && npx electron-builder --win --config electron-builder-demo.json"
   },
   "build": {
     "appId": "com.mephitideusinteractive.skunkedwayofthespray",

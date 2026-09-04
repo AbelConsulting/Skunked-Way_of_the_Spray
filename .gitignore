@@ -63,7 +63,9 @@ libsteam_api.so
 
 # Electron build output
 dist-steam/
+dist-steam-demo/
 release/
+release-demo/
 
 # SteamPipe local build cache (logs/chunks)
 steam/output/

@@ -7211,11 +7211,8 @@
             (function wireDemoCapBanner() {
                 const banner = document.getElementById('demo-cap-banner');
                 if (!banner) return;
-                const isWebDemoCapMessageAllowed = () => !!(
-                    window.game &&
-                    window.game._isWebDemoRuntime &&
-                    window.game._isCappedWebDemo
-                );
+                const isDemoCapMessageAllowed = () => !!(window.game && window.game._isCappedWebDemo);
+                const isSteamDemo = () => !!(window.game && window.game._isSteamDemoRuntime);
                 const setVisible = (visible) => {
                     if (!banner) return;
                     if (visible) {
@@ -7224,28 +7221,29 @@
                         banner.setAttribute('hidden', 'hidden');
                     }
                 };
+                const bannerHtml = (icon, steamText, webText) =>
+                    '<span class="demo-cap-banner__icon" aria-hidden="true">' + icon + '</span><span>' + (isSteamDemo() ? steamText : webText) + '</span>';
                 window.addEventListener('gameStateChange', (e) => {
                     const state = e && e.detail && e.detail.state;
-                    const isAllowed = isWebDemoCapMessageAllowed();
-                    if (!isAllowed) {
+                    if (!isDemoCapMessageAllowed()) {
                         setVisible(false);
                         return;
                     }
                     if (state === 'GAME_OVER') {
                         setVisible(true);
-                        banner.innerHTML = '<span class="demo-cap-banner__icon" aria-hidden="true">⚠</span><span>Demo cap reached: browser build includes the first 2 stages only. Continue on Steam or Google Play.</span>';
+                        banner.innerHTML = bannerHtml('⚠', 'Demo cap reached: this Steam demo includes the first 2 stages only. Wishlist the full game to continue!', 'Demo cap reached: browser build includes the first 2 stages only. Continue on Steam or Google Play.');
                         return;
                     }
                     if (state === 'VICTORY') {
                         setVisible(true);
-                        banner.innerHTML = '<span class="demo-cap-banner__icon" aria-hidden="true">🏁</span><span>Demo completed: full campaign continues on Steam or Google Play.</span>';
+                        banner.innerHTML = bannerHtml('🏁', 'Demo completed: wishlist the full game on Steam to play the whole campaign!', 'Demo completed: full campaign continues on Steam or Google Play.');
                         return;
                     }
                     setVisible(false);
                 });
-                if (isWebDemoCapMessageAllowed()) {
+                if (isDemoCapMessageAllowed()) {
                     setVisible(true);
-                    banner.innerHTML = '<span class="demo-cap-banner__icon" aria-hidden="true">⚠</span><span>Demo cap reached: browser build includes the first 2 stages only. Continue on Steam or Google Play.</span>';
+                    banner.innerHTML = bannerHtml('⚠', 'Demo cap reached: this Steam demo includes the first 2 stages only. Wishlist the full game to continue!', 'Demo cap reached: browser build includes the first 2 stages only. Continue on Steam or Google Play.');
                 } else {
                     setVisible(false);
                 }
@@ -7278,7 +7276,7 @@
                     const isGameOver = e && e.detail && e.detail.state === 'GAME_OVER';
                     if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
                     if (!isGameOver) { hide(steamBtn); hide(googleBtn); return; }
-                    if (!(window.game && window.game._isCappedWebDemo)) return;
+                    if (!(window.game && window.game._isCappedWebDemo) || (window.game && window.game._isSteamDemoRuntime)) return;
                     hide(steamBtn); hide(googleBtn);
                     const lockoutMs = (typeof Config !== 'undefined' && typeof Config.GAME_OVER_LOCKOUT === 'number')
                         ? Config.GAME_OVER_LOCKOUT * 1000 : 3000;
@@ -7329,7 +7327,7 @@
                 window.addEventListener('gameStateChange', (e) => {
                     const isVictory = e && e.detail && e.detail.state === 'VICTORY';
                     if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
-                    if (!isVictory || !(window.game && window.game._isCappedWebDemo)) { hide(); return; }
+                    if (!isVictory || !(window.game && window.game._isCappedWebDemo) || (window.game && window.game._isSteamDemoRuntime)) { hide(); return; }
                     hide();
                     // Delay matches _victoryInputLockoutMs (2200 ms) + buffer
                     revealTimer = setTimeout(() => {

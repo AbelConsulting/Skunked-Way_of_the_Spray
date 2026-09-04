@@ -1,0 +1,52 @@
+{
+  "appId": "com.mephitideusinteractive.skunkedwayofthespraydemo",
+  "productName": "Skunked: Way of the Spray Demo",
+  "copyright": "Copyright © 2026 Mephitideus Interactive LLC",
+  "extraMetadata": {
+    "main": "electron/main-demo.js"
+  },
+  "directories": {
+    "output": "release-demo"
+  },
+  "asar": false,
+  "files": [
+    "dist-steam-demo/**/*",
+    "electron/**/*",
+    "assets/icons/**/*",
+    "!node_modules/@aws-sdk/**",
+    "!node_modules/@smithy/**",
+    "!node_modules/@aws-crypto/**",
+    "!node_modules/@capacitor/**",
+    "!node_modules/@capacitor-community/**",
+    "!node_modules/cordova-plugin-purchase/**",
+    "!node_modules/esbuild/**",
+    "!node_modules/@esbuild/**"
+  ],
+  "win": {
+    "target": [
+      { "target": "nsis", "arch": ["x64"] }
+    ],
+    "icon": "assets/icons/icon-512x512.png",
+    "signAndEditExecutable": false
+  },
+  "mac": {
+    "target": [
+      { "target": "dmg", "arch": ["x64", "arm64"] }
+    ],
+    "icon": "assets/icons/icon-512x512.png",
+    "category": "public.app-category.games"
+  },
+  "linux": {
+    "target": [
+      { "target": "AppImage", "arch": ["x64"] },
+      { "target": "dir", "arch": ["x64"] }
+    ],
+    "icon": "assets/icons/icon-512x512.png",
+    "category": "Game"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true
+  }
+}

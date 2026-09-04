@@ -78,11 +78,16 @@ class Game {
         );
         this._isNativeRuntime = !!(typeof window !== 'undefined' && window._isNativeApp);
         this._isWebDemoRuntime = !this._isSteamRuntime && !this._isNativeRuntime;
+        // Steam marketing demo: same Electron/Steam shell, but the build is patched
+        // (scripts/build-steam-demo.js) to set window.STEAM_DEMO=true, so this only
+        // ever fires for that dedicated demo build — the regular Steam release is unaffected.
+        this._isSteamDemoRuntime = !!(typeof window !== 'undefined' && window.STEAM_DEMO === true);
+        this._isCappedDemoRuntime = this._isWebDemoRuntime || this._isSteamDemoRuntime;
         const configuredDemoCap = Math.max(1, parseInt((Config && Config.WEB_DEMO_STAGE_CAP) || 2, 10) || 2);
-        this._campaignStageCap = this._isWebDemoRuntime
+        this._campaignStageCap = this._isCappedDemoRuntime
             ? Math.min(totalCampaignStages || configuredDemoCap, configuredDemoCap)
             : totalCampaignStages;
-        this._isCappedWebDemo = this._isWebDemoRuntime && totalCampaignStages > 0 && this._campaignStageCap < totalCampaignStages;
+        this._isCappedWebDemo = this._isCappedDemoRuntime && totalCampaignStages > 0 && this._campaignStageCap < totalCampaignStages;
 
         // Game mode: 'arcade' = normal campaign; 'survival' = endless wave mode
         this.gameMode = 'arcade';
