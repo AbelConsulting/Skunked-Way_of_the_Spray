@@ -1,0 +1,16 @@
+// SteamPipe App Build Script - Skunked: Way of the Spray Demo (AppID 5226570)
+// Upload with: steamcmd +login <builder_account> +run_app_build "<full path>\\steam\\app_build_5226570.vdf" +quit
+"appbuild"
+{
+	"appid"	"5226570"
+	"desc"	"Skunked: Way of the Spray Demo Windows build 1"
+	"buildoutput"	"output-demo\\"
+	"setlive"	""
+	"preview"	"0"
+	"local"	""
+
+	"depots"
+	{
+		"5226571"	"depot_build_5226571.vdf"
+	}
+}

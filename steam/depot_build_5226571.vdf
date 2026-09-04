@@ -1,0 +1,20 @@
+// SteamPipe Depot Build Script - Skunked: Way of the Spray Demo Windows depot (5226571)
+"DepotBuildConfig"
+{
+	"DepotID"	"5226571"
+	"ContentRoot"	"..\\release-demo\\win-unpacked\\"
+
+	"FileMapping"
+	{
+		"LocalPath"	"*"
+		"DepotPath"	"."
+		"recursive"	"1"
+	}
+
+	"FileExclusion"	"*.pdb"
+	"FileExclusion"	"*.map"
+	"FileExclusion"	"steam_appid.txt"
+	"FileExclusion"	"*/steam_appid.txt"
+	"FileExclusion"	"*/*/steam_appid.txt"
+	"FileExclusion"	"*/*/*/steam_appid.txt"
+}

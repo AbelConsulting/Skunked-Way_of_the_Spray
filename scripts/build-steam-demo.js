@@ -59,7 +59,7 @@ function patchIndexHtml() {
 
     html = html.replace(
         /(<head[^>]*>)/i,
-        '$1\n    <script>window.PLATFORM="steam";window.STEAM_DEMO=true;window.STEAM_APP_ID=480;</script>'
+        '$1\n    <script>window.PLATFORM="steam";window.STEAM_DEMO=true;window.STEAM_APP_ID=5226570;</script>'
     );
 
     html = html.replace(
