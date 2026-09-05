@@ -24,6 +24,7 @@
     "test:mobile-diagnostics-landscape": "node tools/mobile_diagnostics_landscape.js",
     "test:mobile-all": "npm run test:touch-landscape && npm run test:portrait-rotate && npm run test:touch-present && npm run test:touch-immediate && npm run test:mobile-perf && npm run test:mobile-probe",
     "test:sprite-padding": "node tools/check_sprite_padding.js",
+    "test:steam-home": "node tools/steam_home_screen_test.js",
     "playwright:install": "npx playwright install",
     "deploy:wrangler": "node -e \"console.error('Error: This is a Cloudflare Pages project. Use: npm run deploy:pages'); process.exit(1)\"",
     "deploy:pages": "npm run build && npx wrangler pages deploy ./dist",

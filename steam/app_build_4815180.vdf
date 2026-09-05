@@ -20,7 +20,7 @@
 "appbuild"
 {
 	"appid"	"4815180"
-	"desc"	"Skunked: Way of the Spray — Windows build 2026-07-19b (Verified: gamepad glyphs, keyboard, 9px fonts)"   // shown on the Builds page; bump per upload
+	"desc"	"Skunked: Way of the Spray — Windows 1.3.10 2026-09-05 (Fix full-game home screen showing web demo)"   // shown on the Builds page; bump per upload
 
 	"buildoutput"	"output\\"                              // local SteamPipe log/chunk cache (gitignored)
 	// contentroot omitted — each depot sets its own ContentRoot relative to this VDF file

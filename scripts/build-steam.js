@@ -59,8 +59,11 @@ function patchIndexHtml() {
     // ── Inject platform flag as first thing in <head> ──
     html = html.replace(
         /(<head[^>]*>)/i,
-        '$1\n    <script>window.PLATFORM="steam";window.STEAM_APP_ID=4815180;</script>'
+        '$1\n    <script>window.PLATFORM="steam";window.STEAM_DEMO=false;window.STEAM_APP_ID=4815180;</script>'
     );
+
+    // The website title advertises the browser demo, not this full game.
+    html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>Skunked: Way of the Spray</title>');
 
     // ── Remove manifest link (no PWA on desktop) ──
     html = html.replace(
