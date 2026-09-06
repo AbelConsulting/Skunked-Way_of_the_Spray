@@ -412,9 +412,6 @@ const PurchaseManager = (() => {
         }
     }
 
-    function isNative() {
-        try {
-
     function _nativeRuntimeSignals() {
         let capacitor = false;
         let cordova = false;
@@ -434,6 +431,9 @@ const PurchaseManager = (() => {
         } catch (e) {}
         return { capacitor, cordova, cdvPurchaseBridge, uaAndroidWebView };
     }
+
+    function isNative() {
+        try {
             if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
                 && window.Capacitor.isNativePlatform()) {
                 return true;
@@ -687,17 +687,27 @@ const PurchaseManager = (() => {
             // fire productUpdated()/receiptUpdated() whenever it finishes.
             const realInitPromise = store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]);
             realInitPromise.then(() => { _storeInitSettled = true; }, () => { _storeInitSettled = true; });
-            const initResult = await Promise.race([
-                realInitPromise,
-                new Promise((_resolve, reject) => setTimeout(
-                    () => reject(new Error('store.initialize timeout after ' + initTimeoutMs + 'ms')),
-                    initTimeoutMs
-                ))
-            ]);
-            const initHadError = !!(initResult && initResult.code != null);
+            let initTimer;
+            let initResult;
+            try {
+                initResult = await Promise.race([
+                    realInitPromise,
+                    new Promise((_resolve, reject) => {
+                        initTimer = setTimeout(
+                            () => reject(new Error('store.initialize timeout after ' + initTimeoutMs + 'ms')),
+                            initTimeoutMs
+                        );
+                    })
+                ]);
+            } finally { clearTimeout(initTimer); }
+            // v13 returns IError[], NOT a single IError. An unsuccessful billing
+            // connection/catalogue load must not be reported as a healthy store.
+            const initErrors = (Array.isArray(initResult) ? initResult : [initResult])
+                .filter(err => err && err.code != null);
+            const initHadError = initErrors.length > 0;
             if (initHadError) {
-                _storeInitError = '[' + initResult.code + '] ' + (initResult.message || 'store.initialize returned an error');
-                _warn('Store initialized with error:', initResult);
+                _storeInitError = initErrors.map(err => '[' + err.code + '] ' + (err.message || 'store.initialize returned an error')).join('; ');
+                _warn('Store initialized with error:', _storeInitError);
             } else {
                 _log('Store initialized.');
             }
@@ -765,6 +775,7 @@ const PurchaseManager = (() => {
      * (common on fresh installs, account swaps, or while the Play app is busy).
      * Returns the product (with pricing) or null if it never arrived.
      */
+    let _catalogueRefreshPromise = null;
     async function _refreshProduct(sku, timeoutMs = 6000) {
         const store = _store;
         if (!store) return null;
@@ -781,7 +792,22 @@ const PurchaseManager = (() => {
         const _tryUpdate = () => {
             if (_updateIssued || !_storeInitSettled) return;
             _updateIssued = true;
-            try { Promise.resolve(store.update()).catch(() => {}); } catch (_) {}
+            if (_catalogueRefreshPromise) return; // share any in-flight retry
+            // v13 also throttles update() for TEN MINUTES after initialize().
+            // This is an explicit user-initiated retry of a missing catalogue,
+            // not a periodic price refresh: bypass that throttle for this call.
+            // update() checks the interval synchronously, before its first await.
+            const previousInterval = store.minTimeBetweenUpdates;
+            try {
+                store.minTimeBetweenUpdates = 0;
+                _catalogueRefreshPromise = Promise.resolve(store.update())
+                    .catch(e => { _storeInitError = 'Catalogue refresh failed: ' + ((e && e.message) || String(e)); })
+                    .finally(() => { _catalogueRefreshPromise = null; });
+            } catch (e) {
+                _storeInitError = 'Catalogue refresh failed: ' + ((e && e.message) || String(e));
+            } finally {
+                store.minTimeBetweenUpdates = previousInterval;
+            }
         };
         _tryUpdate();
         const deadline = Date.now() + timeoutMs;
@@ -797,6 +823,23 @@ const PurchaseManager = (() => {
         return (store.get && store.get(sku)) ||
                (sku === PRODUCT_ID_REMOVE_ADS ? _product : _founderProduct) ||
                null;
+    }
+
+    // Diagnostic retry: v13 store.initialize() is one-shot, so calling it
+    // again does NOT reconnect or load products. Re-query via the same guarded
+    // catalogue retry used by Buy instead; never open a payment sheet here.
+    async function refreshProducts() {
+        await initialize();
+        await _waitForReady();
+        if (!_store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
+        if (!_storeInitSettled) return { ok: false, reason: 'store-connecting' };
+        const [removeAds] = await Promise.all([
+            _refreshProduct(PRODUCT_ID_REMOVE_ADS),
+            _refreshProduct(PRODUCT_ID_FOUNDER_PASS),
+        ]);
+        return removeAds && removeAds.pricing
+            ? { ok: true }
+            : { ok: false, reason: 'product-not-loaded' };
     }
 
     /**
@@ -857,7 +900,7 @@ const PurchaseManager = (() => {
                 _warn('Purchase order rejected:', orderErr);
                 const errCode = orderErr.code != null ? String(orderErr.code) : '';
                 const errMsg  = orderErr.message || '';
-                const reason  = (errCode === '1') ? 'user-cancelled'
+                const reason  = (errCode === String(window.CdvPurchase.ErrorCode.PAYMENT_CANCELLED) || errCode === '1') ? 'user-cancelled'
                               : (errMsg || ('error-' + (errCode || 'unknown')));
                 _lastOrderError = '[' + PRODUCT_ID_REMOVE_ADS + '] code=' + (errCode || '?') + ' msg=' + (errMsg || reason);
                 return { ok: false, reason };
@@ -867,6 +910,7 @@ const PurchaseManager = (() => {
             return { ok: true, reason: 'pending' };
         } catch (e) {
             _warn('Purchase failed:', e);
+            _lastOrderError = '[' + PRODUCT_ID_REMOVE_ADS + '] ' + ((e && e.message) || 'purchase-error');
             return { ok: false, reason: (e && e.message) || 'purchase-error' };
         }
     }
@@ -988,7 +1032,7 @@ const PurchaseManager = (() => {
                 _warn('Founder Pass order rejected:', orderErr);
                 const errCode = orderErr.code != null ? String(orderErr.code) : '';
                 const errMsg  = orderErr.message || '';
-                const reason  = (errCode === '1') ? 'user-cancelled'
+                const reason  = (errCode === String(window.CdvPurchase.ErrorCode.PAYMENT_CANCELLED) || errCode === '1') ? 'user-cancelled'
                               : (errMsg || ('error-' + (errCode || 'unknown')));
                 _lastOrderError = '[' + PRODUCT_ID_FOUNDER_PASS + '] code=' + (errCode || '?') + ' msg=' + (errMsg || reason);
                 return { ok: false, reason };
@@ -996,6 +1040,7 @@ const PurchaseManager = (() => {
             return { ok: true, reason: 'pending' };
         } catch (e) {
             _warn('Founder Pass purchase failed:', e);
+            _lastOrderError = '[' + PRODUCT_ID_FOUNDER_PASS + '] ' + ((e && e.message) || 'purchase-error');
             return { ok: false, reason: (e && e.message) || 'purchase-error' };
         }
     }
@@ -1051,8 +1096,14 @@ const PurchaseManager = (() => {
         if (CdvPurchase) {
             try { out.CdvPurchase_version = CdvPurchase.version || 'unknown'; } catch (e) {}
         }
-        console.log('[Purchase:diagnose]', JSON.stringify(out, null, 2));
-        return out;
+        // Diagnostics are intended to be shared for support. Never include
+        // receipt/purchase/offer tokens or signatures in the dump or console.
+        const safe = JSON.parse(JSON.stringify(out, (key, value) => {
+            if (/token|signature/i.test(key) && value) return '[redacted]';
+            return value;
+        }));
+        console.log('[Purchase:diagnose]', JSON.stringify(safe, null, 2));
+        return safe;
     }
 
     return {
@@ -1068,6 +1119,7 @@ const PurchaseManager = (() => {
         onChange,
         purchaseRemoveAds,
         restorePurchases,
+        refreshProducts,
         getPriceString,
         isRemoveAdsProductLoaded,
         isFounderPassProductLoaded,

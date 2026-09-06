@@ -1,11 +1,15 @@
 {
   "name": "skunkfu",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "description": "Skunked: Way of the Spray — a fast-paced ninja skunk action platformer.",
   "author": "Mephitideus Interactive LLC",
   "main": "index.js",
   "private": true,
   "scripts": {
+    "postinstall": "patch-package --error-on-fail",
+    "capacitor:sync:before": "patch-package --error-on-fail",
+    "test:purchases": "node --test tools/purchase_manager_test.js",
+    "test:purchase-ui": "node tools/purchase_ui_test.js",
     "build": "node scripts/build.js",
     "dev": "node scripts/dev.js",
     "start": "node tools/csp_server.js",
@@ -132,6 +136,7 @@
     "electron": "^36.9.5",
     "electron-builder": "^26.8.1",
     "esbuild": "^0.28.0",
+    "patch-package": "^8.0.1",
     "playwright": "^1.60.0",
     "typescript": "^6.0.3",
     "wrangler": "^4.90.1"
@@ -145,7 +150,7 @@
     "@capacitor/screen-orientation": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
-    "cordova-plugin-purchase": "^13.15.4",
+    "cordova-plugin-purchase": "13.15.4",
     "steamworks.js": "^0.4.0"
   },
   "optionalDependencies": {

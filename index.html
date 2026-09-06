@@ -4285,7 +4285,7 @@
                             <h3 style="color:#FFD700;margin-bottom:8px">&#128270; IAP Diagnostics</h3>
                             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
                                 <button id="iap-diag-run-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#9654; Run Check</button>
-                                <button id="iap-diag-reconnect-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#8635; Force Reconnect</button>
+                                <button id="iap-diag-reconnect-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#8635; Refresh Products</button>
                                 <button id="iap-diag-close-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px;opacity:0.7">&#10005; Close</button>
                             </div>
                             <pre id="iap-diag-output" style="font-size:11px;line-height:1.5;color:#cde;background:rgba(0,0,0,0.5);border-radius:8px;padding:10px;overflow:auto;max-height:260px;white-space:pre-wrap;word-break:break-all;margin:0">Tap "Run Check" to inspect billing state.</pre>
@@ -5359,7 +5359,7 @@
                                                 statusEl.textContent = hint;
                                             }
                                             else if (_buyRes.reason === 'store-connecting') statusEl.textContent = 'Still connecting to Google Play\u2026 please wait a few seconds and tap Buy again.';
-                                            else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
+                                            else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Google Play did not return this product after retrying. Check your Play Store account and connection, then try again. If it persists, contact support with the IAP diagnostic results.';
                                             else if (_buyRes.reason === 'user-cancelled' || _buyRes.reason === '1') statusEl.textContent = 'Purchase cancelled.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + _buyRes.reason;
                                         }
@@ -6059,7 +6059,7 @@
                                                     fpStatus.textContent = 'Still connecting to Google Play\u2026 please wait a few seconds and tap Buy again.';
                                                 } else if (res.reason === 'product-not-loaded') {
                                                     fpStatus.style.color = '#FFB060';
-                                                    fpStatus.textContent = 'Product still propagating from Google Play (15\u201330 min after activation). Please try again shortly.';
+                                                    fpStatus.textContent = 'Google Play did not return this product after retrying. Check your Play Store account and connection, then try again. If it persists, contact support with the IAP diagnostic results.';
                                                 } else if (res.reason === 'user-cancelled' || res.reason === '1') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Purchase cancelled.';
@@ -6157,7 +6157,7 @@
                                 }
                                 // Plugin is present from here on.
                                 if (init && init !== 'none') {
-                                    if (init.includes('3') || init.includes('billing_unavailable') || init.includes('unavailable')) {
+                                    if (init.includes('billing_unavailable') || init.includes('billing unavailable')) {
                                         v.push('✗ Billing UNAVAILABLE on init.');
                                         v.push('  → App was NOT installed from Google Play, OR the device has no');
                                         v.push('    Play account. Install from an Internal Testing track with a');
@@ -6183,8 +6183,8 @@
                                     v.push('✓ Catalogue loaded with pricing — Play Billing connection is healthy.');
                                 }
                                 // Order-time diagnostics.
-                                if (orderCode === '1') {
-                                    v.push('• Last order: user cancelled (code 1) — not an error.');
+                                if (orderCode === '1' || orderCode === '6777006') {
+                                    v.push('• Last order: user cancelled — not an error.');
                                 } else if (orderCode === '3') {
                                     v.push('✗ Last order: BILLING_UNAVAILABLE (code 3) — not installed from Play');
                                     v.push('  or no Play account on device.');
@@ -6222,6 +6222,7 @@
                                 lines.push('  initialized    : ' + d.initialized);
                                 lines.push('  ready          : ' + d.ready);
                                 lines.push('  readyMode      : ' + (d.readyMode || 'n/a'));
+                                lines.push('  storeInitSettled: ' + d.storeInitSettled);
                                 lines.push('  storeInitError : ' + (d.storeInitError || 'none'));
                                 lines.push('  storePollDone  : ' + d.storePollDone);
                                 lines.push('  CdvPurchase v  : ' + (d.CdvPurchase_version || 'n/a'));
@@ -6259,21 +6260,14 @@
                                 }
                                 lines.push('');
                                 lines.push('── PURCHASE TOKENS ─────────────────');
-                                const tok = d.lastPurchaseTokens || {};
-                                if (Object.keys(tok).length) {
-                                    for (const [k, v] of Object.entries(tok)) {
-                                        lines.push('  ' + k + ': ' + (v ? v.slice(0, 24) + '…' : 'none'));
-                                    }
-                                } else {
-                                    lines.push('  (none captured yet)');
-                                }
+                                lines.push('  [redacted for support diagnostics]');
                                 lines.push('');
                                 lines.push('── BACKEND SYNC ────────────────────');
                                 lines.push('  remote push    : ' + (d.lastRemotePushStatus || 'none'));
                                 const pending = d.pendingIapPurchases || {};
                                 if (Object.keys(pending).length) {
                                     for (const [k, v] of Object.entries(pending)) {
-                                        lines.push('  pending ' + k + ': ' + ((v && v.purchaseToken) ? v.purchaseToken.slice(0, 24) + '…' : 'no token'));
+                                        lines.push('  pending ' + k + ': ' + ((v && v.purchaseToken) ? 'token captured [redacted]' : 'no token'));
                                     }
                                 } else {
                                     lines.push('  pending        : none');
@@ -6300,24 +6294,22 @@
                             if (diagReconnect) {
                                 diagReconnect.addEventListener('click', async () => {
                                     if (!diagOutput) return;
-                                    diagOutput.textContent = 'Forcing reconnect…';
+                                    diagOutput.textContent = 'Refreshing Google Play products…';
+                                    diagReconnect.disabled = true;
                                     try {
-                                        const CdvPurchase = window.CdvPurchase;
-                                        const store = CdvPurchase && CdvPurchase.store;
-                                        if (!store) {
-                                            diagOutput.textContent = 'CdvPurchase.store not available — plugin not loaded.';
+                                        const PM = window.PurchaseManager;
+                                        if (!PM || typeof PM.refreshProducts !== 'function') {
+                                            diagOutput.textContent = 'PurchaseManager not available.';
                                             return;
                                         }
-                                        const t0 = Date.now();
-                                        await Promise.race([
-                                            store.initialize([CdvPurchase.Platform.GOOGLE_PLAY]),
-                                            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
-                                        ]);
-                                        diagOutput.textContent = 'Reconnect OK (' + (Date.now() - t0) + 'ms)\n\nRe-running check…';
-                                        await new Promise(r => setTimeout(r, 400));
+                                        const result = await PM.refreshProducts();
                                         await _runDiag();
+                                        diagOutput.textContent = (result.ok ? 'Product refresh completed.' : 'Product refresh: ' + result.reason)
+                                            + '\n\n' + diagOutput.textContent;
                                     } catch (e) {
-                                        diagOutput.textContent = 'Reconnect failed: ' + e;
+                                        diagOutput.textContent = 'Product refresh failed: ' + e;
+                                    } finally {
+                                        diagReconnect.disabled = false;
                                     }
                                 });
                             }
