@@ -80,8 +80,9 @@ function patchIndexHtml() {
         '<!-- AdSense script removed for Steam demo build -->'
     );
 
-    html = html.replace(/<title>([\s\S]*?)<\/title>/i, (m, inner) =>
-        inner.includes('Demo') ? m : `<title>${inner} — Demo</title>`
+    // Replace the website's marketing title even when it already says "Demo".
+    html = html.replace(/<title>[\s\S]*?<\/title>/i,
+        '<title>Skunked: Way of the Spray — Demo</title>'
     );
 
     const skinsButtonPattern = /(<button[^>]*id=["']menu-skins-btn["'][^>]*>)([\s\S]*?)(<\/button>)/i;

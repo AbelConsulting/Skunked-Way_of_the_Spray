@@ -3,7 +3,7 @@
 "appbuild"
 {
 	"appid"	"5226570"
-	"desc"	"Skunked: Way of the Spray Demo Windows build 1"
+	"desc"	"Skunked: Way of the Spray Demo - Windows 1.3.10 2026-09-05 (Fix Steam demo window title)"
 	"buildoutput"	"output-demo\\"
 	"setlive"	""
 	"preview"	"0"

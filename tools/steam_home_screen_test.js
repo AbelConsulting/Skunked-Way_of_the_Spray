@@ -59,7 +59,10 @@ async function checkVariant(browser, { name, directory, native = false, bridge =
             assert.equal(await page.title(), 'Skunked: Way of the Spray');
             assert.equal(await page.evaluate(() => window.STEAM_DEMO), false);
         }
-        if (demo) assert.equal(await page.evaluate(() => window.STEAM_DEMO), true);
+        if (demo) {
+            assert.equal(await page.title(), 'Skunked: Way of the Spray — Demo', `${name}: window title`);
+            assert.equal(await page.evaluate(() => window.STEAM_DEMO), true);
+        }
 
         await page.waitForFunction(() => window.game && window.game._campaignStageCap > 0, null, { timeout: 60000 });
         const runtime = await page.evaluate(() => ({
