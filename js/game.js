@@ -1769,7 +1769,9 @@ class Game {
             this.gameStats.demoStageCap = this._campaignStageCap || 0;
             this.gameStats.totalCampaignStages = this._totalCampaignStages || 0;
             this.gameStats.victoryEpilogueText = this._isCappedWebDemo
-                ? 'Web demo clear. Continue the full campaign on Steam or Google Play.'
+                ? (this._isSteamDemoRuntime
+                    ? 'Steam demo clear. Wishlist the full campaign on Steam.'
+                    : 'Web demo clear. Continue the full campaign on Steam or Google Play.')
                 : 'The city exhales. The stench of fear is gone, and the Way of the Spray still burns bright.';
             try {
                 if (window.Highscores && typeof Highscores.isHighScore === 'function') {

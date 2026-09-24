@@ -39,7 +39,12 @@ async function checkVariant(browser, { name, directory, native = false, bridge =
         assert.equal(await page.locator('html').evaluate(el => el.classList.contains('is-full-game')), full, `${name}: installed-game gate`);
         assert.equal((await page.locator('.start-menu-tagline').innerText()).toUpperCase(), full ? 'FULL CAMPAIGN' : 'WEB DEMO BUILD', `${name}: tagline`);
         assert.equal(await page.locator('#menu-steam-store-btn').isVisible(), !full, `${name}: Steam store button`);
-        assert.equal(await page.locator('#menu-google-store-btn').isVisible(), !full, `${name}: Google Play store button`);
+        if (demo) {
+            assert.equal(await page.locator('#menu-google-store-btn').count(), 0, `${name}: Google Play store button removed`);
+            assert.equal(await page.locator('a[href*="play.google.com/store"]').count(), 0, `${name}: Google Play CTA links removed`);
+        } else {
+            assert.equal(await page.locator('#menu-google-store-btn').isVisible(), !full, `${name}: Google Play store button`);
+        }
         assert.equal(await page.locator('.site-landing').evaluate(el => getComputedStyle(el).display === 'none'), full, `${name}: browser landing banner`);
 
         if (full) {

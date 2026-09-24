@@ -878,6 +878,7 @@ class UI {
         const now = Date.now();
         const cx = this.width / 2;
         const isWebDemoComplete = !!gameStats.isWebDemoComplete;
+        const isSteamDemo = !!(typeof window !== 'undefined' && window.STEAM_DEMO === true);
 
         // ── Golden radial background ──
         const gradient = ctx.createRadialGradient(cx, this.height * 0.25, 0, cx, this.height * 0.5, this.height);
@@ -948,7 +949,7 @@ class UI {
         ctx.shadowColor = 'rgba(255, 215, 0, 0.55)';
         ctx.shadowBlur = 8;
         const subLine = isWebDemoComplete
-            ? 'Continue the full campaign on Steam or Google Play.'
+            ? (isSteamDemo ? 'Wishlist the full campaign on Steam.' : 'Continue the full campaign on Steam or Google Play.')
             : 'The streets are safe \u2014 for now. The Way of the Spray endures.';
         ctx.fillText(subLine, cx, titleY + 66);
 

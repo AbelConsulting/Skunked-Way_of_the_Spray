@@ -80,6 +80,26 @@ function patchIndexHtml() {
         '<!-- AdSense script removed for Steam demo build -->'
     );
 
+    // The Steam demo must never offer a Google Play continuation link. Remove
+    // the shared web-funnel CTA nodes instead of relying on runtime CSS.
+    for (const id of ['landing-google-link', 'menu-google-store-btn', 'game-over-google-btn', 'victory-google-btn']) {
+        const pattern = new RegExp(`<a\\b[^>]*\\bid=["']${id}["'][^>]*>[\\s\\S]*?<\\/a>`, 'i');
+        const before = html;
+        html = html.replace(pattern, '');
+        if (html === before) {
+            throw new Error(`[steam-demo-build] Expected #${id} in index.html but it was not found.`);
+        }
+    }
+
+    html = html.replace(
+        /Continue the full campaign on Steam or Google Play\./g,
+        'Wishlist the full campaign on Steam.'
+    );
+    html = html.replace(/Steam or Google Play/g, 'Steam');
+    html = html.replace(/Steam\/Google Play/g, 'Steam');
+    html = html.replace(/Steam and Google Play/g, 'Steam');
+    html = html.replace(/Mobile progression on Google Play/g, 'Full campaign on Steam');
+
     // Replace the website's marketing title even when it already says "Demo".
     html = html.replace(/<title>[\s\S]*?<\/title>/i,
         '<title>Skunked: Way of the Spray — Demo</title>'
@@ -97,6 +117,9 @@ function patchIndexHtml() {
 
     if (!html.includes('All skins unlocked!')) {
         throw new Error('[steam-demo-build] Failed to rewrite #menu-skins-btn text for Steam demo build.');
+    }
+    if (/<a\b[^>]*play\.google\.com\/store|id=["'](?:landing-google-link|menu-google-store-btn|game-over-google-btn|victory-google-btn)["']/i.test(html)) {
+        throw new Error('[steam-demo-build] Google Play CTA leaked into Steam demo build.');
     }
 
     fs.writeFileSync(indexPath, html, 'utf8');
