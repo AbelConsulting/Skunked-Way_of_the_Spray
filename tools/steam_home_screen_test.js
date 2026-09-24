@@ -37,7 +37,8 @@ async function checkVariant(browser, { name, directory, native = false, bridge =
         await page.locator('#menu-play-btn').waitFor({ state: 'visible' });
 
         assert.equal(await page.locator('html').evaluate(el => el.classList.contains('is-full-game')), full, `${name}: installed-game gate`);
-        assert.equal((await page.locator('.start-menu-tagline').innerText()).toUpperCase(), full ? 'FULL CAMPAIGN' : 'WEB DEMO BUILD', `${name}: tagline`);
+        const expectedTagline = full ? 'FULL CAMPAIGN' : (demo ? 'STEAM DEMO BUILD' : 'WEB DEMO BUILD');
+        assert.equal((await page.locator('.start-menu-tagline').innerText()).toUpperCase(), expectedTagline, `${name}: tagline`);
         assert.equal(await page.locator('#menu-steam-store-btn').isVisible(), !full, `${name}: Steam store button`);
         if (demo) {
             assert.equal(await page.locator('#menu-google-store-btn').count(), 0, `${name}: Google Play store button removed`);

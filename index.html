@@ -4481,6 +4481,16 @@
         // --- UTILITIES ---
             // Touch-control visibility debug helper
             window.touchDebug = window.touchDebug || [];
+            window._isNativeIapRuntime = window._isNativeIapRuntime || function() {
+                try {
+                    const PM = window.PurchaseManager;
+                    if (PM && typeof PM.isNativeRuntime === 'function' && PM.isNativeRuntime()) return true;
+                    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) return true;
+                    if (window.cordova && (window.cordova.platformId === 'android' || window.cordova.platformId === 'ios')) return true;
+                    if (window.CdvPurchase && window.CdvPurchase.store) return true;
+                    return false;
+                } catch (_) { return false; }
+            };
             // Hitbox debug helper: enable with ?hitboxes=1 or localStorage.hitboxes=1
             function isHitboxDebugEnabled() {
                 try {
@@ -5260,7 +5270,7 @@
 
                             function _renderAdFreeState() {
                                 const PM = window.PurchaseManager;
-                                const isNative = _isNativeIapRuntime();
+                                const isNative = window._isNativeIapRuntime();
                                 const owned = !!(PM && PM.isAdFree && PM.isAdFree());
                                 // Show a neutral "checking..." state during the brief window
                                 // between page load and the native store finishing init.
@@ -5429,7 +5439,11 @@
                                 });
                             }
                             _renderAdFreeState();
-                        } catch (e) { try { console.warn('[RemoveAds UI]', e); } catch(_) {} }
+                        } catch (e) {
+                            if (!(window.PLATFORM === 'steam' && e && e.message === 'steam-skip')) {
+                                try { console.warn('[RemoveAds UI]', e); } catch(_) {}
+                            }
+                        }
 
                         // --- Soft purchase prompt (3rd death/session) ------
                         // Shows a one-time, dismissible modal after the player
@@ -5864,7 +5878,7 @@
                                         // a moment later (returning customer w/ wiped
                                         // localStorage). Render a neutral pulse instead.
                                         const PM = window.PurchaseManager;
-                                        const isNativeP = _isNativeIapRuntime();
+                                        const isNativeP = window._isNativeIapRuntime();
                                         const checking = isNativeP && PM && typeof PM.isReady === 'function' && !PM.isReady() && !unlocked;
                                         let statusText = '';
                                         if (active) {
@@ -5895,7 +5909,7 @@
                                     const fpBtn      = document.getElementById('founder-pass-buy-btn');
                                     const fpStatus   = document.getElementById('founder-pass-status');
                                     const PM         = window.PurchaseManager;
-                                    const isNativeP  = _isNativeIapRuntime();
+                                    const isNativeP  = window._isNativeIapRuntime();
                                     const fpOwned    = !!(PM && PM.isFounderPassOwned && PM.isFounderPassOwned());
                                     const earlyAccessStillOpen = Date.now() < new Date('2026-12-31T23:59:59Z').getTime();
                                     if (fpRow) {

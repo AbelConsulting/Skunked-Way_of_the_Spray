@@ -99,6 +99,14 @@ function patchIndexHtml() {
     html = html.replace(/Steam\/Google Play/g, 'Steam');
     html = html.replace(/Steam and Google Play/g, 'Steam');
     html = html.replace(/Mobile progression on Google Play/g, 'Full campaign on Steam');
+    html = html.replace(/Web Demo Build/g, 'Steam Demo Build');
+    html = html.replace(/Web demo here\. Full game on stores\./g, 'Steam demo here. Wishlist the full game on Steam.');
+    html = html.replace(/Play a curated browser demo, then continue the full campaign with complete progression on Steam\./g,
+        'Play the Steam demo, then wishlist the full campaign on Steam.');
+    html = html.replace(/Demo cap reached: browser build includes the first 2 stages only\./g,
+        'Steam demo includes the first 2 stages only. Wishlist the full game to continue!');
+    html = html.replace(/Play the skunk spray game free in your browser or download on Android\./g,
+        'Play the Steam demo, then wishlist the full campaign on Steam.');
 
     // Replace the website's marketing title even when it already says "Demo".
     html = html.replace(/<title>[\s\S]*?<\/title>/i,
