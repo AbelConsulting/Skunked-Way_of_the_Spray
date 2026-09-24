@@ -2754,6 +2754,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            box-sizing: border-box;
             display: none; 
             flex-direction: column; 
             align-items: center; 
@@ -2834,7 +2835,7 @@
             60%, 100% { opacity: 0; transform: scale(0.5); }
         }
 
-        #rotate-message h1 {
+        #rotate-message h2 {
             font-size: clamp(1.4rem, 5vw, 2rem);
             font-weight: 400;
             margin: 0;
@@ -3613,7 +3614,7 @@
                     <div class="phone-body"></div>
                     <div class="rotate-arrow">&#8635;</div>
                 </div>
-                <h1>Rotate Your Device</h1>
+                <h2>Rotate Your Device</h2>
                 <div class="rotate-divider"></div>
                 <p>Best experienced in landscape. Turn your phone sideways to play.</p>
                 <div class="rotate-actions">
@@ -3629,7 +3630,7 @@
                 <div id="loading-screen">
                     <div class="loading-content">
                         <div class="loading-logo">&#129448;</div>
-                        <h1>SKUNKED:</h1>
+                        <h2>SKUNKED:</h2>
                         <p class="loading-subtitle">WAY OF THE SPRAY</p>
                         <div class="loading-divider"></div>
                         <div class="loading-bar">
@@ -4356,7 +4357,7 @@
             <!-- ------ PAUSE OVERLAY ------ -->
             <div id="pause-overlay" hidden>
                 <div class="pause-panel">
-                    <h1 class="pause-title">PAUSED</h1>
+                            <h2 class="pause-title">PAUSED</h2>
                     <p class="pause-subtitle">Quick Pause</p>
                     <div class="pause-level-info" id="pause-level-info">Stage 1 &mdash; Score: 0</div>
                     <hr class="pause-divider">
