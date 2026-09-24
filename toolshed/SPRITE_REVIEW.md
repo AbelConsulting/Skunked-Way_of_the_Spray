@@ -266,7 +266,7 @@ self.sprites = {
 
 - The sprite sheets contain MORE frames than specified in the README files, which is excellent for smooth animations- The consistent dimensions (2048x2048 for characters/basic, 1024x1024 for boss/flying) make them easy to work with
 - No visual artifacts or transparency issues detected
-- Sprite sheets appear to be AI-generated or professionally created with consistent art style
+- Sprite sheets were drawn and created by hand in Procreate on a tablet
 
 ---
 
