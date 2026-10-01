@@ -209,6 +209,9 @@
             opacity: 0.15;
             transform: scale(0.97);
         }
+        .site-landing.is-survival {
+            display: none;
+        }
         /* Full installed game (Capacitor/Steam): the web-only conversion banner
            and store CTAs make no sense inside the already-installed app and
            were covering the game. Hide them entirely. */
@@ -4942,6 +4945,8 @@
                             }
 
                             hideAllMenuOverlays();
+                            const landing = document.querySelector('.site-landing');
+                            if (landing) landing.classList.remove('is-survival');
                             // Also dismiss the legacy mobile-start overlay in case it was shown
                             try { if (typeof hideMobileStartOverlay === 'function') hideMobileStartOverlay(); } catch (e) {}
 
@@ -4975,6 +4980,8 @@
                                 return;
                             }
                             hideAllMenuOverlays();
+                            const landing = document.querySelector('.site-landing');
+                            if (landing) landing.classList.add('is-survival');
                             try { if (typeof hideMobileStartOverlay === 'function') hideMobileStartOverlay(); } catch (e) {}
                             try { if (typeof requestFullscreen === 'function') requestFullscreen(); } catch (e) {}
                             try {
@@ -7361,6 +7368,7 @@
                 window.addEventListener('gameStateChange', (e) => {
                     const st = e && e.detail && e.detail.state;
                     landing.classList.toggle('is-playing', PLAYING_STATES.has(st));
+                    landing.classList.toggle('is-survival', !!(window.game && window.game.gameMode === 'survival'));
                 });
             })();
 
