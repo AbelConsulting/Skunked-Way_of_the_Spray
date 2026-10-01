@@ -711,7 +711,11 @@ class Enemy {
         if (this.enemyType === 'THIRD_BASIC') {
             // Rush sparks while dashing (DASH phase only)
             const isDashing = this.kamikazePhase === 'DASH' && !this.hasDetonated;
-            if (isDashing && Math.random() < 0.5) {
+            const disableTransientFx = typeof Config !== 'undefined'
+                && typeof window !== 'undefined'
+                && window.game && window.game.isMobile
+                && Config.MOBILE_MAX_PARTICLES === 0;
+            if (isDashing && !disableTransientFx && Math.random() < 0.5) {
                 const dir = this.facingRight ? -1 : 1;
                 this.rushSparks.push({
                     x: this.x + this.width / 2 + dir * 10,
@@ -725,7 +729,7 @@ class Enemy {
             }
 
             // Fuse warning sparks (FUSE phase — escalating intensity as fuse burns down)
-            if (this.kamikazePhase === 'FUSE' && !this.hasDetonated) {
+            if (this.kamikazePhase === 'FUSE' && !this.hasDetonated && !disableTransientFx) {
                 const fuseTotal = Config.EXPLODER_FUSE_TIME || 1.6;
                 const fuseProgress = 1 - (this.fuseTimer / fuseTotal); // 0 -> 1
                 const sparkRate = 1 + Math.floor(fuseProgress * 5); // 1..6 sparks per frame
@@ -1753,6 +1757,8 @@ class Enemy {
     draw(ctx, cameraX = 0, cameraY = 0) {
         ctx.save();
         ctx.translate(-cameraX, -cameraY);
+        const flatParticles = typeof Config !== 'undefined' && Config.MOBILE_FLAT_PARTICLES;
+        const disableShadowBlur = typeof Config !== 'undefined' && Config.MOBILE_DISABLE_SHADOW_BLUR;
 
         // Draw shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -1767,11 +1773,15 @@ class Enemy {
                 for (const p of this.rushSparks) {
                     const alpha = 1 - (p.age / p.life);
                     ctx.globalAlpha = alpha * 0.85;
-                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.2);
-                    grad.addColorStop(0, '#FFFFFF');
-                    grad.addColorStop(0.5, '#FF4444');
-                    grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
-                    ctx.fillStyle = grad;
+                    if (flatParticles) {
+                        ctx.fillStyle = '#FF4444';
+                    } else {
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.2);
+                        grad.addColorStop(0, '#FFFFFF');
+                        grad.addColorStop(0.5, '#FF4444');
+                        grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                        ctx.fillStyle = grad;
+                    }
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
                     ctx.fill();
@@ -1790,44 +1800,58 @@ class Enemy {
                         // Expanding shockwave ring
                         ctx.globalAlpha = alpha * 0.6;
                         ctx.strokeStyle = '#44FF88';
-                        ctx.shadowColor = '#00FF66';
-                        ctx.shadowBlur = 8;
+                        if (!disableShadowBlur) {
+                            ctx.shadowColor = '#00FF66';
+                            ctx.shadowBlur = 8;
+                        }
                         ctx.lineWidth = 2 + (1 - p.age / p.life) * 3;
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.ringRadius || 1, 0, Math.PI * 2);
                         ctx.stroke();
-                        ctx.shadowBlur = 0;
+                        if (!disableShadowBlur) ctx.shadowBlur = 0;
                     } else if (p.isDust) {
                         // Ground dust puff — softer, tan/brown
                         ctx.globalAlpha = alpha * 0.5;
-                        const dGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
-                        dGrad.addColorStop(0, 'rgba(200, 200, 180, 0.8)');
-                        dGrad.addColorStop(0.6, 'rgba(160, 150, 120, 0.4)');
-                        dGrad.addColorStop(1, 'rgba(120, 110, 90, 0)');
-                        ctx.fillStyle = dGrad;
+                        if (flatParticles) {
+                            ctx.fillStyle = 'rgba(180, 170, 140, 0.55)';
+                        } else {
+                            const dGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+                            dGrad.addColorStop(0, 'rgba(200, 200, 180, 0.8)');
+                            dGrad.addColorStop(0.6, 'rgba(160, 150, 120, 0.4)');
+                            dGrad.addColorStop(1, 'rgba(120, 110, 90, 0)');
+                            ctx.fillStyle = dGrad;
+                        }
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
                         ctx.fill();
                     } else if (p.isTrail) {
                         // Airborne trail — small, soft green glow
                         ctx.globalAlpha = alpha * 0.6;
-                        const tGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 1.8);
-                        tGrad.addColorStop(0, '#88FFAA');
-                        tGrad.addColorStop(0.5, '#44FF66');
-                        tGrad.addColorStop(1, 'rgba(68, 255, 102, 0)');
-                        ctx.fillStyle = tGrad;
+                        if (flatParticles) {
+                            ctx.fillStyle = '#44FF66';
+                        } else {
+                            const tGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 1.8);
+                            tGrad.addColorStop(0, '#88FFAA');
+                            tGrad.addColorStop(0.5, '#44FF66');
+                            tGrad.addColorStop(1, 'rgba(68, 255, 102, 0)');
+                            ctx.fillStyle = tGrad;
+                        }
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
                         ctx.fill();
                     } else {
                         // Standard jump spark — bright green burst
                         ctx.globalAlpha = alpha * 0.9;
-                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5);
-                        grad.addColorStop(0, '#FFFFFF');
-                        grad.addColorStop(0.3, '#88FF88');
-                        grad.addColorStop(0.6, '#44FF44');
-                        grad.addColorStop(1, 'rgba(68, 255, 68, 0)');
-                        ctx.fillStyle = grad;
+                        if (flatParticles) {
+                            ctx.fillStyle = '#44FF44';
+                        } else {
+                            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5);
+                            grad.addColorStop(0, '#FFFFFF');
+                            grad.addColorStop(0.3, '#88FF88');
+                            grad.addColorStop(0.6, '#44FF44');
+                            grad.addColorStop(1, 'rgba(68, 255, 68, 0)');
+                            ctx.fillStyle = grad;
+                        }
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
                         ctx.fill();
