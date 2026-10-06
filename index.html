@@ -5039,7 +5039,7 @@
                                     }, 90000);
                                     try {
                                         if (window.Analytics && Analytics.trackPurchaseStart) {
-                                            Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'settings_card' });
+                                            Analytics.trackPurchaseStart({ product: 'skins', placement: 'settings_card' });
                                         }
                                     } catch (_) {}
                                     let _buyRes = null;
@@ -5069,14 +5069,14 @@
                                         }
                                         try {
                                             if (_buyRes && !_buyRes.ok && window.Analytics && Analytics.trackPurchaseFailed) {
-                                                Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: _buyRes.reason || 'unknown' });
+                                                Analytics.trackPurchaseFailed({ product: 'skins', reason: _buyRes.reason || 'unknown' });
                                             }
                                         } catch (_) {}
                                     } catch (e) {
                                         if (statusEl) statusEl.textContent = 'Purchase error.';
                                         try {
                                             if (window.Analytics && Analytics.trackPurchaseFailed) {
-                                                Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: 'exception' });
+                                                Analytics.trackPurchaseFailed({ product: 'skins', reason: 'exception' });
                                             }
                                         } catch (_) {}
                                     } finally {
@@ -5223,7 +5223,7 @@
                                 try {
                                     if (window.Analytics && Analytics.trackPurchaseModalOpen) {
                                         Analytics.trackPurchaseModalOpen({
-                                            product: 'remove_ads',
+                                            product: 'skins',
                                             placement: 'soft_prompt',
                                             trigger: 'death_threshold'
                                         });
@@ -5331,7 +5331,7 @@
                                     try { Analytics.trackEvent && Analytics.trackEvent('soft_prompt_buy_clicked'); } catch (_) {}
                                     try {
                                         if (window.Analytics && Analytics.trackPurchaseStart) {
-                                            Analytics.trackPurchaseStart({ product: 'remove_ads', placement: 'soft_prompt' });
+                                            Analytics.trackPurchaseStart({ product: 'skins', placement: 'soft_prompt' });
                                         }
                                     } catch (_) {}
                                     // Guard: if Play Billing hasn't loaded the product yet,
@@ -5355,7 +5355,7 @@
                                     } catch (_) {}
                                     try {
                                         if (_spRes && !_spRes.ok && window.Analytics && Analytics.trackPurchaseFailed) {
-                                            Analytics.trackPurchaseFailed({ product: 'remove_ads', reason: _spRes.reason || 'unknown' });
+                                            Analytics.trackPurchaseFailed({ product: 'skins', reason: _spRes.reason || 'unknown' });
                                         }
                                     } catch (_) {}
                                     promptBuy.disabled = false;
@@ -5373,7 +5373,7 @@
                                     try {
                                         if (window.Analytics && Analytics.trackPurchaseModalDismissed) {
                                             Analytics.trackPurchaseModalDismissed({
-                                                product: 'remove_ads',
+                                                product: 'skins',
                                                 placement: 'soft_prompt',
                                                 reason: 'user_skip'
                                             });
@@ -5888,7 +5888,7 @@
                                     v.push('✗ Google Play returned NO product details (catalogue empty).');
                                     v.push('  Most common causes — check in order:');
                                     v.push('   1. Products not set to "Active" in Play Console → Products →');
-                                    v.push('      In-app products (remove_ads, founder_pass).');
+                                    v.push('      In-app products (skins, founder_pass).');
                                     v.push('   2. This build (versionCode) is not uploaded to a Play track the');
                                     v.push('      signed-in account can access (Internal testing is enough).');
                                     v.push('   3. App not signed with the key Play expects (use the upload key /');
@@ -6090,7 +6090,7 @@
                                 try {
                                     if (window.Analytics && Analytics.trackPurchaseModalOpen) {
                                         Analytics.trackPurchaseModalOpen({
-                                            product: 'remove_ads',
+                                            product: 'skins',
                                             placement: 'menu_skins',
                                             trigger: 'main_menu_button'
                                         });

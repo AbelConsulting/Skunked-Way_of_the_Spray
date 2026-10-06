@@ -18,9 +18,25 @@ test("tokenHash is stable sha256 hex", () => {
 });
 
 test("skuFromProductId only allows known SKUs", () => {
+  assert.equal(skuFromProductId("skins"), "skins");
   assert.equal(skuFromProductId("remove_ads"), "remove_ads");
   assert.equal(skuFromProductId("founder_pass"), "founder_pass");
   assert.equal(skuFromProductId("hack_sku"), "");
+});
+
+test("skins and legacy remove_ads grant the same skin-pack entitlement", async () => {
+  const { grantVerifiedPurchase } = require("./iap");
+  for (const sku of ["skins", "remove_ads"]) {
+    const { db, FieldValue, store } = makeFakeDb();
+    const result = await grantVerifiedPurchase(db, FieldValue, {
+      playerId: "player_skin_aaaa",
+      sku,
+      productId: sku,
+      purchaseToken: sku.padEnd(24, "x"),
+    });
+    assert.equal(result.ownedField, "adFree");
+    assert.equal(store.get("entitlements/player_skin_aaaa").adFree, true);
+  }
 });
 
 test("playerId and purchaseToken guards", () => {

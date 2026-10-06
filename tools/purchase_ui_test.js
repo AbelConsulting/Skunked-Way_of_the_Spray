@@ -44,7 +44,7 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
                 store.adapters.initialize = async () => [];
                 store.adapters.findReady = () => ({ async loadProducts() {
                     window.__purchaseCalls.queries++;
-                    for (const id of ['remove_ads', 'founder_pass']) {
+                    for (const id of ['skins', 'founder_pass']) {
                         products.set(id, catalogue.addProduct({ id, type: plugin.ProductType.NON_CONSUMABLE, platform: plugin.Platform.GOOGLE_PLAY }, {
                             productId: id, product_type: 'inapp', product_format: 'v12.0',
                             offers: [{offer_token: 'synthetic-offer', formatted_price: '$1.99', price_amount_micros: 1990000, price_currency_code: 'USD'}]
@@ -67,7 +67,7 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         await page.waitForFunction(() => window.__purchaseCalls.orders.length === 1);
         const calls = await page.evaluate(() => window.__purchaseCalls);
         assert.equal(calls.queries, 1);
-        assert.deepEqual(calls.orders, [{ sku: 'remove_ads', token: 'synthetic-offer' }]);
+        assert.deepEqual(calls.orders, [{ sku: 'skins', token: 'synthetic-offer' }]);
         await page.waitForFunction(() => document.getElementById('remove-ads-status').textContent === 'Purchase cancelled.');
         const diag = await page.evaluate(() => window.PurchaseManager.diagnose());
         assert.equal(diag.ready, true);

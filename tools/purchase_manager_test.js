@@ -10,7 +10,7 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 
-function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, pendingInitialization = false } = {}) {
+function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, pendingInitialization = false, ownedIds = [] } = {}) {
     let now = Date.now();
     const timers = new Set();
     const storage = new Map([['skunkfu.iapAutoRestoreTriedAt', '1']]);
@@ -48,7 +48,7 @@ function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, p
     };
     const catalogue = new plugin.GooglePlay.Products({ order, canPurchase: () => true, owned: () => false });
     function populate() {
-        for (const id of ['remove_ads', 'founder_pass']) {
+        for (const id of ['skins', 'founder_pass']) {
             products.set(id, catalogue.addProduct({ id, type: plugin.ProductType.NON_CONSUMABLE, platform: plugin.Platform.GOOGLE_PLAY }, {
                 productId: id, product_type: 'inapp', product_format: 'v12.0',
                 offers: [{ offer_token: 'test-offer-token', formatted_price: '$1.99', price_amount_micros: 1990000, price_currency_code: 'USD' }],
@@ -57,7 +57,7 @@ function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, p
     }
     if (!emptyCatalogue) populate();
     store.get = id => products.get(id);
-    store.owned = () => false;
+    store.owned = id => ownedIds.includes(typeof id === 'string' ? id : id && id.id);
     // Keep real Store.initialize() and Store.update(), including the 10-minute
     // throttle. Only replace native adapter I/O with a predictable catalogue.
     store.adapters.initialize = async () => pendingInitialization ? new Promise(() => {}) : initErrors;
@@ -96,7 +96,7 @@ test('Buy retries an empty catalogue immediately despite plugin default throttle
         const result = await r.manager.purchaseRemoveAds();
         assert.equal(result.ok, true, result.reason);
         assert.equal(r.calls.catalogue, 1, 'must actually query products, not silently skip update()');
-        assert.deepEqual(r.calls.orders, ['remove_ads']);
+        assert.deepEqual(r.calls.orders, ['skins']);
         assert.equal(r.store.minTimeBetweenUpdates, 600000, 'restore normal background refresh throttle');
     } finally { r.close(); }
 });
@@ -107,9 +107,29 @@ test('both purchase buttons use their own SKU and map plugin cancellation', asyn
         await r.manager.initialize();
         assert.equal((await r.manager.purchaseRemoveAds()).reason, 'user-cancelled');
         assert.equal((await r.manager.purchaseFounderPass()).reason, 'user-cancelled');
-        assert.deepEqual(r.calls.orders, ['remove_ads', 'founder_pass']);
+        assert.deepEqual(r.calls.orders, ['skins', 'founder_pass']);
     } finally { r.close(); }
 });
+
+test('Buy orders the skins product, never the retired remove_ads ID', async () => {
+    const r = runtime();
+    try {
+        await r.manager.initialize();
+        assert.equal((await r.manager.purchaseRemoveAds()).ok, true);
+        assert.deepEqual(r.calls.orders, ['skins']);
+    } finally { r.close(); }
+});
+
+for (const ownedId of ['skins', 'remove_ads']) {
+    test(`owning ${ownedId} unlocks the skin pack on init`, async () => {
+        const r = runtime({ ownedIds: [ownedId] });
+        try {
+            assert.equal(r.manager.isAdFree(), false);
+            await r.manager.initialize();
+            assert.equal(r.manager.isAdFree(), true);
+        } finally { r.close(); }
+    });
+}
 
 test('timed-out initialization stays pending; never fake billing readiness to retry', async () => {
     const r = runtime({ emptyCatalogue: true, pendingInitialization: true });
@@ -146,12 +166,12 @@ test('native serializer keeps the offer-token format even for one offer', () => 
 test('actual Google Play adapter forwards a single offer token to the buy bridge', async () => {
     const r = runtime();
     try {
-        const offer = r.store.get('remove_ads').getOffer();
+        const offer = r.store.get('skins').getOffer();
         let orderedId;
         const adapter = { log: { info() {}, warn() {} }, bridge: {
             buy(success, failure, id) { orderedId = id; success(); },
         } };
         await r.plugin.GooglePlay.Adapter.prototype.order.call(adapter, offer, {});
-        assert.equal(orderedId, 'remove_ads@test-offer-token');
+        assert.equal(orderedId, 'skins@test-offer-token');
     } finally { r.close(); }
 });

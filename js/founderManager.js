@@ -3,8 +3,8 @@
  *
  * What is a Founder?
  *   A player who supported the game during the early-access window. The
- *   entitlement is permanent, account-bound (via the legacy Google Play
- *   `remove_ads` skin-pack purchase on Android, or FounderManager.grant() on web/promo).
+ *   entitlement is permanent, account-bound (via the Google Play `skins`
+ *   skin-pack purchase on Android, or the legacy `remove_ads` one, or FounderManager.grant() on web/promo).
  *
  * Founder rewards (cosmetic, no gameplay imbalance):
  *   • Exclusive GOLD ninja skin (only obtainable during early-access window).
@@ -18,7 +18,7 @@
  *     that also grants Founder — useful for users who install after EA ends
  *     and want the badge, and gives cloud-synced proof of ownership.
  *
- * Skin-pack ($1.99) entitlement (legacy Play product ID `remove_ads`):
+ * Skin-pack ($1.99) entitlement (Play product ID `skins`; legacy `remove_ads` also honoured):
  *   • Unlocks the SAPPHIRE, AMETHYST, and STEEL ninja skins.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
@@ -291,9 +291,9 @@ const FounderManager = (() => {
         // Steam: game is sold complete — all skins included.
         if (window.PLATFORM === 'steam') return true;
         if (variantId === 'gold') return _isFounder;
-        // Sapphire, amethyst, and steel always require the remove_ads purchase,
+        // Sapphire, amethyst, and steel always require the skin-pack purchase,
         // even for Founders. Gold is the Founder-only early-access exclusive;
-        // the colour variants are the remove_ads reward — separate value props.
+        // the colour variants are the skin-pack reward — separate value props.
         return _hasRemoveAds();
     }
 

@@ -21,9 +21,11 @@
  *   1. npm install cordova-plugin-purchase
  *   2. Create managed products in Google Play Console:
  *
- *      SKIN PACK (legacy product ID retained for existing buyers):
- *        Product ID: remove_ads      | Type: One-time (managed) | Price: $1.99
+ *      SKIN PACK:
+ *        Product ID: skins           | Type: One-time (managed) | Price: $1.99
  *        Grants: Sapphire, Amethyst, Steel ninja skins.
+ *        The original product ID `remove_ads` is no longer sold, but owned
+ *        `remove_ads` purchases still grant the same entitlement.
  *        During early-access window also auto-grants Gold skin + Founder badge.
  *
  *      SECONDARY / OPTIONAL (early-access only — deactivate after 2026-12-31):
@@ -40,7 +42,10 @@
 const PurchaseManager = (() => {
     'use strict';
 
-    const PRODUCT_ID_REMOVE_ADS    = 'remove_ads';
+    const PRODUCT_ID_SKINS         = 'skins';
+    // Original skin-pack product ID. No longer sold, but still honoured so
+    // existing buyers keep their unlock via Play ownership / server restore.
+    const PRODUCT_ID_LEGACY_SKINS  = 'remove_ads';
     const PRODUCT_ID_FOUNDER_PASS  = 'founder_pass';
     const STORAGE_KEY_AD_FREE      = 'skunkfu.adFree';
     const STORAGE_KEY_FOUNDER_PASS = 'skunkfu.founderPassOwned';
@@ -61,7 +66,7 @@ const PurchaseManager = (() => {
     let _storeInitSettled = false;
     let _adFree        = _readEntitlementFromStorage();
     let _founderPass   = _readFounderPassFromStorage();
-    let _product       = null;     // CdvPurchase.Product (remove_ads)
+    let _product       = null;     // CdvPurchase.Product (skins)
     let _founderProduct = null;    // CdvPurchase.Product (founder_pass)
     // Last seen Google Play purchase token, keyed by SKU. Captured in
     // .approved() / .finished() so we can forward it to the server-side
@@ -125,6 +130,19 @@ const PurchaseManager = (() => {
             }
         } catch (e) {}
         return '';
+    }
+
+    function _isSkinPackId(id) {
+        return id === PRODUCT_ID_SKINS || id === PRODUCT_ID_LEGACY_SKINS;
+    }
+
+    // Server pushes must use the SKU whose Play token we actually hold, so a
+    // legacy `remove_ads` owner is verified against that product, not `skins`.
+    function _skinPackPushSku() {
+        const pending = _readPendingPurchases();
+        if (_lastPurchaseToken[PRODUCT_ID_SKINS] || pending[PRODUCT_ID_SKINS]) return PRODUCT_ID_SKINS;
+        if (_lastPurchaseToken[PRODUCT_ID_LEGACY_SKINS] || pending[PRODUCT_ID_LEGACY_SKINS]) return PRODUCT_ID_LEGACY_SKINS;
+        return PRODUCT_ID_SKINS;
     }
 
     function _captureToken(tx) {
@@ -313,7 +331,7 @@ const PurchaseManager = (() => {
                 _setFounderPassOwned(true, 'remote-restore');
             }
             // Re-push only when we still have a Play purchase token to verify.
-            if (_adFree && !remote.adFree && !remote.adFreeRevoked) _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
+            if (_adFree && !remote.adFree && !remote.adFreeRevoked) _pushEntitlementRemote(_skinPackPushSku());
             if (_founderPass && !remote.founderPass && !remote.founderPassRevoked) _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
         } catch (e) {
             _warn('Remote entitlement pull failed:', e);
@@ -379,13 +397,13 @@ const PurchaseManager = (() => {
             _log('Skin pack entitlement changed →', _adFree, '(source:', source + ')');
             // Mirror to server (skip if this flip CAME from the server).
             if (_adFree && source !== 'remote-restore' && source !== 'remote-revoke' && source !== 'storage') {
-                _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
+                _pushEntitlementRemote(_skinPackPushSku());
             }
             // Notify subscribers
             _listeners.forEach(fn => { try { fn(_adFree); } catch(e) {} });
             // Analytics
             try { if (window.Analytics && Analytics.trackPurchase) {
-                Analytics.trackPurchase({ product: PRODUCT_ID_REMOVE_ADS, source });
+                Analytics.trackPurchase({ product: PRODUCT_ID_SKINS, source });
             } } catch (e) {}
         }
     }
@@ -568,7 +586,7 @@ const PurchaseManager = (() => {
 
             store.register([
                 {
-                    id:       PRODUCT_ID_REMOVE_ADS,
+                    id:       PRODUCT_ID_SKINS,
                     type:     ProductType.NON_CONSUMABLE,
                     platform: Platform.GOOGLE_PLAY,
                 },
@@ -582,7 +600,7 @@ const PurchaseManager = (() => {
             store.when()
                 .productUpdated((p) => {
                     if (!p) return;
-                    if (p.id === PRODUCT_ID_REMOVE_ADS) {
+                    if (p.id === PRODUCT_ID_SKINS) {
                         const wasLoaded = !!(_product && _product.pricing);
                         _product = p;
                         _log('Product loaded:', p.id, p.pricing && p.pricing.price);
@@ -620,7 +638,7 @@ const PurchaseManager = (() => {
                     // the player has still been charged and deserves the unlock.
                     try {
                         if (tx && Array.isArray(tx.products)) {
-                            if (tx.products.some(p => p && p.id === PRODUCT_ID_REMOVE_ADS)) {
+                            if (tx.products.some(p => p && _isSkinPackId(p.id))) {
                                 _setAdFree(true, 'approved');
                             }
                             if (tx.products.some(p => p && p.id === PRODUCT_ID_FOUNDER_PASS)) {
@@ -642,7 +660,7 @@ const PurchaseManager = (() => {
                     _log('Transaction finished:', tx);
                     _captureToken(tx);
                     if (tx && tx.products) {
-                        if (tx.products.some(p => p.id === PRODUCT_ID_REMOVE_ADS)) {
+                        if (tx.products.some(p => p && _isSkinPackId(p.id))) {
                             _setAdFree(true, 'purchase');
                         }
                         if (tx.products.some(p => p.id === PRODUCT_ID_FOUNDER_PASS)) {
@@ -653,7 +671,7 @@ const PurchaseManager = (() => {
                 .receiptUpdated((r) => {
                     // Reconcile owned products on each receipt update (handles restore).
                     try {
-                        if (store.owned(PRODUCT_ID_REMOVE_ADS))   _setAdFree(true, 'restore');
+                        if (store.owned(PRODUCT_ID_SKINS) || store.owned(PRODUCT_ID_LEGACY_SKINS)) _setAdFree(true, 'restore');
                         if (store.owned(PRODUCT_ID_FOUNDER_PASS)) _setFounderPassOwned(true, 'restore');
                     } catch (e) {}
                 });
@@ -700,7 +718,7 @@ const PurchaseManager = (() => {
 
             // Cross-check ownership on init.
             try {
-                if (store.owned(PRODUCT_ID_REMOVE_ADS))   _setAdFree(true, 'init-owned');
+                if (store.owned(PRODUCT_ID_SKINS) || store.owned(PRODUCT_ID_LEGACY_SKINS)) _setAdFree(true, 'init-owned');
                 if (store.owned(PRODUCT_ID_FOUNDER_PASS)) _setFounderPassOwned(true, 'init-owned');
             } catch (e) {}
 
@@ -799,7 +817,7 @@ const PurchaseManager = (() => {
         const deadline = Date.now() + timeoutMs;
         while (Date.now() < deadline) {
             const p = (store.get && store.get(sku)) ||
-                      (sku === PRODUCT_ID_REMOVE_ADS ? _product : _founderProduct);
+                      (sku === PRODUCT_ID_SKINS ? _product : _founderProduct);
             if (p && p.pricing && p.pricing.price) return p;
             _tryUpdate();
             await new Promise(r => setTimeout(r, 250));
@@ -807,7 +825,7 @@ const PurchaseManager = (() => {
         // Last-ditch: return whatever we have, even without pricing — the order
         // call may still succeed (Play Billing can show its own pricing UI).
         return (store.get && store.get(sku)) ||
-               (sku === PRODUCT_ID_REMOVE_ADS ? _product : _founderProduct) ||
+               (sku === PRODUCT_ID_SKINS ? _product : _founderProduct) ||
                null;
     }
 
@@ -820,7 +838,7 @@ const PurchaseManager = (() => {
         if (!_store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
         if (!_storeInitSettled) return { ok: false, reason: 'store-connecting' };
         const [removeAds] = await Promise.all([
-            _refreshProduct(PRODUCT_ID_REMOVE_ADS),
+            _refreshProduct(PRODUCT_ID_SKINS),
             _refreshProduct(PRODUCT_ID_FOUNDER_PASS),
         ]);
         return removeAds && removeAds.pricing
@@ -829,7 +847,7 @@ const PurchaseManager = (() => {
     }
 
     /**
-     * Initiate purchase of the skin pack (legacy remove_ads product ID).
+     * Initiate purchase of the skin pack (`skins` product ID).
      * @returns {Promise<{ok:boolean, reason?:string}>}
      */
     async function purchaseRemoveAds() {
@@ -852,10 +870,10 @@ const PurchaseManager = (() => {
         // Self-heal: if Play Billing never delivered pricing for this SKU
         // (the root cause of the "indefinitely loading" reports), force a
         // fresh catalogue fetch and wait up to ~6s for productUpdated().
-        let product = store.get(PRODUCT_ID_REMOVE_ADS) || _product;
+        let product = store.get(PRODUCT_ID_SKINS) || _product;
         if (!product || !product.pricing) {
-            _log('remove_ads not in catalogue — forcing refresh before order.');
-            product = await _refreshProduct(PRODUCT_ID_REMOVE_ADS);
+            _log('skins not in catalogue — forcing refresh before order.');
+            product = await _refreshProduct(PRODUCT_ID_SKINS);
         }
         if (!product) {
             // If the plugin's own init never actually settled, this is a slow/
@@ -888,7 +906,7 @@ const PurchaseManager = (() => {
                 const errMsg  = orderErr.message || '';
                 const reason  = (errCode === String(window.CdvPurchase.ErrorCode.PAYMENT_CANCELLED) || errCode === '1') ? 'user-cancelled'
                               : (errMsg || ('error-' + (errCode || 'unknown')));
-                _lastOrderError = '[' + PRODUCT_ID_REMOVE_ADS + '] code=' + (errCode || '?') + ' msg=' + (errMsg || reason);
+                _lastOrderError = '[' + PRODUCT_ID_SKINS + '] code=' + (errCode || '?') + ' msg=' + (errMsg || reason);
                 return { ok: false, reason };
             }
             // The actual entitlement flip happens in the .finished()/receiptUpdated()
@@ -896,7 +914,7 @@ const PurchaseManager = (() => {
             return { ok: true, reason: 'pending' };
         } catch (e) {
             _warn('Purchase failed:', e);
-            _lastOrderError = '[' + PRODUCT_ID_REMOVE_ADS + '] ' + ((e && e.message) || 'purchase-error');
+            _lastOrderError = '[' + PRODUCT_ID_SKINS + '] ' + ((e && e.message) || 'purchase-error');
             return { ok: false, reason: (e && e.message) || 'purchase-error' };
         }
     }
@@ -925,7 +943,7 @@ const PurchaseManager = (() => {
      */
     function getPriceString() {
         try {
-            const p = (_store && _store.get && _store.get(PRODUCT_ID_REMOVE_ADS)) || _product;
+            const p = (_store && _store.get && _store.get(PRODUCT_ID_SKINS)) || _product;
             if (p && p.pricing && p.pricing.price) return p.pricing.price;
         } catch (e) {}
         // Fallback so the Buy button never reads as blank/null while the Play
@@ -1070,7 +1088,8 @@ const PurchaseManager = (() => {
         if (store) {
             try {
                 out.products = {
-                    remove_ads:   store.get ? store.get(PRODUCT_ID_REMOVE_ADS)  : _product,
+                    skins:        store.get ? store.get(PRODUCT_ID_SKINS)  : _product,
+                    remove_ads:   store.get ? store.get(PRODUCT_ID_LEGACY_SKINS) : null,
                     founder_pass: store.get ? store.get(PRODUCT_ID_FOUNDER_PASS) : _founderProduct,
                 };
             } catch (e) { out.products_error = String(e); }
@@ -1119,7 +1138,8 @@ const PurchaseManager = (() => {
         // signed-in Play Games player and mirrors any owned SKUs locally.
         // Safe to call repeatedly; no-op until the player ID is known.
         syncRemoteEntitlements: (force = false) => _pullEntitlementsRemote(!!force),
-        PRODUCT_ID_REMOVE_ADS,
+        PRODUCT_ID_SKINS,
+        PRODUCT_ID_LEGACY_SKINS,
         PRODUCT_ID_FOUNDER_PASS,
         /** Diagnostic dump. Call from Chrome Remote DevTools: PurchaseManager.diagnose() */
         diagnose,

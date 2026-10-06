@@ -4,8 +4,11 @@
  */
 const crypto = require("crypto");
 
-const VALID_SKUS = new Set(["remove_ads", "founder_pass"]);
+// `skins` is the current skin-pack product; `remove_ads` is its original
+// (now inactive) product ID. Both grant the same `adFree` entitlement field.
+const VALID_SKUS = new Set(["skins", "remove_ads", "founder_pass"]);
 const SKU_TO_FIELD = {
+  skins: { ownedField: "adFree", sinceField: "adFreeSince" },
   remove_ads: { ownedField: "adFree", sinceField: "adFreeSince" },
   founder_pass: { ownedField: "founderPass", sinceField: "founderPassSince" },
 };

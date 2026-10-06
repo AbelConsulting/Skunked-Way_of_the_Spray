@@ -273,10 +273,10 @@ export async function getEntitlements(playerId) {
 }
 
 /**
- * Push a single entitlement (`remove_ads` or `founder_pass`) to the server
+ * Push a single entitlement (`skins`, legacy `remove_ads`, or `founder_pass`) to the server
  * for the given player. Idempotent — safe to call repeatedly.
  * @param {string} playerId
- * @param {'remove_ads'|'founder_pass'} sku
+ * @param {'skins'|'remove_ads'|'founder_pass'} sku
  * @param {{purchaseToken?: string, productId?: string}} [opts]
  *   Optional Google Play purchase token + product ID to enable server-side
  *   receipt verification when the Functions backend has a Play Developer
@@ -285,7 +285,7 @@ export async function getEntitlements(playerId) {
  */
 export async function setEntitlement(playerId, sku, opts) {
   if (!playerId || typeof playerId !== 'string') return false;
-  if (sku !== 'remove_ads' && sku !== 'founder_pass') return false;
+  if (sku !== 'skins' && sku !== 'remove_ads' && sku !== 'founder_pass') return false;
   const body = { playerId, sku };
   if (opts && typeof opts === 'object') {
     if (opts.purchaseToken && typeof opts.purchaseToken === 'string') body.purchaseToken = opts.purchaseToken;

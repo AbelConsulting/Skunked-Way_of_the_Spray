@@ -189,11 +189,11 @@
 
         <!-- 4b -->
         <h2 id="iap">4b. In-App Purchases (Android)</h2>
-        <p>The Android version offers an optional one-time skin purchase ($1.99 USD or local equivalent). For compatibility with existing Google Play purchases, its product ID remains <code>remove_ads</code>. It unlocks three additional cosmetic ninja skin colours (Sapphire, Amethyst, and Steel). A fourth, exclusive Gold skin and a “Founder” status badge are granted automatically to anyone who makes the purchase before December 31, 2026 (the early-access window).</p>
+        <p>The Android version offers an optional one-time skin purchase ($1.99 USD or local equivalent), sold under the Google Play product ID <code>skins</code> (earlier purchases made under the original product ID <code>remove_ads</code> remain valid). It unlocks three additional cosmetic ninja skin colours (Sapphire, Amethyst, and Steel). A fourth, exclusive Gold skin and a “Founder” status badge are granted automatically to anyone who makes the purchase before December 31, 2026 (the early-access window).</p>
         <h3>How the purchase is processed</h3>
         <ul>
             <li>Payments are handled exclusively by <strong>Google Play Billing</strong>. Mephitideus Interactive does <strong>not</strong> receive, see, or store your name, billing address, credit-card number, or other payment-instrument data.</li>
-            <li>Google Play provides the Game with a digital receipt indicating that the <code>remove_ads</code> product is owned by your Google account. The Game uses this receipt to enable the skin purchase entitlement.</li>
+            <li>Google Play provides the Game with a digital receipt indicating that the <code>skins</code> product (or the original <code>remove_ads</code> product) is owned by your Google account. The Game uses this receipt to enable the skin purchase entitlement.</li>
             <li>Your entitlement is mirrored locally on your device (<code>localStorage</code> key <code>skunkfu.adFree</code>) so the Game can apply it offline. No purchase information is transmitted to Mephitideus Interactive servers.</li>
         </ul>
         <h3>Restoring purchases</h3>
