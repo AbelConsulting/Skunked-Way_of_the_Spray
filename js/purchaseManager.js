@@ -9,7 +9,8 @@
  *     want to monetize the web build directly. For now web is "Coming soon".
  *
  * What the purchase grants:
- *   • Removes banner + between-stage interstitial ads (rewarded ads stay opt-in).
+ *   • Unlocks three cosmetic ninja skins. Optional rewarded extra-life ads
+ *     remain opt-in and are not affected by this purchase.
  *   • Unlocks the Sapphire, Amethyst, and Steel ninja skins (FounderManager.isSkinUnlocked).
  *   • If purchased before EARLY_ACCESS_END_ISO (2026-12-31), also auto-grants
  *     Founder status + the exclusive Gold ninja skin.
@@ -23,12 +24,13 @@
  *
  *      PRIMARY REVENUE PRODUCT (main IAP — always active):
  *        Product ID: remove_ads      | Type: One-time (managed) | Price: $1.99
- *        Grants: ad-free gameplay + Sapphire, Amethyst, Steel ninja skins.
+ *        Grants: Sapphire, Amethyst, Steel ninja skins.
  *        During early-access window also auto-grants Gold skin + Founder badge.
  *
  *      SECONDARY / OPTIONAL (early-access only — deactivate after 2026-12-31):
  *        Product ID: founder_pass    | Type: One-time (managed) | Price: $0.99
- *        Grants: Gold ninja skin + Founder badge ONLY. Does NOT remove ads.
+ *        Grants: Gold ninja skin + Founder badge ONLY. Does not unlock the
+ *        Sapphire, Amethyst, and Steel skins.
  *        For players who want to cloud-sync Founder status without buying
  *        Remove Ads. This is NOT the primary revenue driver.
  *   3. npx cap sync android
@@ -298,10 +300,10 @@ const PurchaseManager = (() => {
             // Explicit Play refund/cancel (RTDN) may clear server ownership.
             // Missing server records still do not revoke local unlocks (offline purchase).
             if (remote.adFreeRevoked && _adFree) {
-                _log('Revoked ad-free from server (Play refund/cancel)');
+                _log('Revoked purchase entitlement from server (Play refund/cancel)');
                 _setAdFree(false, 'remote-revoke');
             } else if (remote.adFree && !_adFree) {
-                _log('Restored ad-free from server (player ' + pid.slice(0, 6) + '…)');
+                _log('Restored purchase entitlement from server (player ' + pid.slice(0, 6) + '…)');
                 _setAdFree(true, 'remote-restore');
             }
             if (remote.founderPassRevoked && _founderPass) {
@@ -376,12 +378,6 @@ const PurchaseManager = (() => {
         _writeEntitlement(_adFree);
         if (prev !== _adFree) {
             _log('Ad-free entitlement changed →', _adFree, '(source:', source + ')');
-            // Tell AdManager to reconcile (skip interstitial, etc.)
-            try {
-                if (window.AdManager && _adFree) {
-                    // No banner to remove; interstitial is gated by _isAdFree() in onStageComplete.
-                }
-            } catch (e) { _warn('AdManager reconcile failed:', e); }
             // Mirror to server (skip if this flip CAME from the server).
             if (_adFree && source !== 'remote-restore' && source !== 'remote-revoke' && source !== 'storage') {
                 _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
@@ -517,7 +513,7 @@ const PurchaseManager = (() => {
         _initialized = true;
 
         // Steam build: everything is included with the game purchase.
-        // Mark ad-free and founder pass as owned, skip all IAP initialisation.
+        // Mark the purchase entitlements as owned, skip all IAP initialisation.
         if (window.PLATFORM === 'steam') {
             _adFree = true;
             _founderPass = true;

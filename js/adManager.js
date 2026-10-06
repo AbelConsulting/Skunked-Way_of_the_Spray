@@ -1,19 +1,17 @@
 /**
  * adManager.js — Manages AdMob ads via @capacitor-community/admob.
  *
- * Provides Rewarded Video ("Watch Ad to Revive") and Interstitial ads
- * for the Android build. Gracefully no-ops on web / when plugin is absent.
+ * Provides optional Rewarded Video ("Watch Ad to Revive") ads for Android.
+ * Gracefully no-ops on web / when plugin is absent.
  *
  * AdMob app (Google Play — com.skunksquad.skunkfu):
  *   App ID:        ca-app-pub-8519140628365141~5979271944
  *
- * Ad units under that app:
- *   Interstitial (betweenlevels): ca-app-pub-8519140628365141/5195233926
- *   Rewarded (extra life):     ca-app-pub-8519140628365141/3920084812
+ * Ad unit under that app:
+ *   Rewarded (extra life): ca-app-pub-8519140628365141/3920084812
  *
  * Google AdMob test ad unit IDs (used when testing = true):
- *   Rewarded:     ca-app-pub-3940256099942544/5224354917
- *   Interstitial: ca-app-pub-3940256099942544/1033173712
+ *   Rewarded: ca-app-pub-3940256099942544/5224354917
  */
 
 const AdManager = (() => {
@@ -21,24 +19,17 @@ const AdManager = (() => {
 
     // ── Configuration ──────────────────────────────────────────────
     // Defaults; runtime overrides come from localStorage `skunkfu_adConfig`
-    // (a JSON object). This lets us tune cadence remotely (e.g. via a Cloud
-    // Function-served config) without redeploying. Only the listed keys can
-    // be overridden — ad unit IDs and rewarded format are intentionally
-    // baked-in to avoid client-side ad spoofing.
+    // (a JSON object). Only the listed keys can be overridden — the ad unit
+    // ID and rewarded format are intentionally baked in.
     const TUNABLE_KEYS = [
-        'interstitialEveryNStages',
-        'interstitialMinIntervalSec',
-        'interstitialFirstInstallSkipCount',
         'maxRevivesPerSession'
     ];
     const DEFAULT_CONFIG = {
         // Real ad unit IDs from AdMob console (app ~5979271944, Google Play link):
         rewardedAdUnitId:     'ca-app-pub-8519140628365141/3920084812',
-        interstitialAdUnitId: 'ca-app-pub-8519140628365141/5195233926',
 
         // Google's official test ad unit IDs — used when testing is true
         testRewardedId:      'ca-app-pub-3940256099942544/5224354917',
-        testInterstitialId:  'ca-app-pub-3940256099942544/1033173712',
 
         // Set to false for production builds
         testing: false,
@@ -55,15 +46,6 @@ const AdManager = (() => {
         // requests will silently no-fill. The "extra life" unit
         // (3920084812) is type Rewarded, so we use 'rewardVideo'.
         rewardedFormat: 'rewardVideo',
-
-        // Show an interstitial every N stages (0 = never)
-        interstitialEveryNStages: 3,
-        // Minimum seconds between interstitials (frequency cap)
-        interstitialMinIntervalSec: 90,
-        // First-install grace: how many interstitials to skip on a brand-new
-        // install. Helps D1 retention by not showing an ad mid-tutorial. The
-        // counter persists in localStorage as `skunkfu_iapInterSkipped`.
-        interstitialFirstInstallSkipCount: 1,
 
         // Max rewarded revives per session (prevent abuse)
         maxRevivesPerSession: 2,
@@ -90,11 +72,8 @@ const AdManager = (() => {
     let _initialized  = false;
     let _available     = false;  // true only on native Android with plugin
     let _rewardedReady      = false;
-    let _interstitialReady  = false;
     let _revivesUsed        = 0;
-    let _stagesSinceAd      = 0;
-    let _lastInterstitialAt = 0;
-    let _adShowing          = false; // true while a rewarded/interstitial is on screen
+    let _adShowing          = false; // true while a rewarded ad is on screen
     let _pausedStateBeforeAd = null; // game.state value captured at pause time
 
     // ── UMP (Google User Messaging Platform) consent state ─────────
@@ -113,20 +92,12 @@ const AdManager = (() => {
         return CONFIG.testing ? CONFIG.testRewardedId : CONFIG.rewardedAdUnitId;
     }
 
-    function _getInterstitialId() {
-        return CONFIG.testing ? CONFIG.testInterstitialId : CONFIG.interstitialAdUnitId;
-    }
-
     function _log(...args) {
         console.log('[AdManager]', ...args);
     }
 
     function _warn(...args) {
         console.warn('[AdManager]', ...args);
-    }
-
-    function _isAdFree() {
-        try { return !!(window.PurchaseManager && window.PurchaseManager.isAdFree && window.PurchaseManager.isAdFree()); } catch (e) { return false; }
     }
 
     // ── Web (AdSense H5 Games Ads — adBreak API) rewarded helpers ─────────
@@ -340,8 +311,7 @@ const AdManager = (() => {
             // Choices may have changed — refresh consent state and reload ads.
             await _gatherConsent();
             if (_available && _canRequestAds) {
-                if (!_rewardedReady)     _prepareRewarded();
-                if (!_interstitialReady) _prepareInterstitial();
+                if (!_rewardedReady) _prepareRewarded();
             }
             return true;
         } catch (e) {
@@ -403,10 +373,9 @@ const AdManager = (() => {
             _available = true;
             _log('AdMob initialized successfully (testing=' + CONFIG.testing + ').');
 
-            // Pre-load ads in the background (only when consent allows requests)
+            // Pre-load the optional extra-life ad only when consent allows requests.
             if (_canRequestAds) {
                 _prepareRewarded();
-                _prepareInterstitial();
             } else {
                 _log('Ad loading deferred — consent not (yet) granted.');
             }
@@ -462,10 +431,8 @@ const AdManager = (() => {
      * @returns {boolean}
      */
     function canShowRewarded() {
-        // Rewarded ads remain available for everyone, including Remove-Ads owners.
-        // The Remove-Ads SKU only suppresses interstitial. Rewarded is
-        // an opt-in trade ("watch a 30s ad to revive") that ad-free players can
-        // still choose to use for the extra life.
+        // The extra-life ad is always an explicit player choice, independent
+        // of cosmetic purchase entitlements.
         if (_revivesUsed >= CONFIG.maxRevivesPerSession) return false;
         if (_available) return _rewardedReady;                          // native (AdMob)
         return !!DEFAULT_CONFIG.webRewardedEnabled && _webAdReady;      // web (AdSense)
@@ -518,79 +485,6 @@ const AdManager = (() => {
         }
     }
 
-    // ── Interstitial ─────────────────────────────────────────────────────
-    async function _prepareInterstitial() {
-        if (!_available || !_plugin || !_canRequestAds) return;
-        try {
-            await _plugin.prepareInterstitial({
-                adId: _getInterstitialId(),
-                isTesting: CONFIG.testing,
-            });
-            _interstitialReady = true;
-            _log('Interstitial ad ready.');
-        } catch (e) {
-            _interstitialReady = false;
-            _warn('Failed to prepare interstitial:', e);
-            try { Analytics.trackAdNoFill({ type: 'interstitial', placement: 'stage_complete', phase: 'prepare', reason: (e && e.message) || String(e) }); } catch (_) {}
-        }
-    }
-
-    /**
-     * Call this when a stage is completed. Shows an interstitial
-     * every N stages (configured in CONFIG.interstitialEveryNStages).
-     * Returns a Promise that resolves when the ad is dismissed.
-     * @returns {Promise<void>}
-     */
-    async function onStageComplete() {
-        if (_isAdFree()) return;
-        if (!_available || CONFIG.interstitialEveryNStages <= 0) return;
-
-        _stagesSinceAd++;
-        if (_stagesSinceAd < CONFIG.interstitialEveryNStages) return;
-        if (!_interstitialReady) return;
-
-        // Frequency cap: don't show two interstitials within N seconds
-        const now = Date.now();
-        const minMs = (CONFIG.interstitialMinIntervalSec || 0) * 1000;
-        if (minMs > 0 && _lastInterstitialAt && (now - _lastInterstitialAt) < minMs) {
-            return;
-        }
-
-        // First-install grace: skip the first N qualifying interstitials so
-        // brand-new players don't get hit with an ad mid-tutorial. Counter
-        // persists across sessions; resets only on uninstall/clear-data.
-        const skipTarget = CONFIG.interstitialFirstInstallSkipCount | 0;
-        if (skipTarget > 0) {
-            let skipped = 0;
-            try { skipped = parseInt(localStorage.getItem('skunkfu_iapInterSkipped') || '0', 10) || 0; } catch (e) {}
-            if (skipped < skipTarget) {
-                try { localStorage.setItem('skunkfu_iapInterSkipped', String(skipped + 1)); } catch (e) {}
-                _stagesSinceAd = 0; // reset counter so the next one comes in N stages
-                _log('Interstitial skipped (first-install grace ' + (skipped + 1) + '/' + skipTarget + ').');
-                return;
-            }
-        }
-
-        const wasPaused = _pauseGameForAd();
-        _setAdShowing(true);
-        try {
-            _stagesSinceAd = 0;
-            _lastInterstitialAt = now;
-            await _plugin.showInterstitial();
-            _log('Interstitial shown.');
-            try { Analytics.trackAdImpression({ type: 'interstitial', placement: 'stage_complete' }); } catch(e) {}
-        } catch (e) {
-            _warn('Interstitial failed:', e);
-            try { Analytics.trackAdNoFill({ type: 'interstitial', placement: 'stage_complete', phase: 'show', reason: (e && e.message) || String(e) }); } catch (_) {}
-        } finally {
-            _setAdShowing(false);
-            if (wasPaused) _resumeGameAfterAd();
-        }
-
-        _interstitialReady = false;
-        _prepareInterstitial();
-    }
-
     // ── Game pause helpers ─────────────────────────────────────────
     /**
      * Pause the game loop while an ad is visible so players don't take
@@ -598,8 +492,7 @@ const AdManager = (() => {
      * the ad is on top of the WebView.
      *
      * Records the prior game.state so it can be restored exactly when the
-     * ad closes (covers PLAYING and LEVEL_COMPLETE — interstitials fire
-     * from completeLevel() so the state is LEVEL_COMPLETE at that point).
+     * ad closes.
      * Returns true if the game was paused by this call.
      */
     function _pauseGameForAd() {
@@ -667,7 +560,6 @@ const AdManager = (() => {
      */
     function resetSession() {
         _revivesUsed = 0;
-        _stagesSinceAd = 0;
         // Re-enable web rewarded button for the new session (adBreak handles its own fill)
         if (!_available && _webInitDone) _webAdReady = true;
     }
@@ -712,13 +604,12 @@ const AdManager = (() => {
         setConfig,
         canShowRewarded,
         showRewarded,
-        onStageComplete,
         resetSession,
         /** UMP privacy options — re-open the consent form (EEA users). */
         showPrivacyOptions,
         /** True when Google requires a "Privacy options" entry in settings. */
         isPrivacyOptionsRequired,
-        /** True while a full-screen ad (rewarded/interstitial) is on screen. */
+        /** True while a rewarded ad is on screen. */
         isAdShowing() { return _adShowing; },
         /** True if ads are available on this platform. */
         get available() { return _available; },

@@ -1604,8 +1604,7 @@ class Game {
             this.dispatchGameStateChange();
             if (typeof Config !== 'undefined' && Config.DEBUG) console.log('Level Complete!');
             // Is this the final campaign stage? If so, skip the per-stage
-            // jingle and the interstitial cue — both feel jarring right
-            // before the victory screen.
+            // jingle, which feels jarring right before the victory screen.
             const _isFinalStage = (typeof LEVEL_CONFIGS !== 'undefined')
                 && ((this.currentLevelIndex || 0) + 1) >= (this._campaignStageCap || LEVEL_CONFIGS.length);
             this._isFinalStageComplete = _isFinalStage;
@@ -1638,15 +1637,6 @@ class Game {
                 }
             } catch (e) { /* analytics must never break gameplay */ }
 
-            // Notify ad manager for interstitial pacing — but never on the
-            // final stage; an interstitial sandwiched between the boss kill
-            // and the victory screen is a guaranteed bad review.
-            try {
-                if (!_isFinalStage && window.AdManager && typeof AdManager.onStageComplete === 'function') {
-                    AdManager.onStageComplete();
-                }
-            } catch (e) { __err('game', e); }
-            
             // Track level completion and perfect runs
             try {
                 this.gameStats.levelsCompleted++;
@@ -1660,8 +1650,8 @@ class Game {
             // Wait then transition. Use a dt-driven timer (not setTimeout)
             // so the wait is paused while a full-screen ad is on screen.
             // Previously this used setTimeout(2000) which fired even when the
-            // WebView was backgrounded by an AdMob interstitial — by the time
-            // the ad closed the next level had already loaded behind it,
+            // WebView was backgrounded — by the time it resumed the next
+            // level had already loaded behind the completion screen,
             // causing damage / game-overs the player couldn't see.
             // Final stage holds a touch longer so the "FINAL BOSS DOWN!"
             // banner has time to breathe before the fade to victory.
@@ -1848,7 +1838,7 @@ class Game {
             // Freeze everything (gameplay, transitions, level-complete timer)
             // while a full-screen ad is on screen. AdManager dispatches
             // gameAdShow/gameAdHide and toggles isAdShowing() for both
-            // rewarded video and interstitial ads.
+            // rewarded video ads.
             try {
                 if (window.AdManager && typeof window.AdManager.isAdShowing === 'function'
                     && window.AdManager.isAdShowing()) {

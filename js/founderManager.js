@@ -19,8 +19,8 @@
  *     and want the badge, and gives cloud-synced proof of ownership.
  *
  * Remove Ads ($1.99) entitlement (separate from Founder, no time limit):
- *   • Removes banner + interstitial ads.
  *   • Unlocks the SAPPHIRE, AMETHYST, and STEEL ninja skins.
+ *   • Optional rewarded extra-life ads remain available.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
  * Persistence:
@@ -234,7 +234,7 @@ const FounderManager = (() => {
         }
 
         // 2. Listen for future Remove Ads purchases — if PurchaseManager is
-        //    wired, react when the ad-free entitlement flips to true.
+        //    wired, react when the purchase entitlement flips to true.
         //      • During the early-access window → also grant Founder (gold).
         //      • After early-access ends → only the 3 colour skins unlock
         //        (handled implicitly by isSkinUnlocked); we still notify so

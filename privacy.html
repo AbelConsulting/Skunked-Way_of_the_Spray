@@ -120,7 +120,7 @@
         </p>
 
         <div class="notice-box">
-        <p><strong>Summary:</strong> We do not run a traditional user-account system, but we do process limited game-related data on our backend for leaderboard and purchase-entitlement features. Game progress is also saved locally on your device. The Game uses Google advertising and analytics services (including AdSense/AdMob and Google Tag Manager), which may collect device and usage data under Google's own privacy policies. The Android version supports an optional one-time in-app purchase ("Remove Ads", $1.99 USD) processed by Google Play Billing &mdash; we do not see your full payment details. This Game is intended for users <strong>13 years of age and older</strong>.</p>
+        <p><strong>Summary:</strong> We do not run a traditional user-account system, but we do process limited game-related data on our backend for leaderboard and purchase-entitlement features. Game progress is also saved locally on your device. The Game uses Google advertising and analytics services (including AdSense/AdMob and Google Tag Manager), which may collect device and usage data under Google's own privacy policies. Android AdMob ads are optional extra-life videos shown only when you choose to revive after defeat. The Android version also offers an optional one-time in-app purchase ("Remove Ads", $1.99 USD) processed by Google Play Billing &mdash; we do not see your full payment details. This Game is intended for users <strong>13 years of age and older</strong>.</p>
         </div>
 
         <nav class="toc">
@@ -160,7 +160,7 @@
         <h3>Data you actively submit</h3>
         <ul>
             <li><strong>Leaderboard submissions:</strong> when you submit a score, we process your short player name/initials, score, selected game stats (such as level, achievement count, prestige), and a technical run identifier used to prevent duplicate submissions.</li>
-            <li><strong>Purchase entitlement sync:</strong> on Android, when enabled in game, we process your Google Play Games player ID and entitlement state (for example, ad-free ownership) to support cross-device restore behavior.</li>
+            <li><strong>Purchase entitlement sync:</strong> on Android, when enabled in game, we process your Google Play Games player ID and purchase ownership state to support cross-device restore behavior.</li>
         </ul>
 
         <h3>Analytics and product telemetry</h3>
@@ -185,7 +185,7 @@
 
         <!-- 4 -->
         <h2 id="advertising">4. Third-Party Advertising &amp; Cookies</h2>
-        <p>The Game displays advertisements served by Google. On the web version, Google AdSense is used; on the Android version, Google AdMob is used.</p>
+        <p>The web version may display Google AdSense advertisements. On Android, Google AdMob is used only for optional rewarded video ads offered when you choose to revive after defeat; these ads are never shown automatically.</p>
 
         <h3>Data Google may collect</h3>
         <p>When an ad is displayed, Google's advertising SDK may collect or process:</p>
@@ -208,11 +208,11 @@
 
         <!-- 4b -->
         <h2 id="iap">4b. In-App Purchases (Android)</h2>
-        <p>The Android version of the Game offers an optional one-time in-app purchase titled <strong>Remove Ads</strong> (product ID <code>remove_ads</code>, $1.99 USD or local equivalent). The purchase removes between-stage interstitial advertisements within the Game on the device used to make the purchase, and unlocks three additional cosmetic ninja skin colours (Sapphire, Amethyst, and Steel). A fourth, exclusive Gold skin and a “Founder” status badge are granted automatically to anyone who makes the purchase before December 31, 2026 (the early-access window). Optional rewarded video ads (used to revive after a defeat) remain available and are never auto-played.</p>
+        <p>The Android version of the Game offers an optional one-time in-app purchase titled <strong>Remove Ads</strong> (product ID <code>remove_ads</code>, $1.99 USD or local equivalent). The purchase unlocks three additional cosmetic ninja skin colours (Sapphire, Amethyst, and Steel). A fourth, exclusive Gold skin and a “Founder” status badge are granted automatically to anyone who makes the purchase before December 31, 2026 (the early-access window). Optional rewarded video ads (used to revive after a defeat) remain available and are never auto-played.</p>
         <h3>How the purchase is processed</h3>
         <ul>
             <li>Payments are handled exclusively by <strong>Google Play Billing</strong>. Mephitideus Interactive does <strong>not</strong> receive, see, or store your name, billing address, credit-card number, or other payment-instrument data.</li>
-            <li>Google Play provides the Game with a digital receipt indicating that the <code>remove_ads</code> product is owned by your Google account. The Game uses this receipt only to enable the ad-free state.</li>
+            <li>Google Play provides the Game with a digital receipt indicating that the <code>remove_ads</code> product is owned by your Google account. The Game uses this receipt to enable the purchase entitlement and cosmetic skins.</li>
             <li>Your entitlement is mirrored locally on your device (<code>localStorage</code> key <code>skunkfu.adFree</code>) so the Game can apply it offline. No purchase information is transmitted to Mephitideus Interactive servers.</li>
         </ul>
         <h3>Restoring purchases</h3>

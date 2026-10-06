@@ -1599,8 +1599,7 @@ class GameApp {
                 if (typeof window.gameReady === 'undefined') window.gameReady = true;
             } catch (e) { __err('main', e); }
 
-            // Initialize PurchaseManager FIRST so AdManager can read the ad-free flag
-            // before deciding whether to show banners/interstitials.
+            // Initialize purchases before founder entitlements are checked.
             try { if (window.PurchaseManager && typeof PurchaseManager.initialize === 'function') PurchaseManager.initialize(); } catch (e) { __err('main', e); }
             try { if (window.FounderManager && typeof FounderManager.initialize === 'function') FounderManager.initialize(); } catch (e) { __err('main', e); }
 
