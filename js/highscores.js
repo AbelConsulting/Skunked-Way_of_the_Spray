@@ -24,9 +24,8 @@ try {
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
   const MAX_SCORES = 10; // The number of scores to show on the leaderboard.
   const PLAYER_NAME_KEY = 'skunkfu.playerName'; // Last submitted name (for own-row highlight).
-  // Steam leaderboard API name — must match the leaderboard created in
-  // Steamworks (Stats & Achievements → Leaderboards). electron/main.js will
-  // findOrCreate it (Descending / Numeric) on first submit.
+  // Steam stat name used for the player's personal best while the installed
+  // steamworks.js version has no native leaderboard bindings.
   const STEAM_LEADERBOARD = 'global_highscores';
 
   function _savePlayerName(name) {
@@ -421,8 +420,9 @@ try {
       return entries.map((e, i) => ({
         name: e.name || '???',
         score: Number(e.score) || 0,
-        rank: Number(e.rank) || (i + 1),
+        rank: e.isPersonalBest ? null : (Number(e.rank) || (i + 1)),
         isSelf: !!e.isSelf,
+        isPersonalBest: !!e.isPersonalBest,
       }));
     } catch (e) {
       console.warn('Failed to load Steam leaderboard', e);
@@ -479,6 +479,8 @@ try {
   // and prevents network retries from creating duplicate leaderboard rows.
   const _submitInflight = new Map();   // runId → in-flight promise
   const _submitCompleted = new Set();  // runIds that have already succeeded
+  const _steamSubmitInflight = new Map();
+  const _steamSubmitCompleted = new Set();
 
   function _generateRunId() {
     try {
@@ -501,6 +503,34 @@ try {
       try { gameStats.runId = id; } catch (e) { /* frozen object */ }
     }
     return id;
+  }
+
+  function _submitSteamScoreOnce(score, gameStats) {
+    if (!_isSteamDesktop() || typeof window.electronAPI.submitScore !== 'function') {
+      return Promise.resolve(false);
+    }
+
+    const runId = _runIdFor(gameStats);
+    if (_steamSubmitCompleted.has(runId)) return Promise.resolve(true);
+    if (_steamSubmitInflight.has(runId)) return _steamSubmitInflight.get(runId);
+
+    const work = Promise.resolve()
+      .then(() => window.electronAPI.submitScore(STEAM_LEADERBOARD, score))
+      .then((result) => {
+        const succeeded = !!(result && result.success);
+        if (succeeded) _steamSubmitCompleted.add(runId);
+        return succeeded;
+      })
+      .catch((e) => {
+        console.warn('Steam score submission failed', e);
+        return false;
+      })
+      .finally(() => {
+        _steamSubmitInflight.delete(runId);
+      });
+
+    _steamSubmitInflight.set(runId, work);
+    return work;
   }
 
   async function addScore(score, name, gameStats) {
@@ -550,19 +580,9 @@ try {
         ? PlayGamesServices.submitScore(score)
         : Promise.resolve(false);
 
-      // Steam leaderboard submit (desktop build only). electronAPI.platform
-      // === 'steam' is set by electron/preload.js. Best-effort: a Steam
-      // failure must not block the Cloud Functions submission.
-      const canSubmitSteam = !!(
-        window.electronAPI &&
-        window.electronAPI.platform === 'steam' &&
-        typeof window.electronAPI.submitScore === 'function'
-      );
-      const steamSubmitPromise = canSubmitSteam
-        ? window.electronAPI.submitScore(STEAM_LEADERBOARD, score)
-            .then(r => !!(r && r.success))
-            .catch(() => false)
-        : Promise.resolve(false);
+      // The game submits every run to Steam; this call shares that request
+      // when the initials flow submits the same run again.
+      const steamSubmitPromise = _submitSteamScoreOnce(score, gameStats);
 
       const [apiOk, playGamesOk, steamOk] = await Promise.all([
         apiSubmitPromise,
@@ -688,14 +708,19 @@ try {
         skip.disabled = true;
         ok.textContent = 'SAVING...';
 
-        await addScore(score, name, gameStats);
+        const submitted = await addScore(score, name, gameStats);
         
         box.innerHTML = '';
         const confirmTitle = document.createElement('div');
         confirmTitle.className = 'highscore-prompt-title';
-        confirmTitle.textContent = '✓ Score Submitted!';
-        confirmTitle.style.color = '#4CAF50';
+        confirmTitle.textContent = submitted ? '✓ Score Submitted!' : '⚠ Score Could Not Be Submitted';
+        confirmTitle.style.color = submitted ? '#4CAF50' : '#e57373';
         box.appendChild(confirmTitle);
+        if (!submitted) {
+          const errorMessage = document.createElement('div');
+          errorMessage.textContent = 'Please check your connection and try again later.';
+          box.appendChild(errorMessage);
+        }
         
         setTimeout(() => {
           try { document.body.removeChild(overlay); } catch(e){}
@@ -853,6 +878,8 @@ try {
     const list     = container.querySelector('.scoreboard-list');
     const updatedEl = container.querySelector('.scoreboard-updated');
     const refreshBtn = container.querySelector('.scoreboard-refresh');
+    const title = container.querySelector('.scoreboard-title');
+    if (title) title.textContent = period === 'steam' ? '🏆 STEAM SCORES' : '🏆 GLOBAL LEADERBOARD';
 
     // Loading state (preserves header + tabs so controls stay visible)
     if (refreshBtn) refreshBtn.disabled = true;
@@ -913,14 +940,19 @@ try {
       scores.forEach((scoreData, i) => {
         const entry = document.createElement('div');
         entry.className = 'scoreboard-entry';
-        if (i === 0) entry.classList.add('gold');
+        if (i === 0 && !scoreData.isPersonalBest) entry.classList.add('gold');
         if (scoreData.isSelf || (myName && scoreData.name && scoreData.name.toLowerCase() === myName)) {
           entry.classList.add('scoreboard-entry--me');
         }
 
         const rank = document.createElement('div');
         rank.className = 'scoreboard-rank';
-        rank.textContent = `${Number(scoreData.rank) || (i + 1)}.`;
+        rank.textContent = scoreData.isPersonalBest
+          ? 'PB'
+          : `${Number(scoreData.rank) || (i + 1)}.`;
+        if (scoreData.isPersonalBest) {
+          rank.title = 'Personal best; no global Steam rank is available';
+        }
 
         const info = document.createElement('div');
         info.className = 'scoreboard-info';
@@ -1177,13 +1209,7 @@ try {
     if (!validateScore(score)) return;
     // Always run achievement checks — should fire on every completed run.
     try { if (gameStats) checkAchievements(gameStats); } catch (_) {}
-    // Steam submit: only meaningful on the desktop build.
-    if (!_isSteamDesktop()) return;
-    try {
-      if (typeof window.electronAPI.submitScore === 'function') {
-        window.electronAPI.submitScore(STEAM_LEADERBOARD, score).catch(() => {});
-      }
-    } catch (_) { /* must never throw */ }
+    await _submitSteamScoreOnce(score, gameStats);
   }
 
   window.Highscores = {

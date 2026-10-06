@@ -161,7 +161,7 @@ Achievements should map directly to core player motivations:
 - Survivalist
 - Campaign Clear
 
-The codebase already includes the Steam achievement plumbing and leaderboard submission paths; the remaining release work is platform-side setup and validation.
+The codebase includes Steam achievement plumbing and score submission. The installed `steamworks.js` 0.4 binding does not expose Steam leaderboards, so the Steam tab currently submits and displays each player's personal-best INT stat rather than a global ranked board. Global Steam rankings require a leaderboard-capable Steamworks binding and platform-side setup; validate this distinction before describing the feature as a global leaderboard.
 
 ## 9) Controller and input strategy
 

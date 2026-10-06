@@ -145,7 +145,7 @@ function syncPersonalBestStat(statName, score) {
     const cur = getStatInt(statName);
     if (score <= cur) return { ok: true, isNewBest: false };
     if (!setStatInt(statName, score)) return { ok: false, isNewBest: false };
-    storeUserStats();
+    if (!storeUserStats()) return { ok: false, isNewBest: false };
     return { ok: true, isNewBest: true };
 }
 
@@ -201,7 +201,7 @@ async function downloadSteamLeaderboardScores(leaderboardName, count) {
         if (!find || !download) return [];
         const lb = await find(leaderboardName, 'Descending', 'Numeric');
         if (!lb) return [];
-        const n = Math.max(1, Math.min(100, Number(count) || 10));
+        const n = Math.max(1, Math.min(100, Math.trunc(Number(count) || 10)));
         let entries;
         try {
             entries = await download(lb, 1, n);
@@ -375,15 +375,17 @@ function setupIPC() {
         catch (e) { return null; }
     });
 
-    // Leaderboard — submit
-    // steamworks.js 0.4 has no ISteamUserStats leaderboard bindings. If a
-    // future native build exposes `client.leaderboard`, use it; otherwise
-    // persist a personal-best INT stat (API name must exist in Steamworks
-    // Stats, typically matching the board name `global_highscores`).
+    // Leaderboard — submit. steamworks.js 0.4 does not expose leaderboard
+    // bindings, so the supported path stores a per-player INT personal best.
     ipcMain.handle('steam:submitScore', async (_, { leaderboardName, score }) => {
         if (!steamClient) return { success: false };
-        const numeric = Math.round(Number(score) || 0);
-        if (!Number.isFinite(numeric) || numeric < 0) return { success: false };
+        if (typeof score !== 'number' || !Number.isFinite(score) || score < 0 || score > 1000000) {
+            return { success: false, reason: 'invalid_score' };
+        }
+        if (typeof leaderboardName !== 'string' || !leaderboardName.trim()) {
+            return { success: false, reason: 'invalid_leaderboard' };
+        }
+        const numeric = Math.round(score);
         try {
             const uploaded = await uploadSteamLeaderboardScore(leaderboardName, numeric);
             if (uploaded.ok) {
@@ -405,7 +407,8 @@ function setupIPC() {
         }
     });
 
-    // Leaderboard — fetch top N (1-based Steam ranks when the API exists)
+    // Leaderboard — fetch top N when the native API exists; otherwise return
+    // the local player's stored personal best without implying a global rank.
     ipcMain.handle('steam:getLeaderboard', async (_, { leaderboardName, count = 10 }) => {
         if (!steamClient) return [];
         try {
@@ -418,7 +421,7 @@ function setupIPC() {
             })();
             const pb = getStatInt(leaderboardName);
             if (!pb) return [];
-            return [{ name: name || 'You', score: pb, rank: 1, isSelf: true }];
+            return [{ name: name || 'You', score: pb, rank: null, isSelf: true, isPersonalBest: true }];
         } catch (e) {
             console.error('[Steam] getLeaderboard:', e.message);
             return [];

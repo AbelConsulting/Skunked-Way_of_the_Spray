@@ -47,7 +47,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // ── Leaderboard ─────────────────────────────────────────────────
     /**
-     * Submit a score to a named Steam leaderboard.
+     * Submit a score to a named Steam leaderboard, or to its personal-best stat
+     * when the installed Steamworks binding has no leaderboard API.
      * @param {string} leaderboardName
      * @param {number} score
      * @returns {Promise<{success: boolean, isNewBest?: boolean}>}
@@ -56,10 +57,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('steam:submitScore', { leaderboardName, score }),
 
     /**
-     * Fetch the top N entries from a Steam leaderboard.
+     * Fetch Steam leaderboard entries (or the local personal best if unavailable).
      * @param {string} leaderboardName
      * @param {number} [count=10]
-     * @returns {Promise<Array<{name: string, score: number, rank: number}>>}
+     * Entries may include `isPersonalBest: true` when Steam leaderboard APIs
+     * are unavailable; that local score has no global rank.
+     * @returns {Promise<Array<{name: string, score: number, rank: number|null, isSelf?: boolean, isPersonalBest?: boolean}>>}
      */
     getLeaderboard: (leaderboardName, count = 10) =>
         ipcRenderer.invoke('steam:getLeaderboard', { leaderboardName, count }),
