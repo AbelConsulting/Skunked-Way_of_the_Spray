@@ -24,6 +24,9 @@ try {
   const ACHIEVEMENTS_KEY = 'skunkfu_achievements_v1';
   const MAX_SCORES = 10; // The number of scores to show on the leaderboard.
   const PLAYER_NAME_KEY = 'skunkfu.playerName'; // Last submitted name (for own-row highlight).
+  const PLAYER_BESTS_KEY = 'skunkfu.leaderboardPersonalBests.v1';
+  const RANK_SNAPSHOTS_KEY = 'skunkfu.leaderboardRankSnapshots.v1';
+  const _rankMovementsThisSession = new Map();
   // Steam stat name used for the player's personal best while the installed
   // steamworks.js version has no native leaderboard bindings.
   const STEAM_LEADERBOARD = 'global_highscores';
@@ -38,6 +41,44 @@ try {
     if (window.safeStorage) return window.safeStorage.get(PLAYER_NAME_KEY, '') || '';
     try { return localStorage.getItem(PLAYER_NAME_KEY) || ''; }
     catch (e) { return ''; }
+  }
+  function _playerNameKey(name) {
+    return typeof name === 'string' ? name.trim().toLowerCase() : '';
+  }
+  function _readLocalJSON(key) {
+    if (window.safeStorage && typeof window.safeStorage.getJSON === 'function') {
+      const value = window.safeStorage.getJSON(key, {});
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    }
+    try {
+      const raw = localStorage.getItem(key);
+      const value = raw ? JSON.parse(raw) : {};
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function _writeLocalJSON(key, value) {
+    if (window.safeStorage && typeof window.safeStorage.setJSON === 'function') {
+      return window.safeStorage.setJSON(key, value);
+    }
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function _recordPersonalBest(name, score) {
+    const nameKey = _playerNameKey(name);
+    const numericScore = Number(score);
+    if (!nameKey || !Number.isFinite(numericScore)) return;
+    const personalBests = _readLocalJSON(PLAYER_BESTS_KEY);
+    const previousBest = Number(personalBests[nameKey]) || 0;
+    if (numericScore > previousBest) {
+      personalBests[nameKey] = numericScore;
+      _writeLocalJSON(PLAYER_BESTS_KEY, personalBests);
+    }
   }
   function _formatAgo(ms) {
     if (!ms || ms < 0) return '';
@@ -391,6 +432,45 @@ try {
       console.warn('Failed to load highscores from skunked.io', e);
       return null; 
     }
+
+    function _getRankMovements(scores, period) {
+      if (_rankMovementsThisSession.has(period)) {
+        return _rankMovementsThisSession.get(period);
+      }
+      const previousSnapshots = _readLocalJSON(RANK_SNAPSHOTS_KEY);
+      const hasPreviousSnapshot = Object.prototype.hasOwnProperty.call(previousSnapshots, period);
+      const previousRanks = previousSnapshots[period] && typeof previousSnapshots[period] === 'object'
+        ? previousSnapshots[period]
+        : {};
+      const currentRanks = {};
+      const movementByName = new Map();
+      const nameCounts = new Map();
+
+      scores.forEach((scoreData) => {
+        const nameKey = _playerNameKey(scoreData.name);
+        if (nameKey) nameCounts.set(nameKey, (nameCounts.get(nameKey) || 0) + 1);
+      });
+
+      scores.forEach((scoreData, index) => {
+        if (scoreData.isPersonalBest) return;
+        const nameKey = _playerNameKey(scoreData.name);
+        const rank = Number(scoreData.rank) || index + 1;
+        if (!nameKey || nameCounts.get(nameKey) !== 1 || !Number.isFinite(rank)) return;
+
+        currentRanks[nameKey] = rank;
+        const previousRank = Number(previousRanks[nameKey]);
+        if (Number.isFinite(previousRank) && previousRank > 0) {
+          movementByName.set(nameKey, previousRank - rank);
+        } else if (hasPreviousSnapshot) {
+          movementByName.set(nameKey, null);
+        }
+      });
+
+      previousSnapshots[period] = currentRanks;
+      _writeLocalJSON(RANK_SNAPSHOTS_KEY, previousSnapshots);
+      _rankMovementsThisSession.set(period, movementByName);
+      return movementByName;
+    }
   }
 
   /**
@@ -595,6 +675,7 @@ try {
       } else {
         // Mark this runId so a follow-up retry can't double-post.
         _submitCompleted.add(runId);
+        _recordPersonalBest(name, score);
       }
       // Analytics: score submit
       try {
@@ -937,11 +1018,16 @@ try {
       list.appendChild(empty);
     } else {
       const myName = _loadPlayerName().toLowerCase();
+      const personalBests = _readLocalJSON(PLAYER_BESTS_KEY);
+      const personalBest = Number(personalBests[_playerNameKey(myName)]) || 0;
+      const rankMovements = _getRankMovements(scores, period);
       scores.forEach((scoreData, i) => {
         const entry = document.createElement('div');
         entry.className = 'scoreboard-entry';
         if (i === 0 && !scoreData.isPersonalBest) entry.classList.add('gold');
-        if (scoreData.isSelf || (myName && scoreData.name && scoreData.name.toLowerCase() === myName)) {
+        const isOwnRow = !!scoreData.isSelf ||
+          !!(myName && scoreData.name && _playerNameKey(scoreData.name) === _playerNameKey(myName));
+        if (isOwnRow) {
           entry.classList.add('scoreboard-entry--me');
         }
 
@@ -962,10 +1048,47 @@ try {
         nameRow.className = 'scoreboard-name';
         nameRow.textContent = scoreData.name || '???';
 
+        const movement = rankMovements.get(_playerNameKey(scoreData.name));
+        if (movement !== undefined) {
+          const movementBadge = document.createElement('span');
+          movementBadge.className = 'scoreboard-movement';
+          if (movement === null) {
+            movementBadge.textContent = 'NEW';
+            movementBadge.title = 'New to this leaderboard since your last visit';
+            movementBadge.setAttribute('aria-label', movementBadge.title);
+          } else if (movement > 0) {
+            movementBadge.classList.add('scoreboard-movement--up');
+            movementBadge.textContent = `↑ ${movement}`;
+            movementBadge.title = `Moved up ${movement} ${movement === 1 ? 'place' : 'places'} since your last visit`;
+            movementBadge.setAttribute('aria-label', movementBadge.title);
+          } else if (movement < 0) {
+            movementBadge.classList.add('scoreboard-movement--down');
+            movementBadge.textContent = `↓ ${Math.abs(movement)}`;
+            movementBadge.title = `Moved down ${Math.abs(movement)} ${Math.abs(movement) === 1 ? 'place' : 'places'} since your last visit`;
+            movementBadge.setAttribute('aria-label', movementBadge.title);
+          } else {
+            movementBadge.classList.add('scoreboard-movement--steady');
+            movementBadge.textContent = '—';
+            movementBadge.title = 'Rank unchanged since your last visit';
+            movementBadge.setAttribute('aria-label', movementBadge.title);
+          }
+          nameRow.appendChild(movementBadge);
+        }
+
+        const isPersonalBest = !!scoreData.isPersonalBest ||
+          (isOwnRow && personalBest > 0 && Number(scoreData.score) === personalBest);
+        if (isPersonalBest) {
+          const personalBestBadge = document.createElement('span');
+          personalBestBadge.className = 'scoreboard-personal-best';
+          personalBestBadge.textContent = 'PERSONAL BEST';
+          personalBestBadge.title = 'Your highest submitted score on this device';
+          personalBestBadge.setAttribute('aria-label', personalBestBadge.title);
+          nameRow.appendChild(personalBestBadge);
+        }
+
         // FOUNDER badge — only shown on the player's own row when they hold
         // the early-access entitlement. The leaderboard API doesn't yet
         // carry a founder flag for other players, so this is local-only.
-        const isOwnRow = myName && scoreData.name && scoreData.name.toLowerCase() === myName;
         const isFounder = (() => {
           try { return !!(window.FounderManager && FounderManager.isFounder()); }
           catch (e) { return false; }
@@ -1001,6 +1124,23 @@ try {
         scoreLine.className = 'scoreboard-score';
         scoreLine.textContent = scoreData.score.toLocaleString();
         info.appendChild(scoreLine);
+
+        if (isOwnRow && i > 0) {
+          const scoreAbove = Number(scores[i - 1].score);
+          const playerScore = Number(scoreData.score);
+          if (Number.isFinite(scoreAbove) && Number.isFinite(playerScore)) {
+            const pointsToPass = Math.max(1, Math.floor(scoreAbove - playerScore) + 1);
+            const scoreGap = document.createElement('div');
+            scoreGap.className = 'scoreboard-score-gap';
+            scoreGap.textContent = `${pointsToPass.toLocaleString()} pts to pass #${Number(scores[i - 1].rank) || i}`;
+            info.appendChild(scoreGap);
+          }
+        } else if (isOwnRow && i === 0) {
+          const lead = document.createElement('div');
+          lead.className = 'scoreboard-score-gap scoreboard-score-gap--lead';
+          lead.textContent = 'You’re #1 — defend your lead';
+          info.appendChild(lead);
+        }
 
         // Achievement badges row (show top 5 icons)
         if (achCount > 0) {

@@ -343,6 +343,55 @@ html.controller-cursor-hidden * {
     opacity: 0.9;
 }
 
+.scoreboard-movement,
+.scoreboard-personal-best {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    padding: 3px 7px;
+    white-space: nowrap;
+}
+
+.scoreboard-movement {
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.scoreboard-movement--up {
+    color: #a6f5bc;
+    background: rgba(80, 220, 120, 0.14);
+}
+
+.scoreboard-movement--down {
+    color: #ffb0a8;
+    background: rgba(255, 100, 90, 0.14);
+}
+
+.scoreboard-movement--steady {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.scoreboard-personal-best {
+    color: #241700;
+    background: linear-gradient(180deg, #ffe38c, #ffc857);
+    box-shadow: 0 0 10px rgba(255, 200, 87, 0.25);
+}
+
+.scoreboard-score-gap {
+    margin-top: 3px;
+    color: #91f0b2;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.scoreboard-score-gap--lead {
+    color: #ffd875;
+}
+
 /* Founder gold-skin opt-in toggle in Settings → Founder Status. */
 .founder-gold-skin-row {
     display: flex;
