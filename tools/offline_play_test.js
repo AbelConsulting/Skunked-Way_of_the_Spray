@@ -102,6 +102,7 @@ function serve() {
         .filter(el => !/remove-ads|ad-free/i.test(el.id))
         .map(el => `${el.tagName}#${el.id}.${el.className}`));
       assert.deepEqual(ads, []);
+      assert.equal(await page.locator('#soft-purchase-prompt').count(), 0, 'no purchase upsell pop-up');
       const scripts = await page.evaluate(() => [...document.scripts].map(s => s.src + s.textContent.slice(0, 0)).filter(Boolean));
       assert.deepEqual(scripts.filter(s => AD_PATTERN.test(s)), []);
     });

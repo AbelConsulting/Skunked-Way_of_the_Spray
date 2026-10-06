@@ -84,6 +84,15 @@ export async function checkHealth() {
  * @returns {Promise<boolean>}
  */
 export async function submitScore(name, score, achievements, meta) {
+  return (await submitScoreDetailed(name, score, achievements, meta)).ok;
+}
+
+/**
+ * Same as submitScore, but reports whether a failure is worth retrying later
+ * (network down / timeout / 5xx) versus a permanent server rejection (4xx).
+ * @returns {Promise<{ok: boolean, retryable: boolean}>}
+ */
+export async function submitScoreDetailed(name, score, achievements, meta) {
   try {
     const payload = {
       initials: name,
@@ -105,12 +114,12 @@ export async function submitScore(name, score, achievements, meta) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       console.error('Score submission rejected:', res.status, err);
-      return false;
+      return { ok: false, retryable: res.status >= 500 };
     }
-    return true;
+    return { ok: true, retryable: false };
   } catch (e) {
-    console.error('Error submitting score:', e);
-    return false;
+    console.warn('Score submission failed (network):', e && e.message ? e.message : e);
+    return { ok: false, retryable: true };
   }
 }
 

@@ -8,7 +8,7 @@
 // Global high-score manager using the skunked.io leaderboard API.
 
 // Import the REST API functions for the global leaderboard
-import { submitScore as submitAPIScore, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth, getEntitlements as fetchAPIEntitlements, setEntitlement as pushAPIEntitlement } from './firebase.js'; // REST client (no Firebase SDK)
+import { submitScoreDetailed as submitAPIScoreDetailed, getHighScores as getAPIHighScores, checkHealth as checkAPIHealth, getEntitlements as fetchAPIEntitlements, setEntitlement as pushAPIEntitlement } from './firebase.js'; // REST client (no Firebase SDK)
 
 // Bridge the entitlement helpers to the global scope so classic-script
 // modules (PurchaseManager) can use them without bundling. PurchaseManager
@@ -585,6 +585,73 @@ try {
     return id;
   }
 
+  // ── Offline score queue ──
+  // Scores saved with no connection (e.g. a long car ride) are kept locally
+  // and uploaded when the device is back online. The server dedupes by runId,
+  // so a retry can never create a duplicate row.
+  const PENDING_SUBMITS_KEY = 'skunkfu.pendingScoreSubmits.v1';
+  const MAX_PENDING_SUBMITS = 25;
+  const PENDING_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+  let _flushingPending = null;
+
+  function _readPendingSubmits() {
+    try {
+      const raw = localStorage.getItem(PENDING_SUBMITS_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list : [];
+    } catch (e) { return []; }
+  }
+  function _writePendingSubmits(list) {
+    try {
+      if (list.length) localStorage.setItem(PENDING_SUBMITS_KEY, JSON.stringify(list));
+      else localStorage.removeItem(PENDING_SUBMITS_KEY);
+    } catch (e) { /* storage unavailable */ }
+  }
+  function _queuePendingSubmit(entry) {
+    const list = _readPendingSubmits().filter(e => e && e.meta && e.meta.runId !== entry.meta.runId);
+    list.push(Object.assign({ queuedAt: Date.now() }, entry));
+    // Keep the highest scores if the queue overflows.
+    list.sort((a, b) => b.score - a.score);
+    _writePendingSubmits(list.slice(0, MAX_PENDING_SUBMITS));
+  }
+  function getPendingSubmitCount() { return _readPendingSubmits().length; }
+
+  function flushPendingSubmits() {
+    if (_flushingPending) return _flushingPending;
+    _flushingPending = (async () => {
+      let sent = 0;
+      try {
+        const now = Date.now();
+        let list = _readPendingSubmits().filter(e => e && Number.isFinite(e.score) && now - (e.queuedAt || 0) < PENDING_MAX_AGE_MS);
+        _writePendingSubmits(list);
+        while (list.length) {
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) break;
+          const entry = list[0];
+          const result = await submitAPIScoreDetailed(entry.name, entry.score, entry.achievements, entry.meta);
+          if (!result.ok && result.retryable) break; // still offline; try again later
+          if (result.ok) { sent++; _submitCompleted.add(entry.meta.runId); }
+          // Re-read so scores queued during the await are kept.
+          list = _readPendingSubmits().filter(e => e && e.meta && e.meta.runId !== entry.meta.runId);
+          _writePendingSubmits(list);
+        }
+      } catch (e) {
+        console.warn('Pending score upload failed', e);
+      } finally {
+        _flushingPending = null;
+      }
+      return sent;
+    })();
+    return _flushingPending;
+  }
+
+  try {
+    window.addEventListener('online', () => { flushPendingSubmits(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && getPendingSubmitCount()) flushPendingSubmits();
+    });
+    setTimeout(() => { if (getPendingSubmitCount()) flushPendingSubmits(); }, 5000);
+  } catch (e) { /* non-browser */ }
+
   function _submitSteamScoreOnce(score, gameStats) {
     if (!_isSteamDesktop() || typeof window.electronAPI.submitScore !== 'function') {
       return Promise.resolve(false);
@@ -642,13 +709,14 @@ try {
       const achievementIds = Object.keys(allUnlocked).filter(id => allUnlocked[id] && allUnlocked[id].unlocked);
       const prestige = getPrestigeScore(allUnlocked);
       const titleInfo = getPlayerTitle();
-      const apiSubmitPromise = submitAPIScore(name, score, achievementIds, {
+      const apiMeta = {
         prestige,
         title: titleInfo.title,
         achievementCount: titleInfo.count,
         level: gameStats ? (gameStats.levelsCompleted || 0) : 0,
         runId
-      });
+      };
+      const apiSubmitPromise = submitAPIScoreDetailed(name, score, achievementIds, apiMeta);
       const canSubmitPlayGames = !!(
         window.PlayGamesServices &&
         typeof PlayGamesServices.isAvailable === 'function' &&
@@ -664,18 +732,25 @@ try {
       // when the initials flow submits the same run again.
       const steamSubmitPromise = _submitSteamScoreOnce(score, gameStats);
 
-      const [apiOk, playGamesOk, steamOk] = await Promise.all([
+      const [apiResult, playGamesOk, steamOk] = await Promise.all([
         apiSubmitPromise,
         playGamesSubmitPromise,
         steamSubmitPromise,
       ]);
+      const apiOk = apiResult.ok;
+      const apiQueued = !apiOk && apiResult.retryable;
+      if (apiQueued) {
+        _queuePendingSubmit({ name, score, achievements: achievementIds, meta: apiMeta });
+      }
+      // Personal bests are local; record them even with no connection.
+      _recordPersonalBest(name, score);
 
       if (!apiOk && !playGamesOk && !steamOk) {
-        console.error('Score submission failed for Cloud Functions, Play Games, and Steam');
+        if (!apiQueued) console.error('Score submission failed for Cloud Functions, Play Games, and Steam');
       } else {
         // Mark this runId so a follow-up retry can't double-post.
         _submitCompleted.add(runId);
-        _recordPersonalBest(name, score);
+        if (apiOk && getPendingSubmitCount()) flushPendingSubmits();
       }
       // Analytics: score submit
       try {
@@ -688,7 +763,8 @@ try {
           });
         }
       } catch (e) { /* */ }
-      return apiOk || playGamesOk || steamOk;
+      if (apiOk || playGamesOk || steamOk) return true;
+      return apiQueued ? 'queued' : false;
       } catch (e) {
         console.error("Failed to submit score to skunked.io", e);
         return false;
@@ -790,14 +866,20 @@ try {
         ok.textContent = 'SAVING...';
 
         const submitted = await addScore(score, name, gameStats);
+        const queued = submitted === 'queued';
         
         box.innerHTML = '';
         const confirmTitle = document.createElement('div');
         confirmTitle.className = 'highscore-prompt-title';
-        confirmTitle.textContent = submitted ? '✓ Score Submitted!' : '⚠ Score Could Not Be Submitted';
-        confirmTitle.style.color = submitted ? '#4CAF50' : '#e57373';
+        confirmTitle.textContent = queued ? '📶 Score Saved Offline'
+          : (submitted ? '✓ Score Submitted!' : '⚠ Score Could Not Be Submitted');
+        confirmTitle.style.color = queued ? '#ffb74d' : (submitted ? '#4CAF50' : '#e57373');
         box.appendChild(confirmTitle);
-        if (!submitted) {
+        if (queued) {
+          const queuedMessage = document.createElement('div');
+          queuedMessage.textContent = 'It will upload to the leaderboard automatically when you are back online.';
+          box.appendChild(queuedMessage);
+        } else if (!submitted) {
           const errorMessage = document.createElement('div');
           errorMessage.textContent = 'Please check your connection and try again later.';
           box.appendChild(errorMessage);
@@ -1357,6 +1439,8 @@ try {
     loadScores,
     isHighScore,
     addScore,
+    flushPendingSubmits,
+    getPendingSubmitCount,
     renderScoreboard,
     checkServiceHealth,
     // ---
