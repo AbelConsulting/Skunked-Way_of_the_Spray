@@ -4876,6 +4876,7 @@
                             // path. Without this, the card froze on "Checking
                             // purchases…" forever and players uninstalled.
                             let _uiForceReady = false;
+                            let _purchaseStatusLocked = false;
                             setTimeout(() => {
                                 if (_uiForceReady) return;
                                 _uiForceReady = true;
@@ -4972,12 +4973,14 @@
                                     ev.preventDefault();
                                     ev.stopPropagation();
                                     if (!window.PurchaseManager) return;
+                                    _purchaseStatusLocked = true;
                                     if (statusEl) statusEl.textContent = 'Opening Google Play\u2026';
                                     buyBtn.disabled = true;
                                     // Safety net: if the purchase flow hangs without resolving
                                     // (e.g. billing library deadlock or dialog never shown),
                                     // re-enable the button after 90s so the user can retry.
                                     const _safetyTimer = setTimeout(() => {
+                                        _purchaseStatusLocked = false;
                                         try { _renderAdFreeState(); } catch (_) {}
                                         if (statusEl) statusEl.textContent = 'Purchase timed out. Please try again.';
                                     }, 90000);
@@ -5036,7 +5039,10 @@
                                             buyBtn.disabled = true; // keep disabled until onChange fires
                                         } else {
                                             const _errorDelay = (_buyRes && !_buyRes.ok) ? 7000 : 500;
-                                            setTimeout(_renderAdFreeState, _errorDelay);
+                                            setTimeout(() => {
+                                                _purchaseStatusLocked = false;
+                                                _renderAdFreeState();
+                                            }, _errorDelay);
                                         }
                                     }
                                 });
@@ -5064,14 +5070,18 @@
                             }
 
                             if (window.PurchaseManager && PurchaseManager.onChange) {
-                                PurchaseManager.onChange(() => _renderAdFreeState());
+                                PurchaseManager.onChange((owned) => {
+                                    if (_purchaseStatusLocked && !owned) return;
+                                    _purchaseStatusLocked = false;
+                                    _renderAdFreeState();
+                                });
                             }
                             if (window.PurchaseManager && PurchaseManager.onReady) {
                                 // Re-render once the native store finishes initializing so
                                 // the "Checking purchases..." skeleton flips to the real
                                 // owned/buy state without a user-visible price flash.
                                 PurchaseManager.onReady(() => {
-                                    _renderAdFreeState();
+                                    if (!_purchaseStatusLocked) _renderAdFreeState();
                                     try { if (typeof _renderFounderState === 'function') _renderFounderState(); } catch (_) {}
                                 });
                             }

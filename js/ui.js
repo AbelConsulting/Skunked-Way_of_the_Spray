@@ -720,12 +720,8 @@ class UI {
             }
         } else {
             // ── Encouraging tip ──
-            // The actionable buttons (Restart, Menu, Revive, Leaderboard)
-            // are now real HTML elements in #game-over-action-bar so we
-            // don't duplicate "WATCH AD TO REVIVE" / "ENTER → RESTART"
-            // canvas text here. Keeping the strip lean reduces clutter on
-            // the GAME_OVER screen and prevents overlap with the stats
-            // panel and the HTML CTAs.
+            // Restart, Menu, and Leaderboard are HTML controls, so only draw
+            // the tip here to avoid overlap with the stats and action bar.
             const tips = this._getGameOverTip(extra.levelReached || 0, gameStats, extra.isSurvival);
             if (tips) {
                 ctx.save();
