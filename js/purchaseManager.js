@@ -1,5 +1,5 @@
 /**
- * purchaseManager.js — In-App Purchase manager for "Remove Ads + Skins" ($1.99).
+ * purchaseManager.js — In-App Purchase manager for the cosmetic skin pack ($1.99).
  *
  * Strategy:
  *   • Android (Capacitor native): uses cordova-plugin-purchase (CdvPurchase) v13+
@@ -9,20 +9,19 @@
  *     want to monetize the web build directly. For now web is "Coming soon".
  *
  * What the purchase grants:
- *   • Unlocks three cosmetic ninja skins. Optional rewarded extra-life ads
- *     remain opt-in and are not affected by this purchase.
+ *   • Unlocks three cosmetic ninja skins.
  *   • Unlocks the Sapphire, Amethyst, and Steel ninja skins (FounderManager.isSkinUnlocked).
  *   • If purchased before EARLY_ACCESS_END_ISO (2026-12-31), also auto-grants
  *     Founder status + the exclusive Gold ninja skin.
  *
- * Entitlement is mirrored to localStorage so AdManager and FounderManager can
+ * Entitlement is mirrored to localStorage so FounderManager can
  * synchronously gate calls without awaiting the plugin on every check.
  *
  * SETUP (Android, one-time):
  *   1. npm install cordova-plugin-purchase
  *   2. Create managed products in Google Play Console:
  *
- *      PRIMARY REVENUE PRODUCT (main IAP — always active):
+ *      SKIN PACK (legacy product ID retained for existing buyers):
  *        Product ID: remove_ads      | Type: One-time (managed) | Price: $1.99
  *        Grants: Sapphire, Amethyst, Steel ninja skins.
  *        During early-access window also auto-grants Gold skin + Founder badge.
@@ -32,7 +31,7 @@
  *        Grants: Gold ninja skin + Founder badge ONLY. Does not unlock the
  *        Sapphire, Amethyst, and Steel skins.
  *        For players who want to cloud-sync Founder status without buying
- *        Remove Ads. This is NOT the primary revenue driver.
+ *        Skin pack. This is NOT the primary revenue driver.
  *   3. npx cap sync android
  *   4. Upload a signed bundle to a Play Console internal testing track and add
  *      yourself as a license tester so the purchase flow works in test mode.
@@ -148,7 +147,7 @@ const PurchaseManager = (() => {
         if (_ready) return;
         _ready = true;
         _readyMode = reason;
-        _log('Ready (' + reason + '). Ad-free=' + _adFree);
+        _log('Ready (' + reason + '). Skin pack owned=' + _adFree);
         _readyListeners.forEach(fn => { try { fn(_adFree); } catch(e) {} });
         _readyListeners.clear();
     }
@@ -377,7 +376,7 @@ const PurchaseManager = (() => {
         _adFree = !!v;
         _writeEntitlement(_adFree);
         if (prev !== _adFree) {
-            _log('Ad-free entitlement changed →', _adFree, '(source:', source + ')');
+            _log('Skin pack entitlement changed →', _adFree, '(source:', source + ')');
             // Mirror to server (skip if this flip CAME from the server).
             if (_adFree && source !== 'remote-restore' && source !== 'remote-revoke' && source !== 'storage') {
                 _pushEntitlementRemote(PRODUCT_ID_REMOVE_ADS);
@@ -550,7 +549,7 @@ const PurchaseManager = (() => {
 
         const store = await _getStore();
         if (!store) {
-            _log('Native store unavailable. Web fallback active. Ad-free=' + _adFree);
+            _log('Native store unavailable. Web fallback active. Skin pack owned=' + _adFree);
             clearTimeout(_watchdog);
             _markReady('no-store');
             return;
@@ -611,7 +610,7 @@ const PurchaseManager = (() => {
                     // any reason, finish() was never called, leaving the purchase
                     // un-acknowledged. Google Play auto-refunds unacknowledged
                     // purchases after 3 days, which is the exact symptom users
-                    // reported ("I paid but ads are still showing"). Server-side
+                    // reported ("I paid but my purchase was not applied"). Server-side
                     // receipt verification still happens via _pushEntitlementRemote()
                     // → verifyPurchase Cloud Function (see functions/index.js).
                     //
@@ -649,15 +648,6 @@ const PurchaseManager = (() => {
                         if (tx.products.some(p => p.id === PRODUCT_ID_FOUNDER_PASS)) {
                             _setFounderPassOwned(true, 'purchase');
                         }
-                        // Google Ads conversion — only fires on web (gtag script not loaded in Capacitor native).
-                        try {
-                            if (typeof gtag === 'function') {
-                                gtag('event', 'conversion', {
-                                    'send_to': 'AW-18170482905/sLK9CNfb864cENmhrthD',
-                                    'transaction_id': (tx.transactionId || tx.nativeTransactionId || tx.id || '')
-                                });
-                            }
-                        } catch (e) {}
                     }
                 })
                 .receiptUpdated((r) => {
@@ -839,7 +829,7 @@ const PurchaseManager = (() => {
     }
 
     /**
-     * Initiate purchase of the Remove Ads product.
+     * Initiate purchase of the skin pack (legacy remove_ads product ID).
      * @returns {Promise<{ok:boolean, reason?:string}>}
      */
     async function purchaseRemoveAds() {
@@ -998,7 +988,7 @@ const PurchaseManager = (() => {
         // Wait for store.initialize() so the product catalogue is loaded.
         await _waitForReady();
 
-        // Self-heal: same retry path as Remove Ads — force a fresh catalogue
+        // Self-heal: same retry path as the skin pack — force a fresh catalogue
         // fetch if the SKU never propagated to this device.
         let product = store.get(PRODUCT_ID_FOUNDER_PASS) || _founderProduct;
         if (!product || !product.pricing) {
@@ -1142,7 +1132,7 @@ window.PurchaseManager = PurchaseManager;
 // Self-initialize. Previously initialize() was only invoked from deep inside
 // the game-init chain in js/main.js; if anything upstream threw on a user's
 // device, initialize() was never called and isReady() stayed false forever,
-// permanently freezing the Remove Ads card on "Checking purchases…". Kick
+// permanently freezing the skin-pack card on "Checking purchases…". Kick
 // off init from the module itself so the IAP store path is independent of
 // game readiness. initialize() is idempotent (guarded by _initialized) so
 // the existing call from main.js remains a harmless no-op.

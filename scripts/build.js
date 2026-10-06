@@ -23,7 +23,6 @@ const filesInOrder = [
   'purchaseManager.js',
   'founderManager.js',
   'goldenSkin.js',
-  'adManager.js',
   'game.js',
   'main.js'
 ];
@@ -59,7 +58,7 @@ async function build({ minify = true, sourcemap = false } = {}) {
 
   // Copy static site files into dist so Wrangler/Pages can publish the folder
   try {
-    const staticFiles = ['index.html', 'styles.css', 'achievements.css', 'manifest.json', 'sw.js', 'package.json', 'privacy.html', 'terms.html', 'ads.txt', 'app-ads.txt'];
+    const staticFiles = ['index.html', 'styles.css', 'achievements.css', 'manifest.json', 'sw.js', 'package.json', 'privacy.html', 'terms.html'];
     for (const f of staticFiles) {
       const src = path.join(ROOT, f);
       const dest = path.join(DIST, f);
@@ -85,6 +84,17 @@ async function build({ minify = true, sourcemap = false } = {}) {
     };
     cp(path.join(ROOT, 'assets'), path.join(DIST, 'assets'));
     cp(path.join(ROOT, 'js'), path.join(DIST, 'js'));
+    const obsoleteAdAssets = [
+      path.join(DIST, 'ads.txt'),
+      path.join(DIST, 'app-ads.txt'),
+      path.join(DIST, 'js', 'adManager.js'),
+      path.join(ROOT, 'android', 'app', 'src', 'main', 'assets', 'public', 'ads.txt'),
+      path.join(ROOT, 'android', 'app', 'src', 'main', 'assets', 'public', 'app-ads.txt'),
+      path.join(ROOT, 'android', 'app', 'src', 'main', 'assets', 'public', 'js', 'adManager.js')
+    ];
+    for (const file of obsoleteAdAssets) {
+      if (fs.existsSync(file)) fs.unlinkSync(file);
+    }
     console.log('Copied static files into dist');
   } catch (e) { console.warn('Static copy to dist failed', e); }
 }

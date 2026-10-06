@@ -67,19 +67,6 @@ function patchIndexHtml() {
         '<!-- manifest removed for Steam demo build -->'
     );
 
-    html = html.replace(
-        /<!-- Google Tag Manager \(web only[\s\S]*?<!-- End Google Tag Manager -->/g,
-        '<!-- GTM removed for Steam demo build -->'
-    );
-    html = html.replace(
-        /<!-- Google Funding Choices CMP[\s\S]*?<!-- End Google Funding Choices CMP -->/g,
-        '<!-- Funding Choices CMP removed for Steam demo build -->'
-    );
-    html = html.replace(
-        /<script async src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-8519140628365141"[\s\S]*?<\/script>/g,
-        '<!-- AdSense script removed for Steam demo build -->'
-    );
-
     // The Steam demo must never offer a Google Play continuation link. Remove
     // the shared web-funnel CTA nodes instead of relying on runtime CSS.
     for (const id of ['landing-google-link', 'menu-google-store-btn', 'game-over-google-btn', 'victory-google-btn']) {

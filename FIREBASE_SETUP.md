@@ -136,8 +136,6 @@ Now that you're on Firebase, these are one-click additions:
 |---------|----------|---------------|
 | **Firebase Auth** | Player accounts, Google Sign-In | `firebase.json` + client SDK |
 | **Firebase Analytics** | Player behavior, retention, level completion | Add `firebase/analytics` import |
-| **Google AdMob** | Mobile ad monetization (Capacitor app) | AdMob SDK in `android/` |
-| **Google Ads** | Web ad integration (already have ad client) | Works as-is with your existing `ca-app-pub-*` |
 | **Cloud Storage** | Replay saves, custom sprites, UGC | `firebase/storage` import |
 | **Remote Config** | A/B test game balance, feature flags | `firebase/remote-config` import |
 | **Crashlytics** | Error reporting for Android builds | Capacitor plugin |

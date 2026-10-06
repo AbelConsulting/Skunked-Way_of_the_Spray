@@ -197,65 +197,6 @@ const Analytics = (() => {
         });
     }
 
-    function trackAdRevive(data = {}) {
-        push('ad_revive', {
-            level: data.level || 1,
-            score: data.score || 0,
-            revives_used: data.revivesUsed || 1
-        });
-    }
-
-    function trackAdImpression(data = {}) {
-        push('ad_impression', {
-            ad_type: data.type || 'unknown',
-            placement: data.placement || ''
-        });
-    }
-
-    // ── Revive CTA funnel (game-over rewarded ad) ──────────────────
-    // Fires when the game-over reveal timer ends AND a rewarded ad is loaded.
-    function trackAdReviveEligible(data = {}) {
-        push('ad_revive_eligible', {
-            level: data.level || 0,
-            score: data.score || 0,
-            revives_used: data.revivesUsed || 0
-        });
-    }
-    // Fires when the CTA button is actually shown to the player.
-    function trackAdReviveOffered(data = {}) {
-        push('ad_revive_offered', {
-            level: data.level || 0,
-            score: data.score || 0,
-            revives_used: data.revivesUsed || 0
-        });
-    }
-    // Fires when the player taps the CTA.
-    function trackAdReviveClicked(data = {}) {
-        push('ad_revive_clicked', {
-            level: data.level || 0,
-            score: data.score || 0,
-            revives_used: data.revivesUsed || 0
-        });
-    }
-    // Fires when the rewarded ad resolves WITHOUT granting the reward
-    // (player dismissed, ad was skipped, ad failed to play).
-    function trackAdReviveDismissed(data = {}) {
-        push('ad_revive_dismissed', {
-            level: data.level || 0,
-            score: data.score || 0,
-            reason: data.reason || 'dismissed'
-        });
-    }
-    // Fires when an ad request fails to fill (prepare error, show error).
-    function trackAdNoFill(data = {}) {
-        push('ad_no_fill', {
-            ad_type: data.type || 'unknown',
-            placement: data.placement || '',
-            phase: data.phase || 'prepare', // 'prepare' or 'show'
-            reason: data.reason || 'unknown'
-        });
-    }
-
     // ── Purchase / IAP ─────────────────────────────────────────
     // Fires when an entitlement flips ON (purchase, restore, remote-restore).
     function trackPurchase(data = {}) {
@@ -469,13 +410,6 @@ const Analytics = (() => {
         trackPlayerDeath,
         trackAchievement,
         trackScoreSubmit,
-        trackAdRevive,
-        trackAdImpression,
-        trackAdReviveEligible,
-        trackAdReviveOffered,
-        trackAdReviveClicked,
-        trackAdReviveDismissed,
-        trackAdNoFill,
         trackPurchase,
         trackPurchaseStart,
         trackPurchaseModalOpen,

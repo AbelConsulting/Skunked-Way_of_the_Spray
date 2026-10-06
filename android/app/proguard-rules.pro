@@ -16,10 +16,6 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# ── AdMob ────────────────────────────────────────────────────────
--keep class com.google.android.gms.ads.** { *; }
--dontwarn com.google.android.gms.ads.**
-
 # ── Google Play Games ────────────────────────────────────────────
 -keep class com.google.android.gms.games.** { *; }
 -dontwarn com.google.android.gms.games.**

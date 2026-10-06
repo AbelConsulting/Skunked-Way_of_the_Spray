@@ -1615,9 +1615,6 @@ class GameApp {
                 }
             } catch (e) { __err('main', e); }
 
-            // Initialize AdMob (no-ops on web, only runs on native Android)
-            try { if (window.AdManager && typeof AdManager.initialize === 'function') AdManager.initialize(); } catch (e) { __err('main', e); }
-
             // Load extra SFX after the game is live to smooth startup.
             this.loadDeferredAudio();
 

@@ -1709,20 +1709,6 @@ class UI {
                     ctx.restore();
                 }
 
-                // ── Revive-used badge ─────────────────────────────────────────
-                if (survivalInfo.reviveUsed) {
-                    ctx.save();
-                    ctx.font         = "bold 9px 'Press Start 2P', monospace";
-                    ctx.textAlign    = 'right';
-                    ctx.textBaseline = 'top';
-                    ctx.globalAlpha  = 0.70;
-                    ctx.fillStyle    = '#FF8888';
-                    ctx.shadowColor  = 'rgba(255,80,80,0.6)';
-                    ctx.shadowBlur   = 6;
-                    ctx.fillText('\u2665 REVIVE USED', cardX + cardW - 4, cardY + cardH + 4);
-                    ctx.restore();
-                }
-
                 // ── Low-health danger vignette ──────────────────────────────────
                 if (player && player.maxHealth > 0 && player.health / player.maxHealth < 0.3) {
                     const hpFrac  = player.health / player.maxHealth;
@@ -1748,10 +1734,9 @@ class UI {
                     const cy         = Math.floor(this.height * 0.37);
                     const isCleared  = survivalInfo.bannerText.includes('CLEARED');
                     const isGetReady = survivalInfo.bannerText === 'GET READY!';
-                    const isRevived  = survivalInfo.bannerText.includes('ONE MORE CHANCE');
                     const scale   = 1 + 0.05 * Math.sin(now / 140);
-                    const bannerColor = isCleared ? '#00FF88' : (isRevived ? '#80FFD4' : (isGetReady ? '#FFFFFF' : waveFg));
-                    const bannerGlow  = isCleared ? 'rgba(0,255,136,0.9)' : (isRevived ? 'rgba(0,220,160,0.8)' : (isGetReady ? 'rgba(255,255,255,0.6)' : waveGlow));
+                    const bannerColor = isCleared ? '#00FF88' : (isGetReady ? '#FFFFFF' : waveFg);
+                    const bannerGlow  = isCleared ? 'rgba(0,255,136,0.9)' : (isGetReady ? 'rgba(255,255,255,0.6)' : waveGlow);
 
                     // Background strip
                     ctx.save();

@@ -49,9 +49,7 @@ function copyRecursive(src, dest) {
 //  Strategy: minimal safe changes only — no regex that can cross tag boundaries.
 //  • Inject window.PLATFORM = 'steam' as the very first script
 //  • Remove manifest link (no PWA on desktop)
-//  • Remove the GTM noscript iframe (harmless but clean)
-//  Everything else (ads, SW) is already handled at runtime by the game code
-//  (adManager.js checks window.electronAPI.platform === 'steam' and skips all ads).
+//  • The same shared game source is used, with no advertising integrations.
 function patchIndexHtml() {
     const indexPath = path.join(DIST_STEAM, 'index.html');
     let html = fs.readFileSync(indexPath, 'utf8');
@@ -69,20 +67,6 @@ function patchIndexHtml() {
     html = html.replace(
         /<link[^>]+rel=["']manifest["'][^>]*>/g,
         '<!-- manifest removed for Steam build -->'
-    );
-
-    // ── Remove ad/analytics scripts that are irrelevant on desktop Steam ──
-    html = html.replace(
-        /<!-- Google Tag Manager \(web only[\s\S]*?<!-- End Google Tag Manager -->/g,
-        '<!-- GTM removed for Steam build -->'
-    );
-    html = html.replace(
-        /<!-- Google Funding Choices CMP[\s\S]*?<!-- End Google Funding Choices CMP -->/g,
-        '<!-- Funding Choices CMP removed for Steam build -->'
-    );
-    html = html.replace(
-        /<script async src="https:\/\/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-8519140628365141"[\s\S]*?<\/script>/g,
-        '<!-- AdSense script removed for Steam build -->'
     );
 
     // ── Update main-menu Skins button — no purchase wording on Steam ──

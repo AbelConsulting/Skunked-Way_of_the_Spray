@@ -10,7 +10,7 @@ This security policy covers the following components of *Skunked: Way of the Spr
 | Android APK / Google Play build | ✅ In scope |
 | Game JavaScript (js/) | ✅ In scope |
 | Netlify / Cloudflare hosting configuration | ✅ In scope |
-| Third-party services (Google Ads, Google Fonts, hosting CDN) | ❌ Out of scope — report directly to the respective vendor |
+| Third-party services (Google Play, Google Fonts, hosting CDN) | ❌ Out of scope — report directly to the respective vendor |
 
 ## Supported Versions
 
@@ -55,7 +55,7 @@ Examples of issues we want to hear about:
 ## Out of Scope
 
 The following are generally **not** considered valid security reports:
-- Issues in third-party services (Google Ads, Netlify, Cloudflare) — report to them directly
+- Issues in third-party services (Google Play, Netlify, Cloudflare) — report to them directly
 - Missing "best practice" HTTP headers that do not have a practical exploit against this game
 - Self-XSS or attacks that require full control of the victim's device
 - Denial-of-service via resource exhaustion of the static hosting CDN
@@ -64,4 +64,3 @@ The following are generally **not** considered valid security reports:
 ## Recognition
 
 We appreciate responsible disclosure. We are not currently operating a paid bug-bounty program, but we will credit reporters in release notes unless they prefer to remain anonymous.
-

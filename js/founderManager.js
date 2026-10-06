@@ -3,8 +3,8 @@
  *
  * What is a Founder?
  *   A player who supported the game during the early-access window. The
- *   entitlement is permanent, account-bound (via the Google Play Remove Ads
- *   purchase on Android, or directly via FounderManager.grant() on web/promo).
+ *   entitlement is permanent, account-bound (via the legacy Google Play
+ *   `remove_ads` skin-pack purchase on Android, or FounderManager.grant() on web/promo).
  *
  * Founder rewards (cosmetic, no gameplay imbalance):
  *   • Exclusive GOLD ninja skin (only obtainable during early-access window).
@@ -18,9 +18,8 @@
  *     that also grants Founder — useful for users who install after EA ends
  *     and want the badge, and gives cloud-synced proof of ownership.
  *
- * Remove Ads ($1.99) entitlement (separate from Founder, no time limit):
+ * Skin-pack ($1.99) entitlement (legacy Play product ID `remove_ads`):
  *   • Unlocks the SAPPHIRE, AMETHYST, and STEEL ninja skins.
- *   • Optional rewarded extra-life ads remain available.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
  * Persistence:
@@ -28,7 +27,8 @@
  *   localStorage key  → skunkfu.founderSince   (ISO date string, set on first grant)
  *
  * Auto-grant rule:
- *   If the player owns Remove Ads (skunkfu.adFree === '1') AND the current
+ *   If the player owns the skin pack (stored under the legacy
+ *   skunkfu.adFree key) AND the current
  *   wall-clock date is before EARLY_ACCESS_END_ISO, founder status is granted
  *   automatically. After the cutoff, only manual grants (e.g. via promo code)
  *   add new founders — existing founders keep the flag forever.
@@ -48,7 +48,7 @@ const FounderManager = (() => {
 
     // ── Configuration ───────────────────────────────────────────────────────
     // Adjust this date to extend or shorten the early-access window.
-    // After this date, owning Remove Ads no longer auto-grants Founder status,
+    // After this date, owning the skin pack no longer auto-grants Founder status,
     // but anyone already granted keeps it forever.
     const EARLY_ACCESS_END_ISO = '2026-12-31T23:59:59Z';
 
@@ -79,11 +79,6 @@ const FounderManager = (() => {
     const STORAGE_KEY_SKIN_VARIANT  = 'skunkfu.skinVariant';
     const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'sapphire', 'amethyst', 'steel']);
     const DEFAULT_SKIN_VARIANT = 'gold';
-    // Skins that anyone with the Remove Ads purchase can use, regardless of
-    // Founder status. Gold is intentionally excluded — it remains the
-    // permanent early-access exclusive.
-    const AD_FREE_SKIN_VARIANTS = Object.freeze(['sapphire', 'amethyst', 'steel']);
-
     let _isFounder = _read();
     let _goldSkinEnabled = _readGoldSkinPref();
     let _skinVariant = _readSkinVariant();
@@ -203,7 +198,7 @@ const FounderManager = (() => {
                     _log('debugSkins=reset — cleared founder/skin state');
                 } else if (dbg === 'adfree') {
                     try { localStorage.setItem(STORAGE_KEY_AD_FREE, '1'); } catch (e) {}
-                    _log('debugSkins=adfree — simulating Remove Ads owner (gold stays locked)');
+                    _log('debugSkins=adfree — simulating skin-pack owner (gold stays locked)');
                 } else {
                     // Default: grant Founder so all 4 skins are unlockable.
                     if (!_isFounder) _grantInternal('debug-skins-param');
@@ -220,20 +215,20 @@ const FounderManager = (() => {
             _grantInternal('early-access-auto');
         }
 
-        // 1a. Also grant if Remove Ads was purchased during early access (belt-and-suspenders
+        // 1a. Also grant if the skin pack was purchased during early access (belt-and-suspenders
         //     for users who had the flag set before the auto-grant was introduced).
         if (!_isFounder && _hasRemoveAds() && _isWithinEarlyAccess()) {
             _grantInternal('early-access-purchase');
         }
 
         // 1b. Auto-grant if the standalone Founder Pass IAP is owned. Unlike
-        //     Remove Ads, this purchase has no early-access cutoff guard —
+        //     skin pack, this purchase has no early-access cutoff guard —
         //     buying the Founder Pass IS the entitlement, regardless of date.
         if (!_isFounder && _hasFounderPass()) {
             _grantInternal('founder-pass-storage');
         }
 
-        // 2. Listen for future Remove Ads purchases — if PurchaseManager is
+        // 2. Listen for future skin-pack purchases — if PurchaseManager is
         //    wired, react when the purchase entitlement flips to true.
         //      • During the early-access window → also grant Founder (gold).
         //      • After early-access ends → only the 3 colour skins unlock
@@ -289,7 +284,7 @@ const FounderManager = (() => {
     /**
      * Returns true if the player is entitled to use the given skin variant.
      *   gold     → Founder only (early-access exclusive)
-     *   sapphire/amethyst/steel → Founder OR Remove Ads owner
+     *   sapphire/amethyst/steel → Founder OR skin-pack owner
      */
     function isSkinUnlocked(variantId) {
         if (!VALID_SKIN_VARIANTS.includes(variantId)) return false;

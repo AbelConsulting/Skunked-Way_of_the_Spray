@@ -7,7 +7,6 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!-- Banner ads are now managed by @capacitor-community/admob plugin via JS -->
     <WebView
         android:id="@+id/webview"
         android:layout_width="match_parent"
