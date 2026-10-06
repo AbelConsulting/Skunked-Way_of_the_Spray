@@ -439,7 +439,7 @@ class GameApp {
                         } else if (st === 'GAME_OVER') {
                             if (typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
                                 try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
-                                this.game.startGame(0);
+                                this.game.startGame(0, this.game.gameMode);
                                 try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
                             }
                         }
@@ -1014,7 +1014,7 @@ class GameApp {
                     else if (st === 'MENU' || st === 'VICTORY' || st === 'GAME_OVER') {
                         if (st !== 'GAME_OVER' || typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
                             try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
-                            this.game.startGame(0);
+                            this.game.startGame(0, st === 'GAME_OVER' ? this.game.gameMode : 'arcade');
                             try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
                             try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) { __err('main', e); }
                         }
@@ -1279,7 +1279,7 @@ class GameApp {
                     } else if (st === 'GAME_OVER') {
                         if (typeof this.game._isGameOverLocked !== 'function' || !this.game._isGameOverLocked()) {
                             try { this.game.audioManager && this.game.audioManager.playSound && this.game.audioManager.playSound('ui_confirm'); } catch (e) { __err('main', e); }
-                            this.game.startGame(0);
+                            this.game.startGame(0, this.game.gameMode);
                             try { this.game.dispatchGameStateChange && this.game.dispatchGameStateChange(); } catch (e) { __err('main', e); }
                             try { this.game.dispatchScoreChange && this.game.dispatchScoreChange(); } catch (e) { __err('main', e); }
                         }
@@ -1310,8 +1310,9 @@ class GameApp {
         try { console.log('[Capacitor] Running inside native shell (' + window.Capacitor.getPlatform() + ')'); } catch (e) { __err('main', e); }
 
         // ── 1. Android back-button handling ─────────────────────────
-        // Without this, pressing Back instantly kills the app.
-        // Strategy: PLAYING → pause · PAUSED → resume · MENU/GAME_OVER → let OS handle (minimise)
+        // The hardware Back key is routed natively by MainActivity, which
+        // calls window.__skunkfuHandleBack() and minimises the app when it
+        // returns false. These listeners cover Cordova-style shells.
         try {
             document.addEventListener('backbutton', (e) => {
                 e.preventDefault();
@@ -1404,17 +1405,17 @@ class GameApp {
     }
 
     _handleNativeBack() {
-        if (!this.game) return;
+        // Prefer the shared handler in index.html (knows about menu overlays).
+        try {
+            if (typeof window.__skunkfuHandleBack === 'function') return window.__skunkfuHandleBack();
+        } catch (e) { __err('main', e); }
+        if (!this.game) return false;
         const state = this.game.state;
-        if (state === 'PLAYING') {
-            // Pause the game
+        if (state === 'PLAYING' || state === 'PAUSED') {
             this.game.togglePause();
-        } else if (state === 'PAUSED') {
-            // Resume the game
-            this.game.togglePause();
+            return true;
         }
-        // On MENU or GAME_OVER we do nothing — lets the OS minimise the app
-        // (Capacitor default behaviour if we don't preventDefault)
+        return false;
     }
 
     async init() {

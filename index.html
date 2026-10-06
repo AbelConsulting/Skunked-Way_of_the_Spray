@@ -1236,7 +1236,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 510;
+            /* Above #touch-controls (2000), #pause-overlay (2100) and #pause-btn
+               (3000) so sub-menus opened mid-run or from game over stay tappable;
+               below #error-overlay (4000) and .soft-purchase-prompt (9000). */
+            z-index: 3500;
             background: radial-gradient(ellipse at 50% 30%, rgba(0,0,22,0.92), rgba(0,0,0,0.96));
             animation: menuFadeIn 0.35s cubic-bezier(.2,.9,.2,1) both;
         }
@@ -4585,6 +4588,8 @@
                         // Helper: hide start menu and begin game
                         function startGameFromMenu() {
                             if (!startMenuOverlay) return;
+                            // Guard against double-starts (e.g. gamepad sends Enter AND clicks Play).
+                            if (!window._startMenuVisible) return;
 
                             // -- Gate: wait for game engine to be ready --
                             if (!window.gameReady || !window.game) {
@@ -4622,6 +4627,7 @@
 
                         // Helper: launch survival mode
                         function startSurvivalFromMenu() {
+                            if (!window._startMenuVisible) return;
                             if (!window.gameReady || !window.game) {
                                 const survivalBtn = document.getElementById('menu-survival-btn');
                                 if (survivalBtn) {
@@ -4659,6 +4665,50 @@
                             if (howtoplayOverlay) howtoplayOverlay.style.display = 'none';
                             window._startMenuVisible = true;
                         }
+
+                        const subOverlays = [scoresOverlay, infoOverlay, settingsOverlay, howtoplayOverlay].filter(Boolean);
+                        function anySubOverlayOpen() {
+                            return subOverlays.some((el) => el.style.display && el.style.display !== 'none');
+                        }
+
+                        // Back from a sub-menu: return to the hub when we came from the
+                        // title screen, otherwise (e.g. leaderboard opened from game over)
+                        // just close the overlay and reveal the screen underneath.
+                        function menuBack() {
+                            const g = window.game;
+                            if (!g || g.state === 'MENU') {
+                                showStartMenu();
+                            } else {
+                                subOverlays.forEach((el) => { el.style.display = 'none'; });
+                            }
+                            // Drop focus left on a control inside the now-hidden overlay.
+                            try {
+                                const ae = document.activeElement;
+                                if (ae && subOverlays.some((el) => el.contains(ae))) ae.blur();
+                            } catch (_) {}
+                        }
+
+                        // Menu keyboard handling. Capture phase so it runs before the
+                        // game's own window keydown handler.
+                        window.addEventListener('keydown', (ev) => {
+                            if (ev.key === 'Escape' && anySubOverlayOpen()) {
+                                ev.preventDefault();
+                                ev.stopImmediatePropagation();
+                                menuBack();
+                                return;
+                            }
+                            if (!window._startMenuVisible) return;
+                            if (ev.key !== 'Enter' && ev.key !== ' ') return;
+                            // Inside a sub-menu, let the focused control act natively.
+                            if (anySubOverlayOpen()) return;
+                            // A focused hub button other than Play activates itself
+                            // (natively for keyboard; gamepad code clicks it directly).
+                            const ae = document.activeElement;
+                            if (ae && ae !== document.body && ae !== playBtn && startMenuOverlay && startMenuOverlay.contains(ae)) return;
+                            if (ev.repeat) return;
+                            ev.preventDefault();
+                            startGameFromMenu();
+                        }, true);
 
                         // PLAY button
                         if (playBtn) {
@@ -4703,46 +4753,49 @@
                             });
                         }
 
-                        // Keyboard shortcut: Enter starts game from start menu
-                        window.addEventListener('keydown', (ev) => {
-                            if (!window._startMenuVisible) return;
-                            if (ev.key === 'Enter' || ev.key === ' ') {
-                                ev.preventDefault();
-                                startGameFromMenu();
+                        // Open the scores overlay on the requested tab ('arcade' | 'survival').
+                        function openScoresOverlay(tab) {
+                            const showSurvival = tab === 'survival';
+                            if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
+                            const arcadePanel   = document.getElementById('scores-panel-arcade');
+                            const survivalPanel = document.getElementById('scores-panel-survival');
+                            if (arcadePanel)   arcadePanel.hidden   = showSurvival;
+                            if (survivalPanel) survivalPanel.hidden = !showSurvival;
+                            document.querySelectorAll('.scores-mode-tab').forEach(t => {
+                                const active = t.dataset.scoresTab === (showSurvival ? 'survival' : 'arcade');
+                                t.classList.toggle('is-active', active);
+                                t.setAttribute('aria-selected', String(active));
+                            });
+                            if (showSurvival) {
+                                if (survivalBoardEl) {
+                                    if (window.Highscores && typeof Highscores.renderSurvivalBoard === 'function') {
+                                        Highscores.renderSurvivalBoard(survivalBoardEl);
+                                    } else {
+                                        survivalBoardEl.innerHTML = '<p class="scoreboard-empty-msg">No survival scores yet.</p>';
+                                    }
+                                }
+                            } else if (scoresBoardEl) {
+                                if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
+                                    // renderScoreboard manages its own loading/error/empty states.
+                                    Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
+                                        .catch((e) => {
+                                            console.warn('renderScoreboard failed', e);
+                                        });
+                                } else {
+                                    scoresBoardEl.innerHTML = '<p class="scoreboard-empty-msg">Scores not yet available</p>';
+                                }
                             }
-                        });
+                            if (scoresOverlay) scoresOverlay.style.display = 'flex';
+                        }
+                        window._openMenuScores = openScoresOverlay;
 
                         // HIGH SCORES button
                         if (scoresBtn) {
                             scoresBtn.addEventListener('click', (ev) => {
                                 ev.preventDefault();
                                 ev.stopPropagation();
-                                if (startMenuOverlay) startMenuOverlay.classList.add('hidden');
-                                // Reset to arcade tab on open
-                                const arcadePanel   = document.getElementById('scores-panel-arcade');
-                                const survivalPanel = document.getElementById('scores-panel-survival');
-                                const scoreTabs     = document.querySelectorAll('.scores-mode-tab');
-                                if (arcadePanel)   arcadePanel.hidden   = false;
-                                if (survivalPanel) survivalPanel.hidden = true;
-                                scoreTabs.forEach(t => {
-                                    const isArcade = t.dataset.scoresTab === 'arcade';
-                                    t.classList.toggle('is-active', isArcade);
-                                    t.setAttribute('aria-selected', String(isArcade));
-                                });
-                                // Populate arcade scoreboard
-                                if (scoresBoardEl) {
-                                    if (window.Highscores && typeof Highscores.renderScoreboard === 'function') {
-                                        // renderScoreboard manages its own loading/error/empty states.
-                                        Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
-                                            .catch((e) => {
-                                                console.warn('renderScoreboard failed', e);
-                                            });
-                                    } else {
-                                        scoresBoardEl.innerHTML = '<p class="scoreboard-empty-msg">Scores not yet available</p>';
-                                    }
-                                }
                                 try { Analytics.trackMenuAction('high_scores'); } catch(e) {}
-                                if (scoresOverlay) scoresOverlay.style.display = 'flex';
+                                openScoresOverlay('arcade');
                             });
                         }
 
@@ -5288,7 +5341,7 @@
                                         _hidePrompt();
                                         // Open the Settings panel so the user sees the loading state.
                                         try {
-                                            const settingsBtn = document.getElementById('btn-settings');
+                                            const settingsBtn = document.getElementById('menu-settings-btn');
                                             if (settingsBtn) settingsBtn.click();
                                         } catch (_) {}
                                         return;
@@ -5982,27 +6035,48 @@
                         } catch (e) { try { console.warn('[IAP Diag]', e); } catch(_) {} }
 
                         // Back buttons
-                        if (scoresBackBtn) {
-                            scoresBackBtn.addEventListener('click', (ev) => {
+                        [scoresBackBtn, infoBackBtn, settingsBackBtn, howtoplayBackBtn].forEach((btn) => {
+                            if (!btn) return;
+                            btn.addEventListener('click', (ev) => {
                                 ev.preventDefault();
                                 ev.stopPropagation();
-                                showStartMenu();
+                                menuBack();
                             });
-                        }
-                        if (infoBackBtn) {
-                            infoBackBtn.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                showStartMenu();
-                            });
-                        }
-                        if (settingsBackBtn) {
-                            settingsBackBtn.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                showStartMenu();
-                            });
-                        }
+                        });
+
+                        // Shared Back handler (Android hardware Back via MainActivity,
+                        // plus any other caller). Returns true when the press was
+                        // consumed; false lets the OS minimise the app.
+                        window.__skunkfuHandleBack = function () {
+                            try {
+                                const hsSkip = document.querySelector('.highscore-prompt-overlay .highscore-prompt-skip');
+                                if (hsSkip) { if (!hsSkip.disabled) hsSkip.click(); return true; }
+                                const softPrompt = document.getElementById('soft-purchase-prompt');
+                                const softSkip = document.getElementById('soft-purchase-skip-btn');
+                                if (softPrompt && softSkip && !softPrompt.hidden) { softSkip.click(); return true; }
+                                const dynOverlay = document.getElementById('achievements-overlay') || document.getElementById('highscore-overlay');
+                                if (dynOverlay) { dynOverlay.remove(); return true; }
+                                if (anySubOverlayOpen()) { menuBack(); return true; }
+                                const g = window.game;
+                                if (!g) return false;
+                                if (g.state === 'PLAYING' || g.state === 'PAUSED') { g.togglePause(); return true; }
+                                if (g.state === 'GAME_OVER') {
+                                    if (!(typeof g._isGameOverLocked === 'function' && g._isGameOverLocked())) {
+                                        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+                                        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
+                                    }
+                                    return true;
+                                }
+                                if (g.state === 'VICTORY') {
+                                    if (typeof g._returnToMenuAfterVictory === 'function') g._returnToMenuAfterVictory();
+                                    return true;
+                                }
+                                return false;
+                            } catch (e) {
+                                console.warn('back handler failed', e);
+                                return false;
+                            }
+                        };
 
                         // SKINS & REMOVE ADS button � opens the same Settings overlay,
                         // then scrolls to the Skins card so the shopfront
@@ -6034,14 +6108,6 @@
                                 }, 60);
                             });
                         }
-                        if (howtoplayBackBtn) {
-                            howtoplayBackBtn.addEventListener('click', (ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                showStartMenu();
-                            });
-                        }
-
                         // Reset Tutorial Hints button
                         const resetTutorialBtn = document.getElementById('reset-tutorial-btn');
                         if (resetTutorialBtn) {
@@ -6298,6 +6364,7 @@
                                 if (state === 'MENU') {
                                     showStartMenu();
                                     try { window._renderRecentUnlocksRail && window._renderRecentUnlocksRail(); } catch(e){}
+                                    try { window.game && window.game.playMenuMusic && window.game.playMenuMusic(); } catch(e){}
                                 } else {
                                     hideAllMenuOverlays();
                                 }
@@ -6544,15 +6611,13 @@
                     ev.preventDefault();
                     ev.stopPropagation();
                     try {
-                        const scoresOverlay = document.getElementById('menu-scores-overlay');
-                        const scoresBoardEl = document.getElementById('menu-scores-board');
-                        if (scoresBoardEl && window.Highscores && typeof Highscores.renderScoreboard === 'function') {
-                            Promise.resolve(Highscores.renderScoreboard(scoresBoardEl, true))
-                                .catch((err) => console.warn('renderScoreboard failed', err));
-                        } else if (scoresBoardEl) {
-                            scoresBoardEl.innerHTML = '<p class="scoreboard-empty-msg">Scores not yet available</p>';
+                        const mode = window.game && window.game.gameMode === 'survival' ? 'survival' : 'arcade';
+                        if (typeof window._openMenuScores === 'function') {
+                            window._openMenuScores(mode);
+                        } else {
+                            const scoresOverlay = document.getElementById('menu-scores-overlay');
+                            if (scoresOverlay) scoresOverlay.style.display = 'flex';
                         }
-                        if (scoresOverlay) scoresOverlay.style.display = 'flex';
                         try { Analytics.trackMenuAction('high_scores_gameover'); } catch (e) {}
                     } catch (e) {
                         console.warn('game-over leaderboard CTA failed', e);
@@ -7034,13 +7099,14 @@
                         // Restart the current stage from the start.
                         // startGame() resets score & lives and rebuilds the level.
                         const idx = (window.game && window.game.currentLevelIndex) || 0;
+                        const mode = (window.game && window.game.gameMode) || 'arcade';
                         // Flip state out of PAUSED so startGame's transition logic runs cleanly.
                         window.game.state = 'PLAYING';
                         closePauseOverlay();
                         // Resume music context after pause-mute
                         try { window.game.audioManager && window.game.audioManager.unpauseMusic && window.game.audioManager.unpauseMusic(); } catch (_) {}
                         if (typeof window.game.startGame === 'function') {
-                            window.game.startGame(idx);
+                            window.game.startGame(mode === 'survival' ? 0 : idx, mode);
                         }
                     } catch (err) { console.warn('pause restart failed', err); }
                 });
@@ -7051,10 +7117,25 @@
                     try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
                     if (!window.game || window.game.state !== 'PAUSED') return;
                     try { window && window.logTouchControlEvent && window.logTouchControlEvent('pauseQuit', {}); } catch (_) {}
-                    // Full page reload — cleanest way to return to the main menu
-                    // without leaving touch controls, audio, or game state in a
-                    // half-initialised condition.
-                    try { location.reload(); } catch (_) {}
+                    // Return to the hub in place (same transition Game Over -> Menu
+                    // uses). Falls back to a full reload if anything goes wrong.
+                    try {
+                        const g = window.game;
+                        closePauseOverlay();
+                        try { g.audioManager && g.audioManager.cancelDeathSequence && g.audioManager.cancelDeathSequence(); } catch (_) {}
+                        try { g.audioManager && g.audioManager.stopMusic && g.audioManager.stopMusic(); } catch (_) {}
+                        try { g.audioManager && g.audioManager.stopAmbient && g.audioManager.stopAmbient(); } catch (_) {}
+                        try { g._clearAllInput && g._clearAllInput(); } catch (_) {}
+                        try { g.tutorialHints && g.tutorialHints.dismiss && g.tutorialHints.dismiss(); } catch (_) {}
+                        g.transitionState = null;
+                        g.transitionAlpha = 0;
+                        g._gameOverTime = 0;
+                        g.state = 'MENU';
+                        g.dispatchGameStateChange();
+                    } catch (err) {
+                        console.warn('pause quit in place failed, reloading', err);
+                        try { location.reload(); } catch (_) {}
+                    }
                 });
             }
         } catch (e) {}

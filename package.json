@@ -11,6 +11,7 @@
     "test:purchases": "node --test tools/purchase_manager_test.js",
     "test:purchase-ui": "node tools/purchase_ui_test.js",
     "test:scoreboard": "node tools/scoreboard_render_test.js",
+    "test:navigation": "node tools/menu_navigation_test.js",
     "build": "node scripts/build.js",
     "dev": "node scripts/dev.js",
     "start": "node tools/csp_server.js",

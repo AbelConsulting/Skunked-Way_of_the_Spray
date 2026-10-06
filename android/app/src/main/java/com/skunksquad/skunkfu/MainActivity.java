@@ -7,8 +7,10 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.webkit.WebView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -47,6 +49,26 @@ public class MainActivity extends BridgeActivity {
         // game owns the whole screen. Bars reappear with a swipe and
         // auto-hide again. This is the "true fullscreen" experience.
         applyImmersiveMode();
+
+        // Hardware/gesture Back: let the web layer close menus, pause or
+        // resume, or leave game over. If it doesn't consume the press
+        // (title screen), minimise instead of destroying the activity so
+        // the next launch is instant.
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                WebView webView = (bridge != null) ? bridge.getWebView() : null;
+                if (webView == null) {
+                    moveTaskToBack(true);
+                    return;
+                }
+                webView.evaluateJavascript(
+                        "(function(){try{return !!(window.__skunkfuHandleBack&&window.__skunkfuHandleBack());}catch(e){return false;}})()",
+                        result -> {
+                            if (!"true".equals(result)) moveTaskToBack(true);
+                        });
+            }
+        });
     }
 
     @Override
