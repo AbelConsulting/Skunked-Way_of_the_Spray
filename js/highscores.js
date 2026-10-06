@@ -432,45 +432,45 @@ try {
       console.warn('Failed to load highscores from skunked.io', e);
       return null; 
     }
+  }
 
-    function _getRankMovements(scores, period) {
-      if (_rankMovementsThisSession.has(period)) {
-        return _rankMovementsThisSession.get(period);
-      }
-      const previousSnapshots = _readLocalJSON(RANK_SNAPSHOTS_KEY);
-      const hasPreviousSnapshot = Object.prototype.hasOwnProperty.call(previousSnapshots, period);
-      const previousRanks = previousSnapshots[period] && typeof previousSnapshots[period] === 'object'
-        ? previousSnapshots[period]
-        : {};
-      const currentRanks = {};
-      const movementByName = new Map();
-      const nameCounts = new Map();
-
-      scores.forEach((scoreData) => {
-        const nameKey = _playerNameKey(scoreData.name);
-        if (nameKey) nameCounts.set(nameKey, (nameCounts.get(nameKey) || 0) + 1);
-      });
-
-      scores.forEach((scoreData, index) => {
-        if (scoreData.isPersonalBest) return;
-        const nameKey = _playerNameKey(scoreData.name);
-        const rank = Number(scoreData.rank) || index + 1;
-        if (!nameKey || nameCounts.get(nameKey) !== 1 || !Number.isFinite(rank)) return;
-
-        currentRanks[nameKey] = rank;
-        const previousRank = Number(previousRanks[nameKey]);
-        if (Number.isFinite(previousRank) && previousRank > 0) {
-          movementByName.set(nameKey, previousRank - rank);
-        } else if (hasPreviousSnapshot) {
-          movementByName.set(nameKey, null);
-        }
-      });
-
-      previousSnapshots[period] = currentRanks;
-      _writeLocalJSON(RANK_SNAPSHOTS_KEY, previousSnapshots);
-      _rankMovementsThisSession.set(period, movementByName);
-      return movementByName;
+  function _getRankMovements(scores, period) {
+    if (_rankMovementsThisSession.has(period)) {
+      return _rankMovementsThisSession.get(period);
     }
+    const previousSnapshots = _readLocalJSON(RANK_SNAPSHOTS_KEY);
+    const hasPreviousSnapshot = Object.prototype.hasOwnProperty.call(previousSnapshots, period);
+    const previousRanks = previousSnapshots[period] && typeof previousSnapshots[period] === 'object'
+      ? previousSnapshots[period]
+      : {};
+    const currentRanks = {};
+    const movementByName = new Map();
+    const nameCounts = new Map();
+
+    scores.forEach((scoreData) => {
+      const nameKey = _playerNameKey(scoreData.name);
+      if (nameKey) nameCounts.set(nameKey, (nameCounts.get(nameKey) || 0) + 1);
+    });
+
+    scores.forEach((scoreData, index) => {
+      if (scoreData.isPersonalBest) return;
+      const nameKey = _playerNameKey(scoreData.name);
+      const rank = Number(scoreData.rank) || index + 1;
+      if (!nameKey || nameCounts.get(nameKey) !== 1 || !Number.isFinite(rank)) return;
+
+      currentRanks[nameKey] = rank;
+      const previousRank = Number(previousRanks[nameKey]);
+      if (Number.isFinite(previousRank) && previousRank > 0) {
+        movementByName.set(nameKey, previousRank - rank);
+      } else if (hasPreviousSnapshot) {
+        movementByName.set(nameKey, null);
+      }
+    });
+
+    previousSnapshots[period] = currentRanks;
+    _writeLocalJSON(RANK_SNAPSHOTS_KEY, previousSnapshots);
+    _rankMovementsThisSession.set(period, movementByName);
+    return movementByName;
   }
 
   /**

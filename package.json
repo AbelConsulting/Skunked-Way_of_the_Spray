@@ -1,6 +1,6 @@
 {
   "name": "skunkfu",
-  "version": "1.3.14",
+  "version": "1.3.15",
   "description": "Skunked: Way of the Spray — a fast-paced ninja skunk action platformer.",
   "author": "Mephitideus Interactive LLC",
   "main": "index.js",
@@ -10,6 +10,7 @@
     "capacitor:sync:before": "patch-package --error-on-fail",
     "test:purchases": "node --test tools/purchase_manager_test.js",
     "test:purchase-ui": "node tools/purchase_ui_test.js",
+    "test:scoreboard": "node tools/scoreboard_render_test.js",
     "build": "node scripts/build.js",
     "dev": "node scripts/dev.js",
     "start": "node tools/csp_server.js",
