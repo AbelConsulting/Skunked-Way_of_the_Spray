@@ -27,11 +27,15 @@ Evidence from manifests:
 - No call-verification flow found in app code.
 
 Current Android permissions in app manifest:
-- `com.google.android.gms.permission.AD_ID`
 - `com.android.vending.BILLING`
 - `android.permission.INTERNET`
 - `android.permission.ACCESS_NETWORK_STATE`
 - `android.permission.WAKE_LOCK`
+
+Advertising ID:
+- The app and release merged manifest do not declare `com.google.android.gms.permission.AD_ID`.
+- No ads SDK or Advertising ID access is configured in the Android app.
+- Play Console's Advertising ID declaration should be set to **No**, provided no external SDK or service added outside this repository uses the ID.
 
 ## 3) Android developer verification / app registration
 Status: MANUAL ACTION REQUIRED

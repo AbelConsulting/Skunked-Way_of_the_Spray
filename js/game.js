@@ -1388,8 +1388,8 @@ class Game {
                 this.player.velocityY = 0;
             }
 
-            // Survival is single-life: die = game over (revive ad is the only
-            // second chance). Override the arcade `lives = 3` set at game start.
+            // Survival is single-life. Override the arcade `lives = 3` set at
+            // game start.
             this.lives = 1;
 
             // Ensure no leftover respawn state from a previous run
@@ -3112,9 +3112,7 @@ class Game {
         }
 
         // Survival is single-life: force straight to GAME_OVER regardless of
-        // how many lives the counter holds — UNLESS the player just used a revive
-        // ad (lives=2), in which case the first death after revive should respawn
-        // rather than game-over (mirrors the arcade mode behaviour).
+        // how many lives the counter holds.
         if (this.gameMode === 'survival' && this.lives <= 1) {
             this.lives = 1; // will become 0 after decrement below
         }
@@ -3331,7 +3329,7 @@ class Game {
                     ? Config.GAME_OVER_LOCKOUT * 1000 : 3000
             );
 
-            // Extracted so it can be retried after a revive ad closes mid-delay.
+            // Keep this callable so the delayed high-score check can be retried.
             const _tryShowHsPrompt = () => {
                 if (this._gameOverHsPromptDone) return;
                 if (this.state !== 'GAME_OVER') return;
