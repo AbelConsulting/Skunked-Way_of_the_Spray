@@ -9,6 +9,24 @@
  */
 
 class Utils {
+    static drawAttackEffect(ctx, spriteName, hitbox, facingRight) {
+        const sprite = spriteLoader.getSprite(spriteName);
+        if (!sprite) {
+            __err('attackEffect', new Error(`Attack effect sprite not loaded: ${spriteName}`));
+            return;
+        }
+
+        ctx.save();
+        if (!facingRight) {
+            ctx.translate(hitbox.x + hitbox.width, hitbox.y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(sprite, 0, 0, hitbox.width, hitbox.height);
+        } else {
+            ctx.drawImage(sprite, hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        }
+        ctx.restore();
+    }
+
     /**
      * Check if two rectangles collide (AABB collision)
      */

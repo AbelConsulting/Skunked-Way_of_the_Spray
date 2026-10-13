@@ -288,6 +288,12 @@ class SpriteLoader {
             ['ninja_shadow_strike', 'assets/sprites/characters/ninja_shadow_strike.png'],
             ['ninja_hurt', 'assets/sprites/characters/ninja_hurt.png'],
             ['ninja_death', 'assets/sprites/characters/ninja_death.png'],
+
+            // Attack effects are complete images, not animation strips.
+            ['attack_slash', 'assets/sprites/backgrounds/attack_slash.png'],
+            ['attack_strike', 'assets/sprites/backgrounds/attack_strike.png'],
+            ['attack_enemy', 'assets/sprites/backgrounds/attack_enemy.png'],
+            ['attack_boss', 'assets/sprites/backgrounds/attack_boss.png'],
             
             // Enemy sprites
             ['basic_idle', 'assets/sprites/enemies/basic_idle.png'],
