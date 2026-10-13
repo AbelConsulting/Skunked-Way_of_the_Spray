@@ -5,7 +5,11 @@
 			"label": "Run SkunkFU Game (JS)",
 			"type": "shell",
 			"command": "python",
-			"args": ["-m", "http.server", "8000"],
+			"args": [
+				"-m",
+				"http.server",
+				"8000"
+			],
 			"isBackground": true,
 			"presentation": {
 				"echo": true,
@@ -19,10 +23,16 @@
 			"label": "Open JS Game in Browser",
 			"type": "shell",
 			"command": "start",
-			"args": ["http://localhost:8000"],
+			"args": [
+				"http://localhost:8000"
+			],
 			"windows": {
 				"command": "cmd",
-				"args": ["/c", "start", "http://localhost:8000"]
+				"args": [
+					"/c",
+					"start",
+					"http://localhost:8000"
+				]
 			}
 		},
 		{
@@ -41,49 +51,66 @@
 			"label": "Convert Quadrants to Horizontal",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["convert_quadrants_to_horizontal.py"]
+			"args": [
+				"convert_quadrants_to_horizontal.py"
+			]
 		},
 		{
 			"label": "Remove Sprite Backgrounds",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["remove_sprite_backgrounds.py"]
+			"args": [
+				"remove_sprite_backgrounds.py"
+			]
 		},
 		{
 			"label": "Cleanup Sprites",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["cleanup_sprites.py"]
+			"args": [
+				"cleanup_sprites.py"
+			]
 		},
 		{
 			"label": "Generate Metal Sound",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["generate_metal_sound.py"]
+			"args": [
+				"generate_metal_sound.py"
+			]
 		},
 		{
 			"label": "Generate Metal Guitar",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["generate_metal_sound.py"]
+			"args": [
+				"generate_metal_sound.py"
+			]
 		},
 		{
 			"label": "Analyze Music Mix",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["analyze_music_mix.py"]
+			"args": [
+				"analyze_music_mix.py"
+			]
 		},
 		{
 			"label": "Generate Background Music",
 			"type": "shell",
 			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
-			"args": ["generate_music.py"]
+			"args": [
+				"generate_music.py"
+			]
 		},
 		{
 			"label": "Capacitor: Build & Copy",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "cap:build"],
+			"args": [
+				"run",
+				"cap:build"
+			],
 			"group": "build",
 			"problemMatcher": []
 		},
@@ -91,7 +118,10 @@
 			"label": "Capacitor: Sync Android",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "cap:sync"],
+			"args": [
+				"run",
+				"cap:sync"
+			],
 			"group": "build",
 			"problemMatcher": []
 		},
@@ -99,14 +129,21 @@
 			"label": "Capacitor: Open Android Studio",
 			"type": "shell",
 			"command": "npx",
-			"args": ["cap", "open", "android"],
+			"args": [
+				"cap",
+				"open",
+				"android"
+			],
 			"problemMatcher": []
 		},
 		{
 			"label": "Firebase: Start Emulators",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "firebase:emulators"],
+			"args": [
+				"run",
+				"firebase:emulators"
+			],
 			"isBackground": true,
 			"presentation": {
 				"echo": true,
@@ -120,7 +157,10 @@
 			"label": "Firebase: Local Serve (build + serve)",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "firebase:serve"],
+			"args": [
+				"run",
+				"firebase:serve"
+			],
 			"isBackground": true,
 			"presentation": {
 				"echo": true,
@@ -134,7 +174,10 @@
 			"label": "Firebase: Deploy All",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "firebase:deploy"],
+			"args": [
+				"run",
+				"firebase:deploy"
+			],
 			"group": "build",
 			"problemMatcher": []
 		},
@@ -142,7 +185,10 @@
 			"label": "Firebase: Deploy Hosting Only",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "firebase:deploy:hosting"],
+			"args": [
+				"run",
+				"firebase:deploy:hosting"
+			],
 			"group": "build",
 			"problemMatcher": []
 		},
@@ -150,33 +196,64 @@
 			"label": "Firebase: Deploy Functions Only",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "firebase:deploy:functions"],
+			"args": [
+				"run",
+				"firebase:deploy:functions"
+			],
 			"problemMatcher": []
 		},
 		{
 			"label": "Firebase: Deploy Firestore Rules",
 			"type": "shell",
 			"command": "npm",
-			"args": ["run", "firebase:deploy:rules"],
+			"args": [
+				"run",
+				"firebase:deploy:rules"
+			],
 			"problemMatcher": []
 		},
 		{
 			"label": "Firebase: View Logs",
 			"type": "shell",
 			"command": "firebase",
-			"args": ["functions:log", "--only", "submitScore,getLeaderboard,health"],
+			"args": [
+				"functions:log",
+				"--only",
+				"submitScore,getLeaderboard,health"
+			],
 			"problemMatcher": []
 		},
 		{
 			"label": "Firebase: Open Console in Browser",
 			"type": "shell",
 			"command": "cmd",
-			"args": ["/c", "start", "https://studio.firebase.google.com/wots-52349111"],
+			"args": [
+				"/c",
+				"start",
+				"https://studio.firebase.google.com/wots-52349111"
+			],
 			"windows": {
 				"command": "cmd",
-				"args": ["/c", "start", "https://studio.firebase.google.com/wots-52349111"]
+				"args": [
+					"/c",
+					"start",
+					"https://studio.firebase.google.com/wots-52349111"
+				]
 			},
 			"problemMatcher": []
+		},
+		{
+			"label": "Build signed Android test-track AAB",
+			"type": "shell",
+			"command": "npm run android:bundle:release",
+			"options": {
+				"env": {
+					"NODE_ENV": "production"
+				}
+			},
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
