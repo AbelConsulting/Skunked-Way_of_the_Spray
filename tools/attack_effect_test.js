@@ -61,7 +61,7 @@ test('whole attack images draw in both directions without mutating collision geo
             const { ctx, calls } = canvas();
             Utils.drawAttackEffect(ctx, name, hb, right);
             assert.deepEqual(calls, right
-                ? [['save'], ['drawImage', sprites[name], 120, 80, 120, 70], ['restore']]
+                ? [['drawImage', sprites[name], 120, 80, 120, 70]]
                 : [['save'], ['translate', 240, 80], ['scale', -1, 1],
                     ['drawImage', sprites[name], 0, 0, 120, 70], ['restore']]);
             assert.deepEqual(hb, before);
@@ -104,21 +104,64 @@ test('player and enemy rendering selects the right effect and preserves debug bo
     assert.deepEqual(errors, []);
 });
 
-test('missing effects are reported explicitly', () => {
-    const { Utils, sprites, errors } = runtime();
-    delete sprites.attack_slash;
+test('pixel snapping matches character sprites without altering hitboxes', () => {
+    const { Utils, sprites, config } = runtime();
+    const hitbox = { x: 120.4, y: 80.8, width: 119.7, height: 69.6 };
+    const before = { ...hitbox };
+    for (const snap of [true, false]) {
+        config.PIXEL_SNAP = snap;
+        for (const right of [true, false]) {
+            const { ctx, calls } = canvas();
+            Utils.drawAttackEffect(ctx, 'attack_slash', hitbox, right);
+            const x = snap ? 120 : 120.4;
+            const y = snap ? 81 : 80.8;
+            const w = snap ? 120 : 119.7;
+            const h = snap ? 70 : 69.6;
+            assert.deepEqual(calls, right
+                ? [['drawImage', sprites.attack_slash, x, y, w, h]]
+                : [['save'], ['translate', x + w, y], ['scale', -1, 1],
+                    ['drawImage', sprites.attack_slash, 0, 0, w, h], ['restore']]);
+            assert.deepEqual(hitbox, before);
+        }
+    }
+});
+
+test('missing effects are reported once during loading, without placeholders or render-loop logging', async () => {
+    const errors = [];
+    const context = vm.createContext({
+        Config: { DEBUG: false },
+        Image: class { set src(value) { this.onerror(); } },
+        __err: (scope, error) => errors.push({ scope, error }),
+        console
+    });
+    for (const file of ['spriteLoader', 'utils']) {
+        vm.runInContext(fs.readFileSync(path.join(root, 'js', `${file}.js`), 'utf8'), context);
+    }
+    const { Utils, loader } = vm.runInContext('({ Utils, loader: spriteLoader })', context);
     const { ctx, calls } = canvas();
-    Utils.drawAttackEffect(ctx, 'attack_slash', { x: 0, y: 0, width: 120, height: 40 }, true);
+    for (const name of names) {
+        const image = await loader.loadSprite(name, `${name}.png`);
+        assert.equal(image, null);
+        const count = errors.length;
+        for (let frame = 0; frame < 120; frame++) {
+            Utils.drawAttackEffect(ctx, name, { x: 0, y: 0, width: 120, height: 40 }, true);
+        }
+        assert.equal(errors.length, count);
+    }
     assert.equal(calls.length, 0);
-    assert.equal(errors.length, 1);
+    assert.equal(errors.length, 4);
+    assert.equal(loader.loadedCount, 4);
+    assert.equal(loader._missing.length, 4);
     assert.match(errors[0].error.message, /attack_slash/);
 });
 
-test('all four PNGs are registered for startup loading', () => {
+test('all four PNGs are registered for startup loading and offline precaching', () => {
     const source = fs.readFileSync(path.join(root, 'js', 'spriteLoader.js'), 'utf8');
+    const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
     for (const name of names) {
         const relative = `assets/sprites/backgrounds/${name}.png`;
         assert.ok(source.includes(`['${name}', '${relative}']`));
+        assert.ok(serviceWorker.includes(`'${relative}'`));
         const png = fs.readFileSync(path.join(root, 'assets', 'sprites', 'backgrounds', `${name}.png`));
         assert.equal(png.subarray(1, 4).toString(), 'PNG');
         assert.equal(png[25], 6, 'effect PNG must have an alpha channel');

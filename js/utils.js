@@ -11,20 +11,23 @@
 class Utils {
     static drawAttackEffect(ctx, spriteName, hitbox, facingRight) {
         const sprite = spriteLoader.getSprite(spriteName);
-        if (!sprite) {
-            __err('attackEffect', new Error(`Attack effect sprite not loaded: ${spriteName}`));
-            return;
-        }
+        // Failed loads are reported once by SpriteLoader, not on every frame.
+        if (!sprite) return;
 
-        ctx.save();
+        const snap = typeof Config !== 'undefined' && Config.PIXEL_SNAP;
+        const x = snap ? Math.round(hitbox.x) : hitbox.x;
+        const y = snap ? Math.round(hitbox.y) : hitbox.y;
+        const width = snap ? Math.max(1, Math.round(hitbox.width)) : hitbox.width;
+        const height = snap ? Math.max(1, Math.round(hitbox.height)) : hitbox.height;
         if (!facingRight) {
-            ctx.translate(hitbox.x + hitbox.width, hitbox.y);
+            ctx.save();
+            ctx.translate(x + width, y);
             ctx.scale(-1, 1);
-            ctx.drawImage(sprite, 0, 0, hitbox.width, hitbox.height);
+            ctx.drawImage(sprite, 0, 0, width, height);
+            ctx.restore();
         } else {
-            ctx.drawImage(sprite, hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+            ctx.drawImage(sprite, x, y, width, height);
         }
-        ctx.restore();
     }
 
     /**

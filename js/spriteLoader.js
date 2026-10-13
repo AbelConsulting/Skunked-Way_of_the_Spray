@@ -218,6 +218,14 @@ class SpriteLoader {
                 if (!this._missing) this._missing = [];
                 this._missing.push({ name, path });
 
+                if (['attack_slash', 'attack_strike', 'attack_enemy', 'attack_boss'].includes(name)) {
+                    __err('sprite', new Error(`Failed to load attack effect: ${path}`));
+                    this.sprites[name] = null;
+                    this.loadedCount++;
+                    resolve(null);
+                    return;
+                }
+
                 // If this is a known sprite sheet (multiple frames), synthesize
                 // a simple placeholder sheet so animations keep working.
                 const frameCount = this.expectedFrames[name];

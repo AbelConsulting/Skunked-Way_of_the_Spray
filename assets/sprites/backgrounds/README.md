@@ -32,3 +32,6 @@ Artwork faces right and is mirrored for left-facing attacks. Each image is
 scaled to the current attack hitbox; Shadow Strike does not use the larger
 swept collision region for rendering. Collision geometry and damage timing
 are unchanged. `SHOW_HITBOXES` hides the artwork so the debug boxes remain clear.
+Effects follow the game's `PIXEL_SNAP` setting and are precached for offline play.
+Failed effect loads are logged once at load time and omitted from rendering,
+rather than replaced with opaque placeholder boxes.
