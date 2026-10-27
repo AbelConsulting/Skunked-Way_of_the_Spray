@@ -63,7 +63,17 @@ async function build({ minify = true, sourcemap = false } = {}) {
       const src = path.join(ROOT, f);
       const dest = path.join(DIST, f);
       if (fs.existsSync(src)) {
-        fs.copyFileSync(src, dest);
+        if (f === 'index.html') {
+          const version = require(path.join(ROOT, 'package.json')).version;
+          const stamp = `${version} / ${new Date().toISOString()}`;
+          const html = fs.readFileSync(src, 'utf8');
+          fs.writeFileSync(dest, html.replace(
+            '<meta name="skunkfu-build" content="development">',
+            `<meta name="skunkfu-build" content="${stamp}">`
+          ), 'utf8');
+        } else {
+          fs.copyFileSync(src, dest);
+        }
       }
     }
     // Copy assets/ and js/ folders to dist (shallow copy)

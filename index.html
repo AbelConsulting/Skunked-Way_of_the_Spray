@@ -8,6 +8,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="skunkfu-build" content="development">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -3844,6 +3845,7 @@
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Unlock Skins &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
+                                <button id="iap-diag-open-btn" class="menu-btn" type="button" aria-controls="iap-diag-card">Check Billing</button>
                             </div>
                             <p id="remove-ads-status" class="settings-card-status"></p>
                         </div>
@@ -5420,10 +5422,19 @@
                         try {
                             const diagCard       = document.getElementById('iap-diag-card');
                             const diagTrigger    = document.getElementById('remove-ads-diag-trigger');
+                            const diagOpenBtn    = document.getElementById('iap-diag-open-btn');
                             const diagRunBtn     = document.getElementById('iap-diag-run-btn');
                             const diagReconnect  = document.getElementById('iap-diag-reconnect-btn');
                             const diagCloseBtn   = document.getElementById('iap-diag-close-btn');
                             const diagOutput     = document.getElementById('iap-diag-output');
+
+                            function _openDiag() {
+                                if (!diagCard) return;
+                                diagCard.style.display = '';
+                                diagCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                _runDiag();
+                            }
+                            if (diagOpenBtn) diagOpenBtn.addEventListener('click', _openDiag);
 
                             // 5 rapid taps on the skin pack heading reveals the panel
                             if (diagTrigger && diagCard) {
@@ -5434,8 +5445,7 @@
                                     _diagTapTimer = setTimeout(() => { _diagTapCount = 0; }, 1500);
                                     if (_diagTapCount >= 5) {
                                         _diagTapCount = 0;
-                                        diagCard.style.display = '';
-                                        diagCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                        _openDiag();
                                     }
                                 });
                             }
@@ -5530,6 +5540,7 @@
                                     lines.push('');
                                 }
                                 lines.push('── ENVIRONMENT ─────────────────────');
+                                lines.push('  app build      : ' + (document.querySelector('meta[name="skunkfu-build"]')?.content || 'unknown'));
                                 lines.push('  isNative       : ' + d.isNative);
                                 lines.push('  pluginLoaded   : ' + d.pluginLoaded);
                                 lines.push('  storeRef       : ' + d.storeRef);
@@ -5538,6 +5549,7 @@
                                 lines.push('  readyMode      : ' + (d.readyMode || 'n/a'));
                                 lines.push('  storeInitSettled: ' + d.storeInitSettled);
                                 lines.push('  storeInitError : ' + (d.storeInitError || 'none'));
+                                lines.push('  lastStoreError : ' + (d.lastStoreError ? JSON.stringify(d.lastStoreError) : 'none'));
                                 lines.push('  storePollDone  : ' + d.storePollDone);
                                 lines.push('  CdvPurchase v  : ' + (d.CdvPurchase_version || 'n/a'));
                                 lines.push('');

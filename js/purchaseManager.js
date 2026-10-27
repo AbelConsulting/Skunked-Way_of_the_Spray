@@ -75,6 +75,7 @@ const PurchaseManager = (() => {
     // Last order error string (code + message) for both SKUs — shown in the
     // in-app diagnostic panel without needing Chrome DevTools.
     let _lastOrderError = 'none';
+    let _lastStoreError = null;
     let _lastRemotePushStatus = 'none';
 
     function _readPendingPurchases() {
@@ -584,6 +585,15 @@ const PurchaseManager = (() => {
             // visible in Chrome Remote DevTools console and `adb logcat`.
             store.verbosity = LogLevel.DEBUG;
 
+            store.error((error) => {
+                _lastStoreError = {
+                    code: error.code,
+                    message: error.message,
+                    productId: error.productId,
+                };
+                _warn('Store error:', _lastStoreError);
+            });
+
             store.register([
                 {
                     id:       PRODUCT_ID_SKINS,
@@ -1083,6 +1093,7 @@ const PurchaseManager = (() => {
             pendingIapPurchases: _readPendingPurchases(),
             lastRemotePushStatus: _lastRemotePushStatus,
             lastOrderError: _lastOrderError,
+            lastStoreError: _lastStoreError,
         };
         // Dump raw product objects so we can see if pricing arrived
         if (store) {

@@ -216,6 +216,26 @@ You can also run a guarded release build that includes the fingerprint preflight
 npm run android:bundle:release
 ```
 
+### Troubleshooting Android Purchases Without USB Debugging
+
+In the installed app, open **Settings > Unlock Skins & Support the Dev > Check Billing**.
+The visible button opens the billing report and runs a check; no hidden tap gesture
+or developer mode is required. Capture the report, scrolling inside it as needed.
+It includes the bundled app version/build timestamp, initialization state, product
+pricing, and the last asynchronous store error. Purchase tokens are redacted.
+**Refresh Products** retries the catalogue fetch without placing an order.
+
+The button is available only in builds containing this change. Build and sync with
+`npm run cap:sync` before preparing a new Android release, then distribute it through
+a Google Play testing track. A successful automated test does not validate live
+Play Console product availability or real-device checkout.
+
+The persisted `cordova-plugin-purchase` patch also fixes Google Play setup
+recovery: a failed setup retries the native bridge rather than returning its
+cached, unresolved initialization promise. The original promise resolves when
+that retry succeeds, allowing catalogue loading to continue. Setup errors remain
+visible in the billing report.
+
 ### Docker / CI
 
 ```Dockerfile

@@ -88,6 +88,23 @@ test('plugin initialization error arrays are not reported as success', async () 
     } finally { r.close(); }
 });
 
+test('diagnostics retain asynchronous store errors without extra error payloads', async () => {
+    const r = runtime();
+    try {
+        await r.manager.initialize();
+        r.store.triggerError({
+            code: 6777002, message: 'Product details unavailable', productId: 'skins',
+            purchaseToken: 'private-test-token',
+        });
+        await new Promise(resolve => setTimeout(resolve, 10));
+        const d = r.manager.diagnose();
+        assert.equal(d.lastStoreError.code, 6777002);
+        assert.equal(d.lastStoreError.productId, 'skins');
+        assert.equal(d.lastStoreError.message, 'Product details unavailable');
+        assert.doesNotMatch(JSON.stringify(d), /private-test-token/);
+    } finally { r.close(); }
+});
+
 test('Buy retries an empty catalogue immediately despite plugin default throttle', async () => {
     const r = runtime({ emptyCatalogue: true });
     try {
@@ -139,6 +156,36 @@ test('timed-out initialization stays pending; never fake billing readiness to re
         assert.equal(r.manager.diagnose().storeInitSettled, false);
         assert.equal(r.calls.catalogue, 0);
         assert.equal(r.calls.orders.length, 0);
+    } finally { r.close(); }
+});
+
+test('actual Google Play adapter reconnects after setup failure and resolves original initialization', async () => {
+    const r = runtime();
+    try {
+        const retries = [];
+        const errors = [];
+        let attempts = 0;
+        const log = { info() {}, debug() {}, child() { return this; } };
+        const adapter = {
+            log, context: { verbosity: 0, error: error => errors.push(error) },
+            retry: { retry: callback => retries.push(callback) },
+            autoRefreshIntervalMillis: 0,
+            onSetPurchases() {}, onPurchasesUpdated() {}, onPurchaseConsumed() {},
+            bridge: {
+                init(success, failure) {
+                    attempts++;
+                    if (attempts === 1) failure('SERVICE_UNAVAILABLE');
+                    else success();
+                },
+            },
+        };
+        adapter.initialize = () => r.plugin.GooglePlay.Adapter.prototype.initialize.call(adapter);
+        const pending = adapter.initialize();
+        assert.equal(errors.length, 1, 'initial setup failure remains visible');
+        assert.equal(retries.length, 1);
+        retries.shift()();
+        assert.equal(attempts, 2, 'retry must call the native bridge again, not return the cached promise');
+        assert.equal(await pending, undefined, 'successful retry settles the original initialization');
     } finally { r.close(); }
 });
 

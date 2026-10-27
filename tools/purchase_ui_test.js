@@ -60,6 +60,13 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         const page = await context.newPage();
         await page.goto(ORIGIN, { waitUntil: 'domcontentloaded' });
         await page.locator('#menu-settings-btn').click();
+        await page.locator('#iap-diag-open-btn').click();
+        await page.waitForFunction(() => document.getElementById('iap-diag-output').textContent.includes('app build'));
+        const report = await page.locator('#iap-diag-output').textContent();
+        assert.ok(report.includes(require('../package.json').version + ' / '), 'report identifies the bundled build');
+        assert.ok(report.includes('lastStoreError'), 'report includes asynchronous store errors');
+        await page.locator('#iap-diag-close-btn').click();
+        await page.locator('#iap-diag-card').waitFor({ state: 'hidden' });
         const buy = page.locator('#remove-ads-buy-btn');
         await buy.waitFor({ state: 'visible' });
         await page.waitForFunction(() => !document.getElementById('remove-ads-buy-btn').disabled);

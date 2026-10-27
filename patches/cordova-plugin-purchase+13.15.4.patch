@@ -27,3 +27,29 @@ index a50c898..99cc731 100644
          ret
            .put("product_type", "inapp")
            .put("product_format", "v11.0")
+diff --git a/node_modules/cordova-plugin-purchase/src/ts/platforms/google-play/googleplay-adapter.ts b/node_modules/cordova-plugin-purchase/src/ts/platforms/google-play/googleplay-adapter.ts
+index af62833..d9bc37f 100644
+--- a/node_modules/cordova-plugin-purchase/src/ts/platforms/google-play/googleplay-adapter.ts
++++ b/node_modules/cordova-plugin-purchase/src/ts/platforms/google-play/googleplay-adapter.ts
+@@ -187,5 +187,6 @@ namespace CdvPurchase {
+                     const iabError = (err: string) => {
+                         this.initialized = false;
+                         this.context.error(playStoreError(ErrorCode.SETUP, "Init failed - " + err, null));
+-                        this.retry.retry(() => this.initialize());
++                        // Keep the original promise, but retry the native setup.
++                        this.retry.retry(() => this.bridge.init(iabReady, iabError, iabOptions));
+                     }
+diff --git a/node_modules/cordova-plugin-purchase/www/store.js b/node_modules/cordova-plugin-purchase/www/store.js
+index 23a1888..2def5e0 100644
+--- a/node_modules/cordova-plugin-purchase/www/store.js
++++ b/node_modules/cordova-plugin-purchase/www/store.js
+@@ -6113,7 +6113,8 @@ var CdvPurchase;
+                         const iabError = (err) => {
+                             this.initialized = false;
+                             this.context.error(playStoreError(CdvPurchase.ErrorCode.SETUP, "Init failed - " + err, null));
+-                            this.retry.retry(() => this.initialize());
++                            // Keep the original promise, but retry the native setup.
++                            this.retry.retry(() => this.bridge.init(iabReady, iabError, iabOptions));
+                         };
+                         this.bridge.init(iabReady, iabError, iabOptions);
+                     });
