@@ -36,6 +36,14 @@ class SpriteLoader {
             'ninja_shadow_strike': 4,
             'ninja_hurt': 2,
             'ninja_death': 4,
+            'ninja2_idle': 4,
+            'ninja2_walk': 4,
+            'ninja2_jump': 4,
+            'ninja2_attack': 4,
+            'ninja2_skunk_shot': 4,
+            'ninja2_shadow_strike': 4,
+            'ninja2_hurt': 4,
+            'ninja2_death': 4,
             'basic_idle': 4,
             'basic_walk': 4,
             'basic_attack': 4,
@@ -296,6 +304,8 @@ class SpriteLoader {
             ['ninja_shadow_strike', 'assets/sprites/characters/ninja_shadow_strike.png'],
             ['ninja_hurt', 'assets/sprites/characters/ninja_hurt.png'],
             ['ninja_death', 'assets/sprites/characters/ninja_death.png'],
+            ...['idle', 'walk', 'jump', 'attack', 'skunk_shot', 'shadow_strike', 'hurt', 'death']
+                .map(state => ['ninja2_' + state, 'assets/sprites/characters/ninja2_' + state + '.png']),
 
             // Attack effects are complete images, not animation strips.
             ['attack_slash', 'assets/sprites/backgrounds/attack_slash.png'],

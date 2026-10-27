@@ -141,6 +141,35 @@ class Player {
         this._attackDidHit = false;
     }
 
+    _drawCurrentAnimation(ctx) {
+        const base = this.currentAnimation;
+        const useNinja2 = typeof FounderManager !== 'undefined' &&
+            FounderManager.isGoldSkinEnabled() && FounderManager.getSkinVariant() === 'ninja2';
+        if (!useNinja2) {
+            base.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+            return;
+        }
+        if (!this._premiumAnimations) this._premiumAnimations = new Map();
+        let visual = this._premiumAnimations.get(base);
+        if (!visual) {
+            const state = Object.keys(this.animations).find(key => this.animations[key] === base);
+            const sheet = spriteLoader.getSprite('ninja2_' + state);
+            if (!sheet) {
+                console.error('Ninja2 animation unavailable:', state);
+                base.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                return;
+            }
+            visual = new Animation(sheet, 4, base.frameDuration, {
+                frameWidth: sheet.width / 4, frameHeight: sheet.height, frameStride: sheet.width / 4
+            });
+            this._premiumAnimations.set(base, visual);
+        }
+        // Map artwork onto the existing animation clock; combat never uses the cosmetic frames.
+        const progress = (base.currentFrame + base.timer / base.frameDuration) / base.frameCount;
+        visual.currentFrame = Math.min(3, Math.floor(progress * 4));
+        visual.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+    }
+
     loadSprites() {
         const ninja_idle = spriteLoader.getSprite('ninja_idle');
         const ninja_walk = spriteLoader.getSprite('ninja_walk');
@@ -980,7 +1009,7 @@ class Player {
                 ctx.shadowColor = '#00D9FF';
                 ctx.shadowBlur = 15 + Math.sin(Date.now() / 100) * 5; // Pulsing glow
                 ctx.globalCompositeOperation = 'lighter';
-                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                this._drawCurrentAnimation(ctx);
                 ctx.restore();
             }
             // Add health regen glow effect
@@ -989,7 +1018,7 @@ class Player {
                 ctx.shadowColor = '#00FF88';
                 ctx.shadowBlur = 12 + Math.sin(Date.now() / 120) * 4; // Pulsing green glow
                 ctx.globalCompositeOperation = 'lighter';
-                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                this._drawCurrentAnimation(ctx);
                 ctx.restore();
             }
             // Add damage boost glow effect
@@ -998,7 +1027,7 @@ class Player {
                 ctx.shadowColor = '#FF4444';
                 ctx.shadowBlur = 18 + Math.sin(Date.now() / 90) * 6; // Pulsing red glow
                 ctx.globalCompositeOperation = 'lighter';
-                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                this._drawCurrentAnimation(ctx);
                 ctx.restore();
             }
             // Add idol collection bonus glow effect (golden aura)
@@ -1009,11 +1038,11 @@ class Player {
                 ctx.shadowColor = '#FFD700';
                 ctx.shadowBlur = intensity + Math.sin(Date.now() / 150) * (intensity * 0.3); // Pulsing golden glow
                 ctx.globalCompositeOperation = 'lighter';
-                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                this._drawCurrentAnimation(ctx);
                 ctx.restore();
             }
             // Cosmetic skin aura. Gold = early-access Founder exclusive;
-            // sapphire/amethyst/steel = unlocked by Remove Ads ($2.99). The
+            // Sapphire/amethyst/steel palettes are unlocked by the skin pack. The
             // gating lives entirely inside FounderManager.isGoldSkinEnabled(),
             // which now returns true for any player with an unlocked variant
             // and the cosmetic toggle on.
@@ -1026,7 +1055,7 @@ class Player {
             const _founderAuraColor = (_founderGold && typeof GoldenSkin !== 'undefined' && typeof GoldenSkin.getAuraColor === 'function')
                 ? GoldenSkin.getAuraColor(_founderVariant)
                 : '#FFC857';
-            if (_founderGold) {
+            if (_founderGold && _founderVariant !== 'ninja2') {
                 ctx.save();
                 ctx.shadowColor = _founderAuraColor;
                 ctx.shadowBlur = 8 + Math.sin(Date.now() / 220) * 3;
@@ -1038,12 +1067,12 @@ class Player {
             // Final base-sprite blit. Founders get the chosen colour-tinted
             // skin generated procedurally by GoldenSkin from the same source
             // sprite sheet — silhouette and animation frames are identical.
-            if (_founderGold &&
+            if (_founderGold && _founderVariant !== 'ninja2' &&
                 typeof GoldenSkin !== 'undefined' &&
                 typeof GoldenSkin.drawAnimation === 'function') {
                 GoldenSkin.drawAnimation(this.currentAnimation, ctx, this.x, this.y, this.width, this.height, !this.facingRight, _founderVariant);
             } else {
-                this.currentAnimation.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+                this._drawCurrentAnimation(ctx);
             }
         } else {
             ctx.fillStyle = this.color;

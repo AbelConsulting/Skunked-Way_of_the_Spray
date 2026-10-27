@@ -2996,6 +2996,7 @@
         .pause-skin-chip[data-variant="sapphire"]  { --chip-grad: linear-gradient(135deg,#1e3c8a,#3a78ff 55%,#a9c8ff); --chip-glow: rgba(58,120,255,0.50); }
         .pause-skin-chip[data-variant="amethyst"]  { --chip-grad: linear-gradient(135deg,#4a1f7a,#9a52d8 55%,#e2c0ff); --chip-glow: rgba(154,82,216,0.50); }
         .pause-skin-chip[data-variant="steel"]     { --chip-grad: linear-gradient(135deg,#3a4756,#8a99aa 55%,#dfe7ee); --chip-glow: rgba(138,153,170,0.50); }
+        .pause-skin-chip[data-variant="ninja2"]    { --chip-grad: linear-gradient(135deg,#29232e,#a534b2 55%,#edb4f4); --chip-glow: rgba(209,94,224,0.50); }
         .pause-skin-chip.is-active {
             border-color: rgba(255,255,255,0.55);
             background: rgba(20,30,46,0.85);
@@ -3841,7 +3842,7 @@
                         <div class="menu-settings-card" id="remove-ads-card">
                             <!-- 5 rapid taps on the title opens the IAP diagnostic panel -->
                             <h3 id="remove-ads-diag-trigger" style="user-select:none">&#128293; Unlock Skins &amp; Support the Dev</h3>
-                            <p id="remove-ads-desc">One-time purchase. Unlocks 3 ninja skins (Sapphire, Amethyst, Steel). No ads are shown in the game.</p>
+                            <p id="remove-ads-desc">One-time purchase. Unlocks Ninja 2 plus Sapphire, Amethyst, and Steel skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get Ninja 2 included.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Unlock Skins &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
@@ -3872,7 +3873,14 @@
                                 <input id="founder-gold-skin-toggle" type="checkbox" class="founder-gold-skin-toggle" />
                                 <span>Use a ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
-                            <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin colour">
+                            <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin">
+                                <button type="button" class="founder-swatch founder-swatch--ninja2" data-variant="ninja2" role="radio" aria-checked="false" title="Ninja 2">
+                                    <span class="founder-swatch__preview" aria-hidden="true">
+                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
+                                    </span>
+                                    <span class="founder-swatch__name">Ninja 2</span>
+                                    <span class="founder-swatch__status"></span>
+                                </button>
                                 <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold � Founder exclusive">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
@@ -5023,7 +5031,7 @@
                                 function _resolveSheet() {
                                     if (_ready) return true;
                                     try {
-                                        const sl = window.spriteLoader;
+                                        const sl = typeof spriteLoader !== 'undefined' ? spriteLoader : window.spriteLoader;
                                         const img = sl && sl.getSprite ? sl.getSprite('ninja_walk') : null;
                                         if (!img) return false;
                                         const w = img.naturalWidth || img.width;
@@ -5044,17 +5052,24 @@
                                     if (!ctx) return;
                                     const id = btn.dataset.variant;
                                     let src = _sheet;
+                                    let frameW = _frameW, stride = _stride;
+                                    if (id === 'ninja2') {
+                                        const sl = typeof spriteLoader !== 'undefined' ? spriteLoader : window.spriteLoader;
+                                        src = sl && sl.getSprite('ninja2_walk');
+                                        if (!src) return;
+                                        frameW = stride = src.width / FRAME_COUNT;
+                                    }
                                     try {
-                                        if (window.GoldenSkin && typeof GoldenSkin.getTintedFor === 'function') {
+                                        if (id !== 'ninja2' && window.GoldenSkin && typeof GoldenSkin.getTintedFor === 'function') {
                                             src = GoldenSkin.getTintedFor(_sheet, id) || _sheet;
                                         }
                                     } catch (e) {}
                                     const cw = canvas.width, ch = canvas.height;
                                     ctx.imageSmoothingEnabled = false;
                                     ctx.clearRect(0, 0, cw, ch);
-                                    const sx = _frame * _stride;
-                                    const sw = _frameW;
-                                    const sh = _sheet.naturalHeight || _sheet.height;
+                                    const sx = _frame * stride;
+                                    const sw = frameW;
+                                    const sh = src.naturalHeight || src.height;
                                     // Fit the frame into the disc, leaving a small margin so the
                                     // ninja silhouette doesn't kiss the disc edge.
                                     const margin = 4;
@@ -5102,7 +5117,7 @@
                                 const _settingsOverlay = document.getElementById('menu-settings-overlay');
                                 if (_settingsOverlay && typeof MutationObserver !== 'undefined') {
                                     const obs = new MutationObserver(() => {
-                                        const visible = _settingsOverlay.style.display === 'flex' && !_settingsOverlay.hidden;
+                                        const visible = _settingsOverlay.style.display === 'flex';
                                         if (visible) _skinPreview.start(); else _skinPreview.stop();
                                     });
                                     obs.observe(_settingsOverlay, { attributes: true, attributeFilter: ['style', 'hidden'] });
@@ -5131,13 +5146,13 @@
                                             : 'The "FOUNDER" badge and Day-One achievement are yours forever. Skin display is currently off.';
                                         founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for being an early-access player' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else if (adFree) {
-                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
+                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Ninja 2 plus the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
                                     } else if (inEarlyAccess) {
                                         // Still in early access — Gold auto-grant should have fired; this
                                         // branch is a UI safety net (e.g. FounderManager not yet initialized).
                                         founderStatusText.innerHTML = '\u{1F31F} You are an early-access player &mdash; the exclusive <strong>Gold</strong> skin + Founder badge are <strong>yours free</strong>! Optionally, support the dev with the <strong>Founder Pass</strong> ($0.99) for a Play-backed claim.';
                                     } else {
-                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock the Sapphire, Amethyst, and Steel skins for $1.99.';
+                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Ninja 2 plus Sapphire, Amethyst, and Steel with the skin pack.';
                                     }
                                 }
 
@@ -6621,7 +6636,7 @@
 
             const VARIANT_NAMES = {
                 gold: 'Gold', sapphire: 'Sapphire',
-                amethyst: 'Amethyst', steel: 'Steel'
+                amethyst: 'Amethyst', steel: 'Steel', ninja2: 'Ninja 2'
             };
 
             function render() {

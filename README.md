@@ -236,6 +236,24 @@ cached, unresolved initialization promise. The original promise resolves when
 that retry succeeds, allowing catalogue loading to continue. Setup errors remain
 visible in the billing report.
 
+### Ninja 2 Premium Cosmetic
+
+The existing `skins` purchase (and restored legacy `remove_ads` ownership) includes
+Ninja 2 alongside Sapphire, Amethyst, and Steel. Existing buyers do not need another
+purchase. Founder status alone unlocks Gold, not Ninja 2; the full Steam game includes
+all skins. Choose **Ninja 2** in Settings or the pause-menu skin switcher, with skin
+display enabled.
+
+Ninja 2 uses eight transparent, horizontal four-frame PNG sheets named
+`ninja2_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` in
+`assets/sprites/characters/`. Each sheet uses square frames (currently 48 or 64 pixels).
+Rendering uses the original player's animation clock, including fitting the four
+hurt frames into the original two-frame duration. Player size, collisions, attacks,
+damage, and ability timing are unchanged. Turning skins off restores original artwork.
+Run `npm run test:skins` for entitlement, frame bounds, persistence, and timing tests;
+after `npm run cap:sync`, `npm run test:purchase-ui` also checks the bundled premium
+preview, selection, and actual artwork rendering.
+
 ### Docker / CI
 
 ```Dockerfile

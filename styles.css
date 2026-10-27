@@ -586,6 +586,13 @@ html.controller-cursor-hidden * {
         rgba(10, 14, 18, 0.90);
 }
 
+.founder-swatch--ninja2 {
+    --swatch-grad: linear-gradient(160deg, #edb4f4 0%, #a534b2 60%, #29232e 100%);
+    --swatch-glow: rgba(209, 94, 224, 0.55);
+    --swatch-border: rgba(209, 94, 224, 0.50);
+    --swatch-name-color: #edb4f4;
+}
+
 /* Subtle ambient gradient wash for each tile that matches its palette,
    so even at rest the cards feel themed and premium. */
 .founder-swatch::before {

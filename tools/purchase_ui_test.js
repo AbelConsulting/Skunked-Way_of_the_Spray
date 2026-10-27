@@ -14,7 +14,11 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
 (async () => {
     const browser = await chromium.launch();
     try {
-        const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
+        const mobile = process.env.TEST_MOBILE === '1';
+        const context = await browser.newContext({
+            viewport: mobile ? { width: 844, height: 390 } : { width: 1280, height: 800 },
+            isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block'
+        });
         await context.route('**/*', route => {
             const url = new URL(route.request().url());
             if (url.origin !== ORIGIN) return route.abort();
@@ -80,6 +84,57 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         assert.equal(diag.ready, true);
         assert.equal(diag.storeInitSettled, true);
         assert.doesNotMatch(JSON.stringify(diag), /synthetic-offer/);
+        const ninja2 = page.locator('.founder-swatch[data-variant="ninja2"]');
+        await page.waitForFunction(() => {
+            const tile = document.querySelector('.founder-swatch[data-variant="ninja2"]');
+            return tile.classList.contains('is-locked') && tile.querySelector('canvas').classList.contains('is-ready');
+        }).catch(async error => {
+            console.error(await page.evaluate(() => ({
+                tile: document.querySelector('.founder-swatch[data-variant="ninja2"]').outerHTML,
+                settings: document.getElementById('menu-settings-overlay').getAttribute('style'),
+                hidden: document.getElementById('menu-settings-overlay').hidden,
+                loader: typeof spriteLoader,
+                sheet: typeof spriteLoader !== 'undefined' && !!spriteLoader.getSprite('ninja2_walk'),
+            })));
+            throw error;
+        });
+        assert.equal(await ninja2.getAttribute('aria-disabled'), 'true');
+        assert.equal(await page.evaluate(() => FounderManager.setSkinVariant('ninja2')), false);
+        assert.notEqual(await page.evaluate(() => FounderManager.getSkinVariant()), 'ninja2');
+        await page.evaluate(() => {
+            localStorage.setItem('skunkfu.adFree', '1');
+            FounderManager.setSkinVariant('steel');
+            FounderManager.setGoldSkinEnabled(true);
+        });
+        await ninja2.click();
+        assert.equal(await ninja2.getAttribute('aria-checked'), 'true');
+        const rendered = await page.evaluate(() => {
+            const player = Object.create(Player.prototype);
+            Object.assign(player, { x: 0, y: 0, width: 64, height: 64, facingRight: true });
+            player.loadSprites();
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            player.currentAnimation = player.animations.walk;
+            player._drawCurrentAnimation(ctx);
+            const premium = canvas.toDataURL();
+            const visible = ctx.getImageData(0, 0, 64, 64).data.some((value, i) => i % 4 === 3 && value > 0);
+            ctx.clearRect(0, 0, 64, 64);
+            FounderManager.setGoldSkinEnabled(false);
+            player._drawCurrentAnimation(ctx);
+            return { visible, differsFromOriginal: premium !== canvas.toDataURL() };
+        });
+        assert.equal(rendered.visible, true, 'actual premium PNG renders nontransparent pixels');
+        assert.equal(rendered.differsFromOriginal, true, 'toggle restores visually different original artwork');
+        await page.evaluate(() => {
+            const pause = document.getElementById('pause-overlay');
+            pause.removeAttribute('hidden');
+            pause.style.display = 'flex';
+        });
+        const pauseNinja2 = page.locator('.pause-skin-chip[data-variant="ninja2"]');
+        await pauseNinja2.waitFor({ state: 'visible' });
+        assert.ok((await pauseNinja2.textContent()).includes('Ninja 2'));
         console.log('PASS Android-bundled Buy button: empty catalogue -> real refresh -> correct offer order -> readable cancellation; diagnostics redact tokens.');
+        console.log('PASS Ninja 2: locked animated preview, owner selection, real artwork rendering and original-art toggle.');
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

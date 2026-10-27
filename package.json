@@ -9,6 +9,7 @@
     "postinstall": "patch-package --error-on-fail",
     "capacitor:sync:before": "patch-package --error-on-fail",
     "test:purchases": "node --test tools/purchase_manager_test.js",
+    "test:skins": "node --test tools/premium_skin_test.js",
     "test:purchase-ui": "node tools/purchase_ui_test.js",
     "test:scoreboard": "node tools/scoreboard_render_test.js",
     "test:offline": "node tools/offline_play_test.js",
