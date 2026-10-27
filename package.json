@@ -1,6 +1,6 @@
 {
   "name": "skunkfu",
-  "version": "1.3.20",
+  "version": "1.3.21",
   "description": "Skunked: Way of the Spray — a fast-paced ninja skunk action platformer.",
   "author": "Mephitideus Interactive LLC",
   "main": "index.js",
@@ -47,7 +47,8 @@
     "cap:open": "npx cap open android",
     "cap:run": "npx cap run android",
     "android:check-upload-key": "node tools/check_upload_key_fingerprint.js",
-    "android:bundle:release": "npm run cap:sync && npm run android:check-upload-key && cd android && gradlew.bat bundleRelease",
+    "android:bundle:release": "npm run cap:sync && npm run android:check-upload-key && cd android && gradlew.bat bundleRelease && cd .. && npm run android:check-billing-bundle",
+    "android:check-billing-bundle": "powershell -NoProfile -File tools/check_android_billing_bundle.ps1",
     "electron:dev": "node scripts/build-steam.js && npx electron electron/main.js",
     "electron:build": "node scripts/build-steam.js --release && npx electron-builder --config",
     "electron:build:win": "node scripts/build-steam.js --release && npx electron-builder --win --config",

@@ -5489,6 +5489,12 @@
                                     v.push('  → Install the app from a Google Play track to test purchases.');
                                     return v;
                                 }
+                                if (d.lastStoreError && /class not found/i.test(d.lastStoreError.message || '')) {
+                                    v.push('Native billing plugin registration or class is missing from this Android build.');
+                                    v.push('This is an app packaging failure, not a payment rejection.');
+                                    v.push('Install a corrected release that preserves Cordova res/xml/config.xml and cc.fovea.PurchasePlugin.');
+                                    return v;
+                                }
                                 if (!d.pluginLoaded) {
                                     v.push('✗ CdvPurchase plugin NOT loaded into the WebView.');
                                     v.push('  → Run: npx cap sync android, then rebuild & reinstall.');

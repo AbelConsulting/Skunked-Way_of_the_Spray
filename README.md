@@ -236,6 +236,14 @@ cached, unresolved initialization promise. The original promise resolves when
 that retry succeeds, allowing catalogue loading to continue. Setup errors remain
 visible in the billing report.
 
+Release resource shrinking must retain `@xml/config`: Cordova looks it up by name
+to discover `InAppBillingPlugin`. The keep rule in
+`android/app/src/main/res/raw/skunkfu_keep.xml` preserves this registration.
+Without it, the JavaScript plugin can load while native initialization reports
+`Init failed - Class not found`. Class keep rules alone do not retain XML resources.
+The signed release command runs `android:check-billing-bundle` after Gradle to
+inspect the actual AAB for both the registration and native plugin class.
+
 ### Ninja 2 Premium Cosmetic
 
 The existing `skins` purchase (and restored legacy `remove_ads` ownership) includes
