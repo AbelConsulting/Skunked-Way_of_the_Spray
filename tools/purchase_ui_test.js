@@ -134,6 +134,15 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         const pauseNinja2 = page.locator('.pause-skin-chip[data-variant="ninja2"]');
         await pauseNinja2.waitFor({ state: 'visible' });
         assert.ok((await pauseNinja2.textContent()).includes('Ninja 2'));
+        await page.evaluate(() => {
+            document.getElementById('pause-overlay').style.display = 'none';
+            CdvPurchase.store.triggerError({ code: 6777001, message: 'Init failed - Class not found', productId: null });
+        });
+        await page.waitForFunction(() => PurchaseManager.diagnose().lastStoreError?.code === 6777001);
+        await page.locator('#iap-diag-open-btn').click();
+        await page.waitForFunction(() => document.getElementById('iap-diag-output').textContent.includes('app packaging failure'));
+        const packagingReport = await page.locator('#iap-diag-output').textContent();
+        assert.ok(!packagingReport.includes('Products not set to'), 'missing native registration must not be blamed on product configuration');
         console.log('PASS Android-bundled Buy button: empty catalogue -> real refresh -> correct offer order -> readable cancellation; diagnostics redact tokens.');
         console.log('PASS Ninja 2: locked animated preview, owner selection, real artwork rendering and original-art toggle.');
     } finally { await browser.close(); }
