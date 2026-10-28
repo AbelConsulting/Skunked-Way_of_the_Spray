@@ -9,7 +9,7 @@
  *     want to monetize the web build directly. For now web is "Coming soon".
  *
  * What the purchase grants:
- *   • Unlocks Laysie Skunk and Vampyr plus Sapphire, Amethyst, and Steel (FounderManager.isSkinUnlocked).
+ *   • Unlocks Laysie Skunk, Vampyr, and Malodor plus Sapphire and Amethyst (FounderManager.isSkinUnlocked).
  *   • If purchased before EARLY_ACCESS_END_ISO (2026-12-31), also auto-grants
  *     Founder status + the exclusive Gold ninja skin.
  *
@@ -22,7 +22,7 @@
  *
  *      SKIN PACK:
  *        Product ID: skins           | Type: One-time (managed) | Price: $1.99
- *        Grants: Laysie Skunk, Vampyr, Sapphire, Amethyst, Steel ninja skins.
+ *        Grants: Laysie Skunk, Vampyr, Malodor, Sapphire, Amethyst ninja skins.
  *        The original product ID `remove_ads` is no longer sold, but owned
  *        `remove_ads` purchases still grant the same entitlement.
  *        During early-access window also auto-grants Gold skin + Founder badge.
@@ -30,7 +30,7 @@
  *      SECONDARY / OPTIONAL (early-access only — deactivate after 2026-12-31):
  *        Product ID: founder_pass    | Type: One-time (managed) | Price: $0.99
  *        Grants: Gold ninja skin + Founder badge ONLY. Does not unlock the
- *        Laysie Skunk, Vampyr, Sapphire, Amethyst, and Steel skins.
+ *        Laysie Skunk, Vampyr, Malodor, Sapphire, and Amethyst skins.
  *        For players who want to cloud-sync Founder status without buying
  *        Skin pack. This is NOT the primary revenue driver.
  *   3. npx cap sync android

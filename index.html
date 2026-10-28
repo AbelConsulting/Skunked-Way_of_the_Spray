@@ -2960,7 +2960,7 @@
         }
         .pause-skin-shortcut__row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
         .pause-skin-chip {
@@ -2995,9 +2995,9 @@
         .pause-skin-chip[data-variant="gold"]      { --chip-grad: linear-gradient(135deg,#b88a18,#f5d36b 50%,#fff2b0); --chip-glow: rgba(245,211,107,0.50); }
         .pause-skin-chip[data-variant="sapphire"]  { --chip-grad: linear-gradient(135deg,#1e3c8a,#3a78ff 55%,#a9c8ff); --chip-glow: rgba(58,120,255,0.50); }
         .pause-skin-chip[data-variant="amethyst"]  { --chip-grad: linear-gradient(135deg,#4a1f7a,#9a52d8 55%,#e2c0ff); --chip-glow: rgba(154,82,216,0.50); }
-        .pause-skin-chip[data-variant="steel"]     { --chip-grad: linear-gradient(135deg,#3a4756,#8a99aa 55%,#dfe7ee); --chip-glow: rgba(138,153,170,0.50); }
         .pause-skin-chip[data-variant="ninja2"]    { --chip-grad: linear-gradient(135deg,#29232e,#a534b2 55%,#edb4f4); --chip-glow: rgba(209,94,224,0.50); }
         .pause-skin-chip[data-variant="ninja3"]    { --chip-grad: linear-gradient(135deg,#211b2b,#8b203b 55%,#e7b6c4); --chip-glow: rgba(197,57,92,0.50); }
+        .pause-skin-chip[data-variant="ninja4"]    { --chip-grad: linear-gradient(135deg,#24251b,#b85b16 55%,#ffcf55); --chip-glow: rgba(255,154,40,0.50); }
         .pause-skin-chip.is-active {
             border-color: rgba(255,255,255,0.55);
             background: rgba(20,30,46,0.85);
@@ -3843,7 +3843,7 @@
                         <div class="menu-settings-card" id="remove-ads-card">
                             <!-- 5 rapid taps on the title opens the IAP diagnostic panel -->
                             <h3 id="remove-ads-diag-trigger" style="user-select:none">&#128293; Unlock Skins &amp; Support the Dev</h3>
-                            <p id="remove-ads-desc">One-time purchase. Unlocks Laysie Skunk and Vampyr plus Sapphire, Amethyst, and Steel skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get Laysie Skunk and Vampyr included.</p>
+                            <p id="remove-ads-desc">One-time purchase. Unlocks Laysie Skunk, Vampyr, and Malodor plus Sapphire and Amethyst skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get all three character skins included.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Unlock Skins &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
@@ -3875,6 +3875,13 @@
                                 <span>Use a ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
                             <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin">
+                                <button type="button" class="founder-swatch founder-swatch--ninja4" data-variant="ninja4" role="radio" aria-checked="false" title="Malodor">
+                                    <span class="founder-swatch__preview" aria-hidden="true">
+                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
+                                    </span>
+                                    <span class="founder-swatch__name">Malodor</span>
+                                    <span class="founder-swatch__status"></span>
+                                </button>
                                 <button type="button" class="founder-swatch founder-swatch--ninja3" data-variant="ninja3" role="radio" aria-checked="false" title="Vampyr">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
@@ -3914,15 +3921,6 @@
                                         <span class="founder-swatch__shine"></span>
                                     </span>
                                     <span class="founder-swatch__name">Amethyst</span>
-                                    <span class="founder-swatch__status"></span>
-                                </button>
-                                <button type="button" class="founder-swatch founder-swatch--steel" data-variant="steel" role="radio" aria-checked="false" title="Steel">
-                                    <span class="founder-swatch__preview" aria-hidden="true">
-                                        <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
-                                        <span class="founder-swatch__shine"></span>
-                                    </span>
-                                    <span class="founder-swatch__name">Steel</span>
                                     <span class="founder-swatch__status"></span>
                                 </button>
                             </div>
@@ -5061,7 +5059,7 @@
                                     const id = btn.dataset.variant;
                                     let src = _sheet;
                                     let frameW = _frameW, stride = _stride;
-                                    const spriteSkin = id === 'ninja2' || id === 'ninja3';
+                                    const spriteSkin = id === 'ninja2' || id === 'ninja3' || id === 'ninja4';
                                     if (spriteSkin) {
                                         const sl = typeof spriteLoader !== 'undefined' ? spriteLoader : window.spriteLoader;
                                         src = sl && sl.getSprite(id + '_walk');
@@ -5155,13 +5153,13 @@
                                             : 'The "FOUNDER" badge and Day-One achievement are yours forever. Skin display is currently off.';
                                         founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for being an early-access player' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else if (adFree) {
-                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Laysie Skunk and Vampyr plus the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
+                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Laysie Skunk, Vampyr, and Malodor plus the Sapphire and Amethyst ninja skins. The Gold skin is reserved for early-access Founders.';
                                     } else if (inEarlyAccess) {
                                         // Still in early access — Gold auto-grant should have fired; this
                                         // branch is a UI safety net (e.g. FounderManager not yet initialized).
                                         founderStatusText.innerHTML = '\u{1F31F} You are an early-access player &mdash; the exclusive <strong>Gold</strong> skin + Founder badge are <strong>yours free</strong>! Optionally, support the dev with the <strong>Founder Pass</strong> ($0.99) for a Play-backed claim.';
                                     } else {
-                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Laysie Skunk and Vampyr plus Sapphire, Amethyst, and Steel with the skin pack.';
+                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Laysie Skunk, Vampyr, and Malodor plus Sapphire and Amethyst with the skin pack.';
                                     }
                                 }
 
@@ -5180,7 +5178,7 @@
                                 }
                                 for (const btn of variantBtns) {
                                     const id = btn.dataset.variant;
-                                    const label = id === 'ninja2' ? 'Laysie Skunk' : id === 'ninja3' ? 'Vampyr' : id.charAt(0).toUpperCase() + id.slice(1);
+                                    const label = id === 'ninja2' ? 'Laysie Skunk' : id === 'ninja3' ? 'Vampyr' : id === 'ninja4' ? 'Malodor' : id.charAt(0).toUpperCase() + id.slice(1);
                                     const unlocked = !!(FM && typeof FM.isSkinUnlocked === 'function' && FM.isSkinUnlocked(id));
                                     const active = unlocked && (id === variant);
                                     btn.classList.toggle('is-active', active);
@@ -6652,7 +6650,7 @@
 
             const VARIANT_NAMES = {
                 gold: 'Gold', sapphire: 'Sapphire',
-                amethyst: 'Amethyst', steel: 'Steel', ninja2: 'Laysie Skunk', ninja3: 'Vampyr'
+                amethyst: 'Amethyst', ninja2: 'Laysie Skunk', ninja3: 'Vampyr', ninja4: 'Malodor'
             };
 
             function render() {

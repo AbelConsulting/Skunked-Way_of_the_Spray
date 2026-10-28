@@ -145,7 +145,7 @@ class Player {
         const base = this.currentAnimation;
         const variant = typeof FounderManager !== 'undefined' && FounderManager.isGoldSkinEnabled()
             ? FounderManager.getSkinVariant() : null;
-        if (variant !== 'ninja2' && variant !== 'ninja3') {
+        if (variant !== 'ninja2' && variant !== 'ninja3' && variant !== 'ninja4') {
             base.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
             return;
         }
@@ -1044,7 +1044,7 @@ class Player {
                 ctx.restore();
             }
             // Cosmetic skin aura. Gold = early-access Founder exclusive;
-            // Sapphire/amethyst/steel palettes are unlocked by the skin pack. The
+            // Sapphire/amethyst palettes are unlocked by the skin pack. The
             // gating lives entirely inside FounderManager.isGoldSkinEnabled(),
             // which now returns true for any player with an unlocked variant
             // and the cosmetic toggle on.
@@ -1057,7 +1057,7 @@ class Player {
             const _founderAuraColor = (_founderGold && typeof GoldenSkin !== 'undefined' && typeof GoldenSkin.getAuraColor === 'function')
                 ? GoldenSkin.getAuraColor(_founderVariant)
                 : '#FFC857';
-            const _spriteSkin = _founderVariant === 'ninja2' || _founderVariant === 'ninja3';
+            const _spriteSkin = _founderVariant === 'ninja2' || _founderVariant === 'ninja3' || _founderVariant === 'ninja4';
             if (_founderGold && !_spriteSkin) {
                 ctx.save();
                 ctx.shadowColor = _founderAuraColor;

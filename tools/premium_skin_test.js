@@ -21,13 +21,13 @@ function runtime({ owned = false, founder = false, platform, selected } = {}) {
         },
     });
     ctx.window = ctx;
-    for (const file of ['js/spriteLoader.js', 'js/founderManager.js', 'js/player.js']) {
+    for (const file of ['js/spriteLoader.js', 'js/founderManager.js', 'js/goldenSkin.js', 'js/player.js']) {
         vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), ctx);
     }
     if (founder) ctx.FounderManager.grant('test');
     const player = vm.runInContext('Object.create(Player.prototype)', ctx);
     const loader = vm.runInContext('spriteLoader', ctx);
-    for (const prefix of ['ninja', 'ninja2', 'ninja3']) {
+    for (const prefix of ['ninja', 'ninja2', 'ninja3', 'ninja4']) {
         for (const state of states) {
             const name = prefix + '_' + state;
             const bytes = fs.readFileSync(path.join(ROOT, 'assets', 'sprites', 'characters', name + '.png'));
@@ -43,7 +43,35 @@ function runtime({ owned = false, founder = false, platform, selected } = {}) {
     return { ctx, storage, player, canvas, draws, loader, manager: ctx.FounderManager };
 }
 
-for (const variant of ['ninja2', 'ninja3']) {
+test('exactly six skins remain; Steel cannot be selected or rendered as a palette', () => {
+    const r = runtime({ platform: 'steam' });
+    const variants = ['gold', 'sapphire', 'amethyst', 'ninja2', 'ninja3', 'ninja4'];
+    assert.deepEqual(Array.from(r.manager.getSkinVariants()), variants);
+    assert.deepEqual(Array.from(r.manager.getUnlockedSkinVariants()), variants);
+    assert.equal(r.manager.isSkinUnlocked('steel'), false);
+    assert.equal(r.manager.setSkinVariant('steel'), false);
+    assert.equal(r.ctx.GoldenSkin.hasPalette('steel'), false);
+});
+
+for (const options of [{ owned: true }, { owned: true, founder: true }, { platform: 'steam' }]) {
+    test('saved Steel selection migrates to an enabled Sapphire skin: ' + JSON.stringify(options), () => {
+        const r = runtime({ ...options, selected: 'steel' });
+        assert.equal(r.manager.getSkinVariant(), 'sapphire');
+        assert.equal(r.manager.isGoldSkinEnabled(), true);
+        assert.equal(r.storage.get('skunkfu.skinVariant'), 'sapphire');
+        const reloaded = runtime({ ...options, selected: r.storage.get('skunkfu.skinVariant') });
+        assert.equal(reloaded.manager.getSkinVariant(), 'sapphire');
+        assert.equal(reloaded.manager.isGoldSkinEnabled(), true);
+    });
+}
+
+test('migrating Steel does not grant skin-pack ownership', () => {
+    const r = runtime({ selected: 'steel' });
+    assert.equal(r.manager.isSkinUnlocked('sapphire'), false);
+    assert.equal(r.manager.isGoldSkinEnabled(), false);
+});
+
+for (const variant of ['ninja2', 'ninja3', 'ninja4']) {
 test(variant + ' requires skin-pack ownership, not Founder or Founder Pass alone', () => {
     const r = runtime({ founder: true });
     r.storage.set('skunkfu.founderPassOwned', '1');
@@ -94,7 +122,7 @@ test(variant + ' hurt frames occupy the original duration; toggle and switching 
         base.currentFrame = Math.floor(elapsed / base.frameDuration);
         base.timer = elapsed % base.frameDuration;
         r.player._drawCurrentAnimation(r.canvas);
-        assert.equal(r.draws.at(-1)[1], frame * 48);
+        assert.equal(r.draws.at(-1)[1], frame * r.loader.getSprite(variant + '_hurt').height);
     }
     assert.equal(base.frameCount * base.frameDuration, 0.2);
     r.manager.setGoldSkinEnabled(false);
@@ -115,7 +143,7 @@ test('switching character skins reuses only the selected skin artwork', () => {
     const r = runtime({ owned: true });
     for (const state of states) {
         r.player.currentAnimation = r.player.animations[state];
-        for (const variant of ['ninja2', 'ninja3', 'ninja2', 'ninja3']) {
+        for (const variant of ['ninja2', 'ninja3', 'ninja4', 'ninja2', 'ninja3', 'ninja4']) {
             assert.equal(r.manager.setSkinVariant(variant), true);
             r.player._drawCurrentAnimation(r.canvas);
             assert.equal(r.draws.at(-1)[0].name, variant + '_' + state);
@@ -123,17 +151,19 @@ test('switching character skins reuses only the selected skin artwork', () => {
     }
 });
 
-test('Vampyr sheets are queued for loading and cached for offline play', async () => {
+test('all character skin sheets are queued for loading and cached for offline play', async () => {
     const r = runtime();
     const queued = new Map();
     r.loader.loadSprite = async (name, file) => queued.set(name, file);
     r.loader.loadSpriteBest = async () => {};
     await r.loader.loadAllSprites();
     const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-    for (const state of states) {
-        const file = 'assets/sprites/characters/ninja3_' + state + '.png';
-        assert.equal(queued.get('ninja3_' + state), file);
-        assert.equal(r.loader.expectedFrames['ninja3_' + state], 4);
-        assert.ok(sw.includes("'" + file + "'"), state + ' is precached');
+    for (const variant of ['ninja2', 'ninja3', 'ninja4']) {
+        for (const state of states) {
+            const file = 'assets/sprites/characters/' + variant + '_' + state + '.png';
+            assert.equal(queued.get(variant + '_' + state), file);
+            assert.equal(r.loader.expectedFrames[variant + '_' + state], 4);
+            assert.ok(sw.includes("'" + file + "'"), variant + ' ' + state + ' is precached');
+        }
     }
 });

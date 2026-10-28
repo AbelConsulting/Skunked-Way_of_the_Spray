@@ -420,13 +420,18 @@ html.controller-cursor-hidden * {
    the original swatch buttons so existing JS wiring is unchanged. */
 .founder-skin-variants {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     margin: 10px 0 8px;
     padding: 4px 2px 2px;
 }
 .founder-skin-variants.is-hidden {
     display: none;
+}
+@media (max-width: 420px) {
+    .founder-skin-variants {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 .founder-swatch {
     --swatch-grad: linear-gradient(180deg, #888 0%, #333 100%);
@@ -575,17 +580,6 @@ html.controller-cursor-hidden * {
         linear-gradient(180deg, rgba(180, 90, 255, 0.08), rgba(0, 0, 0, 0.38)),
         rgba(14, 4, 24, 0.90);
 }
-.founder-swatch--steel {
-    --swatch-grad: linear-gradient(160deg, #EDF2F7 0%, #7A8EA4 60%, #2E3A46 100%);
-    --swatch-glow: rgba(200, 212, 226, 0.55);
-    --swatch-border: rgba(200, 212, 226, 0.50);
-    --swatch-name-color: #C8D8E8;
-    border-color: rgba(200, 212, 226, 0.20);
-    background:
-        linear-gradient(180deg, rgba(200, 212, 226, 0.07), rgba(0, 0, 0, 0.38)),
-        rgba(10, 14, 18, 0.90);
-}
-
 .founder-swatch--ninja2 {
     --swatch-grad: linear-gradient(160deg, #edb4f4 0%, #a534b2 60%, #29232e 100%);
     --swatch-glow: rgba(209, 94, 224, 0.55);
@@ -598,6 +592,13 @@ html.controller-cursor-hidden * {
     --swatch-glow: rgba(197, 57, 92, 0.55);
     --swatch-border: rgba(197, 57, 92, 0.50);
     --swatch-name-color: #e7b6c4;
+}
+
+.founder-swatch--ninja4 {
+    --swatch-grad: linear-gradient(160deg, #ffcf55 0%, #b85b16 60%, #24251b 100%);
+    --swatch-glow: rgba(255, 154, 40, 0.55);
+    --swatch-border: rgba(255, 154, 40, 0.50);
+    --swatch-name-color: #ffcf55;
 }
 
 /* Subtle ambient gradient wash for each tile that matches its palette,
@@ -696,9 +697,6 @@ html.controller-cursor-hidden * {
 }
 .founder-swatch--amethyst:not(.is-locked) .founder-swatch__shine {
     animation: founder-swatch-shine 6.0s ease-in-out 5.5s infinite;
-}
-.founder-swatch--steel:not(.is-locked) .founder-swatch__shine {
-    animation: founder-swatch-shine 7.0s ease-in-out 2.0s infinite;
 }
 .founder-swatch.is-active .founder-swatch__shine {
     animation: founder-swatch-shine 2.8s ease-in-out 0.4s infinite;
