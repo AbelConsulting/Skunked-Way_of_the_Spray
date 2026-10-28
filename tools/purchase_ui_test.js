@@ -145,6 +145,25 @@ async function assertSkinGrid(page, selector, columns) {
             assert.ok((await tile.getAttribute('title')).startsWith(label));
             assert.equal(await page.evaluate(id => FounderManager.setSkinVariant(id), variant), false);
         }
+        await page.waitForFunction(() => {
+            const preview = document.querySelector('.founder-swatch[data-variant="ninja4"] canvas');
+            const sheet = spriteLoader.getSprite('ninja4_walk');
+            const expected = document.createElement('canvas');
+            expected.width = expected.height = 64;
+            const ctx = expected.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            const pixels = preview.toDataURL();
+            for (let frame = 0; frame < 4; frame++) {
+                ctx.clearRect(0, 0, 64, 64);
+                ctx.save();
+                ctx.translate(64, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(sheet, frame * 128, 0, 128, 128, 4, 4, 56, 56);
+                ctx.restore();
+                if (pixels === expected.toDataURL()) return true;
+            }
+            return false;
+        });
         await page.evaluate(() => {
             localStorage.setItem('skunkfu.adFree', '1');
             FounderManager.grant('test-six-skin-layout');
@@ -210,6 +229,36 @@ async function assertSkinGrid(page, selector, columns) {
                 assert.equal(result.differsFromOriginal, true, result.state + ' toggle restores original artwork');
             }
         }
+        const malodorDirections = await page.evaluate(() => {
+            FounderManager.setSkinVariant('ninja4');
+            const player = Object.create(Player.prototype);
+            Object.assign(player, { x: 0, y: 0, width: 64, height: 64 });
+            player.loadSprites();
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const expected = document.createElement('canvas');
+            expected.width = expected.height = 64;
+            const expectedCtx = expected.getContext('2d');
+            return Object.keys(player.animations).flatMap(state => [true, false].map(facingRight => {
+                player.currentAnimation = player.animations[state];
+                player.facingRight = facingRight;
+                ctx.clearRect(0, 0, 64, 64);
+                player._drawCurrentAnimation(ctx);
+                expectedCtx.clearRect(0, 0, 64, 64);
+                expectedCtx.save();
+                if (facingRight) {
+                    expectedCtx.translate(64, 0);
+                    expectedCtx.scale(-1, 1);
+                }
+                expectedCtx.drawImage(spriteLoader.getSprite('ninja4_' + state), 0, 0, 128, 128, 0, 0, 64, 64);
+                expectedCtx.restore();
+                return { state, facingRight, matches: canvas.toDataURL() === expected.toDataURL() };
+            }));
+        });
+        for (const result of malodorDirections) {
+            assert.equal(result.matches, true, 'Malodor ' + result.state + ' facingRight=' + result.facingRight + ' matches corrected pixels');
+        }
         await page.locator('#menu-settings-back').click();
         await page.evaluate(() => {
             const pause = document.getElementById('pause-overlay');
@@ -241,6 +290,7 @@ async function assertSkinGrid(page, selector, columns) {
         console.log('PASS Laysie Skunk: display names, locked animated preview, owner selection, real artwork rendering and original-art toggle.');
         console.log('PASS Vampyr: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
         console.log('PASS Malodor: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
+        console.log('PASS Malodor orientation: right-facing preview and correct pixels for all eight states facing left and right.');
         console.log('PASS six-skin layout: no Steel; complete equal-width rows in desktop, mobile landscape, portrait and pause menus.');
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

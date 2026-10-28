@@ -5063,9 +5063,15 @@
                                     const dst = Math.min(cw, ch) - margin * 2;
                                     const dx = (cw - dst) / 2;
                                     const dy = (ch - dst) / 2;
+                                    ctx.save();
+                                    if (id === 'ninja4') {
+                                        ctx.translate(cw, 0);
+                                        ctx.scale(-1, 1);
+                                    }
                                     try {
                                         ctx.drawImage(src, sx, 0, sw, sh, dx, dy, dst, dst);
                                     } catch (e) { /* tainted canvas � silently skip */ }
+                                    finally { ctx.restore(); }
                                     canvas.classList.add('is-ready');
                                 }
 

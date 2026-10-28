@@ -262,6 +262,8 @@ Each uses eight transparent, horizontal four-frame PNG sheets named
 `ninja3_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png`, or
 `ninja4_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` in
 `assets/sprites/characters/`. Each sheet uses square frames (currently 48, 64, or 128 pixels).
+Malodor's source sheets face left; gameplay and Settings previews mirror each drawn
+frame as needed to match the player's facing direction without reversing frame order.
 Rendering uses the original player's animation clock, including fitting the four
 hurt frames into the original two-frame duration. Player size, collisions, attacks,
 damage, and ability timing are unchanged. Turning skins off restores original artwork.

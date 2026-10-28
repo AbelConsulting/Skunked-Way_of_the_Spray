@@ -169,7 +169,9 @@ class Player {
         // Map artwork onto the existing animation clock; combat never uses the cosmetic frames.
         const progress = (base.currentFrame + base.timer / base.frameDuration) / base.frameCount;
         visual.currentFrame = Math.min(3, Math.floor(progress * 4));
-        visual.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
+        // Malodor's source artwork faces left; the other character sheets face right.
+        const flipHorizontal = variant === 'ninja4' ? this.facingRight : !this.facingRight;
+        visual.draw(ctx, this.x, this.y, this.width, this.height, flipHorizontal);
     }
 
     loadSprites() {

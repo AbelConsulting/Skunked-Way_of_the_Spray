@@ -12,6 +12,7 @@ function runtime({ owned = false, founder = false, platform, selected } = {}) {
     const storage = new Map(owned ? [['skunkfu.adFree', '1']] : []);
     if (selected) storage.set('skunkfu.skinVariant', selected);
     const draws = [];
+    const scales = [];
     const ctx = vm.createContext({
         console, URLSearchParams, Map, PLATFORM: platform,
         localStorage: {
@@ -37,10 +38,11 @@ function runtime({ owned = false, founder = false, platform, selected } = {}) {
     player.loadSprites();
     Object.assign(player, { x: 10, y: 20, width: 64, height: 64, facingRight: true });
     const canvas = {
-        save() {}, restore() {}, translate() {}, scale() {},
+        save() {}, restore() {}, translate() {},
+        scale(...args) { scales.push(args); },
         drawImage(...args) { draws.push(args); },
     };
-    return { ctx, storage, player, canvas, draws, loader, manager: ctx.FounderManager };
+    return { ctx, storage, player, canvas, draws, scales, loader, manager: ctx.FounderManager };
 }
 
 test('exactly six skins remain; Steel cannot be selected or rendered as a palette', () => {
@@ -107,7 +109,8 @@ test('all eight ' + variant + ' sheets render inside frame bounds without changi
         const [image, sx, sy, sw, sh, dx, dy, dw, dh] = r.draws.at(-1);
         assert.equal(image.name, variant + '_' + state);
         assert.ok(sx >= 0 && sx + sw <= image.width, state + ' slices within sheet');
-        assert.deepEqual([sy, sh, dx, dy, dw, dh], [0, sheet.height, 10, 20, 64, 64]);
+        const destination = variant === 'ninja4' ? [0, 0] : [10, 20];
+        assert.deepEqual([sy, sh, dx, dy, dw, dh], [0, sheet.height, ...destination, 64, 64]);
         assert.equal(JSON.stringify(base), before, state + ' gameplay clock is untouched');
     }
 });
@@ -138,6 +141,32 @@ test(variant + ' hurt frames occupy the original duration; toggle and switching 
     assert.equal(r.draws.at(-1)[0].name, 'ninja_hurt', 'locked saved selection cannot render premium artwork');
 });
 }
+
+test('Malodor compensates for left-facing sheets in every state and direction; other skins and skin-off keep their orientation', () => {
+    const r = runtime({ owned: true });
+    for (const variant of ['ninja2', 'ninja3', 'ninja4']) {
+        r.manager.setSkinVariant(variant);
+        for (const state of states) {
+            r.player.currentAnimation = r.player.animations[state];
+            for (const facingRight of [true, false]) {
+                r.player.facingRight = facingRight;
+                r.scales.length = 0;
+                r.player._drawCurrentAnimation(r.canvas);
+                const flipped = variant === 'ninja4' ? facingRight : !facingRight;
+                assert.deepEqual(r.scales, flipped ? [[-1, 1]] : [], variant + ' ' + state + ' facingRight=' + facingRight);
+                assert.equal(r.player.facingRight, facingRight, 'cosmetic correction never changes gameplay direction');
+            }
+        }
+    }
+    r.manager.setGoldSkinEnabled(false);
+    for (const facingRight of [true, false]) {
+        r.player.facingRight = facingRight;
+        r.scales.length = 0;
+        r.player._drawCurrentAnimation(r.canvas);
+        assert.deepEqual(r.scales, facingRight ? [] : [[-1, 1]]);
+        assert.equal(r.draws.at(-1)[0].name, 'ninja_death');
+    }
+});
 
 test('switching character skins reuses only the selected skin artwork', () => {
     const r = runtime({ owned: true });
