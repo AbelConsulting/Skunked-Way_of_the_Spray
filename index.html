@@ -3842,7 +3842,7 @@
                         <div class="menu-settings-card" id="remove-ads-card">
                             <!-- 5 rapid taps on the title opens the IAP diagnostic panel -->
                             <h3 id="remove-ads-diag-trigger" style="user-select:none">&#128293; Unlock Skins &amp; Support the Dev</h3>
-                            <p id="remove-ads-desc">One-time purchase. Unlocks Ninja 2 plus Sapphire, Amethyst, and Steel skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get Ninja 2 included.</p>
+                            <p id="remove-ads-desc">One-time purchase. Unlocks Laysie Skunk plus Sapphire, Amethyst, and Steel skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get Laysie Skunk included.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Unlock Skins &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
@@ -3874,11 +3874,11 @@
                                 <span>Use a ninja skin <span class="founder-gold-skin-hint">(uncheck for the original look)</span></span>
                             </label>
                             <div id="founder-skin-variants" class="founder-skin-variants is-hidden" role="radiogroup" aria-label="Ninja skin">
-                                <button type="button" class="founder-swatch founder-swatch--ninja2" data-variant="ninja2" role="radio" aria-checked="false" title="Ninja 2">
+                                <button type="button" class="founder-swatch founder-swatch--ninja2" data-variant="ninja2" role="radio" aria-checked="false" title="Laysie Skunk">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
                                     </span>
-                                    <span class="founder-swatch__name">Ninja 2</span>
+                                    <span class="founder-swatch__name">Laysie Skunk</span>
                                     <span class="founder-swatch__status"></span>
                                 </button>
                                 <button type="button" class="founder-swatch founder-swatch--gold" data-variant="gold" role="radio" aria-checked="true" title="Gold � Founder exclusive">
@@ -5146,13 +5146,13 @@
                                             : 'The "FOUNDER" badge and Day-One achievement are yours forever. Skin display is currently off.';
                                         founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for being an early-access player' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else if (adFree) {
-                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Ninja 2 plus the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
+                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Laysie Skunk plus the Sapphire, Amethyst, and Steel ninja skins. The Gold skin is reserved for early-access Founders.';
                                     } else if (inEarlyAccess) {
                                         // Still in early access — Gold auto-grant should have fired; this
                                         // branch is a UI safety net (e.g. FounderManager not yet initialized).
                                         founderStatusText.innerHTML = '\u{1F31F} You are an early-access player &mdash; the exclusive <strong>Gold</strong> skin + Founder badge are <strong>yours free</strong>! Optionally, support the dev with the <strong>Founder Pass</strong> ($0.99) for a Play-backed claim.';
                                     } else {
-                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Ninja 2 plus Sapphire, Amethyst, and Steel with the skin pack.';
+                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Laysie Skunk plus Sapphire, Amethyst, and Steel with the skin pack.';
                                     }
                                 }
 
@@ -5171,6 +5171,7 @@
                                 }
                                 for (const btn of variantBtns) {
                                     const id = btn.dataset.variant;
+                                    const label = id === 'ninja2' ? 'Laysie Skunk' : id.charAt(0).toUpperCase() + id.slice(1);
                                     const unlocked = !!(FM && typeof FM.isSkinUnlocked === 'function' && FM.isSkinUnlocked(id));
                                     const active = unlocked && (id === variant);
                                     btn.classList.toggle('is-active', active);
@@ -5180,11 +5181,11 @@
                                     if (id === 'gold' && !unlocked) {
                                         btn.title = 'Gold \u2014 Early-access Founder exclusive (locked)';
                                     } else if (!unlocked) {
-                                        btn.title = btn.dataset.variant.charAt(0).toUpperCase() + btn.dataset.variant.slice(1) + ' \u2014 Buy the skin pack to unlock';
+                                        btn.title = label + ' \u2014 Buy the skin pack to unlock';
                                     } else if (id === 'gold') {
                                         btn.title = 'Gold \u2014 Founder exclusive';
                                     } else {
-                                        btn.title = id.charAt(0).toUpperCase() + id.slice(1);
+                                        btn.title = label;
                                     }
                                     // Status pill text � gives each tile clear context-of-ownership.
                                     const statusEl = btn.querySelector('.founder-swatch__status');
@@ -6642,7 +6643,7 @@
 
             const VARIANT_NAMES = {
                 gold: 'Gold', sapphire: 'Sapphire',
-                amethyst: 'Amethyst', steel: 'Steel', ninja2: 'Ninja 2'
+                amethyst: 'Amethyst', steel: 'Steel', ninja2: 'Laysie Skunk'
             };
 
             function render() {

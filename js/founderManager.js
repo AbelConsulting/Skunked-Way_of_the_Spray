@@ -19,7 +19,7 @@
  *     and want the badge, and gives cloud-synced proof of ownership.
  *
  * Skin-pack ($1.99) entitlement (Play product ID `skins`; legacy `remove_ads` also honoured):
- *   • Unlocks NINJA 2 plus the SAPPHIRE, AMETHYST, and STEEL ninja skins.
+ *   • Unlocks LAYSIE SKUNK plus the SAPPHIRE, AMETHYST, and STEEL ninja skins.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
  * Persistence:
@@ -291,7 +291,7 @@ const FounderManager = (() => {
         // Steam: game is sold complete — all skins included.
         if (window.PLATFORM === 'steam') return true;
         if (variantId === 'gold') return _isFounder;
-        // Ninja 2, sapphire, amethyst, and steel require the skin-pack purchase,
+        // Laysie Skunk, sapphire, amethyst, and steel require the skin-pack purchase,
         // even for Founders. Gold is the Founder-only early-access exclusive;
         // the colour variants are the skin-pack reward — separate value props.
         return _hasRemoveAds();

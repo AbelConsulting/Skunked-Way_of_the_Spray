@@ -99,6 +99,8 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
             throw error;
         });
         assert.equal(await ninja2.getAttribute('aria-disabled'), 'true');
+        assert.ok((await ninja2.textContent()).includes('Laysie Skunk'));
+        assert.ok((await ninja2.getAttribute('title')).startsWith('Laysie Skunk'));
         assert.equal(await page.evaluate(() => FounderManager.setSkinVariant('ninja2')), false);
         assert.notEqual(await page.evaluate(() => FounderManager.getSkinVariant()), 'ninja2');
         await page.evaluate(() => {
@@ -108,6 +110,7 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         });
         await ninja2.click();
         assert.equal(await ninja2.getAttribute('aria-checked'), 'true');
+        assert.equal(await ninja2.getAttribute('title'), 'Laysie Skunk');
         const rendered = await page.evaluate(() => {
             const player = Object.create(Player.prototype);
             Object.assign(player, { x: 0, y: 0, width: 64, height: 64, facingRight: true });
@@ -133,7 +136,7 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         });
         const pauseNinja2 = page.locator('.pause-skin-chip[data-variant="ninja2"]');
         await pauseNinja2.waitFor({ state: 'visible' });
-        assert.ok((await pauseNinja2.textContent()).includes('Ninja 2'));
+        assert.ok((await pauseNinja2.textContent()).includes('Laysie Skunk'));
         await page.evaluate(() => {
             document.getElementById('pause-overlay').style.display = 'none';
             CdvPurchase.store.triggerError({ code: 6777001, message: 'Init failed - Class not found', productId: null });
@@ -144,6 +147,6 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         const packagingReport = await page.locator('#iap-diag-output').textContent();
         assert.ok(!packagingReport.includes('Products not set to'), 'missing native registration must not be blamed on product configuration');
         console.log('PASS Android-bundled Buy button: empty catalogue -> real refresh -> correct offer order -> readable cancellation; diagnostics redact tokens.');
-        console.log('PASS Ninja 2: locked animated preview, owner selection, real artwork rendering and original-art toggle.');
+        console.log('PASS Laysie Skunk: display names, locked animated preview, owner selection, real artwork rendering and original-art toggle.');
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

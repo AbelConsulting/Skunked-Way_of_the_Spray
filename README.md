@@ -244,15 +244,15 @@ Without it, the JavaScript plugin can load while native initialization reports
 The signed release command runs `android:check-billing-bundle` after Gradle to
 inspect the actual AAB for both the registration and native plugin class.
 
-### Ninja 2 Premium Cosmetic
+### Laysie Skunk Premium Cosmetic
 
 The existing `skins` purchase (and restored legacy `remove_ads` ownership) includes
-Ninja 2 alongside Sapphire, Amethyst, and Steel. Existing buyers do not need another
-purchase. Founder status alone unlocks Gold, not Ninja 2; the full Steam game includes
-all skins. Choose **Ninja 2** in Settings or the pause-menu skin switcher, with skin
+Laysie Skunk alongside Sapphire, Amethyst, and Steel. Existing buyers do not need another
+purchase. Founder status alone unlocks Gold, not Laysie Skunk; the full Steam game includes
+all skins. Choose **Laysie Skunk** in Settings or the pause-menu skin switcher, with skin
 display enabled.
 
-Ninja 2 uses eight transparent, horizontal four-frame PNG sheets named
+Laysie Skunk retains the internal `ninja2` selection ID and uses eight transparent, horizontal four-frame PNG sheets named
 `ninja2_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` in
 `assets/sprites/characters/`. Each sheet uses square frames (currently 48 or 64 pixels).
 Rendering uses the original player's animation clock, including fitting the four
