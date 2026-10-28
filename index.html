@@ -3841,29 +3841,17 @@
                             <button id="reset-tutorial-btn" class="menu-btn">&#128161; Reset Tutorial Hints</button>
                         </div>
                         <div class="menu-settings-card" id="remove-ads-card">
-                            <!-- 5 rapid taps on the title opens the IAP diagnostic panel -->
-                            <h3 id="remove-ads-diag-trigger" style="user-select:none">&#128293; Unlock Skins &amp; Support the Dev</h3>
+                            <h3>&#128293; Unlock Skins &amp; Support the Dev</h3>
                             <p id="remove-ads-desc">One-time purchase. Unlocks Laysie Skunk, Vampyr, and Malodor plus Sapphire and Amethyst skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get all three character skins included.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Unlock Skins &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
-                                <button id="iap-diag-open-btn" class="menu-btn" type="button" aria-controls="iap-diag-card">Check Billing</button>
                             </div>
                             <p id="remove-ads-status" class="settings-card-status"></p>
                         </div>
-                        <!-- IAP Diagnostic Panel — hidden until 5 taps on the skin pack title -->
-                        <div class="menu-settings-card" id="iap-diag-card" style="display:none;border:1px solid rgba(255,200,0,0.35);background:rgba(20,14,4,0.92)">
-                            <h3 style="color:#FFD700;margin-bottom:8px">&#128270; IAP Diagnostics</h3>
-                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-                                <button id="iap-diag-run-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#9654; Run Check</button>
-                                <button id="iap-diag-reconnect-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px">&#8635; Refresh Products</button>
-                                <button id="iap-diag-close-btn" class="menu-btn" type="button" style="font-size:12px;padding:6px 12px;opacity:0.7">&#10005; Close</button>
-                            </div>
-                            <pre id="iap-diag-output" style="font-size:11px;line-height:1.5;color:#cde;background:rgba(0,0,0,0.5);border-radius:8px;padding:10px;overflow:auto;max-height:260px;white-space:pre-wrap;word-break:break-all;margin:0">Tap "Run Check" to inspect billing state.</pre>
-                        </div>
                         <div class="menu-settings-card" id="founder-card">
                             <h3>&#11088; Founder Status</h3>
-                            <p id="founder-status-text">You are an early-access player &mdash; the Gold skin and FOUNDER badge are yours free! Tap the button below to permanently cloud-sync your Founder badge (<em>Gold skin only</em>), or redeem a code.</p>
+                            <p id="founder-status-text">You are an early-access player &mdash; the Gold skin and FOUNDER badge are yours free! Tap the button below to permanently cloud-sync your Founder badge (<em>Gold skin only</em>).</p>
                             <!-- Standalone Founder Pass IAP. Unlocks Gold skin + FOUNDER badge
                                  only. Hidden once owned or granted by promo code. -->
                             <div id="founder-pass-row" class="remove-ads-actions founder-pass-row">
@@ -3924,11 +3912,6 @@
                                     <span class="founder-swatch__status"></span>
                                 </button>
                             </div>
-                            <div class="founder-redeem-row">
-                                <input id="founder-code-input" type="text" autocomplete="off" spellcheck="false" maxlength="24" placeholder="Redeem code" />
-                                <button id="founder-code-btn" class="menu-btn" type="button">&#127873; Redeem</button>
-                            </div>
-                            <p id="founder-code-status" class="settings-card-status"></p>
                         </div>
                     </div>
                     <button id="menu-settings-back" class="menu-btn menu-btn--primary">&#8592; BACK</button>
@@ -4922,7 +4905,7 @@
                                                 statusEl.textContent = hint;
                                             }
                                             else if (_buyRes.reason === 'store-connecting') statusEl.textContent = 'Still connecting to Google Play\u2026 please wait a few seconds and tap Buy again.';
-                                            else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Google Play did not return this product after retrying. Check your Play Store account and connection, then try again. If it persists, contact support with the IAP diagnostic results.';
+                                            else if (_buyRes.reason === 'product-not-loaded') statusEl.textContent = 'Google Play did not return this product after retrying. Check your Play Store account and connection, then try again. If it persists, contact support with your app version and this error message.';
                                             else if (_buyRes.reason === 'user-cancelled' || _buyRes.reason === '1') statusEl.textContent = 'Purchase cancelled.';
                                             else statusEl.textContent = 'Purchase did not complete: ' + _buyRes.reason;
                                         }
@@ -5004,12 +4987,9 @@
                             }
                         }
 
-                        // --- Founder / Redeem Code wiring ------------------
+                        // --- Founder skin wiring ------------------
                         try {
                             const founderStatusText = document.getElementById('founder-status-text');
-                            const codeInput         = document.getElementById('founder-code-input');
-                            const codeBtn           = document.getElementById('founder-code-btn');
-                            const codeStatus        = document.getElementById('founder-code-status');
                             const goldSkinRow       = document.getElementById('founder-gold-skin-row');
                             const goldSkinToggle    = document.getElementById('founder-gold-skin-toggle');
                             const variantsRow       = document.getElementById('founder-skin-variants');
@@ -5310,33 +5290,6 @@
                                 });
                             }
 
-                            if (codeBtn && codeInput) {
-                                codeBtn.addEventListener('click', (ev) => {
-                                    ev.preventDefault();
-                                    ev.stopPropagation();
-                                    if (!window.FounderManager || typeof FounderManager.redeemCode !== 'function') {
-                                        if (codeStatus) codeStatus.textContent = 'Redeem system not available.';
-                                        return;
-                                    }
-                                    const res = FounderManager.redeemCode(codeInput.value);
-                                    if (codeStatus) {
-                                        switch (res.status) {
-                                            case 'granted': codeStatus.style.color = '#7CFFB2'; codeStatus.textContent = '\u2728 Founder status granted. Welcome to the early-access crew!'; break;
-                                            case 'already': codeStatus.style.color = '#FFD75A'; codeStatus.textContent = 'Code accepted, but you were already a Founder.'; break;
-                                            case 'used':    codeStatus.style.color = '#FFB060'; codeStatus.textContent = 'That code has already been redeemed on this device.'; break;
-                                            case 'invalid': codeStatus.style.color = '#FF8080'; codeStatus.textContent = 'Code not recognized. Check spelling and try again.'; break;
-                                            case 'empty':   codeStatus.style.color = '#FF8080'; codeStatus.textContent = 'Enter a code first.'; break;
-                                            default:        codeStatus.style.color = '#FF8080'; codeStatus.textContent = 'Redeem failed.';
-                                        }
-                                    }
-                                    if (res.ok) codeInput.value = '';
-                                    _renderFounderState();
-                                });
-                                codeInput.addEventListener('keydown', (ev) => {
-                                    if (ev.key === 'Enter') { ev.preventDefault(); codeBtn.click(); }
-                                });
-                            }
-
                             // --- Founder Pass (standalone Gold skin IAP) wiring ----------
                             try {
                                 const fpBuyBtn  = document.getElementById('founder-pass-buy-btn');
@@ -5398,7 +5351,7 @@
                                                     fpStatus.textContent = 'Still connecting to Google Play\u2026 please wait a few seconds and tap Buy again.';
                                                 } else if (res.reason === 'product-not-loaded') {
                                                     fpStatus.style.color = '#FFB060';
-                                                    fpStatus.textContent = 'Google Play did not return this product after retrying. Check your Play Store account and connection, then try again. If it persists, contact support with the IAP diagnostic results.';
+                                                    fpStatus.textContent = 'Google Play did not return this product after retrying. Check your Play Store account and connection, then try again. If it persists, contact support with your app version and this error message.';
                                                 } else if (res.reason === 'user-cancelled' || res.reason === '1') {
                                                     fpStatus.style.color = '#FFB060';
                                                     fpStatus.textContent = 'Purchase cancelled.';
@@ -5440,239 +5393,6 @@
                             }
                             _renderFounderState();
                         } catch (e) { try { console.warn('[Founder UI]', e); } catch(_) {} }
-
-                        // --- IAP Diagnostic Panel wiring ------------------
-                        try {
-                            const diagCard       = document.getElementById('iap-diag-card');
-                            const diagTrigger    = document.getElementById('remove-ads-diag-trigger');
-                            const diagOpenBtn    = document.getElementById('iap-diag-open-btn');
-                            const diagRunBtn     = document.getElementById('iap-diag-run-btn');
-                            const diagReconnect  = document.getElementById('iap-diag-reconnect-btn');
-                            const diagCloseBtn   = document.getElementById('iap-diag-close-btn');
-                            const diagOutput     = document.getElementById('iap-diag-output');
-
-                            function _openDiag() {
-                                if (!diagCard) return;
-                                diagCard.style.display = '';
-                                diagCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                _runDiag();
-                            }
-                            if (diagOpenBtn) diagOpenBtn.addEventListener('click', _openDiag);
-
-                            // 5 rapid taps on the skin pack heading reveals the panel
-                            if (diagTrigger && diagCard) {
-                                let _diagTapCount = 0, _diagTapTimer = null;
-                                diagTrigger.addEventListener('click', () => {
-                                    _diagTapCount++;
-                                    clearTimeout(_diagTapTimer);
-                                    _diagTapTimer = setTimeout(() => { _diagTapCount = 0; }, 1500);
-                                    if (_diagTapCount >= 5) {
-                                        _diagTapCount = 0;
-                                        _openDiag();
-                                    }
-                                });
-                            }
-
-                            // Map raw diagnostic state (and Google Play BillingClient
-                            // response codes) to a plain-English root cause + action.
-                            // BillingResponseCode: 0 OK, 1 USER_CANCELED, 2 SERVICE_UNAVAILABLE,
-                            // 3 BILLING_UNAVAILABLE, 4 ITEM_UNAVAILABLE, 5 DEVELOPER_ERROR,
-                            // 6 ERROR, 7 ITEM_ALREADY_OWNED.
-                            function _verdictDiag(d) {
-                                if (!d) return [];
-                                const v = [];
-                                const err = (d.lastOrderError || '').toLowerCase();
-                                const init = (d.storeInitError || '').toLowerCase();
-                                const products = d.products || {};
-                                const hasPricing = Object.values(products).some(p => p && p.pricing && p.pricing.price);
-                                const anyProduct = Object.values(products).some(p => !!p);
-                                const codeMatch = (s) => {
-                                    const m = /code=?\s*([0-9]+)/.exec(s || '');
-                                    return m ? m[1] : null;
-                                };
-                                const orderCode = codeMatch(err);
-
-                                if (!d.isNative) {
-                                    v.push('⚠ Running the WEB build — Google Play IAP is Android-only.');
-                                    v.push('  → Install the app from a Google Play track to test purchases.');
-                                    return v;
-                                }
-                                if (d.lastStoreError && /class not found/i.test(d.lastStoreError.message || '')) {
-                                    v.push('Native billing plugin registration or class is missing from this Android build.');
-                                    v.push('This is an app packaging failure, not a payment rejection.');
-                                    v.push('Install a corrected release that preserves Cordova res/xml/config.xml and cc.fovea.PurchasePlugin.');
-                                    return v;
-                                }
-                                if (!d.pluginLoaded) {
-                                    v.push('✗ CdvPurchase plugin NOT loaded into the WebView.');
-                                    v.push('  → Run: npx cap sync android, then rebuild & reinstall.');
-                                    return v;
-                                }
-                                // Plugin is present from here on.
-                                if (init && init !== 'none') {
-                                    if (init.includes('billing_unavailable') || init.includes('billing unavailable')) {
-                                        v.push('✗ Billing UNAVAILABLE on init.');
-                                        v.push('  → App was NOT installed from Google Play, OR the device has no');
-                                        v.push('    Play account. Install from an Internal Testing track with a');
-                                        v.push('    license-tester Google account.');
-                                    } else if (init.includes('timeout')) {
-                                        v.push('✗ store.initialize() timed out connecting to Play Billing.');
-                                        v.push('  → Check network + that Google Play Store app is up to date.');
-                                    } else {
-                                        v.push('✗ store.initialize() returned an error: ' + d.storeInitError);
-                                    }
-                                }
-                                if (!anyProduct || !hasPricing) {
-                                    v.push('✗ Google Play returned NO product details (catalogue empty).');
-                                    v.push('  Most common causes — check in order:');
-                                    v.push('   1. Products not set to "Active" in Play Console → Products →');
-                                    v.push('      In-app products (skins, founder_pass).');
-                                    v.push('   2. This build (versionCode) is not uploaded to a Play track the');
-                                    v.push('      signed-in account can access (Internal testing is enough).');
-                                    v.push('   3. App not signed with the key Play expects (use the upload key /');
-                                    v.push('      install the Play-distributed build, not a debug APK).');
-                                    v.push('   4. applicationId mismatch (must be com.skunksquad.skunkfu).');
-                                } else {
-                                    v.push('✓ Catalogue loaded with pricing — Play Billing connection is healthy.');
-                                }
-                                // Order-time diagnostics.
-                                if (orderCode === '1' || orderCode === '6777006') {
-                                    v.push('• Last order: user cancelled — not an error.');
-                                } else if (orderCode === '3') {
-                                    v.push('✗ Last order: BILLING_UNAVAILABLE (code 3) — not installed from Play');
-                                    v.push('  or no Play account on device.');
-                                } else if (orderCode === '4') {
-                                    v.push('✗ Last order: ITEM_UNAVAILABLE (code 4) — SKU not Active / not in this');
-                                    v.push('  build\'s track for this account.');
-                                } else if (orderCode === '5') {
-                                    v.push('✗ Last order: DEVELOPER_ERROR (code 5) — package name / signing key /');
-                                    v.push('  product config mismatch between the build and Play Console.');
-                                } else if (orderCode === '7') {
-                                    v.push('• Last order: ITEM_ALREADY_OWNED (code 7) — use Restore Purchases.');
-                                } else if (orderCode === '2' || orderCode === '6') {
-                                    v.push('✗ Last order: transient Play error (code ' + orderCode + ') — retry / check network.');
-                                }
-                                if (d.adFree_runtime && d.lastRemotePushStatus && d.lastRemotePushStatus.indexOf('deferred') === 0) {
-                                    v.push('• Entitlement owned locally but cross-device sync is deferred');
-                                    v.push('  (no Play Games sign-in yet) — sign in to Play Games to sync.');
-                                }
-                                return v;
-                            }
-
-                            function _formatDiag(d) {
-                                if (!d) return 'No data returned.';
-                                const lines = [];
-                                const verdict = _verdictDiag(d);
-                                if (verdict.length) {
-                                    lines.push('── VERDICT ─────────────────────────');
-                                    verdict.forEach(l => lines.push(l));
-                                    lines.push('');
-                                }
-                                lines.push('── ENVIRONMENT ─────────────────────');
-                                lines.push('  app build      : ' + (document.querySelector('meta[name="skunkfu-build"]')?.content || 'unknown'));
-                                lines.push('  isNative       : ' + d.isNative);
-                                lines.push('  pluginLoaded   : ' + d.pluginLoaded);
-                                lines.push('  storeRef       : ' + d.storeRef);
-                                lines.push('  initialized    : ' + d.initialized);
-                                lines.push('  ready          : ' + d.ready);
-                                lines.push('  readyMode      : ' + (d.readyMode || 'n/a'));
-                                lines.push('  storeInitSettled: ' + d.storeInitSettled);
-                                lines.push('  storeInitError : ' + (d.storeInitError || 'none'));
-                                lines.push('  lastStoreError : ' + (d.lastStoreError ? JSON.stringify(d.lastStoreError) : 'none'));
-                                lines.push('  storePollDone  : ' + d.storePollDone);
-                                lines.push('  CdvPurchase v  : ' + (d.CdvPurchase_version || 'n/a'));
-                                lines.push('');
-                                lines.push('── ENTITLEMENTS ────────────────────');
-                                lines.push('  adFree (cache) : ' + d.adFree_localStorage);
-                                lines.push('  adFree (live)  : ' + d.adFree_runtime);
-                                lines.push('  founderPass    : ' + d.founderPass_runtime);
-                                lines.push('');
-                                lines.push('── PRODUCTS ────────────────────────');
-                                if (d.products) {
-                                    for (const [sku, p] of Object.entries(d.products)) {
-                                        if (!p) { lines.push('  ' + sku + ': NOT IN CATALOGUE ⚠'); continue; }
-                                        lines.push('  ' + sku);
-                                        lines.push('    title   : ' + (p.title || p.localizedTitle || '?'));
-                                        lines.push('    state   : ' + (p.state || '?'));
-                                        lines.push('    pricing : ' + (p.pricing ? p.pricing.price : 'NOT LOADED ⚠'));
-                                        lines.push('    offers  : ' + ((p.offers && p.offers.length) || 0));
-                                    }
-                                } else {
-                                    lines.push('  (no products — store may not be connected)');
-                                }
-                                lines.push('');
-                                lines.push('── LAST ORDER ERROR ────────────────');
-                                lines.push('  ' + (d.lastOrderError || 'none'));
-                                lines.push('');
-                                lines.push('── RECEIPTS / TRANSACTIONS ─────────');
-                                const rx = d.receipts;
-                                lines.push('  receipts count : ' + (Array.isArray(rx) ? rx.length : (rx ? 'object' : '0')));
-                                if (Array.isArray(rx) && rx.length) {
-                                    rx.slice(0, 3).forEach((r, i) => {
-                                        lines.push('  [' + i + '] platform: ' + (r.platform || '?') +
-                                                   '  transactions: ' + ((r.transactions && r.transactions.length) || 0));
-                                    });
-                                }
-                                lines.push('');
-                                lines.push('── PURCHASE TOKENS ─────────────────');
-                                lines.push('  [redacted for support diagnostics]');
-                                lines.push('');
-                                lines.push('── BACKEND SYNC ────────────────────');
-                                lines.push('  remote push    : ' + (d.lastRemotePushStatus || 'none'));
-                                const pending = d.pendingIapPurchases || {};
-                                if (Object.keys(pending).length) {
-                                    for (const [k, v] of Object.entries(pending)) {
-                                        lines.push('  pending ' + k + ': ' + ((v && v.purchaseToken) ? 'token captured [redacted]' : 'no token'));
-                                    }
-                                } else {
-                                    lines.push('  pending        : none');
-                                }
-                                return lines.join('\n');
-                            }
-
-                            async function _runDiag() {
-                                if (!diagOutput) return;
-                                diagOutput.textContent = 'Running…';
-                                await new Promise(r => setTimeout(r, 50)); // flush paint
-                                try {
-                                    const PM = window.PurchaseManager;
-                                    const d  = PM && typeof PM.diagnose === 'function' ? PM.diagnose() : null;
-                                    diagOutput.textContent = d ? _formatDiag(d)
-                                        : 'PurchaseManager not available on window.';
-                                } catch (e) {
-                                    diagOutput.textContent = 'Error running diagnose(): ' + e;
-                                }
-                            }
-
-                            if (diagRunBtn) diagRunBtn.addEventListener('click', _runDiag);
-
-                            if (diagReconnect) {
-                                diagReconnect.addEventListener('click', async () => {
-                                    if (!diagOutput) return;
-                                    diagOutput.textContent = 'Refreshing Google Play products…';
-                                    diagReconnect.disabled = true;
-                                    try {
-                                        const PM = window.PurchaseManager;
-                                        if (!PM || typeof PM.refreshProducts !== 'function') {
-                                            diagOutput.textContent = 'PurchaseManager not available.';
-                                            return;
-                                        }
-                                        const result = await PM.refreshProducts();
-                                        await _runDiag();
-                                        diagOutput.textContent = (result.ok ? 'Product refresh completed.' : 'Product refresh: ' + result.reason)
-                                            + '\n\n' + diagOutput.textContent;
-                                    } catch (e) {
-                                        diagOutput.textContent = 'Product refresh failed: ' + e;
-                                    } finally {
-                                        diagReconnect.disabled = false;
-                                    }
-                                });
-                            }
-
-                            if (diagCloseBtn && diagCard) {
-                                diagCloseBtn.addEventListener('click', () => { diagCard.style.display = 'none'; });
-                            }
-                        } catch (e) { try { console.warn('[IAP Diag]', e); } catch(_) {} }
 
                         // Back buttons
                         [scoresBackBtn, infoBackBtn, settingsBackBtn, howtoplayBackBtn].forEach((btn) => {
@@ -6703,7 +6423,7 @@
             mo.observe(overlay, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
 
             // Also re-render on Founder/skin state changes so the chip count
-            // updates the moment a purchase or redeem completes.
+            // updates the moment a purchase or Founder grant completes.
             try {
                 if (window.FounderManager && typeof window.FounderManager.onChange === 'function') {
                     window.FounderManager.onChange(() => {

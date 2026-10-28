@@ -56,7 +56,7 @@ async function assertSkinGrid(page, selector, columns) {
             `(() => {
                 const plugin = window.CdvPurchase;
                 const store = plugin.store;
-                window.__purchaseCalls = { queries: 0, orders: [] };
+                window.__purchaseCalls = { queries: 0, orders: [], restores: 0 };
                 const products = new Map();
                 const catalogue = new plugin.GooglePlay.Products({
                     canPurchase: () => true, owned: () => false,
@@ -80,19 +80,17 @@ async function assertSkinGrid(page, selector, columns) {
                 } });
                 store.get = id => products.get(id);
                 store.owned = () => false;
-                store.restorePurchases = async () => undefined;
+                store.restorePurchases = async () => { window.__purchaseCalls.restores++; };
             })();`
         });
         const page = await context.newPage();
         await page.goto(ORIGIN, { waitUntil: 'domcontentloaded' });
         await page.locator('#menu-settings-btn').click();
-        await page.locator('#iap-diag-open-btn').click();
-        await page.waitForFunction(() => document.getElementById('iap-diag-output').textContent.includes('app build'));
-        const report = await page.locator('#iap-diag-output').textContent();
-        assert.ok(report.includes(require('../package.json').version + ' / '), 'report identifies the bundled build');
-        assert.ok(report.includes('lastStoreError'), 'report includes asynchronous store errors');
-        await page.locator('#iap-diag-close-btn').click();
-        await page.locator('#iap-diag-card').waitFor({ state: 'hidden' });
+        const removedPanels = '[id^="iap-diag-"], #remove-ads-diag-trigger, [id^="founder-code-"], .founder-redeem-row';
+        assert.equal(await page.locator(removedPanels).count(), 0, 'billing diagnostics and redeem controls are removed, not hidden');
+        assert.doesNotMatch(await page.locator('#founder-status-text').textContent(), /redeem/i);
+        const build = await page.locator('meta[name="skunkfu-build"]').getAttribute('content');
+        assert.ok(build.startsWith(require('../package.json').version + ' / '), 'bundled build version is current');
         const buy = page.locator('#remove-ads-buy-btn');
         await buy.waitFor({ state: 'visible' });
         await page.waitForFunction(() => !document.getElementById('remove-ads-buy-btn').disabled);
@@ -106,6 +104,10 @@ async function assertSkinGrid(page, selector, columns) {
         assert.equal(diag.ready, true);
         assert.equal(diag.storeInitSettled, true);
         assert.doesNotMatch(JSON.stringify(diag), /synthetic-offer/);
+        const restores = await page.evaluate(() => window.__purchaseCalls.restores);
+        await page.locator('#remove-ads-restore-btn').click();
+        await page.waitForFunction(count => window.__purchaseCalls.restores === count + 1, restores);
+        await page.waitForFunction(() => document.getElementById('remove-ads-status').textContent === 'Restore complete.');
         await assertSkinGrid(page, '#founder-skin-variants', 3);
         assert.equal(await page.locator('.founder-swatch[data-variant="steel"]').count(), 0);
         const viewport = page.viewportSize();
@@ -234,11 +236,8 @@ async function assertSkinGrid(page, selector, columns) {
         });
         await page.waitForFunction(() => PurchaseManager.diagnose().lastStoreError?.code === 6777001);
         await page.locator('#menu-settings-btn').click();
-        await page.locator('#iap-diag-open-btn').click();
-        await page.waitForFunction(() => document.getElementById('iap-diag-output').textContent.includes('app packaging failure'));
-        const packagingReport = await page.locator('#iap-diag-output').textContent();
-        assert.ok(!packagingReport.includes('Products not set to'), 'missing native registration must not be blamed on product configuration');
-        console.log('PASS Android-bundled Buy button: empty catalogue -> real refresh -> correct offer order -> readable cancellation; diagnostics redact tokens.');
+        assert.equal(await page.locator(removedPanels).count(), 0, 'removed panels stay absent when returning to settings');
+        console.log('PASS purchase UI: correct offer order, readable cancellation, working restore button, no billing-check or redeem-code panels.');
         console.log('PASS Laysie Skunk: display names, locked animated preview, owner selection, real artwork rendering and original-art toggle.');
         console.log('PASS Vampyr: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
         console.log('PASS Malodor: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
