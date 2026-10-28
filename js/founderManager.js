@@ -19,7 +19,7 @@
  *     and want the badge, and gives cloud-synced proof of ownership.
  *
  * Skin-pack ($1.99) entitlement (Play product ID `skins`; legacy `remove_ads` also honoured):
- *   • Unlocks LAYSIE SKUNK plus the SAPPHIRE, AMETHYST, and STEEL ninja skins.
+ *   • Unlocks LAYSIE SKUNK and VAMPYR plus the SAPPHIRE, AMETHYST, and STEEL ninja skins.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
  * Persistence:
@@ -74,10 +74,10 @@ const FounderManager = (() => {
     // Cosmetic preference — Founders may opt out of the gold ninja skin and
     // play with the original look. Defaults to enabled (no entry == on).
     const STORAGE_KEY_GOLD_SKIN     = 'skunkfu.useGoldSkin';
-    // Cosmetic selection includes palettes and the separately drawn ninja2.
+    // Cosmetic selection includes palettes and separately drawn character skins.
     // Default 'gold' if missing or unknown.
     const STORAGE_KEY_SKIN_VARIANT  = 'skunkfu.skinVariant';
-    const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'sapphire', 'amethyst', 'steel', 'ninja2']);
+    const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'sapphire', 'amethyst', 'steel', 'ninja2', 'ninja3']);
     const DEFAULT_SKIN_VARIANT = 'gold';
     let _isFounder = _read();
     let _goldSkinEnabled = _readGoldSkinPref();
@@ -284,14 +284,14 @@ const FounderManager = (() => {
     /**
      * Returns true if the player is entitled to use the given skin variant.
      *   gold     → Founder only (early-access exclusive)
-     *   sapphire/amethyst/steel/ninja2 → skin-pack owner
+     *   sapphire/amethyst/steel/ninja2/ninja3 → skin-pack owner
      */
     function isSkinUnlocked(variantId) {
         if (!VALID_SKIN_VARIANTS.includes(variantId)) return false;
         // Steam: game is sold complete — all skins included.
         if (window.PLATFORM === 'steam') return true;
         if (variantId === 'gold') return _isFounder;
-        // Laysie Skunk, sapphire, amethyst, and steel require the skin-pack purchase,
+        // Laysie Skunk, Vampyr, sapphire, amethyst, and steel require the skin-pack purchase,
         // even for Founders. Gold is the Founder-only early-access exclusive;
         // the colour variants are the skin-pack reward — separate value props.
         return _hasRemoveAds();

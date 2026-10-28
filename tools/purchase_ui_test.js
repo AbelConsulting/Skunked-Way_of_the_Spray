@@ -7,7 +7,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
-const WEB = path.join(ROOT, 'android/app/src/main/assets/public');
+const WEB = process.env.TEST_WEB_ROOT
+    ? path.resolve(ROOT, process.env.TEST_WEB_ROOT)
+    : path.join(ROOT, 'android/app/src/main/assets/public');
 const ORIGIN = 'http://purchase.test';
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.ogg': 'audio/ogg', '.wav': 'audio/wav' };
 
@@ -103,6 +105,15 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         assert.ok((await ninja2.getAttribute('title')).startsWith('Laysie Skunk'));
         assert.equal(await page.evaluate(() => FounderManager.setSkinVariant('ninja2')), false);
         assert.notEqual(await page.evaluate(() => FounderManager.getSkinVariant()), 'ninja2');
+        const vampyr = page.locator('.founder-swatch[data-variant="ninja3"]');
+        await page.waitForFunction(() => {
+            const tile = document.querySelector('.founder-swatch[data-variant="ninja3"]');
+            return tile.classList.contains('is-locked') && tile.querySelector('canvas').classList.contains('is-ready');
+        });
+        assert.equal(await vampyr.getAttribute('aria-disabled'), 'true');
+        assert.ok((await vampyr.textContent()).includes('Vampyr'));
+        assert.ok((await vampyr.getAttribute('title')).startsWith('Vampyr'));
+        assert.equal(await page.evaluate(() => FounderManager.setSkinVariant('ninja3')), false);
         await page.evaluate(() => {
             localStorage.setItem('skunkfu.adFree', '1');
             FounderManager.setSkinVariant('steel');
@@ -129,6 +140,42 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         });
         assert.equal(rendered.visible, true, 'actual premium PNG renders nontransparent pixels');
         assert.equal(rendered.differsFromOriginal, true, 'toggle restores visually different original artwork');
+        await vampyr.click();
+        assert.equal(await vampyr.getAttribute('aria-checked'), 'true');
+        assert.equal(await vampyr.getAttribute('title'), 'Vampyr');
+        assert.equal(await page.evaluate(() => localStorage.getItem('skunkfu.skinVariant')), 'ninja3');
+        const vampyrRendered = await page.evaluate(() => {
+            FounderManager.setGoldSkinEnabled(true);
+            const player = Object.create(Player.prototype);
+            Object.assign(player, { x: 0, y: 0, width: 64, height: 64, facingRight: true });
+            player.loadSprites();
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            return Object.keys(player.animations).map(state => {
+                player.currentAnimation = player.animations[state];
+                ctx.clearRect(0, 0, 64, 64);
+                player._drawCurrentAnimation(ctx);
+                const pixels = canvas.toDataURL();
+                const visible = ctx.getImageData(0, 0, 64, 64).data.some((value, i) => i % 4 === 3 && value > 0);
+                ctx.clearRect(0, 0, 64, 64);
+                FounderManager.setSkinVariant('ninja2');
+                player._drawCurrentAnimation(ctx);
+                const differsFromLaysie = pixels !== canvas.toDataURL();
+                ctx.clearRect(0, 0, 64, 64);
+                FounderManager.setSkinVariant('ninja3');
+                FounderManager.setGoldSkinEnabled(false);
+                player._drawCurrentAnimation(ctx);
+                FounderManager.setGoldSkinEnabled(true);
+                return { state, visible, differsFromLaysie, differsFromOriginal: pixels !== canvas.toDataURL() };
+            });
+        });
+        for (const result of vampyrRendered) {
+            assert.equal(result.visible, true, result.state + ' Vampyr artwork is visible');
+            assert.equal(result.differsFromLaysie, true, result.state + ' switches from Laysie artwork');
+            assert.equal(result.differsFromOriginal, true, result.state + ' toggle restores original artwork');
+        }
+        await page.locator('#menu-settings-back').click();
         await page.evaluate(() => {
             const pause = document.getElementById('pause-overlay');
             pause.removeAttribute('hidden');
@@ -137,16 +184,26 @@ const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': '
         const pauseNinja2 = page.locator('.pause-skin-chip[data-variant="ninja2"]');
         await pauseNinja2.waitFor({ state: 'visible' });
         assert.ok((await pauseNinja2.textContent()).includes('Laysie Skunk'));
+        const pauseVampyr = page.locator('.pause-skin-chip[data-variant="ninja3"]');
+        await pauseVampyr.waitFor({ state: 'visible' });
+        assert.ok((await pauseVampyr.textContent()).includes('Vampyr'));
+        await pauseNinja2.click();
+        assert.equal(await page.evaluate(() => FounderManager.getSkinVariant()), 'ninja2');
+        await pauseVampyr.click();
+        assert.equal(await pauseVampyr.getAttribute('aria-checked'), 'true');
+        assert.equal(await page.evaluate(() => FounderManager.getSkinVariant()), 'ninja3');
         await page.evaluate(() => {
             document.getElementById('pause-overlay').style.display = 'none';
             CdvPurchase.store.triggerError({ code: 6777001, message: 'Init failed - Class not found', productId: null });
         });
         await page.waitForFunction(() => PurchaseManager.diagnose().lastStoreError?.code === 6777001);
+        await page.locator('#menu-settings-btn').click();
         await page.locator('#iap-diag-open-btn').click();
         await page.waitForFunction(() => document.getElementById('iap-diag-output').textContent.includes('app packaging failure'));
         const packagingReport = await page.locator('#iap-diag-output').textContent();
         assert.ok(!packagingReport.includes('Products not set to'), 'missing native registration must not be blamed on product configuration');
         console.log('PASS Android-bundled Buy button: empty catalogue -> real refresh -> correct offer order -> readable cancellation; diagnostics redact tokens.');
         console.log('PASS Laysie Skunk: display names, locked animated preview, owner selection, real artwork rendering and original-art toggle.');
+        console.log('PASS Vampyr: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

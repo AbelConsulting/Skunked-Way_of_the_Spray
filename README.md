@@ -244,16 +244,18 @@ Without it, the JavaScript plugin can load while native initialization reports
 The signed release command runs `android:check-billing-bundle` after Gradle to
 inspect the actual AAB for both the registration and native plugin class.
 
-### Laysie Skunk Premium Cosmetic
+### Laysie Skunk and Vampyr Premium Cosmetics
 
 The existing `skins` purchase (and restored legacy `remove_ads` ownership) includes
-Laysie Skunk alongside Sapphire, Amethyst, and Steel. Existing buyers do not need another
-purchase. Founder status alone unlocks Gold, not Laysie Skunk; the full Steam game includes
-all skins. Choose **Laysie Skunk** in Settings or the pause-menu skin switcher, with skin
+Laysie Skunk and Vampyr alongside Sapphire, Amethyst, and Steel. Existing buyers do not need another
+purchase. Founder status alone unlocks Gold, not these character skins; the full Steam game includes
+all skins. Choose **Laysie Skunk** or **Vampyr** in Settings or the pause-menu skin switcher, with skin
 display enabled.
 
-Laysie Skunk retains the internal `ninja2` selection ID and uses eight transparent, horizontal four-frame PNG sheets named
-`ninja2_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` in
+Laysie Skunk retains the internal `ninja2` selection ID; Vampyr uses `ninja3`.
+Each uses eight transparent, horizontal four-frame PNG sheets named
+`ninja2_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` or
+`ninja3_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` in
 `assets/sprites/characters/`. Each sheet uses square frames (currently 48 or 64 pixels).
 Rendering uses the original player's animation clock, including fitting the four
 hurt frames into the original two-frame duration. Player size, collisions, attacks,
@@ -261,6 +263,8 @@ damage, and ability timing are unchanged. Turning skins off restores original ar
 Run `npm run test:skins` for entitlement, frame bounds, persistence, and timing tests;
 after `npm run cap:sync`, `npm run test:purchase-ui` also checks the bundled premium
 preview, selection, and actual artwork rendering.
+To test a fresh web build without syncing Android, run `npm run build`, then set
+`TEST_WEB_ROOT=dist` when running `npm run test:purchase-ui`.
 
 ### Docker / CI
 
