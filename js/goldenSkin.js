@@ -65,20 +65,6 @@ const GoldenSkin = (() => {
                 { l: 0.85, r: 0xe2, g: 0xc0, b: 0xff },
                 { l: 1.00, r: 0xf6, g: 0xe8, b: 0xff }
             ]
-        },
-        steel: {
-            id: 'steel',
-            label: 'Steel',
-            aura: '#C8D4E2',
-            stops: [
-                { l: 0.00, r: 0x12, g: 0x16, b: 0x1c },
-                { l: 0.08, r: 0x28, g: 0x2e, b: 0x38 },
-                { l: 0.20, r: 0x4a, g: 0x52, b: 0x60 },
-                { l: 0.40, r: 0x76, g: 0x82, b: 0x94 },
-                { l: 0.65, r: 0xb0, g: 0xbc, b: 0xcc },
-                { l: 0.85, r: 0xdc, g: 0xe4, b: 0xee },
-                { l: 1.00, r: 0xf4, g: 0xf8, b: 0xfd }
-            ]
         }
     });
 
