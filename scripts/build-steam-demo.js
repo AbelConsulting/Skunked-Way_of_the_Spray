@@ -71,11 +71,9 @@ function patchIndexHtml() {
     // the shared web-funnel CTA nodes instead of relying on runtime CSS.
     for (const id of ['landing-google-link', 'menu-google-store-btn', 'game-over-google-btn', 'victory-google-btn']) {
         const pattern = new RegExp(`<a\\b[^>]*\\bid=["']${id}["'][^>]*>[\\s\\S]*?<\\/a>`, 'i');
-        const before = html;
+        // Some web-funnel CTAs may no longer exist in the shared page. Remove
+        // any that remain; the guard below rejects any Google Play link left over.
         html = html.replace(pattern, '');
-        if (html === before) {
-            throw new Error(`[steam-demo-build] Expected #${id} in index.html but it was not found.`);
-        }
     }
 
     html = html.replace(
