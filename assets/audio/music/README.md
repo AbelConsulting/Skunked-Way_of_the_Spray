@@ -67,3 +67,21 @@ ffmpeg -y -i assets\audio\music\menu_theme.wav -c:a libvorbis -q:a 5 assets\audi
 Also convert the five button WAVs to OGG as described in the
 [sound effects documentation](../sfx/README.md). The existing menu music
 asset name is unchanged, so no playback routing changes are needed.
+
+## Runtime audio checks
+
+Run `npm run test:audio` from the repository root to check volume settings,
+music transition cancellation, pause/background handling, SFX voice limits,
+and ambient reuse in Web Audio and HTML audio fallback modes.
+
+- Main-menu and pause-menu sliders use the same volume setters and saved
+  preferences; ambience follows the music setting at 20%.
+- Impact ducking reduces music to 40% of the selected volume, never raises it,
+  and does not interrupt a music fade.
+- Web Audio music uses sequential fades through its shared music bus.
+  The HTML fallback crossfades element volumes. Stopping either path cancels
+  queued playback and cleans up outgoing tracks.
+- SFX voices are released on playback completion, including rate/detune changes.
+- Ambient loads reuse cached elements and in-flight requests. Failed loads can
+  be retried; replaying a cached element cancels any pending stop.
+- The legacy metal-pad asset is retained but no longer decoded at startup.

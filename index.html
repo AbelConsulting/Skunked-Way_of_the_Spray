@@ -4736,14 +4736,25 @@
                                 menuSfxSlider.addEventListener('input', () => {
                                     const v = menuSfxSlider.value / 100;
                                     if (menuSfxVal) menuSfxVal.textContent = menuSfxSlider.value + '%';
-                                    try { if (window.game && window.game.audioManager) { window.game.audioManager._pendingSfxVol = v; window.game.audioManager.setSfxVolume && window.game.audioManager.setSfxVolume(v); } } catch (e) {}
+                                    try {
+                                        const am = window.game && window.game.audioManager;
+                                        if (am) am.setSoundVolume(v);
+                                        localStorage.setItem('sfxVolume', menuSfxSlider.value);
+                                    } catch (e) { console.warn('Failed to update menu sound volume', e); }
                                 });
                             }
                             if (menuMusicSlider) {
                                 menuMusicSlider.addEventListener('input', () => {
                                     const v = menuMusicSlider.value / 100;
                                     if (menuMusicVal) menuMusicVal.textContent = menuMusicSlider.value + '%';
-                                    try { if (window.game && window.game.audioManager) { window.game.audioManager._pendingMusicVol = v; window.game.audioManager.setMusicVolume && window.game.audioManager.setMusicVolume(v); } } catch (e) {}
+                                    try {
+                                        const am = window.game && window.game.audioManager;
+                                        if (am) {
+                                            am.setMusicVolume(v);
+                                            am.setAmbientVolume(v * 0.20);
+                                        }
+                                        localStorage.setItem('musicVolume', menuMusicSlider.value);
+                                    } catch (e) { console.warn('Failed to update menu music volume', e); }
                                 });
                             }
                         } catch (e) {}

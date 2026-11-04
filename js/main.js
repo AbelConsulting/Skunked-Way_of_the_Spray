@@ -2028,7 +2028,6 @@ class GameApp {
 
         // Loaded after startup to reduce initial load time.
         this._deferredSoundList = [
-            ['metal_pad', 'assets/audio/sfx/metal_pad.wav'],
             // Optional cues with dedicated generated files or specific mappings:
             ['boss_spawn', 'assets/audio/sfx/boss_spawn_gen.wav'],
             ['boss_defeat', 'assets/audio/sfx/boss_defeat_gen.wav'],

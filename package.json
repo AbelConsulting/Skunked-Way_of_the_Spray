@@ -6,6 +6,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
+    "test:audio": "node --test tools/audio_manager_test.js",
     "postinstall": "patch-package --error-on-fail",
     "capacitor:sync:before": "patch-package --error-on-fail",
     "test:purchases": "node --test tools/purchase_manager_test.js",
