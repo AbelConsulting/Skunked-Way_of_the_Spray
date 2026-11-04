@@ -1,11 +1,12 @@
 """
 Generate audio assets for the game:
-1. Menu background music (calm, slower tempo)
+1. Menu background music (gentle flute variation of the gameplay melody)
 2. Boss battle music (intense, faster tempo)
 3. Ambient environmental sounds (forest, cave, city loops)
-4. UI hover sound effect
+4. Warm menu button sound effects
 """
 
+import argparse
 import struct
 import math
 import random
@@ -70,86 +71,14 @@ def lowpass(samples, cutoff_freq, sample_rate=SAMPLE_RATE):
 
 
 # ──────────────────────────────────────────────────────────────────
-# 1. Menu Background Music — calm, ambient, mysterious
+# 1. Menu Background Music — gentle flute and plucked chords
 # ──────────────────────────────────────────────────────────────────
 def generate_menu_music():
+    from toolshed.generate_music import create_menu_music
+
     print("Generating menu music...")
-    duration = 32.0  # 32-second loop
-    num_samples = int(duration * SAMPLE_RATE)
-    samples = [0.0] * num_samples
-    
-    # Slow pad chords (pulsing synth pads)
-    # Dm - Am - Bb - F progression, each chord 8 seconds
-    chords = [
-        [146.83, 174.61, 220.00],  # D3, F3, A3 (Dm)
-        [130.81, 164.81, 220.00],  # C3, E3, A3 (Am)
-        [146.83, 174.61, 233.08],  # D3, F3, Bb3 (Bb)
-        [130.81, 164.81, 196.00],  # C3, E3, G3 (F)
-    ]
-    
-    chord_duration = 8.0
-    for ci, chord in enumerate(chords):
-        start_sample = int(ci * chord_duration * SAMPLE_RATE)
-        end_sample = int((ci + 1) * chord_duration * SAMPLE_RATE)
-        for i in range(start_sample, min(end_sample, num_samples)):
-            t = i / SAMPLE_RATE
-            local_t = t - ci * chord_duration
-            # Slow LFO for tremolo
-            lfo = 0.5 + 0.5 * sine(0.3, t)
-            # Fade in/out for each chord
-            env = 1.0
-            if local_t < 1.0:
-                env = local_t
-            elif local_t > chord_duration - 1.5:
-                env = (chord_duration - local_t) / 1.5
-            env = max(0, min(1, env))
-            
-            val = 0.0
-            for freq in chord:
-                # Detuned sine pairs for width
-                val += sine(freq, t) * 0.12
-                val += sine(freq * 1.003, t) * 0.10
-                val += triangle(freq * 0.5, t) * 0.06
-            val *= env * lfo * 0.6
-            samples[i] += val
-    
-    # Subtle high arpeggiated melody
-    melody_notes = [
-        440, 523.25, 587.33, 523.25,  # A4, C5, D5, C5
-        440, 392, 349.23, 392,         # A4, G4, F4, G4
-        466.16, 523.25, 587.33, 698.46,# Bb4, C5, D5, F5
-        523.25, 440, 392, 349.23       # C5, A4, G4, F4
-    ]
-    note_dur = 2.0  # Each note 2 seconds
-    for ni, freq in enumerate(melody_notes):
-        start_sample = int(ni * note_dur * SAMPLE_RATE)
-        end_sample = int((ni + 1) * note_dur * SAMPLE_RATE)
-        for i in range(start_sample, min(end_sample, num_samples)):
-            t = i / SAMPLE_RATE
-            local_t = t - ni * note_dur
-            env = envelope_adsr(local_t, attack=0.3, decay=0.5, sustain=0.3, release=0.8, duration=note_dur)
-            val = sine(freq, t) * 0.08 + sine(freq * 2, t) * 0.03
-            # Gentle vibrato
-            vib = sine(5.0, t) * 2.0
-            val = sine(freq + vib, t) * 0.08
-            samples[i] += val * env
-    
-    # Sub bass drone
-    for i in range(num_samples):
-        t = i / SAMPLE_RATE
-        chord_idx = int(t / chord_duration) % 4
-        bass_freq = [73.42, 65.41, 73.42, 65.41][chord_idx]  # D2, C2
-        env = 0.5 + 0.5 * sine(0.15, t)
-        samples[i] += sine(bass_freq, t) * 0.12 * env
-    
-    # Apply lowpass for warmth
-    samples = lowpass(samples, 3500)
-    
-    # Normalize
-    peak = max(abs(s) for s in samples) or 1.0
-    samples = [s / peak * 0.7 for s in samples]
-    
-    write_wav('music/menu_theme.wav', samples)
+    samples, sample_rate = create_menu_music()
+    write_wav('music/menu_theme.wav', samples, sample_rate)
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -410,34 +339,56 @@ def generate_ambient_cave():
 
 
 # ──────────────────────────────────────────────────────────────────
-# 4. UI Hover Sound - short, subtle click/blip
+# 4. Menu Button Sounds - soft, fixed-pitch wooden chimes
 # ──────────────────────────────────────────────────────────────────
-def generate_ui_hover():
-    print("Generating UI hover sound...")
-    duration = 0.08
+MENU_SOUNDS = {
+    'ui_hover': ((659.25,), 0.08),
+    'menu_move': ((523.25,), 0.075),
+    'menu_select': ((523.25, 659.25), 0.16),
+    'ui_confirm': ((659.25, 783.99), 0.18),
+    'ui_back': ((659.25, 523.25), 0.16),
+}
+MENU_SOUND_TAIL = 0.03
+
+
+def menu_sound_samples(name):
+    frequencies, duration = MENU_SOUNDS[name]
     num_samples = int(duration * SAMPLE_RATE)
     samples = [0.0] * num_samples
-    
-    for i in range(num_samples):
-        t = i / SAMPLE_RATE
-        # Quick pitch sweep up
-        freq = 800 + 600 * (t / duration)
-        env = math.exp(-t * 40) * 0.7
-        samples[i] = sine(freq, t) * env + sine(freq * 2, t) * env * 0.3
-    
-    # Normalize
-    peak = max(abs(s) for s in samples) or 1.0
-    samples = [s / peak * 0.5 for s in samples]
-    
-    write_wav('sfx/ui_hover.wav', samples)
+    for note, frequency in enumerate(frequencies):
+        start = round(note * num_samples / len(frequencies))
+        end = round((note + 1) * num_samples / len(frequencies))
+        for i in range(start, end):
+            t = (i - start) / SAMPLE_RATE
+            release = (end - 1 - i) / SAMPLE_RATE
+            env = min(t / 0.008, 1) * min(release / 0.025, 1) * math.exp(-t * 18)
+            samples[i] = (sine(frequency, t) + 0.12 * sine(frequency * 2, t)) * env * 0.22
+    # Short Vorbis cues can lose a final decoder block; protect the audible release.
+    return samples + [0.0] * round(MENU_SOUND_TAIL * SAMPLE_RATE)
+
+
+def generate_ui_hover():
+    print("Generating UI hover sound...")
+    write_wav('sfx/ui_hover.wav', menu_sound_samples('ui_hover'))
+
+
+def generate_menu_sounds():
+    print("Generating warm menu button sounds...")
+    for name in MENU_SOUNDS:
+        write_wav(f'sfx/{name}.wav', menu_sound_samples(name))
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--menu-only', action='store_true',
+                        help='Render menu music and button WAVs without changing gameplay assets')
+    args = parser.parse_args()
     print("=== Generating Audio Assets ===")
     generate_menu_music()
-    generate_boss_music()
-    generate_ambient_forest()
-    generate_ambient_city()
-    generate_ambient_cave()
-    generate_ui_hover()
+    generate_menu_sounds()
+    if not args.menu_only:
+        generate_boss_music()
+        generate_ambient_forest()
+        generate_ambient_city()
+        generate_ambient_cave()
     print("=== Done! ===")

@@ -1,12 +1,77 @@
 """
 Generate placeholder background music using simple synthesis
 """
-import pygame
+import argparse
 import numpy as np
 import os
 from scipy.io import wavfile
 
-pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
+GAMEPLAY_MELODY = (
+    (440.00, 523.25, 659.25, 523.25),
+    (349.23, 440.00, 523.25, 698.46),
+    (329.63, 392.00, 523.25, 659.25),
+    (293.66, 392.00, 246.94, 392.00),
+)
+
+
+def flute_note(frequency, duration, sample_rate, rng):
+    t = np.arange(round(duration * sample_rate)) / sample_rate
+    vibrato = np.minimum(t / 0.18, 1) * np.sin(2 * np.pi * 5 * t) * 0.0015
+    phase = 2 * np.pi * np.cumsum(frequency * (1 + vibrato)) / sample_rate
+    tone = np.sin(phase) + 0.14 * np.sin(phase * 2) + 0.035 * np.sin(phase * 3)
+    breath = np.convolve(rng.uniform(-1, 1, len(t)), np.ones(5) / 5, mode='same')
+    envelope = np.sin(np.minimum(t / 0.035, 1) * np.pi / 2) ** 2
+    envelope *= np.sin(np.clip((duration - t - 1 / sample_rate) / 0.07, 0, 1) * np.pi / 2) ** 2
+    return (tone + breath * 0.018) * envelope
+
+
+def create_menu_music():
+    """A gentle flute rendition of the gameplay melody, without drones or drums."""
+    sample_rate = 22050
+    beat_duration = 60 / 96
+    music = np.zeros(round(16 * 4 * beat_duration * sample_rate))
+    rng = np.random.default_rng(2027)
+    chords = (
+        (220.00, 261.63, 329.63),
+        (174.615, 220.00, 261.63),
+        (130.815, 164.815, 196.00),
+        (196.00, 246.94, 293.66),
+    )
+
+    def place(sound, beat):
+        start = round(beat * beat_duration * sample_rate)
+        music[start:start + len(sound)] += sound
+
+    def pluck(frequency, duration):
+        t = np.arange(round(duration * sample_rate)) / sample_rate
+        tone = np.sin(2 * np.pi * frequency * t) + 0.16 * np.sin(4 * np.pi * frequency * t)
+        envelope = np.minimum(t / 0.008, 1) * np.exp(-t * 5)
+        envelope *= np.clip((duration - t - 1 / sample_rate) / 0.06, 0, 1)
+        return tone * envelope
+
+    for measure in range(16):
+        phrase = measure // 4
+        chord = chords[measure % 4]
+        downbeat = measure * 4
+        for beat, frequency in enumerate(GAMEPLAY_MELODY[measure % 4]):
+            duration = beat_duration * (0.82 if phrase % 2 == 0 else 0.93)
+            lead = flute_note(frequency, duration, sample_rate, rng)
+            place(lead * (0.28 if beat == 0 else 0.25), downbeat + beat)
+
+        for beat in (0, 2):
+            for degree, frequency in enumerate(chord):
+                place(pluck(frequency, beat_duration * 1.6) * 0.07,
+                      downbeat + beat + degree * 0.08)
+        if phrase in (1, 2):
+            for beat, degree in ((0.5, 2), (1.5, 1), (2.5, 2), (3.5, 0)):
+                place(pluck(chord[degree] * 2, beat_duration * 0.45) * 0.055,
+                      downbeat + beat)
+
+    peak = np.max(np.abs(music))
+    rms = np.sqrt(np.mean(music ** 2))
+    music *= min(0.55 / peak, 0.11 / rms)
+    return music, sample_rate
+
 
 def generate_note(frequency, duration, sample_rate=22050, volume=0.15, distortion=False):
     """Generate a musical note with harmonics and optional distortion for metal sound"""
@@ -120,9 +185,113 @@ def create_beat(bpm=120, beats=4, sample_rate=22050):
     
     return beat
 
-def create_gameplay_music(duration=60, bpm=120):
+def arrangement_section(measure):
+    # Eight-bar phrases: groove, pads, arpeggios, then breakdown/build.
+    return (measure // 8) % 4
+
+
+def create_arranged_backing(num_measures, bpm, sample_rate):
+    """Render a deterministic accompaniment without changing the lead melody."""
+    beat_duration = 60.0 / bpm
+    total_samples = round(num_measures * 4 * beat_duration * sample_rate)
+    backing = np.zeros(total_samples)
+    rng = np.random.default_rng(2026)
+    chords = (
+        (110.00, 130.815, 164.815),  # Am
+        (87.3075, 110.00, 130.815),  # F
+        (65.4075, 82.4075, 98.00),  # C
+        (98.00, 123.47, 146.83),  # G
+    )
+
+    def place(sound, beat):
+        start = round(beat * beat_duration * sample_rate)
+        end = min(start + len(sound), total_samples)
+        if end - start < len(sound):
+            # Release the final bass/fill notes rather than cutting their tails at the loop seam.
+            sound = sound[:end - start].copy()
+            release = min(len(sound), round(0.025 * sample_rate))
+            sound[-release:] *= np.linspace(1, 0, release)
+        backing[start:end] += sound[:end - start]
+
+    def pitched(freq, seconds, voice):
+        t = np.arange(round(seconds * sample_rate)) / sample_rate
+        if voice == 'pad':
+            sound = (np.sin(2 * np.pi * freq * t)
+                     + 0.3 * np.sin(2 * np.pi * freq * 2.003 * t)
+                     + 0.12 * np.sin(2 * np.pi * freq * 3 * t))
+            env = np.minimum(t / 0.18, 1) * np.minimum((seconds - t) / 0.25, 1)
+        elif voice == 'pluck':
+            sound = (np.sin(2 * np.pi * freq * t)
+                     + 0.35 * np.sin(2 * np.pi * freq * 2 * t)
+                     + 0.12 * np.sin(2 * np.pi * freq * 4 * t))
+            env = np.minimum(t / 0.004, 1) * np.exp(-t * 9)
+        else:
+            sound = (np.sin(2 * np.pi * freq * t)
+                     + 0.25 * np.sin(2 * np.pi * freq * 2 * t))
+            env = np.minimum(t / 0.008, 1) * np.exp(-t * 3)
+        env *= np.clip((seconds - t - 1 / sample_rate) / 0.025, 0, 1)
+        return sound * env
+
+    def percussion(kind):
+        seconds = {'kick': 0.18, 'snare': 0.14, 'hat': 0.055, 'tom': 0.16}[kind]
+        t = np.arange(round(seconds * sample_rate)) / sample_rate
+        if kind == 'kick':
+            phase = 2 * np.pi * np.cumsum(45 + 115 * np.exp(-t * 40)) / sample_rate
+            sound = np.sin(phase) * np.exp(-t * 24)
+        elif kind == 'snare':
+            sound = (rng.uniform(-1, 1, len(t)) * 0.7
+                     + np.sin(2 * np.pi * 185 * t) * 0.3) * np.exp(-t * 30)
+        elif kind == 'tom':
+            sound = np.sin(2 * np.pi * 120 * t) * np.exp(-t * 25)
+        else:
+            noise = rng.uniform(-1, 1, len(t))
+            sound = np.diff(noise, prepend=noise[0]) * np.exp(-t * 65)
+        edge = np.minimum(t / 0.002, 1)
+        edge *= np.clip((seconds - t - 1 / sample_rate) / 0.01, 0, 1)
+        return sound * edge
+
+    for measure in range(num_measures):
+        section = arrangement_section(measure)
+        breakdown = section == 3 and measure % 8 < 4
+        chord = chords[measure % 4]
+        downbeat = measure * 4
+
+        bass_beats = (0, 2) if breakdown else (0, 1.5, 2, 3, 3.5)
+        for index, beat in enumerate(bass_beats):
+            freq = chord[0] / 2 if index < 3 else chord[2] / 2
+            place(pitched(freq, beat_duration * 0.8, 'bass') * 0.27, downbeat + beat)
+
+        if section != 0:
+            for freq in chord:
+                place(pitched(freq * 2, beat_duration * 4, 'pad') * 0.065, downbeat)
+
+        if section == 2 or (section == 3 and not breakdown):
+            for eighth, degree in enumerate((0, 2, 1, 2, 0, 1, 2, 1)):
+                # Offbeats leave space for the unchanged quarter-note lead.
+                if eighth % 2:
+                    place(pitched(chord[degree] * 4, beat_duration * 0.45, 'pluck') * 0.13,
+                          downbeat + eighth * 0.5)
+
+        kick_beats = (0, 2) if breakdown else ((0, 1.5, 2, 2.75) if measure % 2 else (0, 0.5, 2))
+        for beat in kick_beats:
+            place(percussion('kick') * 0.42, downbeat + beat)
+        for beat in ((2,) if breakdown else (1, 3)):
+            place(percussion('snare') * (0.19 if breakdown else 0.3), downbeat + beat)
+        for eighth in range(0, 8, 2 if breakdown else 1):
+            place(percussion('hat') * (0.065 if eighth % 2 else 0.095),
+                  downbeat + eighth * 0.5)
+        if measure % 8 == 7:
+            for offset in (3.25, 3.5, 3.75):
+                place(percussion('tom') * 0.22, downbeat + offset)
+
+    return backing
+
+
+def create_gameplay_music(duration=60, bpm=120, arranged=False):
     """Create heavy, groovy metal gameplay music"""
     sample_rate = 22050
+    if arranged and (not np.isfinite(bpm) or bpm <= 0):
+        raise ValueError("Arranged gameplay BPM must be finite and positive")
     
     # Chord progression: Am - F - C - G (in A minor - darker metal sound)
     # Drop tuning for maximum heaviness
@@ -148,8 +317,14 @@ def create_gameplay_music(duration=60, bpm=120):
     
     beat_duration = 60.0 / bpm
     measure_duration = beat_duration * 4
-    
-    num_measures = int(duration / measure_duration)
+    if arranged and (
+        not np.isfinite(duration) or duration <= 0
+        or not np.isclose(duration / measure_duration / 32,
+                          round(duration / measure_duration / 32))
+    ):
+        raise ValueError("Arranged gameplay must contain complete 32-bar loops")
+
+    num_measures = round(duration / measure_duration) if arranged else int(duration / measure_duration)
     total_samples = int(duration * sample_rate)
     
     music = np.zeros(total_samples)
@@ -170,20 +345,12 @@ def create_gameplay_music(duration=60, bpm=120):
         ['G4', 'G4', 'G4', 'D3', 'G4', 'G4', 'D3', 'G4']
     ]
     
-    # Lead melody (more melodic, higher register)
-    melody_patterns = [
-        ['A4', 'C5', 'E5', 'C5', 'A4', 'E4', 'A4', 'C5'],
-        ['F4', 'A4', 'C5', 'F5', 'C5', 'A4', 'F4', 'A4'],
-        ['E4', 'G4', 'C5', 'E5', 'C5', 'G4', 'E4', 'G4'],
-        ['D4', 'G4', 'B3', 'G4', 'D4', 'B3', 'G4', 'D4']
-    ]
-    
     for measure in range(num_measures):
         chord_idx = measure % 4
         measure_start = int(measure * measure_duration * sample_rate)
         
         # Add heavy bass notes (whole notes with distortion)
-        if chord_idx < len(power_chords):
+        if not arranged and chord_idx < len(power_chords):
             bass_note = notes.get(power_chords[chord_idx][0], 110)
             bass = generate_note(bass_note * 0.5, measure_duration, sample_rate, volume=0.25, distortion=True)
             
@@ -198,17 +365,18 @@ def create_gameplay_music(duration=60, bpm=120):
                 note_name = rhythm_patterns[chord_idx][eighth % len(rhythm_patterns[chord_idx])]
                 rhythm_freq = notes.get(note_name, 220)
                 rhythm = generate_note(rhythm_freq, eighth_duration * 0.6, sample_rate, volume=0.18, distortion=True)
+                if arranged:
+                    breakdown = arrangement_section(measure) == 3 and measure % 8 < 4
+                    rhythm *= 0.35 if breakdown else 0.8
                 
                 end_idx = min(rhythm_start + len(rhythm), total_samples)
                 if rhythm_start < total_samples:
                     music[rhythm_start:end_idx] += rhythm[:end_idx - rhythm_start]
         
         # Add lead melody (quarter notes, cleaner tone)
-        if chord_idx < len(melody_patterns):
-            for beat in range(4):
+        if chord_idx < len(GAMEPLAY_MELODY):
+            for beat, melody_freq in enumerate(GAMEPLAY_MELODY[chord_idx]):
                 note_start = measure_start + int(beat * beat_duration * sample_rate)
-                note_name = melody_patterns[chord_idx][beat % len(melody_patterns[chord_idx])]
-                melody_freq = notes.get(note_name, 440)
                 note = generate_note(melody_freq, beat_duration * 0.8, sample_rate, volume=0.12, distortion=False)
                 
                 end_idx = min(note_start + len(note), total_samples)
@@ -217,7 +385,8 @@ def create_gameplay_music(duration=60, bpm=120):
     
     # Add drums
     num_beats = int(duration / beat_duration)
-    drums = create_beat(bpm, num_beats, sample_rate)
+    drums = (create_arranged_backing(num_measures, bpm, sample_rate) if arranged
+             else create_beat(bpm, num_beats, sample_rate))
     
     # Ensure same length
     min_length = min(len(music), len(drums))
@@ -237,7 +406,8 @@ def create_gameplay_music(duration=60, bpm=120):
 def save_music_as_ogg(wave, sample_rate, filename):
     """Save wave as OGG file (via WAV then conversion)"""
     # First save as WAV
-    filepath = os.path.join('assets', 'audio', 'music', filename.replace('.ogg', '.wav'))
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                            'assets', 'audio', 'music', filename.replace('.ogg', '.wav'))
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     
     # Convert to stereo
@@ -246,9 +416,9 @@ def save_music_as_ogg(wave, sample_rate, filename):
     
     wavfile.write(filepath, sample_rate, stereo_wave)
     
-    print(f"✓ Generated: {filename} (saved as WAV)")
+    print(f"Generated WAV: {filepath}")
     print(f"  Note: For OGG format, you can use ffmpeg to convert:")
-    print(f"  ffmpeg -i {filepath} {filepath.replace('.wav', '.ogg')}")
+    print(f'  ffmpeg -i "{filepath}" -c:a libvorbis -q:a 5 "{filepath.replace(".wav", ".ogg")}"')
 
 def create_all_music():
     """Generate all music tracks"""
@@ -256,7 +426,7 @@ def create_all_music():
     
     # 1. Gameplay music - heavy and groovy with crushing metal elements (Default)
     print("1. Creating gameplay music (120 BPM heavy metal style)...")
-    gameplay, sr = create_gameplay_music(duration=60, bpm=120)
+    gameplay, sr = create_gameplay_music(duration=64, bpm=120, arranged=True)
     save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
     
     # 2. Forest theme - slightly slower, more organic feel
@@ -294,4 +464,12 @@ def create_all_music():
     print("      - Freesound.org")
 
 if __name__ == "__main__":
-    create_all_music()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--gameplay-only', action='store_true',
+                        help='Render the arranged gameplay WAV without changing other tracks')
+    args = parser.parse_args()
+    if args.gameplay_only:
+        gameplay, sr = create_gameplay_music(duration=64, bpm=120, arranged=True)
+        save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
+    else:
+        create_all_music()

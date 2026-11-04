@@ -24,6 +24,7 @@
 - boss2_defeat.wav
 
 ## UI SFX
+- ui_hover.wav
 - menu_select.wav
 - menu_move.wav
 - ui_confirm.wav
@@ -43,3 +44,34 @@
 - WAV or OGG
 - Short duration (< 2 seconds)
 - 44.1kHz sample rate recommended
+
+## Warm menu button sounds
+
+The menu cues use soft, fixed-pitch chimes with short attacks and releases,
+without pitch sweeps or drones:
+
+- `ui_hover`: a single E5 chime, 80 ms.
+- `menu_move`: a single C5 chime, 75 ms.
+- `menu_select`: C5-E5, 160 ms.
+- `ui_confirm`: E5-G5, 180 ms.
+- `ui_back`: E5-C5, 160 ms.
+
+Each cue also has a 30 ms silent tail to protect its release when short
+Vorbis clips are decoded. These five cues are mono at 22.05 kHz, with peaks
+below 0.22. They are shared
+by the main menu, pause menu, and other UI that uses these sound names.
+Combat sounds, environmental ambience, and outcome jingles are unchanged.
+
+From the repository root:
+
+```powershell
+python generate_audio_assets.py --menu-only
+foreach ($name in 'ui_hover', 'menu_move', 'menu_select', 'ui_confirm', 'ui_back') {
+    ffmpeg -y -i "assets\audio\sfx\$name.wav" -c:a libvorbis -q:a 4 "assets\audio\sfx\$name.ogg"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to convert $name" }
+}
+```
+
+This also writes the flute menu music WAV. Convert it as described in the
+[music documentation](../music/README.md); keep both WAV and OGG exports
+up to date because the game prefers OGG.
