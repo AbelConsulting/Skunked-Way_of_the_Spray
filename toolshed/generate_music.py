@@ -13,6 +13,107 @@ GAMEPLAY_MELODY = (
     (293.66, 392.00, 246.94, 392.00),
 )
 
+LEVEL_ARRANGEMENTS = {
+    'forest_theme': (110, 'flute', 'marimba'),
+    'city_theme': (135, 'electric_piano', 'brass'),
+    'dojo_theme': (116, 'plucked_strings', 'flute'),
+    'crystal_theme': (108, 'bells', 'pizzicato'),
+    'depths_theme': (104, 'pizzicato', 'marimba'),
+    'ridge_theme': (118, 'flute', 'bells'),
+    'action_theme': (145, 'electric_piano', 'plucked_strings'),
+    'boss_theme': (130, 'brass', 'pizzicato'),
+}
+
+
+def instrument_note(voice, frequency, duration, sample_rate, rng):
+    """Short articulated instruments, not environmental loops or drones."""
+    if voice == 'flute':
+        return flute_note(frequency, duration, sample_rate, rng)
+    t = np.arange(round(duration * sample_rate)) / sample_rate
+    phase = 2 * np.pi * frequency * t
+    if voice == 'marimba':
+        sound = np.sin(phase) + 0.3 * np.sin(phase * 4) * np.exp(-t * 18)
+        envelope = np.exp(-t * 8)
+    elif voice == 'electric_piano':
+        sound = np.sin(phase + 1.8 * np.sin(phase * 2) * np.exp(-t * 8))
+        envelope = np.exp(-t * 4)
+    elif voice == 'brass':
+        sound = sum(np.sin(phase * harmonic) / harmonic for harmonic in range(1, 7))
+        envelope = np.minimum(t / 0.035, 1) * np.exp(-t * 2)
+    elif voice == 'plucked_strings':
+        sound = sum(np.sin(phase * harmonic) * np.exp(-t * harmonic * 2) / harmonic
+                    for harmonic in range(1, 9))
+        envelope = np.exp(-t * 3)
+    elif voice == 'bells':
+        sound = (np.sin(phase) + 0.3 * np.sin(phase * 2.76) * np.exp(-t * 7)
+                 + 0.12 * np.sin(phase * 5.4) * np.exp(-t * 12))
+        envelope = np.exp(-t * 5)
+    elif voice == 'pizzicato':
+        sound = np.sin(phase) + 0.45 * np.sin(phase * 2) + 0.2 * np.sin(phase * 3)
+        envelope = np.exp(-t * 10)
+    else:
+        raise ValueError(f"Unknown instrument: {voice}")
+    envelope *= np.minimum(t / 0.005, 1)
+    envelope *= np.clip((duration - t - 1 / sample_rate) / 0.045, 0, 1)
+    return sound * envelope
+
+
+def create_level_music(theme):
+    """Add a distinct instrumental call-and-response to each 32-bar level loop."""
+    bpm, lead_voice, reply_voice = LEVEL_ARRANGEMENTS[theme]
+    beat_duration = 60 / bpm
+    music, sample_rate = create_gameplay_music(
+        duration=32 * 4 * beat_duration, bpm=bpm, arranged=True
+    )
+    music *= 0.6
+    rng = np.random.default_rng(2028)
+    chords = (
+        (220.00, 261.63, 329.63),
+        (174.615, 220.00, 261.63),
+        (130.815, 164.815, 196.00),
+        (196.00, 246.94, 293.66),
+    )
+
+    def place(voice, frequency, beat, length, gain):
+        sound = instrument_note(voice, frequency, length * beat_duration, sample_rate, rng)
+        start = round(beat * beat_duration * sample_rate)
+        end = min(start + len(sound), len(music))
+        music[start:end] += sound[:end - start] * gain
+
+    for measure in range(32):
+        section = arrangement_section(measure)
+        breakdown = section == 3 and measure % 8 < 4
+        downbeat = measure * 4
+        chord = chords[measure % 4]
+        # Alternating bars leave room for the original synth melody.
+        if measure % 2 == 0 or section == 2:
+            for beat, degree in ((0.5, 0), (1.5, 2), (2.5, 1), (3.5, 2)):
+                if not breakdown or beat in (0.5, 2.5):
+                    place(lead_voice, chord[degree] * 2, downbeat + beat, 0.42, 0.22)
+        if section > 0 or measure % 2:
+            for beat, degree in ((0, 0), (1.5, 1), (3, 2)):
+                place(reply_voice, chord[degree], downbeat + beat, 0.7,
+                      0.12 if breakdown else 0.19)
+        if section == 2 or (section == 3 and not breakdown):
+            for frequency in chord:
+                place(reply_voice, frequency, downbeat + 2, 0.75, 0.075)
+
+    # Taper both edges to prevent partial drum tails and Vorbis pre-echo at the seam.
+    release = round(0.02 * sample_rate)
+    music[:release] *= np.linspace(0, 1, release)
+    music[-release:] *= np.linspace(1, 0, release)
+    music = np.tanh(music * 2)
+    peak = np.max(np.abs(music))
+    rms = np.sqrt(np.mean(music ** 2))
+    music *= min(0.7 / peak, 0.16 / rms)
+    return music, sample_rate
+
+
+def create_level_soundtracks():
+    for theme in LEVEL_ARRANGEMENTS:
+        music, sample_rate = create_level_music(theme)
+        save_music_as_ogg(music, sample_rate, f'{theme}.ogg')
+
 
 def flute_note(frequency, duration, sample_rate, rng):
     t = np.arange(round(duration * sample_rate)) / sample_rate
@@ -429,30 +530,7 @@ def create_all_music():
     gameplay, sr = create_gameplay_music(duration=64, bpm=120, arranged=True)
     save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
     
-    # 2. Forest theme - slightly slower, more organic feel
-    print("\n2. Creating forest theme (110 BPM melodic metal)...")
-    forest, sr = create_gameplay_music(duration=60, bpm=110)
-    save_music_as_ogg(forest, sr, 'forest_theme.ogg')
-    
-    # 3. City theme - faster, more aggressive
-    print("\n3. Creating city theme (135 BPM thrash metal)...")
-    city, sr = create_gameplay_music(duration=60, bpm=135)
-    save_music_as_ogg(city, sr, 'city_theme.ogg')
-    
-    # 4. Cave ambient - slow and atmospheric
-    print("\n4. Creating cave ambient (90 BPM atmospheric)...")
-    cave, sr = create_gameplay_music(duration=60, bpm=90)
-    save_music_as_ogg(cave, sr, 'cave_ambient.ogg')
-    
-    # 5. Action theme - high energy
-    print("\n5. Creating action theme (145 BPM speed metal)...")
-    action, sr = create_gameplay_music(duration=60, bpm=145)
-    save_music_as_ogg(action, sr, 'action_theme.ogg')
-    
-    # 6. Boss theme - intense and heavy
-    print("\n6. Creating boss theme (130 BPM heavy groove)...")
-    boss, sr = create_gameplay_music(duration=60, bpm=130)
-    save_music_as_ogg(boss, sr, 'boss_theme.ogg')
+    create_level_soundtracks()
     
     print("\n✅ All music tracks generated successfully!")
     print(f"📁 Saved to: assets/audio/music/")
@@ -465,11 +543,16 @@ def create_all_music():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--gameplay-only', action='store_true',
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--gameplay-only', action='store_true',
                         help='Render the arranged gameplay WAV without changing other tracks')
+    selection.add_argument('--levels-only', action='store_true',
+                           help='Render the eight instrumental level themes only')
     args = parser.parse_args()
     if args.gameplay_only:
         gameplay, sr = create_gameplay_music(duration=64, bpm=120, arranged=True)
         save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
+    elif args.levels_only:
+        create_level_soundtracks()
     else:
         create_all_music()

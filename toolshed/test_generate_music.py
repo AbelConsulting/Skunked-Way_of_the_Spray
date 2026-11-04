@@ -72,6 +72,49 @@ class GameplayArrangementTests(unittest.TestCase):
                 music.create_gameplay_music(duration=64, bpm=bpm, arranged=True)
 
 
+class LevelSoundtrackTests(unittest.TestCase):
+    def test_level_instruments_loops_and_mix(self):
+        for theme, (bpm, lead, reply) in music.LEVEL_ARRANGEMENTS.items():
+            with self.subTest(theme=theme):
+                with patch.object(music, 'instrument_note', wraps=music.instrument_note) as notes:
+                    audio, sr = music.create_level_music(theme)
+                self.assertEqual({call.args[0] for call in notes.call_args_list}, {lead, reply})
+                self.assertLessEqual(abs(len(audio) - 32 * 4 * 60 / bpm * sr), 1)
+                self.assertTrue(np.isfinite(audio).all())
+                self.assertLessEqual(np.max(np.abs(audio)), 0.700001)
+                self.assertGreater(np.sqrt(np.mean(audio ** 2)), 0.1)
+                self.assertLessEqual(np.sqrt(np.mean(audio ** 2)), 0.160001)
+                self.assertLess(abs(audio[-1] - audio[0]), 1 / 32767)
+                repeated, _ = music.create_level_music(theme)
+                np.testing.assert_array_equal(audio, repeated)
+                base, _ = music.create_gameplay_music(
+                    duration=32 * 4 * 60 / bpm, bpm=bpm, arranged=True
+                )
+                # Remove the shared accompaniment's best-fit gain to measure the new parts.
+                residual = audio - base * np.dot(audio, base) / np.dot(base, base)
+                self.assertGreater(np.sqrt(np.mean(residual ** 2)), 0.025)
+                bar = 4 * 60 / bpm * sr
+                breakdown = audio[round(24 * bar):round(28 * bar)]
+                build = audio[round(28 * bar):]
+                self.assertLess(np.sqrt(np.mean(breakdown ** 2)),
+                                np.sqrt(np.mean(build ** 2)) * 0.85)
+
+    def test_instruments_have_distinct_tones_and_released_edges(self):
+        voices = {voice for _, *pair in music.LEVEL_ARRANGEMENTS.values() for voice in pair}
+        rendered = []
+        for voice in voices:
+            audio = music.instrument_note(voice, 440, 0.3, 22050, np.random.default_rng(0))
+            self.assertEqual(audio.shape, (6615,))
+            self.assertLess(abs(audio[0]), 1 / 32767)
+            self.assertLess(abs(audio[-1]), 1 / 32767)
+            self.assertTrue(np.isfinite(audio).all())
+            for other in rendered:
+                self.assertLess(abs(np.corrcoef(audio, other)[0, 1]), 0.995)
+            rendered.append(audio)
+        with self.assertRaises(ValueError):
+            music.instrument_note('unknown', 440, 0.3, 22050, np.random.default_rng(0))
+
+
 class MenuAudioTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

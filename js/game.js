@@ -866,7 +866,6 @@ class Game {
         
             // Stop menu music before starting level music
             this.stopMenuMusic();
-            this.audioManager && this.audioManager.stopAmbient && this.audioManager.stopAmbient();
 
             // Ensure AudioContext is unlocked before playing level music.
             // initialize() may not have completed yet since main.js calls it
@@ -993,7 +992,6 @@ class Game {
                 // event is dispatched, leaving the UI desynced from `this.state`.
                 try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('pause'); } catch (e) { __err('game', e); }
                 try { this.audioManager && this.audioManager.pauseMusic && this.audioManager.pauseMusic(); } catch (e) { __err('game', e); }
-                try { this.audioManager && this.audioManager.pauseAmbient && this.audioManager.pauseAmbient(); } catch (e) { __err('game', e); }
                 // Show pause overlay when available (keeps gameplay UI clean; hosts pause actions)
                 const overlay = document.getElementById('pause-overlay');
                 if (overlay) {
@@ -1064,7 +1062,6 @@ class Game {
                 } catch (e) { __err('game', e); }
                 try { this.audioManager && this.audioManager.playSound && this.audioManager.playSound('ui_back'); } catch (e) { __err('game', e); }
                 try { this.audioManager && this.audioManager.unpauseMusic && this.audioManager.unpauseMusic(); } catch (e) { __err('game', e); }
-                try { this.audioManager && this.audioManager.unpauseAmbient && this.audioManager.unpauseAmbient(); } catch (e) { __err('game', e); }
                 this.dispatchGameStateChange();
             }
         }
@@ -1107,52 +1104,6 @@ class Game {
 
             this.audioManager.playMusic && this.audioManager.playMusic(musicName, true);
 
-            // Load and play ambient sound based on level background type
-            this._ensureLevelAmbient();
-        }
-
-        /** Determine and play appropriate ambient sound for the current level */
-        async _ensureLevelAmbient() {
-            if (!this.audioManager || !this.audioManager.playAmbient) return;
-            const config = (this.gameMode === 'survival' && typeof SURVIVAL_ARENA_CONFIG !== 'undefined')
-                ? SURVIVAL_ARENA_CONFIG
-                : LEVEL_CONFIGS[this.currentLevelIndex];
-            if (!config) return;
-
-            // Map background types to ambient tracks
-            // In survival mode use the live backgroundName so rotation is reflected
-            const bgType = (this.gameMode === 'survival' && this.level && this.level.backgroundName
-                ? this.level.backgroundName
-                : (config.background || '')).toLowerCase();
-            let ambientName = null;
-            if (bgType.includes('forest') || bgType.includes('grass') || bgType.includes('park')) {
-                ambientName = 'ambient_forest';
-            } else if (bgType.includes('cave') || bgType.includes('dungeon') || bgType.includes('underground')) {
-                ambientName = 'ambient_cave_deep';
-            } else if (bgType.includes('city') || bgType.includes('urban') || bgType.includes('street') || bgType.includes('rooftop') || bgType.includes('neon')) {
-                ambientName = 'ambient_city';
-            } else if (bgType.includes('mountain') || bgType.includes('dojo')) {
-                ambientName = 'ambient_forest';
-            }
-            // Also check level music array for hints
-            if (!ambientName && config.music) {
-                const musicStr = config.music.join(' ').toLowerCase();
-                if (musicStr.includes('cave') || musicStr.includes('ambient_cave')) ambientName = 'ambient_cave_deep';
-                else if (musicStr.includes('city')) ambientName = 'ambient_city';
-                else if (musicStr.includes('forest')) ambientName = 'ambient_forest';
-            }
-            // Default to forest for early levels, city for later
-            if (!ambientName) {
-                ambientName = (this.currentLevelIndex >= 7) ? 'ambient_city' : 'ambient_forest';
-            }
-
-            const ambientPath = `assets/audio/music/${ambientName}.wav`;
-            try {
-                await this.audioManager.loadAmbient(ambientName, ambientPath);
-                this.audioManager.playAmbient(ambientName, true);
-            } catch (e) {
-                console.warn('Failed to load ambient:', ambientName, e);
-            }
         }
 
         /** Load and play the menu theme music */
@@ -1964,15 +1915,13 @@ class Game {
                         if (this.audioManager) {
                             (async () => {
                                 try {
-                                    if (!this.audioManager.musicElements['boss_battle']) {
-                                        await this.audioManager.loadMusic('boss_battle', 'assets/audio/music/boss_battle.wav');
+                                    if (!this.audioManager.musicElements['boss_theme']) {
+                                        await this.audioManager.loadMusic('boss_theme', 'assets/audio/music/boss_theme.wav');
                                     }
-                                    this.audioManager.playMusic('boss_battle', true);
-                                    // Also increase playback rate for extra intensity
-                                    if (this.audioManager.setMusicPlaybackRate) this.audioManager.setMusicPlaybackRate(1.5);
+                                    this.audioManager.playMusic('boss_theme', true);
+                                    if (this.audioManager.setMusicPlaybackRate) this.audioManager.setMusicPlaybackRate(1);
                                 } catch (e) {
-                                    // Fallback: just speed up current music
-                                    if (this.audioManager.setMusicPlaybackRate) this.audioManager.setMusicPlaybackRate(2.0);
+                                    console.warn('Failed to load boss music:', e);
                                 }
                             })();
                         }

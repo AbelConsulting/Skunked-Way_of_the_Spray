@@ -19,7 +19,7 @@ const LEVEL_CONFIGS = [
         width: 10000,
         completion: { exitX: 9900 },
         background: 'bg_forest',
-        music: ['forest_theme', 'gameplay'],
+        music: ['forest_theme'],
         spawnPoints: [ 
             { x: 1200, y: 300 }, 
             { x: 2800, y: 300 }, 
@@ -114,7 +114,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 1.4
         },
         background: 'bg_forest',
-        music: ['forest_theme', 'gameplay'],
+        music: ['forest_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -150,7 +150,7 @@ const LEVEL_CONFIGS = [
         width: 12000,
         completion: { exitX: 11900 },
         background: 'bg_city',
-        music: ['city_theme', 'action_theme', 'gameplay'],
+        music: ['city_theme'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 1000, y: 300 },
@@ -252,7 +252,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 1.6
         },
         background: 'bg_city',
-        music: ['city_theme', 'action_theme', 'gameplay'],
+        music: ['city_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -289,7 +289,7 @@ const LEVEL_CONFIGS = [
         width: 15000,
         completion: { exitX: 14900 },
         background: 'bg_dojo',
-        music: ['gameplay', 'action_theme'],
+        music: ['dojo_theme'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -397,7 +397,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.0
         },
         background: 'bg_dojo',
-        music: ['gameplay', 'action_theme'],
+        music: ['dojo_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -434,7 +434,7 @@ const LEVEL_CONFIGS = [
         width: 16000,
         completion: { exitX: 15900 },
         background: 'bg_caves_crystal',
-        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        music: ['crystal_theme'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -546,7 +546,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 1.8
         },
         background: 'bg_caves_crystal',
-        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        music: ['crystal_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -583,7 +583,7 @@ const LEVEL_CONFIGS = [
         width: 16000,
         completion: { exitX: 15900 },
         background: 'bg_cave_depths',
-        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        music: ['depths_theme'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 'left', y: 300 },
@@ -699,7 +699,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 1.9
         },
         background: 'bg_cave_depths',
-        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        music: ['depths_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -736,7 +736,7 @@ const LEVEL_CONFIGS = [
         width: 12000,
         completion: { exitX: 11900 },
         background: 'bg_neon',
-        music: ['city_theme', 'action_theme', 'gameplay'],
+        music: ['action_theme'],
         spawnPoints: [ 
             { x: 'right', y: 300 }, 
             { x: 1000, y: 300 },
@@ -841,7 +841,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 1.8
         },
         background: 'bg_neon',
-        music: ['city_theme', 'action_theme', 'gameplay'],
+        music: ['action_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -878,7 +878,7 @@ const LEVEL_CONFIGS = [
         width: 16000,
         completion: { exitX: 15900 },
         background: 'bg_mountains',
-        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        music: ['ridge_theme'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 'left', y: 300 },
@@ -992,7 +992,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.1
         },
         background: 'bg_mountains',
-        music: ['cave_ambient', 'ambient_cave_loop', 'action_theme'],
+        music: ['ridge_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -1030,7 +1030,7 @@ const LEVEL_CONFIGS = [
         width: 16000,
         completion: { exitX: 15900 },
         background: 'bg_alleyway',
-        music: ['cave_ambient', 'ambient_cave_loop'],
+        music: ['depths_theme'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 'left', y: 300 },
@@ -1147,7 +1147,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.0
         },
         background: 'bg_alleyway',
-        music: ['cave_ambient', 'ambient_cave_loop'],
+        music: ['depths_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -1185,7 +1185,7 @@ const LEVEL_CONFIGS = [
         width: 12000,
         completion: { exitX: 11900 },
         background: 'bg_space',
-        music: ['city_theme', 'action_theme', 'gameplay'],
+        music: ['action_theme'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 1000, y: 300 },
@@ -1296,7 +1296,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.2
         },
         background: 'bg_space',
-        music: ['city_theme', 'action_theme', 'gameplay'],
+        music: ['action_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }
@@ -1333,7 +1333,7 @@ const LEVEL_CONFIGS = [
         width: 12000,
         completion: { exitX: 11900 },
         background: 'bg_final',
-        music: ['boss_theme', 'action_theme', 'city_theme'],
+        music: ['boss_theme'],
         spawnPoints: [
             { x: 'right', y: 300 },
             { x: 1000, y: 300 },
@@ -1444,7 +1444,7 @@ const LEVEL_CONFIGS = [
             attackDamageMultiplier: 2.7
         },
         background: 'bg_final',
-        music: ['boss_theme', 'action_theme', 'city_theme'],
+        music: ['boss_theme'],
         spawnPoints: [
             { x: 200, y: 300 },
             { x: 'right', y: 300 }

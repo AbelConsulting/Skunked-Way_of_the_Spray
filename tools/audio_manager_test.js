@@ -385,3 +385,48 @@ for (const webAudio of [true, false]) {
 test('the unused metal pad is not loaded into SFX memory', () => {
     assert.equal(/\['metal_pad',\s*'assets\/audio\/sfx\/metal_pad\.wav'\]/.test(read('js/main.js')), false);
 });
+
+for (const webAudio of [true, false]) {
+    test(`levels play instrumental themes without ambience (${webAudio ? 'WebAudio' : 'fallback'})`, async () => {
+        const r = runtime({ webAudio });
+        vm.runInContext(read('js/levelData.js') + read('js/game.js')
+            + '\nglobalThis.game = Object.create(Game.prototype);'
+            + '\nglobalThis.levels = LEVEL_CONFIGS;'
+            + '\nglobalThis.arena = SURVIVAL_ARENA_CONFIG;', r.ctx);
+        const game = r.ctx.game;
+        game.audioManager = r.manager;
+        game.gameMode = 'arcade';
+        const expected = [
+            'forest_theme', 'city_theme', 'dojo_theme', 'crystal_theme', 'depths_theme',
+            'action_theme', 'ridge_theme', 'depths_theme', 'action_theme', 'boss_theme',
+        ].flatMap(theme => [theme, theme]);
+        assert.equal(r.ctx.levels.length, expected.length);
+        let ambientCalls = 0;
+        r.manager.loadAmbient = () => { ambientCalls++; throw new Error('Ambient load during gameplay'); };
+        r.manager.playAmbient = () => { ambientCalls++; throw new Error('Ambient playback during gameplay'); };
+        for (let index = 0; index < expected.length; index++) {
+            game.currentLevelIndex = index;
+            assert.deepEqual(Array.from(r.ctx.levels[index].music), [expected[index]]);
+            await game.ensureLevelMusic();
+            r.advance(2000);
+            assert.equal(r.manager.currentMusic, r.manager.musicElements[expected[index]]);
+            assert.equal(r.manager.currentMusic.paused, false);
+        }
+        game.gameMode = 'survival';
+        game.currentLevelIndex = -1;
+        await game.ensureLevelMusic();
+        r.advance(2000);
+        assert.ok(r.ctx.arena.music.some(name => r.manager.currentMusic === r.manager.musicElements[name]));
+        const themes = new Set([...expected, ...r.ctx.arena.music]);
+        for (const theme of themes) {
+            assert.doesNotMatch(theme, /ambient/);
+            for (const extension of ['wav', 'ogg']) {
+                assert.ok(fs.existsSync(path.join(ROOT, 'assets', 'audio', 'music', `${theme}.${extension}`)),
+                    `Missing ${theme}.${extension}`);
+            }
+        }
+        assert.equal(ambientCalls, 0);
+        assert.equal(r.manager.currentAmbient, null);
+        assert.deepEqual(r.errors, []);
+    });
+}
