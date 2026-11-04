@@ -386,6 +386,92 @@ test('the unused metal pad is not loaded into SFX memory', () => {
     assert.equal(/\['metal_pad',\s*'assets\/audio\/sfx\/metal_pad\.wav'\]/.test(read('js/main.js')), false);
 });
 
+function gameOverRuntime(options) {
+    const r = runtime(options);
+    vm.runInContext(read('js/game.js')
+        + '\nglobalThis.game = Object.create(Game.prototype);', r.ctx);
+    r.game = r.ctx.game;
+    r.game.audioManager = r.manager;
+    r.game.state = 'GAME_OVER';
+    r.game._gameOverTime = 10000;
+    return r;
+}
+
+for (const webAudio of [true, false]) {
+    test(`game-over tune plays once on the music bus (${webAudio ? 'WebAudio' : 'fallback'})`, async () => {
+        const r = gameOverRuntime({ webAudio });
+        r.manager.soundEnabled = false;
+        r.manager.setMusicVolume(0.2);
+        await r.game.playGameOverMusic();
+        r.advance(2000);
+        const tune = r.manager.musicElements.game_over;
+        assert.equal(r.manager.currentMusic, tune);
+        assert.equal(tune.loop, false);
+        assert.equal(tune.paused, false);
+        assert.equal(webAudio ? r.manager.musicGainNode.gain.value : tune.volume, 0.2);
+        r.ctx.document.hidden = true;
+        r.listeners.visibilitychange();
+        assert.equal(tune.paused, true);
+        r.ctx.document.hidden = false;
+        r.listeners.visibilitychange();
+        assert.equal(tune.paused, false);
+        r.manager.stopMusic();
+        r.advance(2000);
+        assert.equal(tune.paused, true);
+        assert.deepEqual(r.errors, []);
+    });
+}
+
+test('disabled music does not load the game-over tune', async () => {
+    const r = gameOverRuntime();
+    r.manager.musicEnabled = false;
+    await r.game.playGameOverMusic();
+    assert.equal(r.media.length, 0);
+});
+
+test('a late game-over music load cannot interrupt another screen or run', async () => {
+    for (const state of ['MENU', 'PLAYING', 'GAME_OVER']) {
+        const r = gameOverRuntime();
+        let completeLoad;
+        r.manager.loadMusic = () => new Promise(resolve => { completeLoad = resolve; });
+        let plays = 0;
+        r.manager.playMusic = () => { plays++; };
+        const pending = r.game.playGameOverMusic();
+        r.game.state = state;
+        r.game._gameOverTime++;
+        completeLoad();
+        await pending;
+        assert.equal(plays, 0, state);
+    }
+});
+
+test('game-over music load failures are reported', async () => {
+    const r = gameOverRuntime();
+    r.manager.loadMusic = async () => { throw new Error('Unavailable music'); };
+    await r.game.playGameOverMusic();
+    assert.equal(r.manager.currentMusic, null);
+    assert.equal(r.errors.length, 1);
+    assert.match(r.errors[0][0], /Failed to load game-over music/);
+});
+
+test('final death keeps the impact but no longer schedules the old stinger or drone', () => {
+    const r = runtime();
+    vm.runInContext(read('js/player.js') + '\nglobalThis.player = Object.create(Player.prototype);', r.ctx);
+    const player = r.ctx.player;
+    const impacts = [];
+    player.audioManager = {
+        playSound: (...args) => impacts.push(args),
+        playDeathSequence: () => assert.fail('Old final-death sequence must not play'),
+    };
+    player.updateAnimation = () => {};
+    for (const final of [false, true]) {
+        player.isDying = false;
+        player.startDeath({ final });
+    }
+    assert.deepEqual(impacts, [['player_death', 0.9], ['player_death', 1]]);
+    assert.deepEqual(r.errors, []);
+});
+
 for (const webAudio of [true, false]) {
     test(`levels play instrumental themes without ambience (${webAudio ? 'WebAudio' : 'fallback'})`, async () => {
         const r = runtime({ webAudio });

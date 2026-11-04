@@ -934,27 +934,8 @@ class Player {
         this.invulnerableTimer = 0;
         const isFinal = !!(opts && opts.final);
         try {
-            if (this.audioManager && typeof this.audioManager.playDeathSequence === 'function') {
-                if (isFinal) {
-                    // Long, drawn-out final-death stinger: louder oof + longer
-                    // delay before the game-over musical cue.
-                    this.audioManager.playDeathSequence({
-                        oof: 'player_death',
-                        follow: 'game_over',
-                        delayMs: 1400,
-                        oofVolume: 1.0,
-                        followVolume: 1.0,
-                        finalTail: true
-                    });
-                } else {
-                    // Non-final death: short oof only, no game-over stinger.
-                    if (this.audioManager.playSound) {
-                        this.audioManager.playSound('player_death', 0.9);
-                    }
-                }
-            } else if (this.audioManager && this.audioManager.playSound) {
-                // Fallback for older AudioManager
-                this.audioManager.playSound('player_death', 0.9);
+            if (this.audioManager && this.audioManager.playSound) {
+                this.audioManager.playSound('player_death', isFinal ? 1.0 : 0.9);
             }
         } catch (e) { __err('player', e); }
         if (this.animations && this.animations.death) {

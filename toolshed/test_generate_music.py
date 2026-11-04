@@ -115,6 +115,29 @@ class LevelSoundtrackTests(unittest.TestCase):
             music.instrument_note('unknown', 440, 0.3, 22050, np.random.default_rng(0))
 
 
+class GameOverMusicTests(unittest.TestCase):
+    def test_short_quiet_one_shot_with_released_ending(self):
+        audio, sr = music.create_game_over_music()
+        self.assertEqual(len(audio), round((0.6 + 16 * 60 / 72) * sr))
+        self.assertTrue(np.isfinite(audio).all())
+        self.assertLessEqual(np.max(np.abs(audio)), 0.500001)
+        self.assertAlmostEqual(np.sqrt(np.mean(audio ** 2)), 0.10, places=6)
+        np.testing.assert_array_equal(audio[:round(0.6 * sr)], 0)
+        np.testing.assert_array_equal(audio[-round(0.3 * sr):], 0)
+        repeated, _ = music.create_game_over_music()
+        np.testing.assert_array_equal(audio, repeated)
+
+    def test_descending_minor_melody_with_flute_and_piano_only(self):
+        with patch.object(music, 'instrument_note', wraps=music.instrument_note) as notes:
+            music.create_game_over_music()
+        self.assertEqual({call.args[0] for call in notes.call_args_list},
+                         {'flute', 'electric_piano'})
+        melody = [call.args[1] for call in notes.call_args_list if call.args[0] == 'flute']
+        self.assertEqual(melody[:4], [659.25, 523.25, 493.88, 440.00])
+        self.assertTrue(all(a > b for a, b in zip(melody[:-2], melody[1:-1])))
+        self.assertEqual(melody[-1], 220.00)
+
+
 class MenuAudioTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

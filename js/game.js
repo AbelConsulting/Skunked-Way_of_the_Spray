@@ -1106,6 +1106,21 @@ class Game {
 
         }
 
+        async playGameOverMusic() {
+            if (!this.audioManager || !this.audioManager.musicEnabled || this.state !== 'GAME_OVER') return;
+            const gameOverTime = this._gameOverTime;
+            try {
+                if (!this.audioManager.musicElements['game_over']) {
+                    await this.audioManager.loadMusic('game_over', 'assets/audio/music/game_over.wav');
+                }
+                // A slow load must not interrupt a retry, menu, or later game-over screen.
+                if (this.state !== 'GAME_OVER' || this._gameOverTime !== gameOverTime) return;
+                this.audioManager.playMusic('game_over', false);
+            } catch (e) {
+                console.warn('Failed to load game-over music:', e);
+            }
+        }
+
         /** Load and play the menu theme music */
         async playMenuMusic() {
             if (!this.audioManager) return;
@@ -3118,7 +3133,7 @@ class Game {
             this.state = "GAME_OVER";
             this._gameOverTime = Date.now();
             this.audioManager.stopMusic();
-            // NOTE: game_over stinger is played by the death sequence (delayed).
+            this.playGameOverMusic();
             // Notify UI layers (mobile touch controls) about state change
             try { this.dispatchGameStateChange && this.dispatchGameStateChange(); } catch (e) { __err('game', e); }
 

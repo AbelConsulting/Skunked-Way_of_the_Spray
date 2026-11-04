@@ -22,7 +22,7 @@ remain available but are unused by gameplay.
 
 ## Format
 - OGG or MP3
-- Loopable tracks
+- Loopable level/menu tracks; game-over music plays once
 - Recommended: 2-3 minute loops
 
 ## Gameplay arrangement
@@ -84,8 +84,29 @@ foreach ($theme in $themes) {
 
 The generator writes WAV; FFmpeg updates the OGG preferred by the game. Keep
 both formats together. Fixed seeds make repeated renders reproducible.
-Running without either selection flag regenerates gameplay and all eight
-level themes, but not legacy ambience.
+Running without a selection flag regenerates gameplay, all eight level
+themes, and game-over music, but not legacy ambience.
+
+## Game-over tune
+
+`game_over.wav` and `game_over.ogg` are a roughly 14-second, one-shot tune at
+72 BPM. A descending flute melody and sparse electric piano follow
+Am-Dm-E-Am, resolving softly to a low A. There are no drums or ambient drones.
+A 0.6-second opening leaves room for the death impact, and the final note
+fades away instead of looping. The mix targets 0.10 RMS with a 0.50 peak ceiling.
+
+The game-over screen plays this through the music bus, respecting music
+volume/mute independently of SFX. The initial death impact remains, but the
+old delayed game-over SFX and synthesized low tail no longer play.
+Leaving the screen uses the normal music transition/stop flow; a late load
+cannot start the tune over a retry or the menu.
+
+```powershell
+python toolshed\generate_music.py --game-over-only
+ffmpeg -y -i assets\audio\music\game_over.wav -c:a libvorbis -q:a 5 assets\audio\music\game_over.ogg
+python -m unittest toolshed.test_generate_music
+npm run test:audio
+```
 
 ## Flute menu variation
 

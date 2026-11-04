@@ -126,6 +126,43 @@ def flute_note(frequency, duration, sample_rate, rng):
     return (tone + breath * 0.018) * envelope
 
 
+def create_game_over_music():
+    """A slow A-minor farewell, with descending flute and sparse piano."""
+    sample_rate = 22050
+    beat_duration = 60 / 72
+    intro = 0.6
+    music = np.zeros(round((intro + 16 * beat_duration) * sample_rate))
+    rng = np.random.default_rng(2029)
+    melody = (
+        (0, 659.25, 0.9), (1, 523.25, 0.9), (2, 493.88, 0.9), (3, 440.00, 0.9),
+        (4, 349.23, 1.8), (6, 329.63, 1.8),
+        (8, 293.66, 0.9), (9, 246.94, 0.9), (10, 207.65, 1.8),
+        (12, 220.00, 3.5),
+    )
+    chords = (
+        (220.00, 261.63, 329.63),  # Am
+        (146.83, 174.615, 220.00),  # Dm
+        (164.815, 207.65, 246.94),  # E
+        (110.00, 130.815, 164.815),  # Am
+    )
+
+    def place(voice, frequency, beat, length, gain):
+        sound = instrument_note(voice, frequency, length * beat_duration, sample_rate, rng)
+        start = round((intro + beat * beat_duration) * sample_rate)
+        music[start:start + len(sound)] += sound * gain
+
+    for beat, frequency, length in melody:
+        place('flute', frequency, beat, length, 0.23 if beat < 12 else 0.18)
+    for measure, chord in enumerate(chords):
+        for degree, frequency in enumerate(chord):
+            place('electric_piano', frequency, measure * 4 + degree * 0.25, 2.5, 0.13)
+    music[-sample_rate:] *= np.linspace(1, 0, sample_rate)
+    peak = np.max(np.abs(music))
+    rms = np.sqrt(np.mean(music ** 2))
+    music *= min(0.5 / peak, 0.10 / rms)
+    return music, sample_rate
+
+
 def create_menu_music():
     """A gentle flute rendition of the gameplay melody, without drones or drums."""
     sample_rate = 22050
@@ -531,6 +568,8 @@ def create_all_music():
     save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
     
     create_level_soundtracks()
+    game_over, sr = create_game_over_music()
+    save_music_as_ogg(game_over, sr, 'game_over.ogg')
     
     print("\n✅ All music tracks generated successfully!")
     print(f"📁 Saved to: assets/audio/music/")
@@ -548,11 +587,16 @@ if __name__ == "__main__":
                         help='Render the arranged gameplay WAV without changing other tracks')
     selection.add_argument('--levels-only', action='store_true',
                            help='Render the eight instrumental level themes only')
+    selection.add_argument('--game-over-only', action='store_true',
+                           help='Render the sad, one-shot game-over music only')
     args = parser.parse_args()
     if args.gameplay_only:
         gameplay, sr = create_gameplay_music(duration=64, bpm=120, arranged=True)
         save_music_as_ogg(gameplay, sr, 'gameplay.ogg')
     elif args.levels_only:
         create_level_soundtracks()
+    elif args.game_over_only:
+        game_over, sr = create_game_over_music()
+        save_music_as_ogg(game_over, sr, 'game_over.ogg')
     else:
         create_all_music()
