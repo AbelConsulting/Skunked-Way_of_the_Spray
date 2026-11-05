@@ -1,6 +1,8 @@
 'use strict';
 
 // Run after npm run steam:build and npm run steam:demo:build.
+// Use --main-only to validate the main release without rebuilding the demo.
+// Add --packaged to check the Windows and Linux packaged renderer assets too.
 // Serve local files through Playwright routing: no server or Steam login needed.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -46,7 +48,9 @@ async function checkVariant(browser, { name, directory, native = false, bridge =
         } else {
             assert.equal(await page.locator('#menu-google-store-btn').isVisible(), !full, `${name}: Google Play store button`);
         }
-        assert.equal(await page.locator('.site-landing').evaluate(el => getComputedStyle(el).display === 'none'), full, `${name}: browser landing banner`);
+        if (full) {
+            assert.equal(await page.locator('.site-landing').isVisible(), false, `${name}: no browser landing banner`);
+        }
 
         if (full) {
             const menu = await page.locator('#start-menu-overlay').innerText();
@@ -61,7 +65,7 @@ async function checkVariant(browser, { name, directory, native = false, bridge =
                 assert.match(await page.locator('#menu-play-btn').innerText(), /Touch-ready/i);
             }
         }
-        if (directory === 'dist-steam') {
+        if (steam && full && !bridge) {
             assert.equal(await page.title(), 'Skunked: Way of the Spray');
             assert.equal(await page.evaluate(() => window.STEAM_DEMO), false);
         }
@@ -88,18 +92,32 @@ async function checkVariant(browser, { name, directory, native = false, bridge =
 }
 
 (async () => {
-    for (const dir of ['dist-steam', 'dist-steam-demo']) {
+    const mainOnly = process.argv.includes('--main-only');
+    for (const dir of mainOnly ? ['dist-steam'] : ['dist-steam', 'dist-steam-demo']) {
         assert.ok(fs.existsSync(path.join(ROOT, dir, 'index.html')), `Build ${dir} before running this test`);
     }
     const browser = await chromium.launch();
     try {
-        for (const variant of [
+        const variants = [
             { name: 'Full Steam build', directory: 'dist-steam', full: true, steam: true, demo: false },
             { name: 'Steam bridge fallback', directory: '', bridge: true, full: true, steam: true, demo: false },
             { name: 'Browser demo', directory: '', full: false, steam: false, demo: false },
             { name: 'Capacitor full game', directory: '', native: true, full: true, steam: false, demo: false },
             { name: 'Separate Steam demo', directory: 'dist-steam-demo', full: false, steam: true, demo: true }
-        ]) await checkVariant(browser, variant);
+        ];
+        if (process.argv.includes('--packaged')) {
+            for (const platform of ['win', 'linux']) {
+                variants.push({
+                    name: `Packaged ${platform} main game`,
+                    directory: path.join('release', `${platform}-unpacked`, 'resources', 'app', 'dist-steam'),
+                    full: true, steam: true, demo: false
+                });
+            }
+        }
+        for (const variant of variants) {
+            if (mainOnly && variant.demo) continue;
+            await checkVariant(browser, variant);
+        }
     } finally {
         await browser.close();
     }

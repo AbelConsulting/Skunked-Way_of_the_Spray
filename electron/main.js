@@ -9,8 +9,6 @@ const path = require('path');
 const fs   = require('fs');
 
 // ── Steam App ID ──────────────────────────────────────────────────────────────
-// Replace 480 with your real Steam App ID once your Steamworks app is created.
-// 480 = Valve's "SpaceWar" demo — safe for SDK testing only.
 // SKUNKFU_DEMO=1 (set only by electron/main-demo.js) switches to the demo build
 // output + demo App ID without touching the regular Steam release path/appid.
 const IS_DEMO_BUILD = process.env.SKUNKFU_DEMO === '1';
@@ -18,10 +16,14 @@ const DIST_STEAM_DIR = IS_DEMO_BUILD ? 'dist-steam-demo' : 'dist-steam';
 const STEAM_APP_ID = (() => {
     const txt = path.join(__dirname, IS_DEMO_BUILD ? 'steam_appid.demo.txt' : 'steam_appid.txt');
     if (fs.existsSync(txt)) {
-        const id = parseInt(fs.readFileSync(txt, 'utf8').trim(), 10);
-        if (!isNaN(id) && id > 0) return id;
+        const id = Number(fs.readFileSync(txt, 'utf8').trim());
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new Error(`[Steam] Invalid App ID in ${txt}`);
+        }
+        return id;
     }
-    return 480; // fallback test ID
+    // SteamPipe excludes development App ID files from uploaded depots.
+    return IS_DEMO_BUILD ? 5226570 : 4815180;
 })();
 
 // ── Steamworks ────────────────────────────────────────────────────────────────

@@ -83,6 +83,37 @@ Then open [http://localhost:8000](http://localhost:8000) in your browser.
 
 ---
 
+## Preparing the main Steam release (Windows + Linux)
+
+The main game uses App ID `4815180`; the separate demo is not rebuilt by these commands.
+From the repository root, prepare version `1.3.29` with:
+
+```powershell
+npm run test:steam-appid
+npm run electron:build:win
+npm run electron:build:linux
+npm run test:steam-home -- --main-only --packaged
+```
+
+Stop if any command fails. SteamPipe uploads the unpacked folders
+`release/win-unpacked` (depot `4815181`) and `release/linux-unpacked` (depot `4815183`),
+not the Windows installer. Linux can be packaged on Windows, but still needs a native
+Linux/Steam Deck launch check. Verify Steam overlay, achievements, controller input,
+and saved progress through Steam before promoting a release.
+
+When upload is approved, use [the combined Windows + Linux build configuration](steam/app_build_4815180_win_linux.vdf):
+
+```powershell
+steamcmd +login <builder_account> +run_app_build "$PWD\steam\app_build_4815180_win_linux.vdf" +quit
+```
+
+Update the VDF descriptions for each release. `setlive` stays empty: uploading does
+not publish the build. Promote it manually on the Steamworks Builds page after testing.
+SteamPipe excludes development `steam_appid.txt` files; the launcher retains the real
+main/demo App IDs when those files are absent.
+
+---
+
 ## Controls
 
 ### Keyboard
