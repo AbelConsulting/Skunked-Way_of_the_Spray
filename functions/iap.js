@@ -79,8 +79,8 @@ function revokeActionsFromRtdn(notification) {
 
   const voided = notification.voidedPurchaseNotification;
   if (voided && voided.purchaseToken) {
-    // productType 1 = one-time (Play RTDN). Ignore subscriptions (2) for now.
-    if (voided.productType == null || voided.productType === 1) {
+    // RTDN uses 2 for one-time purchases and 1 for subscriptions.
+    if (voided.productType == null || voided.productType === 2) {
       actions.push({
         sku: "",
         purchaseToken: voided.purchaseToken,
@@ -107,6 +107,7 @@ async function grantVerifiedPurchase(db, FieldValue, opts) {
   const { playerId, sku, productId, purchaseToken, orderId } = opts;
   if (!isValidPlayerId(playerId)) throw grantError("bad_player_id");
   if (!VALID_SKUS.has(sku)) throw grantError("bad_sku");
+  if (productId && productId !== sku) throw grantError("product_sku_mismatch");
   if (!isValidPurchaseToken(purchaseToken)) throw grantError("bad_purchase_token");
 
   const { ownedField, sinceField } = SKU_TO_FIELD[sku];

@@ -110,7 +110,8 @@ async function acknowledgePlayPurchase(productId, purchaseToken) {
     const status = e && e.response && e.response.status;
     const message = (e && e.message) || "";
     if (status === 400 || /already acknowledged/i.test(message)) {
-      return { ok: true, already: true };
+      const live = await verifyPlayPurchase(productId, purchaseToken);
+      if (live.ok && live.ackState === 1) return { ok: true, already: true };
     }
     return { ok: false, reason: "ack_failed", status, message };
   }
@@ -450,6 +451,10 @@ exports.setEntitlement = onRequest({ region: "us-central1", secrets: ["GOOGLE_PL
     res.status(400).json({ error: "bad_sku" });
     return;
   }
+  if (productId !== sku) {
+    res.status(400).json({ error: "product_sku_mismatch" });
+    return;
+  }
   if (!iap.isValidPurchaseToken(purchaseToken)) {
     res.status(400).json({ error: "purchase_token_required" });
     return;
@@ -482,6 +487,10 @@ exports.setEntitlement = onRequest({ region: "us-central1", secrets: ["GOOGLE_PL
         const ack = await acknowledgePlayPurchase(productId, purchaseToken);
         if (!ack.ok) {
           console.warn("[setEntitlement] acknowledge failed:", sku, ack);
+          // Ownership is already durable; retrying this request is idempotent.
+          // Do not let the client discard its pending token until Play has acked.
+          res.status(503).json({ error: "acknowledgement_failed" });
+          return;
         }
       }
     } else {

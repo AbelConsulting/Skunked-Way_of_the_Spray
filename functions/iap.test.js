@@ -172,9 +172,28 @@ test("revokeActionsFromRtdn handles cancel and void", () => {
     packageName: "com.skunksquad.skunkfu",
     voidedPurchaseNotification: {
       purchaseToken: "tok-abcdefghijklmnopqrstuvwxyz",
-      productType: 1,
+      productType: 2,
     },
   });
   assert.equal(voided.length, 1);
   assert.equal(voided[0].reason, "voided");
+});
+
+test("subscription voids do not revoke one-time entitlements", () => {
+  assert.deepEqual(revokeActionsFromRtdn({
+    voidedPurchaseNotification: {
+      purchaseToken: "tok-abcdefghijklmnopqrstuvwxyz",
+      productType: 1,
+    },
+  }), []);
+});
+
+test("grant helper rejects mismatched verified product and entitlement SKU", async () => {
+  const { grantVerifiedPurchase } = require("./iap");
+  const { db, FieldValue, store } = makeFakeDb();
+  await assert.rejects(() => grantVerifiedPurchase(db, FieldValue, {
+    playerId: "player_review_1234", sku: "skins", productId: "founder_pass",
+    purchaseToken: "synthetic-review-token-12345",
+  }), { code: "product_sku_mismatch" });
+  assert.equal(store.size, 0);
 });

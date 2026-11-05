@@ -10,7 +10,7 @@
     "shell": "firebase functions:shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "node --test iap.test.js"
+    "test": "node --test iap.test.js index.test.js"
   },
   "dependencies": {
     "firebase-admin": "^13.9.0",

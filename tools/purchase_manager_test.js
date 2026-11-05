@@ -13,6 +13,7 @@ const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, pendingInitialization = false, ownedIds = [] } = {}) {
     let now = Date.now();
     const timers = new Set();
+    const events = new Map();
     const storage = new Map([['skunkfu.iapAutoRestoreTriedAt', '1']]);
     const ctx = vm.createContext({
         console: { log() {}, warn() {}, error() {} },
@@ -35,7 +36,11 @@ function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, p
         Date: class extends Date { static now() { return now; } },
     });
     ctx.window = ctx;
-    ctx.addEventListener = () => {};
+    ctx.addEventListener = (name, fn) => {
+        const listeners = events.get(name) || [];
+        listeners.push(fn);
+        events.set(name, listeners);
+    };
     ctx.Capacitor = { isNativePlatform: () => true };
     vm.runInContext(read('node_modules/cordova-plugin-purchase/www/store.js'), ctx);
     const plugin = ctx.CdvPurchase;
@@ -65,9 +70,151 @@ function runtime({ initErrors = [], emptyCatalogue = false, cancelled = false, p
         async loadProducts() { calls.catalogue++; populate(); return [...products.values()]; },
     });
     vm.runInContext(read('js/purchaseManager.js'), ctx);
-    return { ctx, plugin, store, calls, manager: ctx.PurchaseManager,
+    return { ctx, plugin, store, calls, storage, manager: ctx.PurchaseManager,
+        async emit(name) { for (const fn of events.get(name) || []) await fn(); },
         close() { for (const timer of timers) clearTimeout(timer); } };
 }
+
+test('Restore surfaces returned native billing errors instead of reporting success', async () => {
+    const r = runtime();
+    try {
+        await r.manager.initialize();
+        r.store.adapters.list = [{
+            ready: true,
+            restorePurchases: async () => ({ code: 6777002, message: 'Billing disconnected' }),
+        }];
+        r.store._storefronts.refreshWith = async () => {};
+        const result = await r.manager.restorePurchases();
+        assert.equal(result.ok, false);
+        assert.match(result.reason, /Billing disconnected/);
+    } finally { r.close(); }
+});
+
+test('Restore waits for real initialization rather than succeeding with no ready adapter', async () => {
+    const r = runtime({ pendingInitialization: true });
+    try {
+        await r.manager.initialize();
+        const result = await r.manager.restorePurchases();
+        assert.equal(result.ok, false);
+        assert.equal(result.reason, 'store-connecting');
+    } finally { r.close(); }
+});
+
+test('a failed cloud pull can be retried and each signed-in account gets its own sync', async () => {
+    const r = runtime();
+    try {
+        let playerId = 'player_first_1234';
+        const pulls = [];
+        r.ctx.PlayGamesServices = { getPlayerId: () => playerId };
+        r.ctx.SkunkEntitlementsAPI = {
+            getEntitlements: async id => {
+                pulls.push(id);
+                return pulls.length === 1 ? null : { adFree: false, founderPass: false };
+            },
+        };
+        await r.manager.syncRemoteEntitlements();
+        await r.manager.syncRemoteEntitlements();
+        await r.manager.syncRemoteEntitlements();
+        playerId = 'player_second_1234';
+        await r.emit('skunkfu-pgs-signed-in');
+        assert.deepEqual(pulls, ['player_first_1234', 'player_first_1234', 'player_second_1234']);
+    } finally { r.close(); }
+});
+
+test('concurrent pulls share one request and ignore a response for a previous account', async () => {
+    const r = runtime();
+    try {
+        let playerId = 'player_first_1234';
+        let resolvePull;
+        let pulls = 0;
+        r.ctx.PlayGamesServices = { getPlayerId: () => playerId };
+        r.ctx.SkunkEntitlementsAPI = {
+            getEntitlements: () => { pulls++; return new Promise(resolve => { resolvePull = resolve; }); },
+        };
+        const first = r.manager.syncRemoteEntitlements();
+        const second = r.manager.syncRemoteEntitlements();
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(pulls, 1);
+        playerId = 'player_second_1234';
+        resolvePull({ adFree: true, founderPass: true });
+        await Promise.all([first, second]);
+        assert.equal(r.manager.isAdFree(), false);
+        assert.equal(r.manager.isFounderPassOwned(), false);
+    } finally { r.close(); }
+});
+
+test('failed acknowledgement stays queued and retries online even if ownership is already stored remotely', async () => {
+    const r = runtime({ ownedIds: ['skins'] });
+    try {
+        await r.manager.initialize();
+        const key = 'skunkfu.pendingIapPurchases';
+        const token = 'synthetic-review-token-12345';
+        r.storage.set(key, JSON.stringify({ skins: { purchaseToken: token, productId: 'skins' } }));
+        r.ctx.PlayGamesServices = { getPlayerId: () => 'player_review_1234' };
+        let pushes = 0;
+        r.ctx.SkunkEntitlementsAPI = {
+            getEntitlements: async () => ({ adFree: true, founderPass: false }),
+            setEntitlement: async (_id, sku, opts) => {
+                assert.equal(sku, 'skins');
+                assert.equal(opts.purchaseToken, token);
+                return ++pushes > 1;
+            },
+        };
+        await r.manager.syncRemoteEntitlements();
+        assert.equal(pushes, 1);
+        assert.ok(JSON.parse(r.storage.get(key)).skins);
+        await r.emit('online');
+        assert.equal(pushes, 2);
+        assert.equal(JSON.parse(r.storage.get(key)).skins, undefined);
+        assert.equal(r.manager.isAdFree(), true);
+    } finally { r.close(); }
+});
+
+test('successful native restore also retries cloud restore', async () => {
+    const r = runtime();
+    try {
+        await r.manager.initialize();
+        r.store.restorePurchases = async () => undefined;
+        r.ctx.PlayGamesServices = { getPlayerId: () => 'player_review_1234' };
+        r.ctx.SkunkEntitlementsAPI = { getEntitlements: async () => ({ adFree: true, founderPass: false }) };
+        const result = await r.manager.restorePurchases();
+        assert.equal(result.ok, true);
+        assert.equal(r.manager.isAdFree(), true);
+    } finally { r.close(); }
+});
+
+test('a failed forced refresh remains retryable after a previously successful sync', async () => {
+    const r = runtime();
+    try {
+        let pulls = 0;
+        r.ctx.PlayGamesServices = { getPlayerId: () => 'player_review_1234' };
+        r.ctx.SkunkEntitlementsAPI = {
+            getEntitlements: async () => ++pulls === 2 ? null : { adFree: false, founderPass: false },
+        };
+        await r.manager.syncRemoteEntitlements();
+        await r.manager.syncRemoteEntitlements(true);
+        await r.manager.syncRemoteEntitlements();
+        assert.equal(pulls, 3);
+    } finally { r.close(); }
+});
+
+test('an acknowledgement response cannot discard a newer pending purchase token', async () => {
+    const r = runtime();
+    try {
+        const key = 'skunkfu.pendingIapPurchases';
+        r.storage.set(key, JSON.stringify({ skins: { purchaseToken: 'older-synthetic-token', productId: 'skins' } }));
+        r.ctx.PlayGamesServices = { getPlayerId: () => 'player_review_1234' };
+        r.ctx.SkunkEntitlementsAPI = {
+            getEntitlements: async () => ({ adFree: true, founderPass: false }),
+            setEntitlement: async () => {
+                r.storage.set(key, JSON.stringify({ skins: { purchaseToken: 'newer-synthetic-token', productId: 'skins' } }));
+                return true;
+            },
+        };
+        await r.manager.syncRemoteEntitlements();
+        assert.equal(JSON.parse(r.storage.get(key)).skins.purchaseToken, 'newer-synthetic-token');
+    } finally { r.close(); }
+});
 
 test('diagnostics work before and after initialization', async () => {
     const r = runtime();

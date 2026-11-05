@@ -100,10 +100,11 @@ const PurchaseManager = (() => {
         _writePendingPurchases(pending);
     }
 
-    function _clearPendingPurchase(sku) {
+    function _clearPendingPurchase(sku, purchaseToken) {
         if (!sku) return;
         const pending = _readPendingPurchases();
         if (!pending[sku]) return;
+        if (pending[sku].purchaseToken !== purchaseToken) return;
         delete pending[sku];
         _writePendingPurchases(pending);
     }
@@ -271,49 +272,84 @@ const PurchaseManager = (() => {
                 : '';
         } catch (_) { return ''; }
     }
+    const _remotePushes = new Map();
     function _pushEntitlementRemote(sku, opts) {
         const api = _getApi();
         const pid = _getPlayerId();
         if (!api || !pid || !sku) {
             _lastRemotePushStatus = 'deferred: api=' + !!api + ' playerId=' + !!pid + ' sku=' + !!sku;
-            return;
+            return Promise.resolve(false);
         }
         const pending = _readPendingPurchases()[sku] || {};
         const purchaseToken = (opts && opts.purchaseToken) || _lastPurchaseToken[sku] || pending.purchaseToken || '';
         const productId     = (opts && opts.productId) || pending.productId || sku;
         if (!purchaseToken) {
             _lastRemotePushStatus = 'deferred: missing-purchase-token sku=' + sku;
-            return;
+            return Promise.resolve(false);
         }
-        try {
-            api.setEntitlement(pid, sku, { purchaseToken, productId }).then(ok => {
+        const key = JSON.stringify([pid, sku, purchaseToken]);
+        if (_remotePushes.has(key)) return _remotePushes.get(key);
+        const request = Promise.resolve().then(async () => {
+            try {
+                const ok = await api.setEntitlement(pid, sku, { purchaseToken, productId });
                 if (ok) {
                     _lastRemotePushStatus = 'ok: ' + sku + ' verified-token-sent';
-                    _clearPendingPurchase(sku);
+                    _clearPendingPurchase(sku, purchaseToken);
                     _log('Mirrored entitlement to server:', sku, '(verified)');
                 } else {
                     _lastRemotePushStatus = 'failed: ' + sku + ' token-present';
                     _warn('Server entitlement push reported failure:', sku);
                 }
-            }).catch(e => {
+                return !!ok;
+            } catch (e) {
                 _lastRemotePushStatus = 'threw: ' + sku + ' ' + ((e && e.message) || String(e));
                 _warn('Server entitlement push threw:', e);
-            });
-        } catch (e) {
-            _lastRemotePushStatus = 'setup-failed: ' + sku + ' ' + ((e && e.message) || String(e));
-            _warn('Server entitlement push setup failed:', e);
-        }
+                return false;
+            }
+        }).finally(() => _remotePushes.delete(key));
+        _remotePushes.set(key, request);
+        return request;
     }
-    let _remotePullDone = false;
-    async function _pullEntitlementsRemote(force) {
-        if (_remotePullDone && !force) return;
+    let _remoteSyncedPlayerId = '';
+    let _remotePull = null;
+    function _pullEntitlementsRemote(force) {
         const api = _getApi();
         const pid = _getPlayerId();
-        if (!api || !pid) return;
-        _remotePullDone = true;
+        if (!api || !pid) return Promise.resolve(false);
+        if (_remotePull && _remotePull.playerId === pid) return _remotePull.promise;
+        if (_remoteSyncedPlayerId === pid && !force && !Object.keys(_readPendingPurchases()).length) {
+            return Promise.resolve(true);
+        }
+        _remoteSyncedPlayerId = '';
+        const request = { playerId: pid };
+        request.promise = _syncEntitlementsRemote(api, pid).finally(() => {
+            if (_remotePull === request) _remotePull = null;
+        });
+        _remotePull = request;
+        return request.promise;
+    }
+    async function _syncEntitlementsRemote(api, pid) {
         try {
+            let pushed = true;
+            // A previous grant may have succeeded while acknowledgement failed.
+            // Flush pending tokens even when the server already reports ownership.
+            for (const sku of Object.keys(_readPendingPurchases())) {
+                if (pid !== _getPlayerId()) {
+                    _warn('Purchase sync interrupted by a Play Games account change.');
+                    return false;
+                }
+                const ok = await _pushEntitlementRemote(sku);
+                pushed = ok && pushed;
+            }
             const remote = await api.getEntitlements(pid);
-            if (!remote) return;
+            if (!remote) {
+                _warn('Remote entitlement pull returned no result; sync remains retryable.');
+                return false;
+            }
+            if (pid !== _getPlayerId()) {
+                _warn('Ignoring entitlement response for a previous Play Games account.');
+                return false;
+            }
             // Explicit Play refund/cancel (RTDN) may clear server ownership.
             // Missing server records still do not revoke local unlocks (offline purchase).
             if (remote.adFreeRevoked && _adFree) {
@@ -331,20 +367,24 @@ const PurchaseManager = (() => {
                 _setFounderPassOwned(true, 'remote-restore');
             }
             // Re-push only when we still have a Play purchase token to verify.
-            if (_adFree && !remote.adFree && !remote.adFreeRevoked) _pushEntitlementRemote(_skinPackPushSku());
-            if (_founderPass && !remote.founderPass && !remote.founderPassRevoked) _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS);
+            if (_adFree && !remote.adFree && !remote.adFreeRevoked) {
+                pushed = (await _pushEntitlementRemote(_skinPackPushSku())) && pushed;
+            }
+            if (_founderPass && !remote.founderPass && !remote.founderPassRevoked) {
+                pushed = (await _pushEntitlementRemote(PRODUCT_ID_FOUNDER_PASS)) && pushed;
+            }
+            if (pushed && pid === _getPlayerId()) _remoteSyncedPlayerId = pid;
+            return pushed;
         } catch (e) {
             _warn('Remote entitlement pull failed:', e);
+            return false;
         }
     }
 
-    // Listen for the GPGS sign-in event so we can pull entitlements as soon
-    // as the player ID is known. The listener runs at most once per session
-    // because _pullEntitlementsRemote() is gated by _remotePullDone.
     try {
-        window.addEventListener('skunkfu-pgs-signed-in', () => {
-            _pullEntitlementsRemote(false);
-        });
+        window.addEventListener('skunkfu-pgs-signed-in', () => _pullEntitlementsRemote(false));
+        window.addEventListener('online', () => _pullEntitlementsRemote(true));
+        document.addEventListener('resume', () => _pullEntitlementsRemote(true));
     } catch (_) {}
 
     function _readEntitlementFromStorage() {
@@ -737,6 +777,7 @@ const PurchaseManager = (() => {
             // additional onChange() calls if it flips the entitlement.
             clearTimeout(_watchdog);
             _markReady(initHadError ? 'store-init-error' : 'store-init');
+            _pullEntitlementsRemote(false);
 
             // First-launch auto-restore: covers reinstalls / device switches
             // where the user already paid but the local entitlement flag was
@@ -751,7 +792,15 @@ const PurchaseManager = (() => {
                     try { localStorage.setItem(RESTORED_KEY, String(Date.now())); } catch (_) {}
                     // Fire-and-forget; receiptUpdated() above will flip the
                     // entitlement if Google Play reports the product as owned.
-                    store.restorePurchases().catch(e => _warn('auto-restore failed', e));
+                    store.restorePurchases().then(error => {
+                        if (error) {
+                            _warn('auto-restore failed', error);
+                            localStorage.removeItem(RESTORED_KEY);
+                        }
+                    }).catch(e => {
+                        _warn('auto-restore failed', e);
+                        try { localStorage.removeItem(RESTORED_KEY); } catch (storageError) { _warn('Cannot reset auto-restore retry:', storageError); }
+                    });
                 }
             } catch (e) {}
 
@@ -932,14 +981,22 @@ const PurchaseManager = (() => {
      * Restore previously purchased entitlements (e.g., after reinstall).
      */
     async function restorePurchases() {
+        await initialize();
+        await _waitForReady();
         let store = await _getStore();
         if (!store && isNative() && _readyMode === 'no-store') {
             await initialize();
             store = await _getStore();
         }
         if (!store) return { ok: false, reason: isNative() ? 'store-unavailable' : 'web-not-supported' };
+        if (!_storeInitSettled) return { ok: false, reason: 'store-connecting' };
         try {
-            await store.restorePurchases();
+            const error = await store.restorePurchases();
+            if (error) {
+                _warn('Restore failed:', error);
+                return { ok: false, reason: error.message || ('restore-error-' + error.code) };
+            }
+            await _pullEntitlementsRemote(true);
             return { ok: true };
         } catch (e) {
             _warn('Restore failed:', e);

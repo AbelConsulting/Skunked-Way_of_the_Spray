@@ -80,7 +80,10 @@ async function assertSkinGrid(page, selector, columns) {
                 } });
                 store.get = id => products.get(id);
                 store.owned = () => false;
-                store.restorePurchases = async () => { window.__purchaseCalls.restores++; };
+                store.restorePurchases = async () => {
+                    window.__purchaseCalls.restores++;
+                    return window.__restoreError;
+                };
             })();`
         });
         const page = await context.newPage();
@@ -104,6 +107,10 @@ async function assertSkinGrid(page, selector, columns) {
         assert.equal(diag.ready, true);
         assert.equal(diag.storeInitSettled, true);
         assert.doesNotMatch(JSON.stringify(diag), /synthetic-offer/);
+        await page.evaluate(() => { window.__restoreError = { code: 6777002, message: 'Billing disconnected' }; });
+        await page.locator('#remove-ads-restore-btn').click();
+        await page.waitForFunction(() => document.getElementById('remove-ads-status').textContent === 'Could not restore: Billing disconnected');
+        await page.evaluate(() => { window.__restoreError = undefined; });
         const restores = await page.evaluate(() => window.__purchaseCalls.restores);
         await page.locator('#remove-ads-restore-btn').click();
         await page.waitForFunction(count => window.__purchaseCalls.restores === count + 1, restores);

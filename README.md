@@ -285,6 +285,29 @@ Build and sync with `npm run cap:sync` before preparing a new Android release,
 then distribute it through a Google Play testing track. A successful automated
 test does not validate live Play Console product availability or real-device checkout.
 
+Purchase reliability checks:
+
+```powershell
+npm run test:purchases
+npm --prefix functions test
+npm run test:purchase-ui
+```
+
+The server requires the verified Play product ID to match the requested SKU,
+including legacy `remove_ads` restores. A grant is persisted before acknowledgement;
+an acknowledgement failure returns HTTP 503 so the client retains its pending token.
+Pending verification/acknowledgement retries on sign-in, connectivity recovery,
+app resume, startup, or manual restore. Failed cloud pulls remain retryable and
+responses for a previous Play Games account are ignored. Native restore errors
+are displayed rather than reported as successful restores.
+
+Deploy the updated `setEntitlement` and `playRtdn` functions separately, with approval,
+before distributing the matching Android build. In a Play internal testing track,
+validate successful and cancelled checkout, pending-payment completion, restore after
+reinstall, offline recovery, account changes, and refund/revoke notifications. For
+voided-purchase RTDNs, Google uses `productType: 2` for one-time purchases and `1`
+for subscriptions. Do not use a real charged purchase as an automated test.
+
 The persisted `cordova-plugin-purchase` patch also fixes Google Play setup
 recovery: a failed setup retries the native bridge rather than returning its
 cached, unresolved initialization promise. The original promise resolves when

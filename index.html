@@ -4961,6 +4961,7 @@
                                             if (res.ok) statusEl.textContent = 'Restore complete.';
                                             else if (res.reason === 'web-not-supported') statusEl.textContent = 'Restore only available on the Android app.';
                                             else if (res.reason === 'store-unavailable') statusEl.textContent = 'Google Play Billing is not available. Ensure the app was installed from the Play Store, then try again.';
+                                            else if (res.reason === 'store-connecting') statusEl.textContent = 'Google Play Billing is still connecting. Try restoring again in a moment.';
                                             else statusEl.textContent = 'Could not restore: ' + res.reason;
                                         }
                                     } catch (e) {
