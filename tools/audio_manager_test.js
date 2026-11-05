@@ -516,3 +516,74 @@ for (const webAudio of [true, false]) {
         assert.deepEqual(r.errors, []);
     });
 }
+
+for (const webAudio of [true, false]) {
+    test(`unmuting restores the music and ambient stopped by mute (${webAudio ? 'WebAudio' : 'fallback'})`, async () => {
+        const r = runtime({ webAudio });
+        const tune = await r.manager.loadMusic('menu_theme', 'menu_theme.wav');
+        const amb = await r.manager.loadAmbient('forest', 'forest.wav');
+        r.manager.playMusic('menu_theme');
+        r.manager.playAmbient('forest');
+        r.advance(1500);
+        assert.equal(tune.paused, false);
+        assert.equal(amb.paused, false);
+
+        r.manager.toggleMute();
+        r.advance(1500);
+        assert.equal(r.manager.musicEnabled, false);
+        assert.equal(tune.paused, true, 'mute stops music');
+        assert.equal(amb.paused, true, 'mute stops ambient');
+        assert.equal(r.manager.currentMusic, null);
+        assert.equal(r.manager.currentAmbient, null);
+
+        r.manager.toggleMute();
+        r.advance(1500);
+        assert.equal(r.manager.musicEnabled, true);
+        assert.equal(r.manager.currentMusic, tune, 'unmute restores the same track');
+        assert.equal(tune.paused, false, 'unmute resumes music');
+        assert.equal(r.manager.currentAmbient, amb, 'unmute restores the same ambient');
+        assert.equal(amb.paused, false, 'unmute resumes ambient');
+        assert.deepEqual(r.errors, []);
+    });
+}
+
+test('unmute with nothing playing before mute stays silent', async () => {
+    const r = runtime();
+    await r.manager.loadMusic('menu_theme', 'menu_theme.wav');
+    r.manager.toggleMute();
+    r.manager.toggleMute();
+    r.advance(1500);
+    assert.equal(r.manager.currentMusic, null, 'no music was playing at mute time, so nothing restarts');
+    assert.deepEqual(r.errors, []);
+});
+
+test('pausing music cancels a pending duck release', async () => {
+    const r = runtime();
+    const tune = await r.manager.loadMusic('menu_theme', 'menu_theme.wav');
+    r.manager.setMusicVolume(0.5);
+    r.manager.playMusic('menu_theme');
+    r.advance(1000);
+    r.manager._applyDuck();
+    r.advance(30);
+    assert.ok(Math.abs(r.manager.musicGainNode.gain.value - 0.5 * 0.4) < 1e-9, 'ducked');
+    r.manager.pauseMusic();
+    r.advance(1000);
+    // The duck release must not ramp the bus back up while paused.
+    assert.ok(r.manager.musicGainNode.gain.value <= 0.5 * 0.4 + 1e-9, 'duck release cancelled on pause');
+    assert.equal(tune.paused, true);
+});
+
+test('voice stealing a never-started source does not throw or leak pooled nodes', () => {
+    const r = runtime();
+    r.manager.sfxBuffers.boss_attack = { duration: 1 };
+    // Simulate a voice whose source was created but never started (start threw).
+    const orphanSource = r.manager.audioCtx.createBufferSource();
+    orphanSource.buffer = r.manager.sfxBuffers.boss_attack;
+    orphanSource.started = false; // never started
+    r.manager._activeSfx.push({ name: 'boss_attack', source: orphanSource });
+    // Steal it: stop() on a never-started source must be skipped, not throw.
+    r.manager.maxSfxVoices = 1;
+    r.manager.playSound('boss_attack');
+    assert.equal(orphanSource.stopped, undefined, 'never-started source is not stopped');
+    assert.deepEqual(r.errors, [], 'no InvalidStateError from stealing a never-started voice');
+});

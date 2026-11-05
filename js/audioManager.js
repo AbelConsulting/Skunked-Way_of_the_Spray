@@ -686,7 +686,12 @@ class AudioManager {
         }
         if (this._activeSfx.length >= this.maxSfxVoices) {
             const oldest = this._activeSfx.shift();
-            try { oldest && oldest.source && oldest.source.stop(); } catch (e) { __err('audio', e); }
+            // stop() throws InvalidStateError on a source that was never
+            // started; guard so a never-started voice can't leak its pooled
+            // gain/panner nodes (they're only released via onended).
+            try {
+                if (oldest && oldest.source && oldest.source.started !== false) oldest.source.stop();
+            } catch (e) { __err('audio', e); }
         }
 
         const source = this.audioCtx.createBufferSource();
@@ -1063,6 +1068,10 @@ class AudioManager {
 
     pauseMusic() {
         this._musicPaused = true;
+        // Cancel any pending duck-release so the shared music bus isn't ramped
+        // back up to full volume while no track is playing (which would make
+        // the next playMusic fade-in start from a non-zero baseline).
+        this._cancelDuck();
         for (const audio of [this.currentMusic, this._outgoingMusic]) {
             if (audio && !audio.paused) audio.pause();
         }
@@ -1091,17 +1100,34 @@ class AudioManager {
     toggleMute() {
         this.soundEnabled = !this.soundEnabled;
         this.musicEnabled = !this.musicEnabled;
-        
+
         // Analytics: settings change
         try {
             if (typeof Analytics !== 'undefined') {
                 Analytics.trackSettingsChange({ setting: 'mute', value: !this.soundEnabled });
             }
         } catch (e) { /* */ }
-        
+
         if (!this.musicEnabled) {
+            // Remember what was playing so unmuting can restore it.
+            this._mutedMusicName = this._currentMusicName || null;
+            this._mutedMusicLoop = this.currentMusic ? this.currentMusic.loop : true;
+            this._mutedAmbientName = this._currentAmbientName || null;
             this.stopMusic();
             this.stopAmbient();
+        } else {
+            // Unmuting: restore the music/ambient that was stopped on mute.
+            const musicName = this._mutedMusicName;
+            const musicLoop = this._mutedMusicLoop !== false;
+            const ambientName = this._mutedAmbientName;
+            this._mutedMusicName = null;
+            this._mutedAmbientName = null;
+            if (musicName && this.musicElements[musicName]) {
+                try { this.playMusic(musicName, musicLoop); } catch (e) { __err('audio', e); }
+            }
+            if (ambientName && this.ambientElements[ambientName]) {
+                try { this.playAmbient(ambientName); } catch (e) { __err('audio', e); }
+            }
         }
         // Web Audio mute
         if (this.audioCtx && this.masterGain) this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1 : 0, this.audioCtx.currentTime);
@@ -1258,6 +1284,7 @@ class AudioManager {
         this.stopAmbient(fadeOut);
 
         this.currentAmbient = audioEl;
+        this._currentAmbientName = name;
         this.currentAmbient.loop = true;
         if (this.audioCtx && this.ambientGainNode) {
             const now = this.audioCtx.currentTime;
@@ -1309,6 +1336,7 @@ class AudioManager {
                 try { toStop.pause(); toStop.currentTime = 0; } catch (e) { __err('audio', e); }
             }
             this.currentAmbient = null;
+            this._currentAmbientName = null;
         }
     }
 
