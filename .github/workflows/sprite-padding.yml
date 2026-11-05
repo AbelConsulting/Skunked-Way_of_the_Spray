@@ -3,17 +3,20 @@ name: Sprite Padding Smoke Test
 on:
   push:
     paths:
+      - '.github/workflows/sprite-padding.yml'
       - 'js/**'
       - 'tools/**'
   pull_request:
     paths:
+      - '.github/workflows/sprite-padding.yml'
       - 'js/**'
       - 'tools/**'
 
 jobs:
   sprite-padding:
     name: Sprite padding detection
-    runs-on: ubuntu-latest
+    # Keep the runner on an OS supported by the installed Playwright browsers.
+    runs-on: ubuntu-24.04
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'

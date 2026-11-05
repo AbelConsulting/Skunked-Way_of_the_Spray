@@ -336,6 +336,11 @@ To test a fresh web build without syncing Android, run `npm run build`, then set
 
 ### Docker / CI
 
+GitHub Actions browser-test jobs use `ubuntu-24.04`, not `ubuntu-latest`, to
+stay within the installed Playwright version's supported platforms. Check browser
+installation compatibility before upgrading the runner image. Cloudflare deployment
+depends on the CI test job succeeding.
+
 ```Dockerfile
 CMD ["node", "index.js"]
 ```

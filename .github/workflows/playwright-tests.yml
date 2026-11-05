@@ -8,7 +8,8 @@ on:
 
 jobs:
   integration:
-    runs-on: ubuntu-latest
+    # Keep the runner on an OS supported by the installed Playwright browsers.
+    runs-on: ubuntu-24.04
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
