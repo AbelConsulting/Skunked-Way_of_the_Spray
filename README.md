@@ -112,6 +112,29 @@ not publish the build. Promote it manually on the Steamworks Builds page after t
 SteamPipe excludes development `steam_appid.txt` files; the launcher retains the real
 main/demo App IDs when those files are absent.
 
+### Preparing the Windows Steam demo
+
+The demo uses App ID `5226570` and Windows depot `5226571`. Build version `1.3.29`
+from the same game source without changing the main release outputs:
+
+```powershell
+npm run test:steam-appid
+npm run electron:demo:build:win
+npm run test:steam-home -- --demo-only --packaged
+```
+
+Stop if any command fails. The checks verify the demo identity, full-game Steam
+store link, and campaign completion after two stages (not progression into stage 3).
+Upload `release-demo/win-unpacked`, not the demo installer, using
+[the demo build configuration](steam/app_build_5226570.vdf) only after approval:
+
+```powershell
+steamcmd +login <builder_account> +run_app_build "$PWD\steam\app_build_5226570.vdf" +quit
+```
+
+Keep `setlive` empty and test the uploaded demo through Steam before promoting it.
+The existing demo upload configuration covers Windows only.
+
 ---
 
 ## Controls
