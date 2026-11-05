@@ -23,7 +23,7 @@ async function assertSkinGrid(page, selector, columns) {
         });
         return { tiles, left: bounds.left, right: bounds.right };
     }, selector);
-    assert.deepEqual(layout.tiles.map(tile => tile.id).sort(), ['amethyst', 'gold', 'ninja2', 'ninja3', 'ninja4', 'sapphire']);
+    assert.deepEqual(layout.tiles.map(tile => tile.id).sort(), ['gold', 'ninja2', 'ninja3', 'ninja4', 'ninja5', 'ninja6']);
     const rows = new Map();
     for (const tile of layout.tiles) {
         rows.set(tile.top, (rows.get(tile.top) || 0) + 1);
@@ -133,7 +133,7 @@ async function assertSkinGrid(page, selector, columns) {
         assert.ok((await ninja2.getAttribute('title')).startsWith('Laysie Skunk'));
         assert.equal(await page.evaluate(() => FounderManager.setSkinVariant('ninja2')), false);
         assert.notEqual(await page.evaluate(() => FounderManager.getSkinVariant()), 'ninja2');
-        const characterSkins = [['ninja3', 'Vampyr'], ['ninja4', 'Malodor']];
+        const characterSkins = [['ninja3', 'Vampyr'], ['ninja4', 'Malodor'], ['ninja5', 'CyberSkunk'], ['ninja6', 'Kyle']];
         for (const [variant, label] of characterSkins) {
             const tile = page.locator('.founder-swatch[data-variant="' + variant + '"]');
             await page.waitForFunction(id => {
@@ -167,7 +167,7 @@ async function assertSkinGrid(page, selector, columns) {
         await page.evaluate(() => {
             localStorage.setItem('skunkfu.adFree', '1');
             FounderManager.grant('test-six-skin-layout');
-            FounderManager.setSkinVariant('sapphire');
+            FounderManager.setSkinVariant('ninja6');
             FounderManager.setGoldSkinEnabled(true);
         });
         await ninja2.click();
@@ -291,6 +291,8 @@ async function assertSkinGrid(page, selector, columns) {
         console.log('PASS Vampyr: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
         console.log('PASS Malodor: locked animated preview, owner selection, saved preference, all eight artwork states, toggle and pause switching.');
         console.log('PASS Malodor orientation: right-facing preview and correct pixels for all eight states facing left and right.');
+        console.log('PASS CyberSkunk: locked animated preview, owner selection, saved preference, all artwork states (run stands in for walk, hurt for death), toggle and pause switching.');
+        console.log('PASS Kyle: locked animated preview, owner selection, saved preference, all artwork states (idle stands in for walk, hurt for death), toggle and pause switching.');
         console.log('PASS six-skin layout: no Steel; complete equal-width rows in desktop, mobile landscape, portrait and pause menus.');
     } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

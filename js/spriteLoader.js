@@ -60,6 +60,22 @@ class SpriteLoader {
             'ninja4_shadow_strike': 4,
             'ninja4_hurt': 4,
             'ninja4_death': 4,
+            // CyberSkunk (ninja5) ships a run sheet instead of walk, and no
+            // death sheet; Kyle (ninja6) ships neither walk/run nor death.
+            // Player render falls back walk→run→idle and death→hurt.
+            'ninja5_idle': 4,
+            'ninja5_run': 4,
+            'ninja5_jump': 4,
+            'ninja5_attack': 4,
+            'ninja5_skunk_shot': 4,
+            'ninja5_shadow_strike': 4,
+            'ninja5_hurt': 4,
+            'ninja6_idle': 4,
+            'ninja6_jump': 4,
+            'ninja6_attack': 4,
+            'ninja6_skunk_shot': 4,
+            'ninja6_shadow_strike': 4,
+            'ninja6_hurt': 4,
             'basic_idle': 4,
             'basic_walk': 4,
             'basic_attack': 4,
@@ -326,6 +342,12 @@ class SpriteLoader {
                 .map(state => ['ninja3_' + state, 'assets/sprites/characters/ninja3_' + state + '.png']),
             ...['idle', 'walk', 'jump', 'attack', 'skunk_shot', 'shadow_strike', 'hurt', 'death']
                 .map(state => ['ninja4_' + state, 'assets/sprites/characters/ninja4_' + state + '.png']),
+            // CyberSkunk (ninja5): run sheet stands in for walk; no death sheet.
+            ...['idle', 'run', 'jump', 'attack', 'skunk_shot', 'shadow_strike', 'hurt']
+                .map(state => ['ninja5_' + state, 'assets/sprites/characters/ninja5_' + state + '.png']),
+            // Kyle (ninja6): no walk/run or death sheets.
+            ...['idle', 'jump', 'attack', 'skunk_shot', 'shadow_strike', 'hurt']
+                .map(state => ['ninja6_' + state, 'assets/sprites/characters/ninja6_' + state + '.png']),
 
             // Attack effects are complete images, not animation strips.
             ['attack_slash', 'assets/sprites/backgrounds/attack_slash.png'],

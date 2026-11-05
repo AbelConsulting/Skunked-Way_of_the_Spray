@@ -245,24 +245,31 @@ Without it, the JavaScript plugin can load while native initialization reports
 The signed release command runs `android:check-billing-bundle` after Gradle to
 inspect the actual AAB for both the registration and native plugin class.
 
-### Laysie Skunk, Vampyr, and Malodor Premium Cosmetics
+### Laysie Skunk, Vampyr, Malodor, CyberSkunk, and Kyle Premium Cosmetics
 
 The existing `skins` purchase (and restored legacy `remove_ads` ownership) includes
-Laysie Skunk, Vampyr, and Malodor alongside Sapphire and Amethyst. Existing buyers do not need another
+Laysie Skunk, Vampyr, and Malodor alongside CyberSkunk and Kyle. Existing buyers do not need another
 purchase. Founder status alone unlocks Gold, not these character skins; the full Steam game includes
-all skins. Choose **Laysie Skunk**, **Vampyr**, or **Malodor** in Settings or the pause-menu skin switcher, with skin
+all skins. Choose **Laysie Skunk**, **Vampyr**, **Malodor**, **CyberSkunk**, or **Kyle** in Settings or the pause-menu skin switcher, with skin
 display enabled.
 Together with Founder-exclusive Gold, there are six selectable skins.
-Steel has been retired; saved Steel selections migrate to Sapphire.
+The Sapphire and Amethyst palette skins have been retired; saved Sapphire selections migrate to
+CyberSkunk and saved Amethyst selections migrate to Kyle. (Steel was retired earlier and also
+migrates to CyberSkunk.)
 
 Laysie Skunk retains the internal `ninja2` selection ID; Vampyr uses `ninja3`,
-and the antagonist Malodor is playable as the cosmetic skin `ninja4`.
-Each uses eight transparent, horizontal four-frame PNG sheets named
+the antagonist Malodor is playable as the cosmetic skin `ninja4`, CyberSkunk uses `ninja5`,
+and Kyle uses `ninja6`.
+Laysie Skunk, Vampyr, and Malodor each use eight transparent, horizontal four-frame PNG sheets named
 `ninja2_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png`,
 `ninja3_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png`, or
 `ninja4_{idle,walk,jump,attack,skunk_shot,shadow_strike,hurt,death}.png` in
-`assets/sprites/characters/`. Each sheet uses square frames (currently 48, 64, or 128 pixels).
-Malodor's source sheets face left; gameplay and Settings previews mirror each drawn
+`assets/sprites/characters/`. CyberSkunk ships `ninja5_{idle,run,jump,attack,skunk_shot,shadow_strike,hurt}.png`
+(a `run` sheet in place of `walk`, and no `death` sheet); Kyle ships
+`ninja6_{idle,jump,attack,skunk_shot,shadow_strike,hurt}.png`. At render time a missing `walk`
+falls back to the skin's `run` then `idle` sheet, and a missing `death` falls back to `hurt`.
+Each sheet uses square frames (currently 48, 64, or 128 pixels).
+Malodor's, CyberSkunk's, and Kyle's source sheets face left; gameplay and Settings previews mirror each drawn
 frame as needed to match the player's facing direction without reversing frame order.
 Rendering uses the original player's animation clock, including fitting the four
 hurt frames into the original two-frame duration. Player size, collisions, attacks,

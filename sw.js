@@ -13,7 +13,7 @@
  * Bump CACHE_VERSION when you deploy new code/assets to bust the cache.
  */
 
-const CACHE_VERSION = 'skunked-v34';
+const CACHE_VERSION = 'skunked-v35';
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 // Build identifier published to clients via the GET_VERSION message.
@@ -103,6 +103,19 @@ const CORE_ASSETS_RELATIVE = [
   'assets/sprites/characters/ninja4_shadow_strike.png',
   'assets/sprites/characters/ninja4_skunk_shot.png',
   'assets/sprites/characters/ninja4_walk.png',
+  'assets/sprites/characters/ninja5_attack.png',
+  'assets/sprites/characters/ninja5_hurt.png',
+  'assets/sprites/characters/ninja5_idle.png',
+  'assets/sprites/characters/ninja5_jump.png',
+  'assets/sprites/characters/ninja5_run.png',
+  'assets/sprites/characters/ninja5_shadow_strike.png',
+  'assets/sprites/characters/ninja5_skunk_shot.png',
+  'assets/sprites/characters/ninja6_attack.png',
+  'assets/sprites/characters/ninja6_hurt.png',
+  'assets/sprites/characters/ninja6_idle.png',
+  'assets/sprites/characters/ninja6_jump.png',
+  'assets/sprites/characters/ninja6_shadow_strike.png',
+  'assets/sprites/characters/ninja6_skunk_shot.png',
 
   // Static attack effects
   'assets/sprites/backgrounds/attack_slash.png',

@@ -2993,8 +2993,8 @@
                         0 4px 10px var(--chip-glow, rgba(212,175,55,0.45));
         }
         .pause-skin-chip[data-variant="gold"]      { --chip-grad: linear-gradient(135deg,#b88a18,#f5d36b 50%,#fff2b0); --chip-glow: rgba(245,211,107,0.50); }
-        .pause-skin-chip[data-variant="sapphire"]  { --chip-grad: linear-gradient(135deg,#1e3c8a,#3a78ff 55%,#a9c8ff); --chip-glow: rgba(58,120,255,0.50); }
-        .pause-skin-chip[data-variant="amethyst"]  { --chip-grad: linear-gradient(135deg,#4a1f7a,#9a52d8 55%,#e2c0ff); --chip-glow: rgba(154,82,216,0.50); }
+        .pause-skin-chip[data-variant="ninja5"]    { --chip-grad: linear-gradient(135deg,#0d1b1e,#12a5b8 55%,#a8fff4); --chip-glow: rgba(18,165,184,0.50); }
+        .pause-skin-chip[data-variant="ninja6"]    { --chip-grad: linear-gradient(135deg,#14260e,#3fae2a 55%,#c8ff9e); --chip-glow: rgba(63,174,42,0.50); }
         .pause-skin-chip[data-variant="ninja2"]    { --chip-grad: linear-gradient(135deg,#29232e,#a534b2 55%,#edb4f4); --chip-glow: rgba(209,94,224,0.50); }
         .pause-skin-chip[data-variant="ninja3"]    { --chip-grad: linear-gradient(135deg,#211b2b,#8b203b 55%,#e7b6c4); --chip-glow: rgba(197,57,92,0.50); }
         .pause-skin-chip[data-variant="ninja4"]    { --chip-grad: linear-gradient(135deg,#24251b,#b85b16 55%,#ffcf55); --chip-glow: rgba(255,154,40,0.50); }
@@ -3842,7 +3842,7 @@
                         </div>
                         <div class="menu-settings-card" id="remove-ads-card">
                             <h3>&#128293; Unlock Skins &amp; Support the Dev</h3>
-                            <p id="remove-ads-desc">One-time purchase. Unlocks Laysie Skunk, Vampyr, and Malodor plus Sapphire and Amethyst skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get all three character skins included.</p>
+                            <p id="remove-ads-desc">One-time purchase. Unlocks Laysie Skunk, Vampyr, and Malodor plus CyberSkunk and Kyle skins. Cosmetic only; no gameplay advantage. Existing skin-pack owners get all five character skins included.</p>
                             <div class="remove-ads-actions">
                                 <button id="remove-ads-buy-btn" class="menu-btn" type="button">&#128722; Unlock Skins &mdash; <span id="remove-ads-price">$1.99</span></button>
                                 <button id="remove-ads-restore-btn" class="menu-btn" type="button">&#8635; Restore Purchase</button>
@@ -3893,22 +3893,18 @@
                                     <span class="founder-swatch__name">Gold</span>
                                     <span class="founder-swatch__status"></span>
                                 </button>
-                                <button type="button" class="founder-swatch founder-swatch--sapphire" data-variant="sapphire" role="radio" aria-checked="false" title="Sapphire">
+                                <button type="button" class="founder-swatch founder-swatch--ninja5" data-variant="ninja5" role="radio" aria-checked="false" title="CyberSkunk">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
-                                        <span class="founder-swatch__shine"></span>
                                     </span>
-                                    <span class="founder-swatch__name">Sapphire</span>
+                                    <span class="founder-swatch__name">CyberSkunk</span>
                                     <span class="founder-swatch__status"></span>
                                 </button>
-                                <button type="button" class="founder-swatch founder-swatch--amethyst" data-variant="amethyst" role="radio" aria-checked="false" title="Amethyst">
+                                <button type="button" class="founder-swatch founder-swatch--ninja6" data-variant="ninja6" role="radio" aria-checked="false" title="Kyle">
                                     <span class="founder-swatch__preview" aria-hidden="true">
                                         <canvas class="founder-swatch__canvas" width="64" height="64"></canvas>
-                                        <span class="founder-swatch__ninja">🥷</span>
-                                        <span class="founder-swatch__shine"></span>
                                     </span>
-                                    <span class="founder-swatch__name">Amethyst</span>
+                                    <span class="founder-swatch__name">Kyle</span>
                                     <span class="founder-swatch__status"></span>
                                 </button>
                             </div>
@@ -5050,10 +5046,14 @@
                                     const id = btn.dataset.variant;
                                     let src = _sheet;
                                     let frameW = _frameW, stride = _stride;
-                                    const spriteSkin = id === 'ninja2' || id === 'ninja3' || id === 'ninja4';
+                                    const spriteSkin = id === 'ninja2' || id === 'ninja3' || id === 'ninja4' || id === 'ninja5' || id === 'ninja6';
                                     if (spriteSkin) {
                                         const sl = typeof spriteLoader !== 'undefined' ? spriteLoader : window.spriteLoader;
-                                        src = sl && sl.getSprite(id + '_walk');
+                                        // CyberSkunk ships run instead of walk; Kyle ships neither —
+                                        // fall back so the preview always renders.
+                                        src = sl && sl.getSprite
+                                            ? (sl.getSprite(id + '_walk') || sl.getSprite(id + '_run') || sl.getSprite(id + '_idle'))
+                                            : null;
                                         if (!src) return;
                                         frameW = stride = src.width / FRAME_COUNT;
                                     }
@@ -5075,7 +5075,7 @@
                                     const dx = (cw - dst) / 2;
                                     const dy = (ch - dst) / 2;
                                     ctx.save();
-                                    if (id === 'ninja4') {
+                                    if (id === 'ninja4' || id === 'ninja5' || id === 'ninja6') {
                                         ctx.translate(cw, 0);
                                         ctx.scale(-1, 1);
                                     }
@@ -5150,13 +5150,13 @@
                                             : 'The "FOUNDER" badge and Day-One achievement are yours forever. Skin display is currently off.';
                                         founderStatusText.innerHTML = '\u2728 You are a <strong>Founder</strong>. Thanks for being an early-access player' + (sinceLabel ? ' (since ' + sinceLabel + ')' : '') + '. ' + skinLine;
                                     } else if (adFree) {
-                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Laysie Skunk, Vampyr, and Malodor plus the Sapphire and Amethyst ninja skins. The Gold skin is reserved for early-access Founders.';
+                                        founderStatusText.innerHTML = '\u2705 Purchase active. You\u2019ve unlocked Laysie Skunk, Vampyr, and Malodor plus the CyberSkunk and Kyle ninja skins. The Gold skin is reserved for early-access Founders.';
                                     } else if (inEarlyAccess) {
                                         // Still in early access — Gold auto-grant should have fired; this
                                         // branch is a UI safety net (e.g. FounderManager not yet initialized).
                                         founderStatusText.innerHTML = '\u{1F31F} You are an early-access player &mdash; the exclusive <strong>Gold</strong> skin + Founder badge are <strong>yours free</strong>! Optionally, support the dev with the <strong>Founder Pass</strong> ($0.99) for a Play-backed claim.';
                                     } else {
-                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Laysie Skunk, Vampyr, and Malodor plus Sapphire and Amethyst with the skin pack.';
+                                        founderStatusText.innerHTML = 'Early access has ended. The Gold skin is now exclusive to Founders. You can still unlock Laysie Skunk, Vampyr, and Malodor plus CyberSkunk and Kyle with the skin pack.';
                                     }
                                 }
 
@@ -5175,7 +5175,7 @@
                                 }
                                 for (const btn of variantBtns) {
                                     const id = btn.dataset.variant;
-                                    const label = id === 'ninja2' ? 'Laysie Skunk' : id === 'ninja3' ? 'Vampyr' : id === 'ninja4' ? 'Malodor' : id.charAt(0).toUpperCase() + id.slice(1);
+                                    const label = id === 'ninja2' ? 'Laysie Skunk' : id === 'ninja3' ? 'Vampyr' : id === 'ninja4' ? 'Malodor' : id === 'ninja5' ? 'CyberSkunk' : id === 'ninja6' ? 'Kyle' : id.charAt(0).toUpperCase() + id.slice(1);
                                     const unlocked = !!(FM && typeof FM.isSkinUnlocked === 'function' && FM.isSkinUnlocked(id));
                                     const active = unlocked && (id === variant);
                                     btn.classList.toggle('is-active', active);
@@ -6386,8 +6386,8 @@
             if (!row) return;
 
             const VARIANT_NAMES = {
-                gold: 'Gold', sapphire: 'Sapphire',
-                amethyst: 'Amethyst', ninja2: 'Laysie Skunk', ninja3: 'Vampyr', ninja4: 'Malodor'
+                gold: 'Gold', ninja5: 'CyberSkunk',
+                ninja6: 'Kyle', ninja2: 'Laysie Skunk', ninja3: 'Vampyr', ninja4: 'Malodor'
             };
 
             function render() {

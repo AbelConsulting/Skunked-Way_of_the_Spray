@@ -8,6 +8,21 @@
  * Player character class
  */
 
+// Character-skin variants with their own drawn sprite sheets (as opposed to
+// procedurally tinted palettes like Gold). Sheets are named `<variant>_<state>.png`.
+const SPRITE_SKIN_VARIANTS = new Set(['ninja2', 'ninja3', 'ninja4', 'ninja5', 'ninja6']);
+// Variants whose source artwork faces left; frames are mirrored at draw time
+// to match player facing. The rest face right like the base ninja.
+const LEFT_FACING_SKIN_VARIANTS = new Set(['ninja4', 'ninja5', 'ninja6']);
+// Some skins ship without every animation state; fall back to the closest
+// available sheet so the skin always renders (CyberSkunk has run instead of
+// walk; neither CyberSkunk nor Kyle ships a death sheet).
+const SKIN_SHEET_FALLBACKS = {
+    walk: ['run', 'idle'],
+    run: ['walk', 'idle'],
+    death: ['hurt', 'idle']
+};
+
 class Player {
     constructor(x, y, audioManager) {
         // Position and movement
@@ -145,7 +160,7 @@ class Player {
         const base = this.currentAnimation;
         const variant = typeof FounderManager !== 'undefined' && FounderManager.isGoldSkinEnabled()
             ? FounderManager.getSkinVariant() : null;
-        if (variant !== 'ninja2' && variant !== 'ninja3' && variant !== 'ninja4') {
+        if (!SPRITE_SKIN_VARIANTS.has(variant)) {
             base.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
             return;
         }
@@ -155,7 +170,7 @@ class Player {
         let visual = animations.get(base);
         if (!visual) {
             const state = Object.keys(this.animations).find(key => this.animations[key] === base);
-            const sheet = spriteLoader.getSprite(variant + '_' + state);
+            const sheet = this._getSkinSheet(variant, state);
             if (!sheet) {
                 console.error('Skin animation unavailable:', variant, state);
                 base.draw(ctx, this.x, this.y, this.width, this.height, !this.facingRight);
@@ -169,9 +184,21 @@ class Player {
         // Map artwork onto the existing animation clock; combat never uses the cosmetic frames.
         const progress = (base.currentFrame + base.timer / base.frameDuration) / base.frameCount;
         visual.currentFrame = Math.min(3, Math.floor(progress * 4));
-        // Malodor's source artwork faces left; the other character sheets face right.
-        const flipHorizontal = variant === 'ninja4' ? this.facingRight : !this.facingRight;
+        // Malodor, CyberSkunk, and Kyle source artwork faces left; the other
+        // character sheets face right.
+        const flipHorizontal = LEFT_FACING_SKIN_VARIANTS.has(variant) ? this.facingRight : !this.facingRight;
         visual.draw(ctx, this.x, this.y, this.width, this.height, flipHorizontal);
+    }
+
+    // Resolve a character-skin sheet for an animation state, falling back to
+    // the closest available sheet when the skin ships without that state.
+    _getSkinSheet(variant, state) {
+        const candidates = [state, ...(SKIN_SHEET_FALLBACKS[state] || ['idle'])];
+        for (const candidate of candidates) {
+            const sheet = spriteLoader.getSprite(variant + '_' + candidate);
+            if (sheet) return sheet;
+        }
+        return null;
     }
 
     loadSprites() {
@@ -1027,7 +1054,7 @@ class Player {
                 ctx.restore();
             }
             // Cosmetic skin aura. Gold = early-access Founder exclusive;
-            // Sapphire/amethyst palettes are unlocked by the skin pack. The
+            // the skin pack unlocks the drawn character skins (no aura). The
             // gating lives entirely inside FounderManager.isGoldSkinEnabled(),
             // which now returns true for any player with an unlocked variant
             // and the cosmetic toggle on.
@@ -1040,7 +1067,7 @@ class Player {
             const _founderAuraColor = (_founderGold && typeof GoldenSkin !== 'undefined' && typeof GoldenSkin.getAuraColor === 'function')
                 ? GoldenSkin.getAuraColor(_founderVariant)
                 : '#FFC857';
-            const _spriteSkin = _founderVariant === 'ninja2' || _founderVariant === 'ninja3' || _founderVariant === 'ninja4';
+            const _spriteSkin = SPRITE_SKIN_VARIANTS.has(_founderVariant);
             if (_founderGold && !_spriteSkin) {
                 ctx.save();
                 ctx.shadowColor = _founderAuraColor;

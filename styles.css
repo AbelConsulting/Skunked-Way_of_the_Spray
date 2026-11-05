@@ -560,25 +560,17 @@ html.controller-cursor-hidden * {
         linear-gradient(180deg, rgba(255, 210, 80, 0.08), rgba(0, 0, 0, 0.38)),
         rgba(20, 14, 4, 0.90);
 }
-.founder-swatch--sapphire {
-    --swatch-grad: linear-gradient(160deg, #A8DCFF 0%, #2D7FCC 60%, #0A2D5C 100%);
-    --swatch-glow: rgba(90, 184, 255, 0.65);
-    --swatch-border: rgba(90, 184, 255, 0.55);
-    --swatch-name-color: #8FD0FF;
-    border-color: rgba(90, 184, 255, 0.25);
-    background:
-        linear-gradient(180deg, rgba(90, 184, 255, 0.08), rgba(0, 0, 0, 0.38)),
-        rgba(4, 12, 24, 0.90);
+.founder-swatch--ninja5 {
+    --swatch-grad: linear-gradient(160deg, #A8FFF4 0%, #12A5B8 60%, #0D1B1E 100%);
+    --swatch-glow: rgba(18, 165, 184, 0.55);
+    --swatch-border: rgba(18, 165, 184, 0.50);
+    --swatch-name-color: #A8FFF4;
 }
-.founder-swatch--amethyst {
-    --swatch-grad: linear-gradient(160deg, #ECC6FF 0%, #8A3FCC 60%, #3A0A6A 100%);
-    --swatch-glow: rgba(198, 107, 255, 0.65);
-    --swatch-border: rgba(198, 107, 255, 0.55);
-    --swatch-name-color: #DDB4FF;
-    border-color: rgba(180, 90, 255, 0.25);
-    background:
-        linear-gradient(180deg, rgba(180, 90, 255, 0.08), rgba(0, 0, 0, 0.38)),
-        rgba(14, 4, 24, 0.90);
+.founder-swatch--ninja6 {
+    --swatch-grad: linear-gradient(160deg, #C8FF9E 0%, #3FAE2A 60%, #14260E 100%);
+    --swatch-glow: rgba(63, 174, 42, 0.55);
+    --swatch-border: rgba(63, 174, 42, 0.50);
+    --swatch-name-color: #C8FF9E;
 }
 .founder-swatch--ninja2 {
     --swatch-grad: linear-gradient(160deg, #edb4f4 0%, #a534b2 60%, #29232e 100%);
@@ -691,12 +683,6 @@ html.controller-cursor-hidden * {
 }
 .founder-swatch--gold:not(.is-locked) .founder-swatch__shine {
     animation: founder-swatch-shine 4.5s ease-in-out 1.2s infinite;
-}
-.founder-swatch--sapphire:not(.is-locked) .founder-swatch__shine {
-    animation: founder-swatch-shine 5.5s ease-in-out 3.0s infinite;
-}
-.founder-swatch--amethyst:not(.is-locked) .founder-swatch__shine {
-    animation: founder-swatch-shine 6.0s ease-in-out 5.5s infinite;
 }
 .founder-swatch.is-active .founder-swatch__shine {
     animation: founder-swatch-shine 2.8s ease-in-out 0.4s infinite;

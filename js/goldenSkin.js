@@ -37,36 +37,12 @@ const GoldenSkin = (() => {
                 { l: 0.85, r: 0xff, g: 0xee, b: 0xa8 },
                 { l: 1.00, r: 0xff, g: 0xfa, b: 0xe0 }
             ]
-        },
-        sapphire: {
-            id: 'sapphire',
-            label: 'Sapphire',
-            aura: '#5AB8FF',
-            stops: [
-                { l: 0.00, r: 0x06, g: 0x10, b: 0x30 },
-                { l: 0.08, r: 0x0c, g: 0x22, b: 0x55 },
-                { l: 0.20, r: 0x14, g: 0x3e, b: 0x90 },
-                { l: 0.40, r: 0x28, g: 0x70, b: 0xd0 },
-                { l: 0.65, r: 0x60, g: 0xb8, b: 0xff },
-                { l: 0.85, r: 0xb8, g: 0xe2, b: 0xff },
-                { l: 1.00, r: 0xe8, g: 0xf6, b: 0xff }
-            ]
-        },
-        amethyst: {
-            id: 'amethyst',
-            label: 'Amethyst',
-            aura: '#C66BFF',
-            stops: [
-                { l: 0.00, r: 0x18, g: 0x06, b: 0x2c },
-                { l: 0.08, r: 0x32, g: 0x12, b: 0x55 },
-                { l: 0.20, r: 0x5e, g: 0x26, b: 0x95 },
-                { l: 0.40, r: 0x8c, g: 0x46, b: 0xc8 },
-                { l: 0.65, r: 0xc8, g: 0x80, b: 0xff },
-                { l: 0.85, r: 0xe2, g: 0xc0, b: 0xff },
-                { l: 1.00, r: 0xf6, g: 0xe8, b: 0xff }
-            ]
         }
     });
+
+    // Note: the Sapphire and Amethyst palette skins were retired in favour of
+    // the drawn CyberSkunk (ninja5) and Kyle (ninja6) character skins; Gold
+    // remains the only tinted palette.
 
     const DEFAULT_PALETTE = 'gold';
 

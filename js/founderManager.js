@@ -19,7 +19,7 @@
  *     and want the badge, and gives cloud-synced proof of ownership.
  *
  * Skin-pack ($1.99) entitlement (Play product ID `skins`; legacy `remove_ads` also honoured):
- *   • Unlocks LAYSIE SKUNK, VAMPYR, and MALODOR plus the SAPPHIRE and AMETHYST ninja skins.
+ *   • Unlocks LAYSIE SKUNK, VAMPYR, and MALODOR plus the CYBERSKUNK and KYLE ninja skins.
  *   • If purchased before EARLY_ACCESS_END_ISO, also auto-grants Founder + Gold.
  *
  * Persistence:
@@ -77,7 +77,7 @@ const FounderManager = (() => {
     // Cosmetic selection includes palettes and separately drawn character skins.
     // Default 'gold' if missing or unknown.
     const STORAGE_KEY_SKIN_VARIANT  = 'skunkfu.skinVariant';
-    const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'sapphire', 'amethyst', 'ninja2', 'ninja3', 'ninja4']);
+    const VALID_SKIN_VARIANTS = Object.freeze(['gold', 'ninja5', 'ninja6', 'ninja2', 'ninja3', 'ninja4']);
     const DEFAULT_SKIN_VARIANT = 'gold';
     let _isFounder = _read();
     let _goldSkinEnabled = _readGoldSkinPref();
@@ -101,9 +101,15 @@ const FounderManager = (() => {
     function _readSkinVariant() {
         try {
             const v = localStorage.getItem(STORAGE_KEY_SKIN_VARIANT);
-            if (v === 'steel') {
-                localStorage.setItem(STORAGE_KEY_SKIN_VARIANT, 'sapphire');
-                return 'sapphire';
+            // Retired palette skins migrate to their character-skin replacements:
+            // steel/sapphire → CyberSkunk (ninja5), amethyst → Kyle (ninja6).
+            if (v === 'steel' || v === 'sapphire') {
+                localStorage.setItem(STORAGE_KEY_SKIN_VARIANT, 'ninja5');
+                return 'ninja5';
+            }
+            if (v === 'amethyst') {
+                localStorage.setItem(STORAGE_KEY_SKIN_VARIANT, 'ninja6');
+                return 'ninja6';
             }
             return VALID_SKIN_VARIANTS.includes(v) ? v : DEFAULT_SKIN_VARIANT;
         } catch (e) { return DEFAULT_SKIN_VARIANT; }
@@ -288,14 +294,14 @@ const FounderManager = (() => {
     /**
      * Returns true if the player is entitled to use the given skin variant.
      *   gold     → Founder only (early-access exclusive)
-     *   sapphire/amethyst/ninja2/ninja3/ninja4 → skin-pack owner
+     *   ninja5/ninja6/ninja2/ninja3/ninja4 → skin-pack owner
      */
     function isSkinUnlocked(variantId) {
         if (!VALID_SKIN_VARIANTS.includes(variantId)) return false;
         // Steam: game is sold complete — all skins included.
         if (window.PLATFORM === 'steam') return true;
         if (variantId === 'gold') return _isFounder;
-        // Laysie Skunk, Vampyr, Malodor, sapphire, and amethyst require the skin-pack purchase,
+        // Laysie Skunk, Vampyr, Malodor, CyberSkunk, and Kyle require the skin-pack purchase,
         // even for Founders. Gold is the Founder-only early-access exclusive;
         // the colour variants are the skin-pack reward — separate value props.
         return _hasRemoveAds();
@@ -314,7 +320,7 @@ const FounderManager = (() => {
 
     /**
      * Picks a sensible default variant from the unlocked set.
-     * Preference order: gold (if unlocked) → sapphire → amethyst → character skins.
+     * Preference order: gold (if unlocked) → CyberSkunk → Kyle → character skins.
      */
     function _firstUnlockedVariant() {
         const unlocked = getUnlockedSkinVariants();
