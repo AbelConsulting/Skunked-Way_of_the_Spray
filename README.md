@@ -114,7 +114,7 @@ main/demo App IDs when those files are absent.
 
 ### Preparing the Windows Steam demo
 
-The demo uses App ID `5226570` and Windows depot `5226571`. Build version `1.3.29`
+The demo uses App ID `5226570` and Windows depot `5226571`. Build version `1.3.30`
 from the same game source without changing the main release outputs:
 
 ```powershell
